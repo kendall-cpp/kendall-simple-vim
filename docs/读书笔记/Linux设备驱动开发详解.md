@@ -1,7 +1,17 @@
 
+
+- [第4章 Linux内核模块](#第4章-linux内核模块)
+  - [Linux内核的编译](#linux内核的编译)
+    - [Kconfig](#kconfig)
+      - [配置选项](#配置选项)
+- [第5章 Linux文件系统与设备文件](#第5章-linux文件系统与设备文件)
+  - [linux 文件系统](#linux-文件系统)
+    - [file结构体](#file结构体)
+    - [devfs 设备文件系统](#devfs-设备文件系统)
+
 ----
 
-# 第三章 Linux内核及编程
+# 第4章 Linux内核模块
 
 ## Linux内核的编译
 
@@ -139,3 +149,197 @@ range <symbol> <symbol> [if <expr>]
     <expr> '||' <expr>
 ```
 
+# 第5章 Linux文件系统与设备文件
+
+## linux 文件系统
+
+![](../img/文件系
+
+> VFS -- 虚拟文件系统
+
+![](../img/应用程序-VFS-设备驱动.jpg)
+
+### file结构体
+
+kernel/linux-5.6.14/include/linux/fs.h
+
+- file
+
+```c
+struct file {
+	union {
+		struct llist_node	fu_llist;
+		struct rcu_head 	fu_rcuhead;
+	} f_u;
+	struct path		f_path;
+	struct inode		*f_inode;	/* cached value */
+	const struct file_operations	*f_op;
+
+	/*
+	 * Protects f_ep_links, f_flags.
+	 * Must not be taken from IRQ context.
+	 */
+	spinlock_t		f_lock;
+	enum rw_hint		f_write_hint;
+	atomic_long_t		f_count;
+	unsigned int 		f_flags;          // 设备驱动关心的内容
+                                  // f_flags & O_NONBLOCK 为 真 表示非阻塞打开设备文件
+	fmode_t			f_mode;               // 文件读写模式
+	struct mutex		f_pos_lock;
+	loff_t			f_pos;
+	struct fown_struct	f_owner;
+	const struct cred	*f_cred;
+	struct file_ra_state	f_ra;
+
+	u64			f_version;
+
+	errseq_t		f_wb_err;
+} __randomize_layout
+  __attribute__((aligned(4)));
+```
+
+- inode 
+
+```c
+struct inode {
+	umode_t			i_mode;
+	unsigned short		i_opflags;
+	kuid_t			i_uid;
+	kgid_t			i_gid;
+	unsigned int		i_flags;
+
+#ifdef CONFIG_FS_POSIX_ACL
+	struct posix_acl	*i_acl;
+	struct posix_acl	*i_default_acl;
+#endif
+
+	const struct inode_operations	*i_op;
+	struct super_block	*i_sb;
+	struct address_space	*i_mapping;
+
+#ifdef CONFIG_SECURITY
+	void			*i_security;
+#endif
+
+	/* Stat data, not accessed from path walking */
+	unsigned long		i_ino;
+	/*
+	 * Filesystems may only read i_nlink directly.  They shall use the
+	 * following functions for modification:
+	 *
+	 *    (set|clear|inc|drop)_nlink
+	 *    inode_(inc|dec)_link_count
+	 */
+	union {
+		const unsigned int i_nlink;
+		unsigned int __i_nlink;
+	};
+	dev_t			i_rdev;         //设备编号，linux内核的设备编号分为主设备编号和次设备编号。前者12位，后者20位
+	loff_t			i_size;
+	struct timespec64	i_atime;
+	struct timespec64	i_mtime;
+	struct timespec64	i_ctime;
+	spinlock_t		i_lock;	/* i_blocks, i_bytes, maybe i_size */
+	unsigned short          i_bytes;
+	u8			i_blkbits;
+	u8			i_write_hint;
+	blkcnt_t		i_blocks;
+
+#ifdef __NEED_I_SIZE_ORDERED
+	seqcount_t		i_size_seqcount;
+#endif
+
+	/* Misc */
+	unsigned long		i_state;
+	struct rw_semaphore	i_rwsem;
+
+	unsigned long		dirtied_when;	/* jiffies of first dirtying */
+	unsigned long		dirtied_time_when;
+
+	struct hlist_node	i_hash;
+	struct list_head	i_io_list;	/* backing dev IO list */
+#ifdef CONFIG_CGROUP_WRITEBACK
+	struct bdi_writeback	*i_wb;		/* the associated cgroup wb */
+
+	/* foreign inode detection, see wbc_detach_inode() */
+	int			i_wb_frn_winner;
+	u16			i_wb_frn_avg_time;
+	u16			i_wb_frn_history;
+#endif
+	struct list_head	i_lru;		/* inode LRU list */
+	struct list_head	i_sb_list;
+	struct list_head	i_wb_list;	/* backing dev writeback list */
+	union {
+		struct hlist_head	i_dentry;
+		struct rcu_head		i_rcu;
+	};
+	atomic64_t		i_version;
+	atomic64_t		i_sequence; /* see futex */
+	atomic_t		i_count;
+	atomic_t		i_dio_count;
+	atomic_t		i_writecount;
+#if defined(CONFIG_IMA) || defined(CONFIG_FILE_LOCKING)
+	atomic_t		i_readcount; /* struct files open RO */
+#endif
+	union {
+		const struct file_operations	*i_fop;	/* former ->i_op->default_file_ops */
+		void (*free_inode)(struct inode *);
+	};
+	struct file_lock_context	*i_flctx;
+	struct address_space	i_data;
+	struct list_head	i_devices;
+	union {
+		struct pipe_inode_info	*i_pipe;
+		struct block_device	*i_bdev;
+		struct cdev		*i_cdev;
+		char			*i_link;
+		unsigned		i_dir_seq;
+	};
+
+	__u32			i_generation;
+
+
+
+	void			*i_private; /* fs or device private pointer */
+} __randomize_layout;
+```
+
+查看 `/proc/devices` 文件可以获知系统中注册的设备，第1列为主设备号，第2列为设备名。
+
+### devfs 设备文件系统
+
+- 可以通过程序在设备初始化时在 `/dev` 目录下创建设备文件，卸载设备时将它删除
+
+- 设备驱动程序可以指定设备名、所有者和权限位，用户空间程序仍可以修改所有者和权限位。
+
+- 不再需要为设备驱动程序分配主设备号以及处理次设备号，在程序中可以直接给 `register_chrdev()` 传递0主设备号以获得可用的主设备号，并在`devfs_register()`中指定次设备号
+
+```c
+static devfs_handle_t devfs_handle;
+static int _ _init xxx_init(void)
+{
+    int ret;
+    int i;
+    /* 在内核中注册设备 */
+    ret = register_chrdev(XXX_MAJOR, DEVICE_NAME, &xxx_fops);
+    if (ret < 0) {
+        printk(DEVICE_NAME " can't register major number\n");
+        return ret;
+    }
+    /* 创建设备文件 -- 已经被删除了 */
+    devfs_handle =devfs_register(NULL, DEVICE_NAME, VFS_FL_DEFAULT,
+    XXX_MAJOR, 0, S_IFCHR | S_IRUSR | S_IWUSR, &xxx_fops, NULL);
+    ...
+    printk(DEVICE_NAME " initialized\n");
+    return 0;
+ }
+
+ static void _ _exit xxx_exit(void)
+ {
+    devfs_unregister(devfs_handle); /* 撤销设备文件  -- 已经被删除了 */
+    unregister_chrdev(XXX_MAJOR, DEVICE_NAME); /* 注销设备 */
+ }
+
+ module_init(xxx_init);
+ module_exit(xxx_exit);
+```
