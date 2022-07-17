@@ -9,7 +9,7 @@
 
 > 主引导记录会存入内存地址 0x7C00, 为什么是 0x7c00，详细可以参考[这篇文章](https://www.glamenv-septzen.net/en/view/6)
 
-主引导记录（Master boot record，缩写为 MBR ）是什么，后面学到《计算机是如何启动的？》会详细介绍，关注并留意 微信公众号【零K同学】
+主引导记录（Master boot record，缩写为 MBR ）
 
 先简单说一下计算机启动是这样一个过程
 

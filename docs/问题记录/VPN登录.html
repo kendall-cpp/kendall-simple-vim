@@ -1,0 +1,2658 @@
+<!DOCTYPE html>
+<!-- saved from url=(0078)https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows -->
+<html lang="zh-CN" class="js-focus-visible" data-js-focus-visible=""><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+                            <title>How to connect remote VPN on Windows - IT Team - Amlogic Confluence</title>
+    
+        
+
+                        
+    
+                        
+    
+
+                
+    
+    <meta http-equiv="X-UA-Compatible" content="IE=EDGE,chrome=IE7">
+
+<meta id="confluence-context-path" name="confluence-context-path" content="">
+<meta id="confluence-base-url" name="confluence-base-url" content="https://confluence.amlogic.com">
+
+    <meta id="atlassian-token" name="atlassian-token" content="966f0779c43d79e5bb238cbd991a4a8616ddf1e7">
+
+
+<meta id="confluence-space-key" name="confluence-space-key" content="IT">
+<script type="text/javascript">
+        var contextPath = '';
+</script>
+
+    
+
+    <meta name="confluence-request-time" content="1657532387887">
+        
+    
+        
+            <meta name="ajs-show-space-welcome-dialog" content="true">
+            <style>.ia-fixed-sidebar, .ia-splitter-left {width: 285px;}.theme-default .ia-splitter #main {margin-left: 285px;}.ia-fixed-sidebar {visibility: hidden;}</style>
+            <meta name="ajs-use-keyboard-shortcuts" content="true">
+            <meta name="ajs-discovered-plugin-features" content="{&quot;com.atlassian.confluence.plugins.confluence-jira-metadata&quot;:[&quot;linked-issues-dropdown&quot;]}">
+            <meta name="ajs-keyboardshortcut-hash" content="c9a7c6de46f285bc3314089eea08f215">
+            <meta id="team-calendars-has-jira-link" content="true">
+            <meta name="ajs-team-calendars-display-time-format" content="displayTimeFormat12">
+            <meta id="team-calendars-display-week-number" content="false">
+            <meta id="team-calendars-user-timezone" content="Asia/Shanghai">
+            <script type="text/x-template" id="team-calendars-messages" title="team-calendars-messages"><fieldset class="i18n hidden"><input type="hidden" name="calendar3.month.long.july" value="七月"><input type="hidden" name="calendar3.day.short.wednesday" value="星期三"><input type="hidden" name="calendar3.day.short.thursday" value="星期四"><input type="hidden" name="calendar3.month.short.march" value="三月"><input type="hidden" name="calendar3.month.long.april" value="四月"><input type="hidden" name="calendar3.month.long.october" value="十月"><input type="hidden" name="calendar3.month.long.august" value="八月"><input type="hidden" name="calendar3.month.short.july" value="七月"><input type="hidden" name="calendar3.month.short.may" value="五月"><input type="hidden" name="calendar3.month.short.november" value="十一月"><input type="hidden" name="calendar3.day.long.friday" value="星期五"><input type="hidden" name="calendar3.day.long.sunday" value="星期日"><input type="hidden" name="calendar3.day.long.saturday" value="星期六"><input type="hidden" name="calendar3.month.short.april" value="四月"><input type="hidden" name="calendar3.day.long.wednesday" value="星期三"><input type="hidden" name="calendar3.month.long.december" value="十二月"><input type="hidden" name="calendar3.month.short.october" value="十月"><input type="hidden" name="calendar3.day.long.monday" value="星期一"><input type="hidden" name="calendar3.month.short.june" value="六月"><input type="hidden" name="calendar3.day.short.monday" value="星期一"><input type="hidden" name="calendar3.day.short.tuesday" value="星期二"><input type="hidden" name="calendar3.day.short.saturday" value="星期六"><input type="hidden" name="calendar3.month.long.march" value="三月"><input type="hidden" name="calendar3.month.long.june" value="六月"><input type="hidden" name="calendar3.month.short.february" value="二月"><input type="hidden" name="calendar3.month.short.august" value="八月"><input type="hidden" name="calendar3.month.short.december" value="十二月"><input type="hidden" name="calendar3.day.short.sunday" value="星期日"><input type="hidden" name="calendar3.month.long.february" value="二月"><input type="hidden" name="calendar3.day.long.tuesday" value="星期二"><input type="hidden" name="calendar3.month.long.may" value="五月"><input type="hidden" name="calendar3.month.long.september" value="九月"><input type="hidden" name="calendar3.month.long.november" value="十一月"><input type="hidden" name="calendar3.month.short.january" value="一月"><input type="hidden" name="calendar3.month.short.september" value="九月"><input type="hidden" name="calendar3.day.long.thursday" value="星期四"><input type="hidden" name="calendar3.month.long.january" value="一月"><input type="hidden" name="calendar3.day.short.friday" value="星期五"></fieldset></script>
+            <meta name="ajs-is-confluence-admin" content="false">
+            <meta name="ajs-connection-timeout" content="10000">
+            
+    
+    
+            <meta name="ajs-page-title" content="How to connect remote VPN on Windows">
+            <meta name="ajs-latest-published-page-title" content="How to connect remote VPN on Windows">
+            <meta name="ajs-space-name" content="IT Team">
+            <meta name="ajs-page-id" content="140476854">
+            <meta name="ajs-latest-page-id" content="140476854">
+            <meta name="ajs-content-type" content="page">
+            <meta name="ajs-parent-page-title" content="IT manual">
+            <meta name="ajs-parent-page-id" content="138876046">
+            <meta name="ajs-space-key" content="IT">
+            <meta name="ajs-max-number-editors" content="12">
+            <meta name="ajs-macro-placeholder-timeout" content="5000">
+            <meta name="ajs-jira-metadata-count" content="-1">
+            <meta name="ajs-from-page-title" content="">
+            <meta name="ajs-can-remove-page" content="false">
+            <meta name="ajs-can-remove-page-hierarchy" content="false">
+            <meta name="ajs-browse-page-tree-mode" content="view">
+            <meta name="ajs-shared-drafts" content="true">
+            <meta name="ajs-user-display-name" content="Shengken Lin">
+            <meta name="ajs-context-path" content="">
+            <meta name="ajs-base-url" content="https://confluence.amlogic.com">
+            <meta name="ajs-version-number" content="7.13.1">
+            <meta name="ajs-build-number" content="8703">
+            <meta name="ajs-remote-user" content="Shengken.Lin">
+            <meta name="ajs-remote-user-key" content="2c93f8927fda9cf001818f48dcc000cf">
+            <meta name="ajs-remote-user-has-licensed-access" content="true">
+            <meta name="ajs-remote-user-has-browse-users-permission" content="true">
+            <meta name="ajs-current-user-fullname" content="Shengken Lin">
+            <meta name="ajs-current-user-avatar-url" content="/images/icons/profilepics/default.svg">
+            <meta name="ajs-current-user-avatar-uri-reference" content="/images/icons/profilepics/default.svg">
+            <meta name="ajs-static-resource-url-prefix" content="/s/vhsut6/8703/1nlnn84/_">
+            <meta name="ajs-global-settings-attachment-max-size" content="20971520">
+            <meta name="ajs-global-settings-quick-search-enabled" content="true">
+            <meta name="ajs-user-locale" content="zh_CN">
+            <meta name="ajs-enabled-dark-features" content="site-wide.shared-drafts,site-wide.synchrony,clc.quick.create,confluence.view.edit.transition,cql.search.screen,confluence-inline-comments-resolved,frontend.editor.v4,http.session.registrar,nps.survey.inline.dialog,confluence.efi.onboarding.new.templates,frontend.editor.v4.compatibility,atlassian.cdn.static.assets,pdf-preview,previews.sharing,previews.versions,file-annotations,confluence.efi.onboarding.rich.space.content,collaborative-audit-log,confluence.reindex.improvements,previews.conversion-service,editor.ajax.save,read.only.mode,graphql,previews.trigger-all-file-types,attachment.extracted.text.extractor,lucene.caching.filter,confluence.table.resizable,notification.batch,previews.sharing.pushstate,confluence-inline-comments-rich-editor,tc.tacca.dacca,site-wide.synchrony.opt-in,file-annotations.likes,gatekeeper-ui-v2,v2.content.name.searcher,mobile.supported.version,pulp,confluence-inline-comments,confluence-inline-comments-dangling-comment,quick-reload-inline-comments-flags">
+            <meta name="ajs-atl-token" content="966f0779c43d79e5bb238cbd991a4a8616ddf1e7">
+            <meta name="ajs-confluence-flavour" content="VANILLA">
+            <meta name="ajs-user-date-pattern" content="yyyy-M-d">
+            <meta name="ajs-access-mode" content="READ_WRITE">
+            <meta name="ajs-render-mode" content="READ_WRITE">
+            <meta name="ajs-date.format" content="MMM dd, yyyy">
+    
+    <link rel="shortcut icon" href="https://confluence.amlogic.com/s/yn4s1b/8703/1nlnn84/1/_/favicon.ico">
+    <link rel="icon" type="image/x-icon" href="https://confluence.amlogic.com/s/yn4s1b/8703/1nlnn84/1/_/favicon.ico">
+
+<link rel="search" type="application/opensearchdescription+xml" href="https://confluence.amlogic.com/opensearch/osd.action" title="Amlogic Confluence">
+    
+                    
+            <meta name="ajs-create-issue-metadata-show-discovery" content="false">
+            
+
+    <script>
+window.WRM=window.WRM||{};window.WRM._unparsedData=window.WRM._unparsedData||{};window.WRM._unparsedErrors=window.WRM._unparsedErrors||{};
+WRM._unparsedData["com.atlassian.plugins.atlassian-plugins-webresource-plugin:context-path.context-path"]="\u0022\u0022";
+WRM._unparsedData["com.atlassian.confluence.plugins.confluence-feature-discovery-plugin:confluence-feature-discovery-plugin-resources.test-mode"]="false";
+WRM._unparsedData["com.atlassian.analytics.analytics-client:policy-update-init.policy-update-data-provider"]="false";
+WRM._unparsedData["com.atlassian.analytics.analytics-client:programmatic-analytics-init.programmatic-analytics-data-provider"]="false";
+WRM._unparsedData["com.atlassian.applinks.applinks-plugin:applinks-common-exported.applinks-help-paths"]="{\u0022entries\u0022:{\u0022applinks.docs.root\u0022:\u0022https://confluence.atlassian.com/display/APPLINKS-072/\u0022,\u0022applinks.docs.diagnostics.troubleshoot.sslunmatched\u0022:\u0022SSL+and+application+link+troubleshooting+guide\u0022,\u0022applinks.docs.diagnostics.troubleshoot.oauthsignatureinvalid\u0022:\u0022OAuth+troubleshooting+guide\u0022,\u0022applinks.docs.diagnostics.troubleshoot.oauthtimestamprefused\u0022:\u0022OAuth+troubleshooting+guide\u0022,\u0022applinks.docs.delete.entity.link\u0022:\u0022Create+links+between+projects\u0022,\u0022applinks.docs.adding.application.link\u0022:\u0022Link+Atlassian+applications+to+work+together\u0022,\u0022applinks.docs.administration.guide\u0022:\u0022Application+Links+Documentation\u0022,\u0022applinks.docs.oauth.security\u0022:\u0022OAuth+security+for+application+links\u0022,\u0022applinks.docs.troubleshoot.application.links\u0022:\u0022Troubleshoot+application+links\u0022,\u0022applinks.docs.diagnostics.troubleshoot.unknownerror\u0022:\u0022Network+and+connectivity+troubleshooting+guide\u0022,\u0022applinks.docs.configuring.auth.trusted.apps\u0022:\u0022Configuring+Trusted+Applications+authentication+for+an+application+link\u0022,\u0022applinks.docs.diagnostics.troubleshoot.authlevelunsupported\u0022:\u0022OAuth+troubleshooting+guide\u0022,\u0022applinks.docs.diagnostics.troubleshoot.ssluntrusted\u0022:\u0022SSL+and+application+link+troubleshooting+guide\u0022,\u0022applinks.docs.diagnostics.troubleshoot.unknownhost\u0022:\u0022Network+and+connectivity+troubleshooting+guide\u0022,\u0022applinks.docs.delete.application.link\u0022:\u0022Link+Atlassian+applications+to+work+together\u0022,\u0022applinks.docs.adding.project.link\u0022:\u0022Configuring+Project+links+across+Applications\u0022,\u0022applinks.docs.link.applications\u0022:\u0022Link+Atlassian+applications+to+work+together\u0022,\u0022applinks.docs.diagnostics.troubleshoot.oauthproblem\u0022:\u0022OAuth+troubleshooting+guide\u0022,\u0022applinks.docs.diagnostics.troubleshoot.migration\u0022:\u0022Update+application+links+to+use+OAuth\u0022,\u0022applinks.docs.relocate.application.link\u0022:\u0022Link+Atlassian+applications+to+work+together\u0022,\u0022applinks.docs.administering.entity.links\u0022:\u0022Create+links+between+projects\u0022,\u0022applinks.docs.upgrade.application.link\u0022:\u0022OAuth+security+for+application+links\u0022,\u0022applinks.docs.diagnostics.troubleshoot.connectionrefused\u0022:\u0022Network+and+connectivity+troubleshooting+guide\u0022,\u0022applinks.docs.configuring.auth.oauth\u0022:\u0022OAuth+security+for+application+links\u0022,\u0022applinks.docs.insufficient.remote.permission\u0022:\u0022OAuth+security+for+application+links\u0022,\u0022applinks.docs.configuring.application.link.auth\u0022:\u0022OAuth+security+for+application+links\u0022,\u0022applinks.docs.diagnostics\u0022:\u0022Application+links+diagnostics\u0022,\u0022applinks.docs.configured.authentication.types\u0022:\u0022OAuth+security+for+application+links\u0022,\u0022applinks.docs.adding.entity.link\u0022:\u0022Create+links+between+projects\u0022,\u0022applinks.docs.diagnostics.troubleshoot.unexpectedresponse\u0022:\u0022Network+and+connectivity+troubleshooting+guide\u0022,\u0022applinks.docs.configuring.auth.basic\u0022:\u0022Configuring+Basic+HTTP+Authentication+for+an+Application+Link\u0022,\u0022applinks.docs.diagnostics.troubleshoot.authlevelmismatch\u0022:\u0022OAuth+troubleshooting+guide\u0022}}";
+WRM._unparsedData["com.atlassian.applinks.applinks-plugin:applinks-common-exported.applinks-types"]="{\u0022crowd\u0022:\u0022\u4eba\u7fa4\u0022,\u0022confluence\u0022:\u0022Confluence\u0022,\u0022fecru\u0022:\u0022Fisheye / Crucible\u0022,\u0022stash\u0022:\u0022Bitbucket\u670d\u52a1\u5668\u0022,\u0022jira\u0022:\u0022Jira\u0022,\u0022refapp\u0022:\u0022\u76f8\u5173\u5e94\u7528\u7a0b\u5e8f\u0022,\u0022bamboo\u0022:\u0022\u7af9\u0022,\u0022generic\u0022:\u0022\u901a\u7528\u5e94\u7528\u7a0b\u5e8f\u0022}";
+WRM._unparsedData["com.atlassian.applinks.applinks-plugin:applinks-common-exported.entity-types"]="{\u0022singular\u0022:{\u0022refapp.charlie\u0022:\u0022Charlie\u0022,\u0022fecru.project\u0022:\u0022Crucible\u9879\u76ee\u0022,\u0022fecru.repository\u0022:\u0022FishEye \u4ed3\u5e93\u0022,\u0022stash.project\u0022:\u0022Bitbucket\u670d\u52a1\u5668\u9879\u76ee\u0022,\u0022generic.entity\u0022:\u0022\u901a\u7528\u9879\u76ee\u0022,\u0022confluence.space\u0022:\u0022Confluence\u7a7a\u95f4\u0022,\u0022bamboo.project\u0022:\u0022Bamboo\u9879\u76ee\u0022,\u0022jira.project\u0022:\u0022Jira \u9879\u76ee\u0022},\u0022plural\u0022:{\u0022refapp.charlie\u0022:\u0022\u67e5\u7406\u65af\u0022,\u0022fecru.project\u0022:\u0022Crucible\u9879\u76ee\u0022,\u0022fecru.repository\u0022:\u0022FishEye \u4ed3\u5e93\u96c6\u0022,\u0022stash.project\u0022:\u0022Bitbucket\u670d\u52a1\u5668\u9879\u76ee\u0022,\u0022generic.entity\u0022:\u0022\u901a\u7528\u9879\u76ee\u0022,\u0022confluence.space\u0022:\u0022Confluence\u7a7a\u95f4\u0022,\u0022bamboo.project\u0022:\u0022Bamboo\u9879\u76ee\u0022,\u0022jira.project\u0022:\u0022Jira \u9879\u76ee\u0022}}";
+WRM._unparsedData["com.atlassian.applinks.applinks-plugin:applinks-common-exported.authentication-types"]="{\u0022com.atlassian.applinks.api.auth.types.BasicAuthenticationProvider\u0022:\u0022\u57fa\u672c\u8bbf\u95ee\u0022,\u0022com.atlassian.applinks.api.auth.types.TrustedAppsAuthenticationProvider\u0022:\u0022\u4fe1\u4efb\u7684\u5e94\u7528\u65e0\u6548\u0022,\u0022com.atlassian.applinks.api.auth.types.CorsAuthenticationProvider\u0022:\u0022\u6b4c\u73e5\u0022,\u0022com.atlassian.applinks.api.auth.types.OAuthAuthenticationProvider\u0022:\u0022Oauth\u0022,\u0022com.atlassian.applinks.api.auth.types.TwoLeggedOAuthAuthenticationProvider\u0022:\u0022Oauth\u0022,\u0022com.atlassian.applinks.api.auth.types.TwoLeggedOAuthWithImpersonationAuthenticationProvider\u0022:\u0022Oauth\u0022}";
+WRM._unparsedData["com.atlassian.confluence.plugins.synchrony-interop:synchrony-status-banner-loader.synchrony-status"]="false";
+WRM._unparsedData["com.atlassian.confluence.plugins.confluence-license-banner:confluence-license-banner-resources.license-details"]="{\u0022daysBeforeLicenseExpiry\u0022:0,\u0022daysBeforeMaintenanceExpiry\u0022:0,\u0022showLicenseExpiryBanner\u0022:false,\u0022showMaintenanceExpiryBanner\u0022:false,\u0022renewUrl\u0022:null,\u0022salesUrl\u0022:null}";
+WRM._unparsedData["com.atlassian.confluence.plugins.confluence-search-ui-plugin:confluence-search-ui-plugin-resources.i18n-data"]="{\u0022search.ui.recent.link.text\u0022:\u0022\u67e5\u770b\u66f4\u591a\u6700\u8fd1\u8bbf\u95ee\u0022,\u0022search.ui.filter.space.category.input.label\u0022:\u0022\u67e5\u627e\u7a7a\u95f4\u7c7b\u522b......\u0022,\u0022search.ui.search.results.empty\u0022:\u0022\u6211\u4eec\u627e\u4e0d\u5230\u4efb\u4f55\u5339\u914d\u201c{0}\u201d\u7684\u5185\u5bb9\u3002\u0022,\u0022search.ui.filter.clear.selected\u0022:\u0022\u6e05\u9664\u6240\u9009\u9879\u76ee\u0022,\u0022search.ui.content.name.search.items.panel.load.all.top.items.button.text\u0022:\u0022\u663e\u793a\u66f4\u591a\u5e94\u7528\u7ed3\u679c......\u0022,\u0022search.ui.filter.space.archive.label\u0022:\u0022\u641c\u7d22\u5df2\u7ecf\u5f52\u6863\u7684\u7a7a\u95f4\u0022,\u0022search.ui.filter.label\u0022:\u0022\u7b5b\u9009\u5668\u0022,\u0022search.ui.filter.contributor.button.text\u0022:\u0022\u8d21\u732e\u8005\u0022,\u0022search.ui.filter.date.all.text\u0022:\u0022\u968f\u65f6\u0022,\u0022search.ui.filter.space.current.label\u0022:\u0022\u5f53\u524d\u0022,\u0022search.ui.clear.input.button.text\u0022:\u0022\u6e05\u9664\u6587\u672c\u0022,\u0022search.ui.search.results.clear.button\u0022:\u0022\u6e05\u7a7a\u7b5b\u9009\u5668\u3002\u0022,\u0022search.ui.filter.date.hour.text\u0022:\u0022\u8fc7\u53bb\u4e00\u5929\u0022,\u0022help.search.ui.link.title\u0022:\u0022\u641c\u7d22\u6280\u5de7\u0022,\u0022search.ui.filters.heading\u0022:\u0022\u7b5b\u9009\u65b9\u5f0f\u0022,\u0022search.ui.filter.label.input.label\u0022:\u0022\u67e5\u627e\u6807\u7b7e......\u0022,\u0022search.ui.recent.items.anonymous\u0022:\u0022\u5f00\u59cb\u63a2\u7d22\u3002 \u60a8\u7684\u641c\u7d22\u7ed3\u679c\u5c06\u663e\u793a\u5728\u6b64\u5904\u3002\u0022,\u0022search.ui.filter.date.month.text\u0022:\u0022\u8fc7\u53bb\u4e00\u4e2a\u6708\u0022,\u0022search.ui.input.label\u0022:\u0022\u641c\u7d22\u0022,\u0022search.ui.search.result\u0022:\u0022{0,choice,1#{0}\u4e2a\u641c\u7d22\u7ed3\u679c|1\u005Cu003c{0}\u4e2a\u641c\u7d22\u7ed3\u679c}\u0022,\u0022search.ui.infinite.scroll.button.text\u0022:\u0022\u66f4\u591a\u7ed3\u679c\u0022,\u0022search.ui.filter.date.button.text\u0022:\u0022\u65e5\u671f\u0022,\u0022search.ui.filter.date.week.text\u0022:\u0022\u8fc7\u53bb\u4e00\u5468\u0022,\u0022search.ui.filter.label.button.text\u0022:\u0022\u6807\u7b7e\u0022,\u0022search.ui.input.alert\u0022:\u0022\u6309\u56de\u8f66\u952e(Enter)\u641c\u7d22\u0022,\u0022search.ui.result.subtitle.calendar\u0022:\u0022\u56e2\u961f\u65e5\u7a0b\u8868\u0022,\u0022search.ui.filter.no.result.text\u0022:\u0022\u6211\u4eec\u627e\u4e0d\u5230\u4efb\u4f55\u7b26\u5408\u60a8\u641c\u7d22\u6761\u4ef6\u7684\u5185\u5bb9\u0022,\u0022search.ui.filter.date.heading\u0022:\u0022\u4e0a\u6b21\u4fee\u6539\u0022,\u0022search.ui.result.subtitle.user\u0022:\u0022\u7528\u6237\u8d44\u6599\u0022,\u0022search.ui.filter.contributor.input.label\u0022:\u0022\u67e5\u627e\u4eba\u5458......\u0022,\u0022search.ui.filter.content.type.button.text\u0022:\u0022\u7c7b\u578b\u0022,\u0022search.ui.filter.space.input.label\u0022:\u0022\u67e5\u627e\u7a7a\u95f4\u0022,\u0022search.ui.filter.date.year.text\u0022:\u0022\u8fc7\u53bb\u4e00\u5e74\u0022,\u0022search.ui.advanced.search.link.text\u0022:\u0022\u9ad8\u7ea7\u641c\u7d22\u0022,\u0022search.ui.filter.space.button.text\u0022:\u0022\u7a7a\u95f4\u0022,\u0022search.ui.generic.error\u0022:\u0022\u51fa\u9519\u4e86\u3002\u5237\u65b0\u9875\u9762\uff0c\u6216\u8005\u5982\u679c\u6301\u7eed\u53d1\u751f\u8fd9\u79cd\u60c5\u51b5\uff0c\u8bf7\u8054\u7cfb\u60a8\u7684\u7ba1\u7406\u5458\u3002\u0022,\u0022search.ui.recent.spaces\u0022:\u0022\u6700\u8fd1\u7a7a\u95f4\u0022,\u0022search.ui.search.results.clear.line2\u0022:\u0022\u8bf7\u5c1d\u8bd5\u4e0d\u540c\u7684\u641c\u7d22\u5173\u952e\u5b57\u6216\u8005\u0022,\u0022search.ui.filter.space.category.button.text\u0022:\u0022\u7a7a\u95f4\u7c7b\u522b\u0022,\u0022search.ui.search.results.clear.line1\u0022:\u0022\u627e\u4e0d\u5230\u5339\u914d\u7684\u641c\u7d22\u7ed3\u679c\u0022,\u0022search.ui.content.name.search.items.panel.load.all.top.items.admin.button.text\u0022:\u0022\u663e\u793a\u66f4\u591a\u8bbe\u7f6e\u548c\u5e94\u7528\u7ed3\u679c...\u0022,\u0022search.ui.recent.pages\u0022:\u0022\u6700\u8fd1\u8bbf\u95ee\u0022,\u0022search.ui.search.result.anonymous\u0022:\u0022{0,choice,1#{0}\u4e2a\u641c\u7d22\u7ed3\u679c| 1 \u005Cu003c{0}\u4e2a\u641c\u7d22\u7ed3\u679c}\u3002 \u60a8\u6709\u5e10\u6237\u5417\uff1f{1}\u767b\u5f55{2}\u641c\u7d22\u66f4\u591a\u7ed3\u679c\u3002\u0022,\u0022search.ui.recent.items.empty\u0022:\u0022\u5f00\u59cb\u63a2\u7d22\u3002 \u60a8\u6700\u8fd1\u8bbf\u95ee\u8fc7\u7684\u9875\u9762\u548c\u7a7a\u95f4\u5c06\u663e\u793a\u5728\u6b64\u5904\u3002\u0022,\u0022search.ui.result.subtitle.space\u0022:\u0022\u7a7a\u95f4\u0022,\u0022search.ui.filter.space.init.heading\u0022:\u0022\u6700\u8fd1\u7a7a\u95f4\u0022}";
+if(window.WRM._dataArrived)window.WRM._dataArrived();</script>
+<link type="text/css" rel="stylesheet" href="./VPN登录_files/batch.css" data-wrm-key="_super" data-wrm-batch-type="context" media="all">
+<link type="text/css" rel="stylesheet" href="./VPN登录_files/batch(1).css" data-wrm-key="atl.confluence.plugins.pagetree-desktop,main,page,viewcontent,atl.general,atl.comments,-_super" data-wrm-batch-type="context" media="all">
+<script type="text/javascript" src="./VPN登录_files/batch.js.下载" data-wrm-key="_super" data-wrm-batch-type="context" data-initially-rendered=""></script>
+<script type="text/javascript" src="./VPN登录_files/batch.js(1).下载" data-wrm-key="atl.confluence.plugins.pagetree-desktop,main,page,viewcontent,atl.general,atl.comments,-_super" data-wrm-batch-type="context" data-initially-rendered=""></script><style type="text/css">
+[class^='gantt-elastic'],
+[class*=' gantt-elastic'] {
+  box-sizing: border-box;
+}
+.gantt-elastic__main-view svg {
+  display: block;
+}
+.gantt-elastic__grid-horizontal-line,
+.gantt-elastic__grid-vertical-line {
+  stroke: #a0a0a0;
+  stroke-width: 1;
+}
+foreignObject > * {
+  margin: 0px;
+}
+.gantt-elastic .p-2 {
+  padding: 10rem;
+}
+.gantt-elastic__main-view-main-container,
+.gantt-elastic__main-view-container {
+  overflow: hidden;
+  max-width: 100%;
+}
+.gantt-elastic__task-list-header-column:last-of-type {
+  border-right: 1px solid #00000050;
+}
+.gantt-elastic__task-list-item:last-of-type {
+  border-bottom: 1px solid #00000050;
+}
+.gantt-elastic__task-list-item-value-wrapper:hover {
+  overflow: visible !important;
+}
+.gantt-elastic__task-list-item-value-wrapper:hover > .gantt-elastic__task-list-item-value-container {
+  position: relative;
+  overflow: visible !important;
+}
+.gantt-elastic__task-list-item-value-wrapper:hover > .gantt-elastic__task-list-item-value {
+  position: absolute;
+}
+</style><style type="text/css">.vue-slider-dot{position:absolute;will-change:transform;-webkit-transition:all 0s;transition:all 0s;z-index:5}.vue-slider-dot-tooltip{position:absolute;visibility:hidden}.vue-slider-dot-tooltip-show{visibility:visible}.vue-slider-dot-tooltip-top{top:-10px;left:50%;-webkit-transform:translate(-50%,-100%);transform:translate(-50%,-100%)}.vue-slider-dot-tooltip-bottom{bottom:-10px;left:50%;-webkit-transform:translate(-50%,100%);transform:translate(-50%,100%)}.vue-slider-dot-tooltip-left{left:-10px;top:50%;-webkit-transform:translate(-100%,-50%);transform:translate(-100%,-50%)}.vue-slider-dot-tooltip-right{right:-10px;top:50%;-webkit-transform:translate(100%,-50%);transform:translate(100%,-50%)}</style><style type="text/css">.vue-slider-marks{position:relative;width:100%;height:100%}.vue-slider-mark{position:absolute;z-index:1}.vue-slider-ltr .vue-slider-mark,.vue-slider-rtl .vue-slider-mark{width:0;height:100%;top:50%}.vue-slider-ltr .vue-slider-mark-step,.vue-slider-rtl .vue-slider-mark-step{top:0}.vue-slider-ltr .vue-slider-mark-label,.vue-slider-rtl .vue-slider-mark-label{top:100%;margin-top:10px}.vue-slider-ltr .vue-slider-mark{-webkit-transform:translate(-50%,-50%);transform:translate(-50%,-50%)}.vue-slider-ltr .vue-slider-mark-step{left:0}.vue-slider-ltr .vue-slider-mark-label{left:50%;-webkit-transform:translateX(-50%);transform:translateX(-50%)}.vue-slider-rtl .vue-slider-mark{-webkit-transform:translate(50%,-50%);transform:translate(50%,-50%)}.vue-slider-rtl .vue-slider-mark-step{right:0}.vue-slider-rtl .vue-slider-mark-label{right:50%;-webkit-transform:translateX(50%);transform:translateX(50%)}.vue-slider-btt .vue-slider-mark,.vue-slider-ttb .vue-slider-mark{width:100%;height:0;left:50%}.vue-slider-btt .vue-slider-mark-step,.vue-slider-ttb .vue-slider-mark-step{left:0}.vue-slider-btt .vue-slider-mark-label,.vue-slider-ttb .vue-slider-mark-label{left:100%;margin-left:10px}.vue-slider-btt .vue-slider-mark{-webkit-transform:translate(-50%,50%);transform:translate(-50%,50%)}.vue-slider-btt .vue-slider-mark-step{top:0}.vue-slider-btt .vue-slider-mark-label{top:50%;-webkit-transform:translateY(-50%);transform:translateY(-50%)}.vue-slider-ttb .vue-slider-mark{-webkit-transform:translate(-50%,-50%);transform:translate(-50%,-50%)}.vue-slider-ttb .vue-slider-mark-step{bottom:0}.vue-slider-ttb .vue-slider-mark-label{bottom:50%;-webkit-transform:translateY(50%);transform:translateY(50%)}.vue-slider-mark-label,.vue-slider-mark-step{position:absolute}</style><style type="text/css">.vue-slider{position:relative;-webkit-box-sizing:content-box;box-sizing:content-box;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;display:block;-ms-touch-action:none;-webkit-tap-highlight-color:rgba(0,0,0,0)}.vue-slider-disabled{pointer-events:none}.vue-slider-rail{position:relative;width:100%;height:100%;-webkit-transition-property:width,height,left,right,top,bottom;transition-property:width,height,left,right,top,bottom}.vue-slider-process{position:absolute;z-index:1}.vue-slider-sr-only{clip:rect(1px,1px,1px,1px);height:1px;width:1px;overflow:hidden;position:absolute!important}</style><style type="text/css">/* component style */
+.vue-slider-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* rail style */
+.vue-slider-rail {
+  background-color: #ccc;
+  border-radius: 15px;
+}
+
+/* process style */
+.vue-slider-process {
+  background-color: #3498db;
+  border-radius: 15px;
+}
+
+/* mark style */
+.vue-slider-mark {
+  z-index: 4;
+}
+.vue-slider-mark:first-child .vue-slider-mark-step, .vue-slider-mark:last-child .vue-slider-mark-step {
+  display: none;
+}
+.vue-slider-mark-step {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.16);
+}
+.vue-slider-mark-label {
+  font-size: 14px;
+  white-space: nowrap;
+}
+/* dot style */
+.vue-slider-dot-handle {
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: #fff;
+  box-sizing: border-box;
+  box-shadow: 0.5px 0.5px 2px 1px rgba(0, 0, 0, 0.32);
+}
+.vue-slider-dot-handle-focus {
+  box-shadow: 0px 0px 1px 2px rgba(52, 152, 219, 0.36);
+}
+
+.vue-slider-dot-handle-disabled {
+  cursor: not-allowed;
+  background-color: #ccc;
+}
+
+.vue-slider-dot-tooltip-inner {
+  font-size: 14px;
+  white-space: nowrap;
+  padding: 2px 5px;
+  min-width: 20px;
+  text-align: center;
+  color: #fff;
+  border-radius: 5px;
+  border-color: #3498db;
+  background-color: #3498db;
+  box-sizing: content-box;
+}
+.vue-slider-dot-tooltip-inner::after {
+  content: "";
+  position: absolute;
+}
+.vue-slider-dot-tooltip-inner-top::after {
+  top: 100%;
+  left: 50%;
+  transform: translate(-50%, 0);
+  height: 0;
+  width: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px;
+  border-top-color: inherit;
+}
+.vue-slider-dot-tooltip-inner-bottom::after {
+  bottom: 100%;
+  left: 50%;
+  transform: translate(-50%, 0);
+  height: 0;
+  width: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px;
+  border-bottom-color: inherit;
+}
+.vue-slider-dot-tooltip-inner-left::after {
+  left: 100%;
+  top: 50%;
+  transform: translate(0, -50%);
+  height: 0;
+  width: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px;
+  border-left-color: inherit;
+}
+.vue-slider-dot-tooltip-inner-right::after {
+  right: 100%;
+  top: 50%;
+  transform: translate(0, -50%);
+  height: 0;
+  width: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px;
+  border-right-color: inherit;
+}
+
+.vue-slider-dot-tooltip-wrapper {
+  opacity: 0;
+  transition: all 0.3s;
+}
+.vue-slider-dot-tooltip-wrapper-show {
+  opacity: 1;
+}
+</style><style type="text/css">/**
+ * Default
+ */
+/**
+ * Bulma
+ */
+/**
+ * Bootstrap
+ */
+.vue-switcher {
+  position: relative;
+  display: inline-block;
+}
+.vue-switcher__label {
+    display: block;
+    font-size: 10px;
+    margin-bottom: 5px;
+}
+.vue-switcher input {
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    z-index: 1;
+    cursor: pointer;
+}
+.vue-switcher div {
+    height: 15px;
+    width: 36px;
+    position: relative;
+    border-radius: 30px;
+    display: -webkit-flex;
+    display: -ms-flex;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    cursor: pointer;
+    transition: linear .2s, background-color linear .2s;
+}
+.vue-switcher div:after {
+      content: '';
+      height: 20px;
+      width: 20px;
+      border-radius: 100px;
+      display: block;
+      transition: linear .15s, background-color linear .15s;
+      position: absolute;
+      left: 100%;
+      margin-left: -18px;
+      cursor: pointer;
+      top: -3px;
+      box-shadow: 0 1px 5px 0 rgba(0, 0, 0, 0.1);
+}
+.vue-switcher--unchecked div {
+    justify-content: flex-end;
+}
+.vue-switcher--unchecked div:after {
+      left: 15px;
+}
+.vue-switcher--disabled div {
+    opacity: .3;
+}
+.vue-switcher--disabled input {
+    cursor: not-allowed;
+}
+.vue-switcher--bold div {
+    top: -8px;
+    height: 26px;
+    width: 51px;
+}
+.vue-switcher--bold div:after {
+      margin-left: -24px;
+      top: 3px;
+}
+.vue-switcher--bold--unchecked div:after {
+    left: 28px;
+}
+.vue-switcher--bold .vue-switcher__label span {
+    padding-bottom: 7px;
+    display: inline-block;
+}
+.vue-switcher-theme--default.vue-switcher-color--default div {
+    background-color: #b7b7b7;
+}
+.vue-switcher-theme--default.vue-switcher-color--default div:after {
+      background-color: #9d9d9d;
+}
+.vue-switcher-theme--default.vue-switcher-color--default.vue-switcher--unchecked div {
+    background-color: #aaa;
+}
+.vue-switcher-theme--default.vue-switcher-color--default.vue-switcher--unchecked div:after {
+      background-color: #c4c4c4;
+}
+.vue-switcher-theme--default.vue-switcher-color--blue div {
+    background-color: #77b0c8;
+}
+.vue-switcher-theme--default.vue-switcher-color--blue div:after {
+      background-color: #539bb9;
+}
+.vue-switcher-theme--default.vue-switcher-color--blue.vue-switcher--unchecked div {
+    background-color: #c0dae5;
+}
+.vue-switcher-theme--default.vue-switcher-color--blue.vue-switcher--unchecked div:after {
+      background-color: #77b0c8;
+}
+.vue-switcher-theme--default.vue-switcher-color--red div {
+    background-color: #c87777;
+}
+.vue-switcher-theme--default.vue-switcher-color--red div:after {
+      background-color: #b95353;
+}
+.vue-switcher-theme--default.vue-switcher-color--red.vue-switcher--unchecked div {
+    background-color: #e5c0c0;
+}
+.vue-switcher-theme--default.vue-switcher-color--red.vue-switcher--unchecked div:after {
+      background-color: #c87777;
+}
+.vue-switcher-theme--default.vue-switcher-color--yellow div {
+    background-color: #c9c377;
+}
+.vue-switcher-theme--default.vue-switcher-color--yellow div:after {
+      background-color: #bab353;
+}
+.vue-switcher-theme--default.vue-switcher-color--yellow.vue-switcher--unchecked div {
+    background-color: #e6e3c0;
+}
+.vue-switcher-theme--default.vue-switcher-color--yellow.vue-switcher--unchecked div:after {
+      background-color: #c9c377;
+}
+.vue-switcher-theme--default.vue-switcher-color--orange div {
+    background-color: #c89577;
+}
+.vue-switcher-theme--default.vue-switcher-color--orange div:after {
+      background-color: #b97953;
+}
+.vue-switcher-theme--default.vue-switcher-color--orange.vue-switcher--unchecked div {
+    background-color: #e5cec0;
+}
+.vue-switcher-theme--default.vue-switcher-color--orange.vue-switcher--unchecked div:after {
+      background-color: #c89577;
+}
+.vue-switcher-theme--default.vue-switcher-color--green div {
+    background-color: #77c88d;
+}
+.vue-switcher-theme--default.vue-switcher-color--green div:after {
+      background-color: #53b96e;
+}
+.vue-switcher-theme--default.vue-switcher-color--green.vue-switcher--unchecked div {
+    background-color: #c0e5ca;
+}
+.vue-switcher-theme--default.vue-switcher-color--green.vue-switcher--unchecked div:after {
+      background-color: #77c88d;
+}
+.vue-switcher-theme--bulma.vue-switcher-color--default div {
+    background-color: gainsboro;
+}
+.vue-switcher-theme--bulma.vue-switcher-color--default div:after {
+      background-color: #f5f5f5;
+}
+.vue-switcher-theme--bulma.vue-switcher-color--default.vue-switcher--unchecked div {
+    background-color: #e8e8e8;
+}
+.vue-switcher-theme--bulma.vue-switcher-color--default.vue-switcher--unchecked div:after {
+      background-color: #f5f5f5;
+}
+.vue-switcher-theme--bulma.vue-switcher-color--primary div {
+    background-color: #05ffda;
+}
+.vue-switcher-theme--bulma.vue-switcher-color--primary div:after {
+      background-color: #00d1b2;
+}
+.vue-switcher-theme--bulma.vue-switcher-color--primary.vue-switcher--unchecked div {
+    background-color: #6bffe9;
+}
+.vue-switcher-theme--bulma.vue-switcher-color--primary.vue-switcher--unchecked div:after {
+      background-color: #05ffda;
+}
+.vue-switcher-theme--bulma.vue-switcher-color--blue div {
+    background-color: #5e91e3;
+}
+.vue-switcher-theme--bulma.vue-switcher-color--blue div:after {
+      background-color: #3273dc;
+}
+.vue-switcher-theme--bulma.vue-switcher-color--blue.vue-switcher--unchecked div {
+    background-color: #b5ccf2;
+}
+.vue-switcher-theme--bulma.vue-switcher-color--blue.vue-switcher--unchecked div:after {
+      background-color: #5e91e3;
+}
+.vue-switcher-theme--bulma.vue-switcher-color--red div {
+    background-color: #ff6b89;
+}
+.vue-switcher-theme--bulma.vue-switcher-color--red div:after {
+      background-color: #ff3860;
+}
+.vue-switcher-theme--bulma.vue-switcher-color--red.vue-switcher--unchecked div {
+    background-color: #ffd1da;
+}
+.vue-switcher-theme--bulma.vue-switcher-color--red.vue-switcher--unchecked div:after {
+      background-color: #ff6b89;
+}
+.vue-switcher-theme--bulma.vue-switcher-color--yellow div {
+    background-color: #ffe78a;
+}
+.vue-switcher-theme--bulma.vue-switcher-color--yellow div:after {
+      background-color: #ffdd57;
+}
+.vue-switcher-theme--bulma.vue-switcher-color--yellow.vue-switcher--unchecked div {
+    background-color: #fffcf0;
+}
+.vue-switcher-theme--bulma.vue-switcher-color--yellow.vue-switcher--unchecked div:after {
+      background-color: #ffe78a;
+}
+.vue-switcher-theme--bulma.vue-switcher-color--green div {
+    background-color: #3dde75;
+}
+.vue-switcher-theme--bulma.vue-switcher-color--green div:after {
+      background-color: #22c65b;
+}
+.vue-switcher-theme--bulma.vue-switcher-color--green.vue-switcher--unchecked div {
+    background-color: #94edb3;
+}
+.vue-switcher-theme--bulma.vue-switcher-color--green.vue-switcher--unchecked div:after {
+      background-color: #3dde75;
+}
+.vue-switcher-theme--bootstrap.vue-switcher-color--default div {
+    background-color: #e6e6e6;
+}
+.vue-switcher-theme--bootstrap.vue-switcher-color--default div:after {
+      background-color: #f0f0f0;
+}
+.vue-switcher-theme--bootstrap.vue-switcher-color--default.vue-switcher--unchecked div {
+    background-color: whitesmoke;
+}
+.vue-switcher-theme--bootstrap.vue-switcher-color--default.vue-switcher--unchecked div:after {
+      background-color: #f0f0f0;
+}
+.vue-switcher-theme--bootstrap.vue-switcher-color--primary div {
+    background-color: #4f93ce;
+}
+.vue-switcher-theme--bootstrap.vue-switcher-color--primary div:after {
+      background-color: #337ab7;
+}
+.vue-switcher-theme--bootstrap.vue-switcher-color--primary.vue-switcher--unchecked div {
+    background-color: #9fc4e4;
+}
+.vue-switcher-theme--bootstrap.vue-switcher-color--primary.vue-switcher--unchecked div:after {
+      background-color: #4f93ce;
+}
+.vue-switcher-theme--bootstrap.vue-switcher-color--success div {
+    background-color: #80c780;
+}
+.vue-switcher-theme--bootstrap.vue-switcher-color--success div:after {
+      background-color: #5cb85c;
+}
+.vue-switcher-theme--bootstrap.vue-switcher-color--success.vue-switcher--unchecked div {
+    background-color: #c7e6c7;
+}
+.vue-switcher-theme--bootstrap.vue-switcher-color--success.vue-switcher--unchecked div:after {
+      background-color: #80c780;
+}
+.vue-switcher-theme--bootstrap.vue-switcher-color--info div {
+    background-color: #85d0e7;
+}
+.vue-switcher-theme--bootstrap.vue-switcher-color--info div:after {
+      background-color: #5bc0de;
+}
+.vue-switcher-theme--bootstrap.vue-switcher-color--info.vue-switcher--unchecked div {
+    background-color: #daf1f8;
+}
+.vue-switcher-theme--bootstrap.vue-switcher-color--info.vue-switcher--unchecked div:after {
+      background-color: #85d0e7;
+}
+.vue-switcher-theme--bootstrap.vue-switcher-color--warning div {
+    background-color: #f4c37d;
+}
+.vue-switcher-theme--bootstrap.vue-switcher-color--warning div:after {
+      background-color: #f0ad4e;
+}
+.vue-switcher-theme--bootstrap.vue-switcher-color--warning.vue-switcher--unchecked div {
+    background-color: #fceedb;
+}
+.vue-switcher-theme--bootstrap.vue-switcher-color--warning.vue-switcher--unchecked div:after {
+      background-color: #f4c37d;
+}
+.vue-switcher-theme--bootstrap.vue-switcher-color--danger div {
+    background-color: #d9534f;
+}
+.vue-switcher-theme--bootstrap.vue-switcher-color--danger div:after {
+      background-color: #c9302c;
+}
+.vue-switcher-theme--bootstrap.vue-switcher-color--danger.vue-switcher--unchecked div {
+    background-color: #eba5a3;
+}
+.vue-switcher-theme--bootstrap.vue-switcher-color--danger.vue-switcher--unchecked div:after {
+      background-color: #d9534f;
+}
+</style>
+
+    
+
+        
+    
+
+        
+        <meta name="ajs-site-title" content="Amlogic Confluence">
+            
+    
+
+    
+                <link rel="canonical" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows">
+        <link rel="shortlink" href="https://confluence.amlogic.com/x/toFfC">
+    <meta name="wikilink" content="[IT:How to connect remote VPN on Windows]">
+    <meta name="page-version" content="8">
+    <meta name="ajs-page-version" content="8">
+
+<script type="text/javascript" charset="utf-8" src="./VPN登录_files/batch.js(2).下载"></script><style id="eh-style" type="text/css">undefined</style><link rel="stylesheet" type="text/css" href="./VPN登录_files/batch(2).css"><script type="text/javascript" charset="utf-8" src="./VPN登录_files/batch.js(3).下载"></script>
+            <meta name="ajs-use-watch" content="true">
+            <meta name="ajs-attachment-source-content-id" content="140476854">
+            <meta name="ajs-use-inline-tasks" content="true">
+            <meta name="ajs-heartbeat" content="true">
+            <meta name="ajs-action-locale" content="zh_CN">
+            <meta name="ajs-editor-plugin-resource-prefix" content="/s/yn4s1b/8703/1nlnn84/7.13.1/_">
+            <meta name="ajs-edit-mode" content="collaborative">
+            <meta name="ajs-user-watching-own-content" content="true">
+            <meta name="ajs-new-page" content="false">
+            <meta name="ajs-editor-mode" content="richtext">
+            <meta name="ajs-auto-start" content="false">
+            <meta name="ajs-conf-revision" content="confluence$content$140476854.219">
+            <meta name="ajs-sync-revision-source" content="synchrony-ack">
+            <meta name="ajs-draft-id" content="140476855">
+            <meta name="ajs-draft-share-id" content="b7c07bc1-7a6c-4b20-a186-4b511d1c0885">
+            <meta name="ajs-content-type" content="page">
+            <meta name="ajs-collaborative-editor-status" content="">
+            <meta name="ajs-existing-draft-id" content="0">
+            <meta name="ajs-content-id" content="140476854">
+            <meta name="ajs-form-name" content="inlinecommentform">
+            <meta name="ajs-can-attach-files" content="true">
+            <meta name="ajs-show-draft-message" content="false">
+            <meta name="ajs-shared-drafts" content="true">
+            <meta name="ajs-collaborative-content" content="true">
+            <meta name="ajs-min-editor-height" content="150">
+            <meta name="ajs-version-comment" content="">
+            <meta name="ajs-draft-type" content="page">
+                
+                <meta name="ajs-synchrony-token" content="eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJodHRwczpcL1wvY29uZmx1ZW5jZS5hbWxvZ2ljLmNvbVwvc3luY2hyb255XC92MSIsInN1YiI6IjJjOTNmODkyN2ZkYTljZjAwMTgxOGY0OGRjYzAwMGNmIiwiYWNjZXNzIjp7IlwvZGF0YVwvU3luY2hyb255LTlmNTlkZGQzLTUxMmMtMzM4ZC1iM2UzLTI1Yzk5OGM5MWM4NFwvY29uZmx1ZW5jZS0xNDA0NzY4NTQiOiJmdWxsIiwiXC9kYXRhXC9TeW5jaHJvbnktOWY1OWRkZDMtNTEyYy0zMzhkLWIzZTMtMjVjOTk4YzkxYzg0XC9jb25mbHVlbmNlLTE0MDQ3Njg1NC10aXRsZSI6ImZ1bGwifSwicmV2aXNpb25NZXRhIjp7InVzZXJLZXkiOiIyYzkzZjg5MjdmZGE5Y2YwMDE4MThmNDhkY2MwMDBjZiJ9LCJzZXNzaW9uIjp7ImF2YXRhclVSTCI6IlwvaW1hZ2VzXC9pY29uc1wvcHJvZmlsZXBpY3NcL2RlZmF1bHQuc3ZnIiwibmFtZSI6IlNoZW5na2VuLkxpbiIsImZ1bGxuYW1lIjoiU2hlbmdrZW4gTGluIn0sImlzcyI6IlN5bmNocm9ueS05ZjU5ZGRkMy01MTJjLTMzOGQtYjNlMy0yNWM5OThjOTFjODQiLCJleHAiOjE2NTc2MTg3ODgsImlhdCI6MTY1NzUzMjM4OH0.2cHuuT5C78_3b-TzoyxGRdHdd4K4iKb3O4M9FA9A8Q8">
+    <meta name="ajs-synchrony-base-url" content="https://confluence.amlogic.com/synchrony,https://confluence.amlogic.com/synchrony-proxy">
+    <meta name="ajs-synchrony-app-id" content="Synchrony-9f59ddd3-512c-338d-b3e3-25c998c91c84">
+    <meta name="ajs-synchrony-expiry" content="1657617888">
+    <meta name="ajs-use-xhr-fallback" content="true">
+
+            		    <meta name="ajs-max-thumb-width" content="300">
+		    <meta name="ajs-max-thumb-height" content="300">
+		    <meta name="ajs-can-send-email" content="true">
+		    <meta name="ajs-is-dev-mode" content="false">
+		    <meta name="ajs-draft-save-interval" content="30000">
+		    <meta name="ajs-show-hidden-user-macros" content="false">
+		    <meta name="ajs-can-view-profile" content="true">
+		    <meta name="ajs-is-admin" content="false">
+		    <meta name="ajs-confluence.prefs.editor.disable.autocomplete" content="false">
+		    <meta name="ajs-confluence.prefs.editor.disable.autoformat" content="false">
+		    <meta name="ajs-heartbeat-interval" content="30000">
+	
+    <link rel="stylesheet" type="text/css" href="./VPN登录_files/batch(3).css"><script type="text/javascript" charset="utf-8" src="./VPN登录_files/batch.js(4).下载"></script><link rel="stylesheet" type="text/css" href="./VPN登录_files/batch(4).css"><script type="text/javascript" charset="utf-8" src="./VPN登录_files/batch.js(5).下载"></script><style type="text/css">#property-panel a.macro-placeholder-property-panel-display-newline-button span.icon{background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAvklEQVR42rVTPQuFIBT1p1t7e2EFDrXnVmNb4Ca4BS5BW9AfOA+F+wjfAwfpwuHcDzn3olcGIAv5An3fo+u6L55x27bE5P+cZdkWqVJH6pDMsWxTSsFjmqbAMZIC4zjivm9c14XjOLDvO4wx2LYNwzCkBZqmwXmecM7BWgutNdZ1xTzP8LWkQFVVWJYFUspwQUII1HUd2NeSApxzeJRlCfKLovBxYPa6xe9KsedHLc7TXryzidQpnurvZNm/8QMbqb4yyqv4rAAAAABJRU5ErkJggg==);width:16px;height:16px;display:inline-block}#property-panel a.macro-placeholder-property-panel-display-inline-button span.icon{background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAw0lEQVR42q1TMQqAMBDr0/UBroJiBUEf0E51dRMcxUlwFBcHPxA5IUuLONSDcDmupO01VQCiEC+gtYagrusH5FVVCfdz0FfRQVVR5CmoLtzfnWBf/R7WWhhjIFnAmvlToOs6XNeF8zyx7zvWdcU8zxjHEW3bhgK8NydaFAWO48C2bViWBdM0YRgGOOcgPc7t9RWyLEPf92ia5hEuyxJ5nj+Lpae+IkkSpGkKZnLW6u/gDHzX+c6kP4j/nfjmNJ8HiP6NN81gzxU6QYojAAAAAElFTkSuQmCC);width:16px;height:16px;display:inline-block}#property-panel a.macro-placeholder-property-panel-display-inline-button,#property-panel a.macro-placeholder-property-panel-display-newline-button{padding:0 6px}</style><style type="text/css">#charmap-picker{border:0;font-size:16px;font-family:Arial,Helvetica,FreeSans,sans-serif;padding:2px;text-align:center}#charmap-view{padding-right:1em;text-align:left;vertical-align:top}#charmap-info{text-align:center;vertical-align:top;width:100%}#charmap-info>table{border:0;height:100px;padding:0;width:100%}#code-value{font-size:3em}#code-name{font-size:13px}#code-name,#code-value{color:#666;text-align:center}.charmap a:active,.charmap a:hover,.charmap a:link,.charmap a:visited{color:#326ca6;text-decoration:none}</style><style type="text/css">body.ios{min-height:150px}</style><style type="text/css">table.draggable{margin-left:-10px;margin-top:-10px}table.draggable:hover>tbody>tr>td.draggable-column,table.draggable:hover>tbody>tr>td.draggable-row,table.draggable:hover>tbody>tr>td.draggable-table{background-color:#777;border-top:1px solid #777;border-left:1px solid #777}table.draggable:hover>tbody>tr>td.draggable-column,table.draggable:hover>tbody>tr>td.draggable-table{border-right:1px solid #aaa}table.draggable:hover>tbody>tr>td.draggable-row,table.draggable:hover>tbody>tr>td.draggable-table{border-bottom:1px solid #aaa}td.draggable-column,td.draggable-row,td.draggable-table{background-color:transparent;border-top:1px solid transparent;border-left:1px solid transparent;cursor:move}td.draggable-column,td.draggable-table{border-right:1px solid transparent}td.draggable-row,td.draggable-table{border-bottom:1px solid transparent}td.draggable-column{height:10px}td.draggable-row{width:10px}.wiki-content img.confluence-embedded-image,.wiki-content img.editor-inline-macro,.wiki-content table.wysiwyg-macro{cursor:move}.wiki-content table.wysiwyg-macro>tbody>tr>td.wysiwyg-macro-body{cursor:text}#move-indicator{font-weight:400!important}</style><style type="text/css">.quick-comment-form #rte-toolbar .insert-files.toolbar-item{padding:0 6px}.quick-comment-form #rte-toolbar .insert-files .toolbar-trigger{margin:0 -6px}#rte-toolbar .insert-files.toolbar-item{padding:0}#rte-toolbar .insert-files .trigger-text{display:none}#rte-toolbar .insert-files .aui-button{padding:0 6px}</style><style type="text/css">.aui-dialog .wiki-parser-selector{font-size:14px;margin-right:5px}.insert-wiki-markup-panel div,.insert-wiki-markup-panel div form{height:100%;text-align:center}.insert-wiki-markup-panel .spinner{position:absolute;top:50%;left:50%;margin-top:-73px;margin-left:-60px}#insert-wiki-info-title{text-align:left;margin-left:10px}#insert-wiki-markup-form{height:95%}#insert-wiki-markup-form .wiki-title span{box-sizing:border-box;display:-moz-inline-stack;display:inline-block;margin-bottom:10px;max-width:48%;text-align:left;vertical-align:middle;width:48%}#insert-wiki-markup-form .wiki-title span:first-child{margin-right:20px}#insert-wiki-textarea,#insert-wiki-textarea-preview{box-sizing:border-box;display:-moz-inline-stack;display:inline-block;font-size:14px;height:84%;max-width:48%;vertical-align:middle;width:48%;resize:none}#insert-wiki-textarea.originalDefault{height:100%;min-width:100%;width:100%}#insert-wiki-textarea{font-family:Monaco,Consolas,Courier New,"monospace";margin-right:20px}#insert-wiki-textarea-preview{border:1px solid #ccc;border-radius:3px;position:relative}#insert-wiki-textarea-preview iframe{border:0;height:100%;left:0;min-height:100%;overflow:hidden;position:absolute;top:0;width:100%}</style><style type="text/css">#property-panel a.macro-property-panel-Grey span.icon{background-color:#42526e}#property-panel a.macro-property-panel-Green span.icon{background-color:#00875a}#property-panel a.macro-property-panel-Red span.icon{background-color:#bf2600}#property-panel a.macro-property-panel-Yellow span.icon{background-color:#ff991f}#property-panel a.macro-property-panel-Blue span.icon{background-color:#0052cc}#property-panel a.macro-property-panel-Blue,#property-panel a.macro-property-panel-Brown,#property-panel a.macro-property-panel-Green,#property-panel a.macro-property-panel-Grey,#property-panel a.macro-property-panel-Red,#property-panel a.macro-property-panel-Yellow{padding:6px;display:inline-block}#property-panel a.macro-property-panel-Blue span.icon,#property-panel a.macro-property-panel-Brown span.icon,#property-panel a.macro-property-panel-Green span.icon,#property-panel a.macro-property-panel-Grey span.icon,#property-panel a.macro-property-panel-Red span.icon,#property-panel a.macro-property-panel-Yellow span.icon{display:inline-block;background-image:none;margin:0;border:0;min-width:auto;border-radius:3px;width:16px;height:16px}#property-panel .editable.status-macro-title{margin-right:10px;float:none;text-transform:uppercase;text-decoration:none;width:88px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:11px;padding:0 5px}#property-panel input.editable.status-macro-title{outline:none;height:30px;line-height:20px;vertical-align:bottom;padding-top:2px}</style></head>
+
+    
+<body id="com-atlassian-confluence" class="theme-default  aui-layout aui-theme-default synchrony-active" data-aui-version="9.2.0">
+
+        
+            <div id="stp-licenseStatus-banner"></div>
+    <ul id="assistive-skip-links" class="assistive">
+    <li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#title-heading">转至内容</a></li>
+    <li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#breadcrumbs">转至导航栏</a></li>
+    <li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#header-menu-bar">转至主菜单</a></li>
+    <li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#navigation">转至动作菜单</a></li>
+    <li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#quick-search-query">转至快速搜索</a></li>
+</ul>
+<!-- Render the dialog --><section role="dialog" id="page-view-tracker-dialog" class="aui-layer aui-dialog2" style="width:820px;" data-aui-modal="true" aria-hidden="true"><!-- Dialog header --><header class="aui-dialog2-header"><!-- The dialogs title --><h2 class="aui-dialog2-header-main">Page View Statistics</h2></header><!-- Main dialog content --><div class="aui-dialog2-content" id="page-view-tracker-content" style="height:400px; overflow-y: scroll;"></div><!-- Dialog footer --><footer class="aui-dialog2-footer"><!-- Actions to render on the right of the footer --><div class="aui-dialog2-footer-actions"><button id="page-view-tracker-help" class="aui-button aui-button-link" resolved="">Help</button><button id="page-view-tracker-close" class="aui-button aui-button-link" resolved="">Close</button></div></footer></section><div id="page">
+<div id="full-height-container"><ul id="messageContainer"></ul>
+    <div id="header-precursor">
+        <div class="cell">
+            
+                            </div>
+    </div>
+        
+
+
+
+
+
+<header id="header" role="banner" class="fixed-header">
+    <nav class="aui-header aui-dropdown2-trigger-group" aria-label="站点" resolved="" data-aui-responsive="true"><div class="aui-header-inner"><div class="aui-header-before"><button class=" aui-dropdown2-trigger app-switcher-trigger aui-dropdown2-trigger-arrowless" aria-controls="app-switcher" aria-haspopup="true" role="button" data-aui-trigger="" href="#app-switcher" resolved="" aria-expanded="false"><span class="aui-icon aui-icon-small aui-iconfont-appswitcher">已链接应用程序</span></button><div id="app-switcher" class="aui-dropdown2 aui-style-default aui-layer" role="menu" hidden="" data-is-switcher="true" data-environment="{&quot;isUserAdmin&quot;:false,&quot;isAppSuggestionAvailable&quot;:false,&quot;isSiteAdminUser&quot;:false}" resolved="" tabindex="-1"><div class="aui-dropdown2-section"><ul class="nav-links"><li class="nav-link"><a href="https://jira.amlogic.com/secure/MyJiraHome.jspa" class="aui-dropdown2-radio" title="https://jira.amlogic.com/secure/MyJiraHome.jspa" resolved="" aria-checked="false" tabindex="0"><span class="nav-link-label">Amlogic JIRA</span></a></li><li class="nav-link nav-link-local"><a href="https://confluence.amlogic.com/" class="aui-dropdown2-radio aui-dropdown2-checked checked" title="https://confluence.amlogic.com/" resolved="" aria-checked="true" tabindex="0"><span class="nav-link-label">Amlogic Confluence</span></a></li></ul></div></div></div><div class="aui-header-primary"><span id="logo" class="aui-header-logo aui-header-logo-confluence" style=""><a href="https://confluence.amlogic.com/" aria-label="转到主页"><span class="aui-header-logo-device">Amlogic Confluence</span></a></span><ul class="aui-nav" style="width: auto;">
+                            <li style="">
+            
+        
+        
+<a id="space-menu-link" class=" aui-dropdown2-trigger aui-nav-link" aria-controls="space-menu-link-content" aria-haspopup="true" role="button" title="空间" tabindex="0" data-aui-trigger="" resolved="" aria-expanded="false" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#space-menu-link-content">空间</a><div id="space-menu-link-content" class="aui-dropdown2 aui-style-default aui-dropdown2-in-header aui-layer" role="menu" hidden="" resolved="" tabindex="-1"></div>
+        </li>
+                    <li style="">
+            
+    
+        
+<a id="people-directory-link" href="https://confluence.amlogic.com/browsepeople.action" class=" aui-nav-imagelink" title="人员">
+            <span>人员</span>
+    </a>
+        </li>
+                    <li style="">
+            
+    
+        
+<a href="https://confluence.amlogic.com/calendar/mycalendar.action" class=" aui-nav-imagelink" title="日程表">
+            <span>日程表</span>
+    </a>
+        </li>
+                                <li class="aui-buttons" style="">
+                                    
+                                        <a href="https://confluence.amlogic.com/pages/createpage.action?spaceKey=IT&amp;fromPageId=140476854&amp;src=quick-create" id="quick-create-page-button" class="aui-button aui-button-primary" title="创建空白页 (Type &#39;c&#39;)" tabindex="0" resolved="">创建</a>
+                                <a href="https://confluence.amlogic.com/pages/createpage.action?spaceKey=IT&amp;fromPageId=140476854" id="create-page-button" class="aui-button aui-button-primary clc-create-dialog-btn" title="从模板创建" tabindex="0" resolved=""><span class="aui-icon aui-icon-small aui-iconfont-more">创建 </span></a>
+            </li>
+</ul>
+</div><div class="aui-header-secondary"><ul class="aui-nav">
+                        <li>
+        <div id="search-ui" class="aui-quicksearch dont-default-focus header-quicksearch"><input id="quick-search-query" aria-label="搜索" placeholder="搜索" type="text" title=" (Type &#39;g&#39; then &#39;g&#39;OR &#39;/&#39;)"><div id="quick-search-alert" role="alert">按回车键(Enter)搜索</div><aui-spinner size="small" resolved=""><div class="aui-spinner spinner"><svg focusable="false" size="20" height="20" width="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="9"></circle></svg></div></aui-spinner></div>
+    </li>
+        <li>
+            
+        <a id="help-menu-link" class="aui-nav-link aui-dropdown2-trigger aui-dropdown2-trigger-arrowless" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-haspopup="true" title="帮助" resolved="" aria-controls="help-menu-link-content" aria-expanded="false">
+        <span class="aui-icon aui-icon-small aui-iconfont-question-filled">帮助</span>
+    </a>
+    <nav id="help-menu-link-content" class="aui-dropdown2 aui-style-default aui-layer" aria-hidden="true" resolved="" tabindex="-1">
+                    <div class="aui-dropdown2-section">
+                                <ul id="help-menu-link-leading" class="aui-list-truncate section-leading first">
+                                            <li>
+        
+            
+<a id="confluence-help-link" href="https://docs.atlassian.com/confluence/docs-713/" class="    " title="访问Confluence文档首页" target="_blank">
+        在线帮助
+</a>
+</li>
+                                            <li>
+    
+                
+<a id="keyboard-shortcuts-link" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" class="    " title="查看可用的键盘快捷方式 (Type &#39;?&#39;)">
+        快捷键
+</a>
+</li>
+                                            <li>
+    
+            
+<a id="feed-builder-link" href="https://confluence.amlogic.com/dashboard/configurerssfeed.action" class="    " title="创建个性化的 RSS源。">
+        RSS源建立器
+</a>
+</li>
+                                            <li>
+    
+            
+<a id="whats-new-menu-link" href="https://confluence.atlassian.com/display/DOC/Confluence+7.13+Release+Notes?a=false" class="    " title="">
+        新功能
+</a>
+</li>
+                                            <li>
+    
+                
+<a id="gadget-directory-link" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" class="   user-item administration-link " title="浏览小工具">
+        可用的小工具
+</a>
+</li>
+                                            <li>
+    
+            
+<a id="confluence-about-link" href="https://confluence.amlogic.com/aboutconfluencepage.action" class="    " title="获取关于Confluence的更多信息">
+        关于Confluence
+</a>
+</li>
+                                    </ul>
+            </div>
+            </nav>
+    
+    </li>
+        <li>
+                
+    
+    </li>
+        <li>
+                    
+        
+            
+<a id="notifications-anchor" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" class="mw-anchor aui-nav-imagelink unread" title="打开通知 (Type &#39;g&#39; then &#39;n&#39;)"><div class="badge-i aui-icon aui-icon-small aui-iconfont-notification"></div><span class="badge-w"><span class="badge">2</span></span></a>
+    
+    </li>
+        <li>
+                                            
+        <a id="user-menu-link" class="aui-dropdown2-trigger aui-dropdown2-trigger-arrowless " aria-haspopup="true" data-username="Shengken.Lin" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" title="Shengken Lin" resolved="" aria-controls="user-menu-link-content" aria-expanded="false">
+                    <div class="aui-avatar aui-avatar-small">
+                <div class="aui-avatar-inner">
+                                                                                                    <img alt="Shengken.Lin 的个人资料头像" src="./VPN登录_files/default.svg">
+                </div>
+            </div>
+            <span class="aui-icon-dropdown"></span>
+        </a>
+        <nav id="user-menu-link-content" class="aui-dropdown2 aui-style-default aui-layer" aria-hidden="true" resolved="" tabindex="-1">
+                            <div class="aui-dropdown2-section">
+                    <ul id="user-menu-link-user-preferences" class="aui-list-truncate section-user-preferences first">
+                                                    <li>
+        
+            
+<a id="create-personal-space-link" href="https://confluence.amlogic.com/spaces/createpersonalspace.action" class="   user-item personal-space create-personal-space-link " title="">
+        添加个人空间......
+</a>
+</li>
+                                                    <li>
+    
+            
+<a id="view-user-history-link" href="https://confluence.amlogic.com/users/viewuserhistory.action" class="   user-item user-history popup-link " title=" (Type &#39;g&#39; then &#39;r&#39;)">
+        最近浏览
+</a>
+</li>
+                                                    <li>
+    
+            
+<a id="user-recently-worked-on" href="https://confluence.amlogic.com/dashboard.action#recently-worked" class="   user-item " title="">
+        最近的工作
+</a>
+</li>
+                                            </ul>
+                </div>
+                            <div class="aui-dropdown2-section">
+                    <ul id="user-menu-link-user-content" class="aui-list-truncate section-user-content">
+                                                    <li>
+    
+            
+<a id="view-user-profile-link" href="https://confluence.amlogic.com/users/viewmyprofile.action" class="   user-item user-profile " title="">
+        用户信息
+</a>
+</li>
+                                                    <li>
+    
+            
+<a id="view-mytasks-link" href="https://confluence.amlogic.com/plugins/inlinetasks/mytasks.action" class="   user-item list-user-status " title="">
+        任务
+</a>
+</li>
+                                                    <li>
+    
+            
+<a id="user-favourites-link" href="https://confluence.amlogic.com/users/viewmyfavourites.action" class="   user-item " title="">
+        收藏夹
+</a>
+</li>
+                                                    <li>
+    
+            
+<a id="user-watches-link" href="https://confluence.amlogic.com/users/viewnotifications.action" class="   user-item " title="">
+        关注
+</a>
+</li>
+                                                    <li>
+    
+            
+<a id="user-drafts-link" href="https://confluence.amlogic.com/users/viewmydrafts.action" class="   user-item " title="">
+        草稿
+</a>
+</li>
+                                                    <li>
+    
+            
+<a id="user-network-link" href="https://confluence.amlogic.com/users/viewfollow.action?username=Shengken.Lin" class="   follow-link " title="">
+        网络
+</a>
+</li>
+                                                    <li>
+    
+            
+<a id="user-settings-link" href="https://confluence.amlogic.com/users/viewmysettings.action" class="   user-item " title="">
+        设置
+</a>
+</li>
+                                                    <li>
+    
+            
+<a id="upm-requests-link" href="https://confluence.amlogic.com/plugins/servlet/upm/requests?source=header_user" class="    " title="">
+        Atlassian Marketplace
+</a>
+</li>
+                                            </ul>
+                </div>
+                            <div class="aui-dropdown2-section">
+                    <ul id="user-menu-link-user-operations" class="aui-list-truncate section-user-operations">
+                                                    <li>
+    
+            
+<a id="logout-link" href="https://confluence.amlogic.com/logout.action" class="   user-item logout-link " title="">
+        注销
+</a>
+</li>
+                                            </ul>
+                </div>
+                    </nav>
+                    
+    </li>
+    </ul>
+</div></div><!-- .aui-header-inner--></nav><!-- .aui-header -->
+    <br class="clear">
+</header><div id="announcement-banner" data-uuid="cf43f574-1415-489f-880f-9aaf9d8f01d5" class=" "><span id="banner-close-btn" class="aui-icon aui-icon-small aui-iconfont-close-dialog"></span>Entry Link for Knowledge sharing: <a href="https://confluence.amlogic.com/display/DD/Debugging+Dictionary" style="color:#FF0000;"> https://confluence.amlogic.com/display/DD/Debugging+Dictionary </a> </div>
+    
+
+    
+    	<div class="ia-splitter">
+    		<div class="ia-splitter-left">
+    			<div class="ia-fixed-sidebar" style="top: 40px; left: 0px; width: 285px; visibility: visible;">
+                                            
+                            <div class="acs-side-bar ia-scrollable-section"><div class="acs-side-bar-space-info tipsy-enabled" data-configure-tooltip="编辑空间详情"><div class="avatar"><div class="space-logo" data-key="IT" data-name="IT Team" data-entity-type="confluence.space"><div class="avatar-img-container"><div class="avatar-img-wrapper"><a href="https://confluence.amlogic.com/display/IT/IT+Team+Home?src=sidebar" title="IT Team"><img class="avatar-img" src="./VPN登录_files/default-space-logo.svg" alt="IT Team"></a></div></div></div></div><div class="space-information-container"><div class="name"><a href="https://confluence.amlogic.com/display/IT/IT+Team+Home?src=sidebar" title="IT Team">IT Team</a></div><div class="flyout-handle icon aui-icon aui-icon-small aui-iconfont-edit"></div><div class="favourite-space-icon "><button class="space-favourite aui-icon aui-icon-small aui-iconfont-unstar" id="space-favourite-add" title="收藏空间" aria-pressed="false"></button><button class="space-favourite-hidden space-favourite aui-icon aui-icon-small aui-iconfont-star" id="space-favourite-remove" title="取消收藏" aria-pressed="false"></button></div></div></div><div class="acs-side-bar-content"><div class="acs-nav-wrapper"><div class="acs-nav" data-has-create-permission="true" data-quick-links-state="null" data-page-tree-state="null" data-nav-type="page-tree"><div class="acs-nav-sections"><div class="main-links-section "><ul class="acs-nav-list"><li class="acs-nav-item wiki current-item" aria-current="true" data-collector-key="spacebar-pages"><a class="acs-nav-item-link tipsy-enabled" href="https://confluence.amlogic.com/collector/pages.action?key=IT&amp;src=sidebar" data-collapsed-tooltip="页面"><span class="icon"></span><span class="acs-nav-item-label">页面</span></a></li><li class="acs-nav-item blog" data-collector-key="spacebar-blogs"><a class="acs-nav-item-link tipsy-enabled" href="https://confluence.amlogic.com/pages/viewrecentblogposts.action?key=IT&amp;src=sidebar" data-collapsed-tooltip="博文"><span class="icon"></span><span class="acs-nav-item-label">博文</span></a></li><li class="acs-nav-item space-calendar-sidebar-link" data-collector-key="space-calendar-sidebar-link"><a class="acs-nav-item-link tipsy-enabled" href="https://confluence.amlogic.com/display/IT/calendars?src=sidebar" data-collapsed-tooltip="日程表"><span class="icon"></span><span class="acs-nav-item-label">日程表</span></a></li></ul></div><div class="quick-links-wrapper"><h5 class="ia-quick-links-header-title">空间快捷链接</h5><div class="quick-links-section tipsy-enabled " data-collapsed-tooltip="空间快捷链接"><ul class="acs-nav-list"><li class="acs-nav-item pinned_page blueprint kb-troubleshooting-article"><a class="acs-nav-item-link tipsy-enabled" href="https://confluence.amlogic.com/display/IT/Troubleshooting+articles?src=spaceshortcut" data-collapsed-tooltip="null"><span class="icon"></span><span class="acs-nav-item-label">Troubleshooting articles</span></a></li></ul></div></div></div></div></div><div class="ia-secondary-container tipsy-enabled" data-tree-type="page-tree"><div class="ia-secondary-header"><h5 class="ia-secondary-header-title page-tree"><span class="icon"></span><span class="label">页面树结构</span></h5></div><div class="ia-secondary-content">
+
+
+<div class="plugin_pagetree conf-macro output-inline" data-hasbody="false" data-macro-name="pagetree">
+
+        
+        
+    <ul class="plugin_pagetree_children_list plugin_pagetree_children_list_noleftspace">
+        <div class="plugin_pagetree_children" id="children133932582-0">
+        
+
+
+
+<ul class="plugin_pagetree_children_list" id="child_ul133932582-0">
+
+            
+
+            <li>
+    <div class="plugin_pagetree_childtoggle_container">
+                                            <a id="plusminus184822983-0" class="plugin_pagetree_childtoggle aui-icon aui-icon-small aui-iconfont-chevron-right" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows" data-type="toggle" data-page-id="184822983" data-tree-id="0" aria-expanded="false" aria-label="展开项目 applications setup">
+            </a>
+            </div>
+    <div class="plugin_pagetree_children_content">
+          
+        
+                    <span class="plugin_pagetree_children_span" id="childrenspan184822983-0">                        <a href="https://confluence.amlogic.com/display/IT/applications+setup?src=contextnavpagetreemode">applications setup</a>
+        </span>
+            </div>
+
+        <div id="children184822983-0" class="plugin_pagetree_children_container">
+                                                
+            </div>
+    </li>
+            <li>
+    <div class="plugin_pagetree_childtoggle_container">
+                                            <a id="plusminus133932622-0" class="plugin_pagetree_childtoggle aui-icon aui-icon-small aui-iconfont-chevron-right" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows" data-type="toggle" data-page-id="133932622" data-tree-id="0" aria-expanded="false" aria-label="展开项目 Helpdesk info">
+            </a>
+            </div>
+    <div class="plugin_pagetree_children_content">
+          
+        
+                    <span class="plugin_pagetree_children_span" id="childrenspan133932622-0">                        <a href="https://confluence.amlogic.com/display/IT/Helpdesk+info?src=contextnavpagetreemode">Helpdesk info</a>
+        </span>
+            </div>
+
+        <div id="children133932622-0" class="plugin_pagetree_children_container">
+                                                
+            </div>
+    </li>
+            <li>
+    <div class="plugin_pagetree_childtoggle_container">
+                                            <a id="plusminus138876046-0" class="plugin_pagetree_childtoggle aui-icon aui-icon-small aui-iconfont-chevron-down" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows" data-type="toggle" data-page-id="138876046" data-tree-id="0" data-expanded="true" data-children-loaded="true" aria-expanded="true" aria-label="展开项目 IT manual">
+            </a>
+            </div>
+    <div class="plugin_pagetree_children_content">
+          
+        
+                    <span class="plugin_pagetree_children_span" id="childrenspan138876046-0">                        <a href="https://confluence.amlogic.com/display/IT/IT+manual?src=contextnavpagetreemode">IT manual</a>
+        </span>
+            </div>
+
+        <div id="children138876046-0" class="plugin_pagetree_children_container">
+                                                                            <ul class="plugin_pagetree_children_list " id="child_ul138876046-0">
+                                        
+                                                                    <li>
+    <div class="plugin_pagetree_childtoggle_container">
+                    <span class="no-children icon"></span>
+            </div>
+    <div class="plugin_pagetree_children_content">
+          
+        
+                    <span class="plugin_pagetree_children_span" id="childrenspan184829871-0">                        <a href="https://confluence.amlogic.com/display/IT/About+git+mirror+servers?src=contextnavpagetreemode">About git mirror servers</a>
+        </span>
+            </div>
+
+        <div id="children184829871-0" class="plugin_pagetree_children_container">
+            </div>
+    </li>
+                                            <li>
+    <div class="plugin_pagetree_childtoggle_container">
+                    <span class="no-children icon"></span>
+            </div>
+    <div class="plugin_pagetree_children_content">
+          
+        
+                    <span class="plugin_pagetree_children_span" id="childrenspan142942181-0">                        <a href="https://confluence.amlogic.com/pages/viewpage.action?pageId=142942181&amp;src=contextnavpagetreemode">Amlogic会议预定使用说明</a>
+        </span>
+            </div>
+
+        <div id="children142942181-0" class="plugin_pagetree_children_container">
+            </div>
+    </li>
+                                            <li>
+    <div class="plugin_pagetree_childtoggle_container">
+                    <span class="no-children icon"></span>
+            </div>
+    <div class="plugin_pagetree_children_content">
+          
+        
+                    <span class="plugin_pagetree_children_span" id="childrenspan140476904-0">                        <a href="https://confluence.amlogic.com/pages/viewpage.action?pageId=140476904&amp;src=contextnavpagetreemode">Amlogic公司邮箱密码修改指南</a>
+        </span>
+            </div>
+
+        <div id="children140476904-0" class="plugin_pagetree_children_container">
+            </div>
+    </li>
+                                            <li>
+    <div class="plugin_pagetree_childtoggle_container">
+                    <span class="no-children icon"></span>
+            </div>
+    <div class="plugin_pagetree_children_content">
+          
+        
+                    <span class="plugin_pagetree_children_span" id="childrenspan140476901-0">                        <a href="https://confluence.amlogic.com/pages/viewpage.action?pageId=140476901&amp;src=contextnavpagetreemode">Amlogic邮箱服务器使用指南</a>
+        </span>
+            </div>
+
+        <div id="children140476901-0" class="plugin_pagetree_children_container">
+            </div>
+    </li>
+                                            <li>
+    <div class="plugin_pagetree_childtoggle_container">
+                    <span class="no-children icon"></span>
+            </div>
+    <div class="plugin_pagetree_children_content">
+          
+        
+                    <span class="plugin_pagetree_children_span" id="childrenspan193241609-0">                        <a href="https://confluence.amlogic.com/display/IT/Connect+to+server+by+jump+server?src=contextnavpagetreemode">Connect to server by jump server</a>
+        </span>
+            </div>
+
+        <div id="children193241609-0" class="plugin_pagetree_children_container">
+            </div>
+    </li>
+                                            <li>
+    <div class="plugin_pagetree_childtoggle_container">
+                    <span class="no-children icon"></span>
+            </div>
+    <div class="plugin_pagetree_children_content">
+          
+        
+                    <span class="plugin_pagetree_children_span" id="childrenspan184825524-0">                        <a href="https://confluence.amlogic.com/pages/viewpage.action?pageId=184825524&amp;src=contextnavpagetreemode">How to apply for new project/git on openlinux/source servers</a>
+        </span>
+            </div>
+
+        <div id="children184825524-0" class="plugin_pagetree_children_container">
+            </div>
+    </li>
+                                            <li>
+    <div class="plugin_pagetree_childtoggle_container">
+                    <span class="no-children icon"></span>
+            </div>
+    <div class="plugin_pagetree_children_content">
+          
+        
+                    <span class="plugin_pagetree_children_span" id="childrenspan142935997-0">                        <a href="https://confluence.amlogic.com/pages/viewpage.action?pageId=142935997&amp;src=contextnavpagetreemode">How to connect remote vpn on Linux OS(ubuntu here)</a>
+        </span>
+            </div>
+
+        <div id="children142935997-0" class="plugin_pagetree_children_container">
+            </div>
+    </li>
+                                            <li>
+    <div class="plugin_pagetree_childtoggle_container">
+                    <span class="no-children icon"></span>
+            </div>
+    <div class="plugin_pagetree_children_content">
+          
+        
+                    <span class="plugin_pagetree_children_span plugin_pagetree_current" id="childrenspan140476854-0">                        <a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows?src=contextnavpagetreemode">How to connect remote VPN on Windows</a>
+        </span>
+            </div>
+
+        <div id="children140476854-0" class="plugin_pagetree_children_container">
+            </div>
+    </li>
+                                            <li>
+    <div class="plugin_pagetree_childtoggle_container">
+                    <span class="no-children icon"></span>
+            </div>
+    <div class="plugin_pagetree_children_content">
+          
+        
+                    <span class="plugin_pagetree_children_span" id="childrenspan180732358-0">                        <a href="https://confluence.amlogic.com/display/IT/How+to+customize+workspace+on+RHEL+8+vnc?src=contextnavpagetreemode">How to customize workspace on RHEL 8 vnc</a>
+        </span>
+            </div>
+
+        <div id="children180732358-0" class="plugin_pagetree_children_container">
+            </div>
+    </li>
+                                            <li>
+    <div class="plugin_pagetree_childtoggle_container">
+                    <span class="no-children icon"></span>
+            </div>
+    <div class="plugin_pagetree_children_content">
+          
+        
+                    <span class="plugin_pagetree_children_span" id="childrenspan138876052-0">                        <a href="https://confluence.amlogic.com/display/IT/How+to+open+or+fix+VNC+port?src=contextnavpagetreemode">How to open or fix VNC port</a>
+        </span>
+            </div>
+
+        <div id="children138876052-0" class="plugin_pagetree_children_container">
+            </div>
+    </li>
+                                            <li>
+    <div class="plugin_pagetree_childtoggle_container">
+                    <span class="no-children icon"></span>
+            </div>
+    <div class="plugin_pagetree_children_content">
+          
+        
+                    <span class="plugin_pagetree_children_span" id="childrenspan148279260-0">                        <a href="https://confluence.amlogic.com/display/IT/How+to+set+proxy?src=contextnavpagetreemode">How to set proxy</a>
+        </span>
+            </div>
+
+        <div id="children148279260-0" class="plugin_pagetree_children_container">
+            </div>
+    </li>
+                                            <li>
+    <div class="plugin_pagetree_childtoggle_container">
+                    <span class="no-children icon"></span>
+            </div>
+    <div class="plugin_pagetree_children_content">
+          
+        
+                    <span class="plugin_pagetree_children_span" id="childrenspan180740291-0">                        <a href="https://confluence.amlogic.com/pages/viewpage.action?pageId=180740291&amp;src=contextnavpagetreemode">How to use Lark（feishu）</a>
+        </span>
+            </div>
+
+        <div id="children180740291-0" class="plugin_pagetree_children_container">
+            </div>
+    </li>
+                                            <li>
+    <div class="plugin_pagetree_childtoggle_container">
+                    <span class="no-children icon"></span>
+            </div>
+    <div class="plugin_pagetree_children_content">
+          
+        
+                    <span class="plugin_pagetree_children_span" id="childrenspan168508046-0">                        <a href="https://confluence.amlogic.com/display/IT/How+to+use++remote+vpn+of+the+Fortigate?src=contextnavpagetreemode">How to use  remote vpn of the Fortigate</a>
+        </span>
+            </div>
+
+        <div id="children168508046-0" class="plugin_pagetree_children_container">
+            </div>
+    </li>
+                                            <li>
+    <div class="plugin_pagetree_childtoggle_container">
+                    <span class="no-children icon"></span>
+            </div>
+    <div class="plugin_pagetree_children_content">
+          
+        
+                    <span class="plugin_pagetree_children_span" id="childrenspan184832815-0">                        <a href="https://confluence.amlogic.com/pages/viewpage.action?pageId=184832815&amp;src=contextnavpagetreemode">Linux server登录 sha算法错误问题</a>
+        </span>
+            </div>
+
+        <div id="children184832815-0" class="plugin_pagetree_children_container">
+            </div>
+    </li>
+                                            <li>
+    <div class="plugin_pagetree_childtoggle_container">
+                    <span class="no-children icon"></span>
+            </div>
+    <div class="plugin_pagetree_children_content">
+          
+        
+                    <span class="plugin_pagetree_children_span" id="childrenspan180720747-0">                        <a href="https://confluence.amlogic.com/display/IT/Process+for+external+contract?src=contextnavpagetreemode">Process for external contract</a>
+        </span>
+            </div>
+
+        <div id="children180720747-0" class="plugin_pagetree_children_container">
+            </div>
+    </li>
+                                            <li>
+    <div class="plugin_pagetree_childtoggle_container">
+                    <span class="no-children icon"></span>
+            </div>
+    <div class="plugin_pagetree_children_content">
+          
+        
+                    <span class="plugin_pagetree_children_span" id="childrenspan155466025-0">                        <a href="https://confluence.amlogic.com/display/IT/the+common+problems+when+download+openlinux+git+repos?src=contextnavpagetreemode">the common problems when download openlinux git repos</a>
+        </span>
+            </div>
+
+        <div id="children155466025-0" class="plugin_pagetree_children_container">
+            </div>
+    </li>
+                                            <li>
+    <div class="plugin_pagetree_childtoggle_container">
+                    <span class="no-children icon"></span>
+            </div>
+    <div class="plugin_pagetree_children_content">
+          
+        
+                    <span class="plugin_pagetree_children_span" id="childrenspan184823379-0">                        <a href="https://confluence.amlogic.com/pages/viewpage.action?pageId=184823379&amp;src=contextnavpagetreemode">服务器、PC、监控机等设备存储单元报废与更替管理规定</a>
+        </span>
+            </div>
+
+        <div id="children184823379-0" class="plugin_pagetree_children_container">
+            </div>
+    </li>
+                                            <li>
+    <div class="plugin_pagetree_childtoggle_container">
+                                            <a id="plusminus173473800-0" class="plugin_pagetree_childtoggle aui-icon aui-icon-small aui-iconfont-chevron-right" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows" data-type="toggle" data-page-id="173473800" data-tree-id="0" aria-expanded="false" aria-label="展开项目 权限申请流程">
+            </a>
+            </div>
+    <div class="plugin_pagetree_children_content">
+          
+        
+                    <span class="plugin_pagetree_children_span" id="childrenspan173473800-0">                        <a href="https://confluence.amlogic.com/pages/viewpage.action?pageId=173473800&amp;src=contextnavpagetreemode">权限申请流程</a>
+        </span>
+            </div>
+
+        <div id="children173473800-0" class="plugin_pagetree_children_container">
+                                                
+            </div>
+    </li>
+                                            <li>
+    <div class="plugin_pagetree_childtoggle_container">
+                    <span class="no-children icon"></span>
+            </div>
+    <div class="plugin_pagetree_children_content">
+          
+        
+                    <span class="plugin_pagetree_children_span" id="childrenspan140476888-0">                        <a href="https://confluence.amlogic.com/pages/viewpage.action?pageId=140476888&amp;src=contextnavpagetreemode">邮箱账号照片上传和更换设置文档</a>
+        </span>
+            </div>
+
+        <div id="children140476888-0" class="plugin_pagetree_children_container">
+            </div>
+    </li>
+                                            <li>
+    <div class="plugin_pagetree_childtoggle_container">
+                    <span class="no-children icon"></span>
+            </div>
+    <div class="plugin_pagetree_children_content">
+          
+        
+                    <span class="plugin_pagetree_children_span" id="childrenspan180739950-0">                        <a href="https://confluence.amlogic.com/pages/viewpage.action?pageId=180739950&amp;src=contextnavpagetreemode">飞书与Lark的登陆和使用</a>
+        </span>
+            </div>
+
+        <div id="children180739950-0" class="plugin_pagetree_children_container">
+            </div>
+    </li>
+                                                                </ul>
+                            
+            </div>
+    </li>
+            <li>
+    <div class="plugin_pagetree_childtoggle_container">
+                                            <a id="plusminus155466056-0" class="plugin_pagetree_childtoggle aui-icon aui-icon-small aui-iconfont-chevron-right" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows" data-type="toggle" data-page-id="155466056" data-tree-id="0" aria-expanded="false" aria-label="展开项目 Troubleshooting articles">
+            </a>
+            </div>
+    <div class="plugin_pagetree_children_content">
+          
+        
+                    <span class="plugin_pagetree_children_span" id="childrenspan155466056-0">                        <a href="https://confluence.amlogic.com/display/IT/Troubleshooting+articles?src=contextnavpagetreemode">Troubleshooting articles</a>
+        </span>
+            </div>
+
+        <div id="children155466056-0" class="plugin_pagetree_children_container">
+                                                
+            </div>
+    </li>
+            </ul>
+</div>
+    </ul>
+
+    <fieldset class="hidden">
+        <input type="hidden" name="treeId" value="">
+        <input type="hidden" name="treeRequestId" value="/plugins/pagetree/naturalchildren.action?decorator=none&amp;excerpt=false&amp;sort=position&amp;reverse=false&amp;disableLinks=false&amp;expandCurrent=true&amp;placement=sidebar">
+        <input type="hidden" name="treePageId" value="140476854">
+
+        <input type="hidden" name="noRoot" value="false">
+        <input type="hidden" name="rootPageId" value="133932582">
+
+        <input type="hidden" name="rootPage" value="">
+        <input type="hidden" name="startDepth" value="0">
+        <input type="hidden" name="spaceKey" value="IT">
+
+        <input type="hidden" name="i18n-pagetree.loading" value="载入中...">
+        <input type="hidden" name="i18n-pagetree.error.permission" value="无法载入页面树。看来你没有权限查看根页面。">
+        <input type="hidden" name="i18n-pagetree.eeror.general" value="检索页面树时发生问题。有关详细信息，请检查服务器的日志文件。">
+        <input type="hidden" name="loginUrl" value="/login.action?os_destination=%2Fpages%2Fviewpage.action%3FspaceKey%3DIT%26title%3DHow%2Bto%2Bconnect%2Bremote%2BVPN%2Bon%2BWindows&amp;permissionViolation=true">
+        <input type="hidden" name="mobile" value="false">
+        <input type="hidden" name="placement" value="sidebar">
+
+                <fieldset class="hidden">
+                                                <input type="hidden" name="ancestorId" value="138876046">
+                                    <input type="hidden" name="ancestorId" value="133932582">
+                                    </fieldset>
+    </fieldset>
+</div>
+</div></div></div><div class="hidden"><a href="https://confluence.amlogic.com/collector/pages.action?key=IT&amp;src=sidebar" id="space-pages-link" title=" (Type &#39;g&#39; then &#39;s&#39;)"></a><script type="text/x-template" title="logo-config-content"><h2>空间详情</h2><div class="personal-space-logo-hint">您的个人头像被作为您的个人空间的logo使用。<a href="/users/profile/editmyprofilepicture.action" target="_blank">更改您的个人头像</a>.</div></script></div></div><div class="space-tools-section"><div id="space-tools-menu-additional-items" class="hidden"><div data-label="重排页面" data-class="" data-href="/pages/reorderpages.action?key=IT">重排页面</div></div><button id="space-tools-menu-trigger" class=" aui-dropdown2-trigger aui-button aui-button-subtle tipsy-enabled aui-dropdown2-trigger-arrowless " aria-controls="space-tools-menu" aria-haspopup="true" role="button" data-aui-trigger="" resolved="" aria-expanded="false" data-collapsed-tooltip="空间管理"><span class="aui-icon aui-icon-small aui-iconfont-configure">设置</span><span class="aui-button-label">空间管理</span><span class="aui-icon "></span></button><div id="space-tools-menu" class="aui-dropdown2 aui-style-default space-tools-dropdown aui-layer" role="menu" hidden="" data-aui-alignment="top left" resolved="" tabindex="-1"><div class="aui-dropdown2-section space-tools-navigation"><ul class="aui-list-truncate"><li><a role="menuitem" tabindex="-1" class="" href="https://confluence.amlogic.com/spaces/viewspacesummary.action?key=IT&amp;src=spacetools">概览</a></li><li><a role="menuitem" tabindex="-1" class="" href="https://confluence.amlogic.com/pages/reorderpages.action?key=IT&amp;src=spacetools">内容工具</a></li><li><a role="menuitem" tabindex="-1" class="" href="https://confluence.amlogic.com/spaces/usage/report.action?key=IT&amp;src=spacetools">活动</a></li></ul></div><div class="aui-dropdown2-section space-operations"><ul class="aui-list-truncate"><li><a role="menuitem" tabindex="-1" class="" href="https://confluence.amlogic.com/pages/reorderpages.action?key=IT&amp;src=spacetools">重排页面</a></li></ul></div></div><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" role="button" class="expand-collapse-trigger aui-icon aui-icon-small aui-iconfont-chevron-double-left" aria-expanded="true" data-tooltip="收起侧边栏 ( [ )" aria-label="收起侧边栏 ( [ )"></a></div>
+                    
+                        			<div class="ia-splitter-handle tipsy-enabled" data-tooltip="收起侧边栏 ( [ )" original-title=" (Type &#39;[&#39;)"><div class="ia-splitter-handle-highlight confluence-icon-grab-handle"></div></div></div>
+    		</div>
+        <!-- \#header -->
+
+            
+    
+        <div id="main" class=" aui-page-panel" style="margin-left: 285px;">
+                        <div id="main-header-placeholder" style="margin: -10px 0px 20px; padding: 40px 0px 0px; height: 70px;"><h1 class="with-breadcrumbs" style="font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Oxygen, Ubuntu, &quot;Fira Sans&quot;, &quot;Droid Sans&quot;, &quot;Helvetica Neue&quot;, sans-serif; font-size: 28px; font-style: normal; font-weight: 500; text-decoration: none solid rgb(23, 43, 77); letter-spacing: -0.28px; text-align: start; padding: 35.0057px 0px 0px; margin-right: 0px; margin-bottom: 0px; margin-left: 0px;">
+                                                <a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows" style="font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, Oxygen, Ubuntu, &quot;Fira Sans&quot;, &quot;Droid Sans&quot;, &quot;Helvetica Neue&quot;, sans-serif; font-size: 28px; font-style: normal; font-weight: 500; margin: 0px; padding: 0px; color: rgb(23, 43, 77); text-decoration: none solid rgb(23, 43, 77); letter-spacing: -0.28px; text-align: start;">How to connect remote VPN on Windows</a>
+                                    </h1></div><div id="main-header" style="position: fixed; width: 783px; right: 0px; top: 40px; margin-top: 0px; padding: 10px 40px; z-index: 100;" class="overlay-header">
+                        
+    <div id="navigation" class="content-navigation view">
+                    <ul class="ajs-menu-bar">
+                                                                    <li class="ajs-button normal">
+
+        
+        
+    
+                                                        
+    
+    
+            <a id="editPageLink" href="https://confluence.amlogic.com/pages/editpage.action?pageId=140476854" rel="nofollow" class="aui-button aui-button-subtle edit" accesskey="e" title="编辑 (Type &#39;e&#39;)" resolved="">
+                        <span>
+                                    <span class="aui-icon aui-icon-small aui-iconfont-edit"></span>
+                                <u>E</u>编辑
+            </span>        </a>
+    </li>
+                                            <li class="ajs-button normal">
+
+        
+            
+    
+                                                        
+    
+    
+            <a id="page-favourite" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" rel="nofollow" class="aui-button aui-button-subtle action-page-favourite" accesskey="f" title="收藏 (Type &#39;f&#39;)" resolved="">
+                        <span>
+                                    <span class="aui-icon aui-icon-small aui-iconfont-unstar"></span>
+                                <u>F</u>收藏
+            </span>        </a>
+    </li>
+                                            <li class="ajs-button normal">
+
+        
+            
+    
+                                                        
+    
+    
+            <a id="watch-content-button" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" rel="nofollow" class="aui-button aui-button-subtle watch-menu watch-state-initialised" title="关注(w)" resolved="">
+                        <span><span class="aui-icon aui-icon-small aui-iconfont-unwatch"></span> <u> </u> 观看</span>        </a>
+    </li>
+                                            <li class="ajs-button normal">
+
+        
+            
+    
+                                                        
+    
+    
+            <a id="shareContentLink" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" rel="nofollow" class="aui-button aui-button-subtle share" title="与别人分享这个页面。 (Type &#39;s&#39;OR &#39;k&#39;)" resolved="">
+                        <span>
+                                    <span class="aui-icon aui-icon-small aui-iconfont-share"></span>
+                                <u>S</u>分享
+            </span>        </a>
+    </li>
+                    
+        <li class="normal ajs-menu-item">
+        <a id="action-menu-link" class="action aui-dropdown2-trigger-arrowless aui-button aui-button-subtle ajs-menu-title aui-dropdown2-trigger" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-haspopup="true" aria-label="更多选项" data-container="#navigation" resolved="" aria-controls="action-menu" aria-expanded="false">
+            <span>
+                                    <span class="aui-icon aui-icon-small aui-iconfont-more" aria-label="更多选项"></span>
+                                
+            </span>
+        </a>         <div id="action-menu" class="aui-dropdown2 aui-style-default aui-layer most-right-menu-item" aria-hidden="true" resolved="" tabindex="-1">
+                            <div class="aui-dropdown2-section">
+                    <ul id="action-menu-primary" class="section-primary first">
+                                                    <li>
+
+    
+        
+    
+                                                        
+    
+    
+            <a id="view-attachments-link" href="https://confluence.amlogic.com/pages/viewpageattachments.action?pageId=140476854" rel="nofollow" class="action-view-attachments" accesskey="t" title="查看附件 (Type &#39;t&#39;)">
+                        <span>
+                                <u>t</u>附件(15)
+            </span>        </a>
+    </li>
+                                                <li>
+
+    
+        
+    
+                                                        
+    
+    
+            <a id="action-view-history-link" href="https://confluence.amlogic.com/pages/viewpreviousversions.action?pageId=140476854" rel="nofollow" class="action-view-history" title="">
+                        <span>
+                                页面历史记录
+            </span>        </a>
+    </li>
+                                                <li>
+
+    
+        
+    
+                                                        
+    
+    
+            <a id="action-page-permissions-link" href="https://confluence.amlogic.com/pages/viewinfo.action?pageId=140476854" rel="nofollow" class="action-page-permissions" title="编辑限制">
+                        <span>
+                                限制
+            </span>        </a>
+    </li>
+                                                <li>
+
+    
+            
+    
+                                                        
+    
+    
+            <a id="who-can-view-button-ak-button" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" rel="nofollow" class="who-can-view-link" title="">
+                        <span>
+                                可以查看的人
+            </span>        </a>
+    </li>
+                                        </ul>
+                </div>
+                            <div class="aui-dropdown2-section">
+                    <ul id="action-menu-secondary" class="section-secondary">
+                                                    <li>
+
+    
+        
+    
+                                                        
+    
+    
+            <a id="view-page-info-link" href="https://confluence.amlogic.com/pages/viewinfo.action?pageId=140476854" rel="nofollow" class="action-view-info" title="">
+                        <span>
+                                页面信息
+            </span>        </a>
+    </li>
+                                                <li>
+
+    
+            
+    
+                                                        
+    
+    
+            <a id="view-resolved-comments" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" rel="nofollow" class="" title="">
+                        <span>已解决评论 (0)</span>        </a>
+    </li>
+                                                <li>
+
+    
+        
+    
+                                                        
+    
+    
+            <a id="view-in-hierarchy-link" href="https://confluence.amlogic.com/pages/reorderpages.action?key=IT&amp;openId=140476854#selectedPageInHierarchy" rel="nofollow" class="" title="">
+                        <span>
+                                以层级方式查看
+            </span>        </a>
+    </li>
+                                                <li>
+
+    
+        
+    
+                                                        
+    
+    
+            <a id="action-view-source-link" href="https://confluence.amlogic.com/plugins/viewsource/viewpagesrc.action?pageId=140476854" rel="nofollow" class="action-view-source popup-link" title="">
+                        <span>
+                                查看页面源代码
+            </span>        </a>
+    </li>
+                                                <li>
+
+    
+        
+    
+                                                        
+    
+    
+            <a id="action-export-pdf-link" href="https://confluence.amlogic.com/spaces/flyingpdf/pdfpageexport.action?pageId=140476854" rel="nofollow" class="" title="">
+                        <span>
+                                导出为PDF
+            </span>        </a>
+    </li>
+                                                <li>
+
+    
+        
+    
+                                                        
+    
+    
+            <a id="action-export-word-link" href="https://confluence.amlogic.com/exportword?pageId=140476854" rel="nofollow" class="action-export-word" title="">
+                        <span>
+                                导出为Word
+            </span>        </a>
+    </li>
+                                                <li>
+
+    
+        
+    
+                                                        
+    
+    
+            <a id="import-word-doc" href="https://confluence.amlogic.com/pages/worddav/uploadimport.action?pageId=140476854" rel="nofollow" class="" title="">
+                        <span>
+                                Doc文件导入
+            </span>        </a>
+    </li>
+                                                <li>
+
+    
+        
+    
+                                                        
+    
+    
+            <a href="https://confluence.amlogic.com/plugins/lucidchart/selectVisio.action?contentId=140476854" rel="nofollow" class="" title="">
+                        <span>
+                                View Visio File
+            </span>        </a>
+    </li>
+                                        </ul>
+                </div>
+                            <div class="aui-dropdown2-section">
+                    <ul id="action-menu-modify" class="section-modify">
+                                                    <li>
+
+    
+        
+    
+                                                        
+    
+    
+            <a id="action-copy-page-link" href="https://confluence.amlogic.com/pages/copypage.action?idOfPageToCopy=140476854&amp;spaceKey=IT" rel="nofollow" class="action-copy" title="">
+                        <span>
+                                复制
+            </span>        </a>
+    </li>
+                                                <li>
+
+    
+        
+    
+                                                        
+    
+    
+            <a id="action-move-page-dialog-link" href="https://confluence.amlogic.com/pages/viewpage.action?pageId=140476854" rel="nofollow" class="action-move" title="">
+                        <span>
+                                移动
+            </span>        </a>
+    </li>
+                                        </ul>
+                </div>
+                    </div>
+    </li>
+            </ul>
+    </div>
+
+            
+            <div id="title-heading" class="pagetitle with-breadcrumbs">
+                
+                                    <div id="breadcrumb-section">
+                        
+    
+    
+    <ol id="breadcrumbs">
+                                        
+                        
+        <li class="first">
+                        
+                            <span class=""><a href="https://confluence.amlogic.com/collector/pages.action?key=IT&amp;src=breadcrumbs-collector">页面</a></span>
+                                                                                    
+                        
+        </li><li>
+                        
+                            <span class=""><a href="https://confluence.amlogic.com/display/IT/IT+Team+Home?src=breadcrumbs">IT Team Home</a></span>
+                                                                                    
+                        
+        </li><li>
+                        
+                            <span class=""><a href="https://confluence.amlogic.com/display/IT/IT+manual?src=breadcrumbs-parent">IT manual</a></span>
+                                                                    </li></ol>
+
+
+                    </div>
+                
+                
+        <a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#page-banner-end" class="assistive">Skip to end of banner</a>
+<div id="page-banner-start" class="assistive"></div>
+
+                    
+            <div id="page-metadata-banner" style="visibility: visible;"><ul class="banner"><li id="system-content-items" class="noprint"><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows" title="未限制" id="content-metadata-page-restrictions" class="aui-icon aui-icon-small aui-iconfont-unlocked system-metadata-restrictions" resolved=""></a><a href="https://confluence.amlogic.com/pages/viewpageattachments.action?pageId=140476854&amp;metadataLink=true" title="15 个附件" id="content-metadata-attachments" class="aui-icon aui-icon-small aui-iconfont-attachment"></a></li><li class="page-metadata-item noprinthas-button" id="content-metadata-jira-wrapper"><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows" title="" id="content-metadata-jira" class="aui-button aui-button-subtle content-metadata-jira tipsy-disabled hidden" resolved=""><span>JIRA 链接</span></a></li></ul></div>
+            
+
+<a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#page-banner-start" class="assistive">Go to start of banner</a>
+<div id="page-banner-end" class="assistive"></div>
+    
+
+                <h1 id="title-text" class="with-breadcrumbs" style="display: none;">
+                                                <a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows" style="">How to connect remote VPN on Windows</a>
+                                    </h1>
+            </div>
+        </div><!-- \#main-header -->
+        
+        
+
+        <div id="sidebar-container">
+                                                </div><!-- \#sidebar-container -->
+
+        
+    
+
+        
+
+
+
+
+            
+    
+
+                                
+    
+
+    
+    
+        
+    
+    
+                    
+    
+
+    
+
+    
+            
+        
+
+    
+    
+
+    
+            
+        
+
+
+
+    
+<div id="content" class="page view">
+    
+
+
+<div id="action-messages">
+                        </div>
+
+
+
+            <script type="text/x-template" title="searchResultsGrid">
+    <table class="aui">
+        <thead>
+            <tr class="header">
+                <th class="search-result-title">页面标题</th>
+                <th class="search-result-space">空间</th>
+                <th class="search-result-date">更新于</th>
+            </tr>
+        </thead>
+    </table>
+</script>
+<script type="text/x-template" title="searchResultsGridCount">
+    <p class="search-result-count">{0}</p>
+</script>
+<script type="text/x-template" title="searchResultsGridRow">
+    <tr class="search-result">
+        <td class="search-result-title"><a href="{1}" class="content-type-{2}"><span>{0}</span></a></td>
+        <td class="search-result-space"><a class="space" href="/display/{4}/" title="{3}">{3}</a></td>
+        <td class="search-result-date"><span class="date" title="{6}">{5}</span></td>
+    </tr>
+</script>
+        
+    
+            
+
+        
+                            
+    
+
+                    
+
+        
+        <a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#page-metadata-end" class="assistive">Skip to end of metadata</a>
+<div id="page-metadata-start" class="assistive"></div>
+
+    <div class="page-metadata">
+        <ul>
+            <li class="page-metadata-modification-info">
+                
+        
+    
+        
+    
+        
+            
+            由<span class="author">     <a href="https://confluence.amlogic.com/display/~rocky.duan" class="url fn confluence-userlink userlink-0" data-username="rocky.duan" title="" data-user-hover-bound="true">Rocky Duan</a></span>创建, 最后修改于<a class="last-modified" href="https://confluence.amlogic.com/pages/diffpagesbyversion.action?pageId=140476854&amp;selectedPageVersions=7&amp;selectedPageVersions=8" original-title="查看变更">三月 25, 2022</a>
+                </li>
+        </ul>
+    </div>
+
+
+<a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#page-metadata-start" class="assistive">Go to start of metadata</a>
+<div id="page-metadata-end" class="assistive"></div>
+
+        
+                                            
+        <div id="main-content" class="wiki-content">
+                           
+        <h3 id="HowtoconnectremoteVPNonWindows-一、申请流程："><strong>一、申请流程：</strong></h3><p>发送邮件给你主管领导审批，同时cc给itsd@amlogic.com, 审批后<span>IT</span>会添加到<span>Ciscovpn</span>权限组。然后你就可以根据以下方法配置使用。</p><h3 id="HowtoconnectremoteVPNonWindows-二、各地vpn服务器列表:"><strong>二、各地<span>vpn</span>服务器列表</strong><strong><span>:</span></strong></h3><p><span>1</span>、上海<span>VPN</span>服务器地址列表<span>:</span></p><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 服务器地址:<strong> </strong><strong>&nbsp;</strong><a class="external-link" href="https://vpn-sh.amlogic.com/" rel="nofollow"><strong>https://vpn-sh.amlogic.com</strong></a></p><p><strong>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</strong>以及:&nbsp;<strong> </strong><a class="external-link" href="https://vpn-sh2.amlogic.com/" rel="nofollow"><strong>https://vpn-sh2.amlogic.com</strong></a></p><p><span>2</span>、深圳<span>VPN</span>服务器地址列表<span>:</span></p><p><strong>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</strong><strong>服务器地址</strong><strong>: &nbsp;</strong><a class="external-link" href="https://vpn-sz.amlogic.com/" rel="nofollow"><strong>https://vpn-sz.amlogic.com</strong></a></p><p>3、北京<span>VPN</span>服务器地址列表</p><p><strong>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</strong><strong>服务器地址</strong><strong>: </strong><strong>&nbsp;</strong><a class="external-link" href="http://vpn-bj.amlogic.com/" rel="nofollow"><strong>http://vpn-bj.amlogic.com</strong></a><span><strong>:4433</strong></span></p><p>4、西安<span>VPN</span>服务器地址列表</p><p><strong>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</strong><strong>服务器地址</strong><strong>: </strong><strong>&nbsp;</strong><a class="external-link" href="https://vpn-xa.amlogic.cn/" rel="nofollow"><strong>https://vpn-xa.amlogic.</strong></a>com</p><p>5、成都<span>VPN</span>服务器地址列表</p><p><strong>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</strong><strong>服务器地址</strong><strong>: </strong><strong>&nbsp;</strong><a class="external-link" href="https://vpn-cd.amlogic.com/" rel="nofollow"><strong>https://vpn-cd.amlogic.com</strong></a></p><h3 id="HowtoconnectremoteVPNonWindows-三、Windows系统CiscoVPN安装步骤："><strong><span>三、Windows</span>系统<span>CiscoVPN</span>安装步骤：</strong></h3><p>1、打开浏览器，输入<span><a class="external-link" href="https://vpn-sh.amlogic.com/" rel="nofollow">https://vpn-sh.amlogic.com</a> </span>各地可以使用各地地址</p><p><strong><span><span class="confluence-embedded-file-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image" height="250" src="./VPN登录_files/image2021-10-14_14-24-43.png" data-image-src="/download/attachments/140476854/image2021-10-14_14-24-43.png?version=1&amp;modificationDate=1634192684121&amp;api=v2" data-unresolved-comment-count="0" data-linked-resource-id="140476859" data-linked-resource-version="1" data-linked-resource-type="attachment" data-linked-resource-default-alias="image2021-10-14_14-24-43.png" data-base-url="https://confluence.amlogic.com" data-linked-resource-content-type="image/png" data-linked-resource-container-id="140476854" data-linked-resource-container-version="8"></span>&nbsp;</span></strong></p><p><br></p><p><span>2</span>、点击高级<span>-</span>继续前往有访问，页面输入账号名和密码，和邮箱账号密码一致（用户名不含<span>@<a class="external-link" href="http://amlogic.com/" rel="nofollow">amlogic.com</a></span>）。</p><p><span>&nbsp;<span class="confluence-embedded-file-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image" height="250" src="./VPN登录_files/image2022-3-25_15-52-31.png" data-image-src="/download/attachments/140476854/image2022-3-25_15-52-31.png?version=2&amp;modificationDate=1652300765990&amp;api=v2" data-unresolved-comment-count="0" data-linked-resource-id="173804423" data-linked-resource-version="2" data-linked-resource-type="attachment" data-linked-resource-default-alias="image2022-3-25_15-52-31.png" data-base-url="https://confluence.amlogic.com" data-linked-resource-content-type="image/png" data-linked-resource-container-id="140476854" data-linked-resource-container-version="8"></span></span></p><p><span>3</span>、点击<span>”Anyconnect VPN”</span>下载<span>Ciscovpn</span>客户端插件安装</p><p><span>&nbsp;<span class="confluence-embedded-file-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image" height="150" src="./VPN登录_files/image2022-3-25_15-53-47.png" data-image-src="/download/attachments/140476854/image2022-3-25_15-53-47.png?version=1&amp;modificationDate=1648194827480&amp;api=v2" data-unresolved-comment-count="0" data-linked-resource-id="173804435" data-linked-resource-version="1" data-linked-resource-type="attachment" data-linked-resource-default-alias="image2022-3-25_15-53-47.png" data-base-url="https://confluence.amlogic.com" data-linked-resource-content-type="image/png" data-linked-resource-container-id="140476854" data-linked-resource-container-version="8"></span></span></p><p><span>&nbsp;</span><span>&nbsp;</span><span>4</span>、安装<span>Cisco Anyconnect Secure Mobility client</span>客户端。</p><p><span>&nbsp;<span class="confluence-embedded-file-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image" height="250" src="./VPN登录_files/image2021-10-14_14-26-54.png" data-image-src="/download/attachments/140476854/image2021-10-14_14-26-54.png?version=1&amp;modificationDate=1634192815284&amp;api=v2" data-unresolved-comment-count="0" data-linked-resource-id="140476863" data-linked-resource-version="1" data-linked-resource-type="attachment" data-linked-resource-default-alias="image2021-10-14_14-26-54.png" data-base-url="https://confluence.amlogic.com" data-linked-resource-content-type="image/png" data-linked-resource-container-id="140476854" data-linked-resource-container-version="8"></span></span></p><p><br></p><p>5、安装完成打开<span>"Cisco Anyconnect Secure Mobility client" </span>输入地址 <span>“<a class="external-link" href="http://vpn-sh.amlogic.com/" rel="nofollow">vpn-sh.amlogic.com</a>”</span></p><p>第一次安装后，<strong>需要将下面的默认勾选的设置<span>"Block connections to untrusted servers" </span>取消掉！勾选如图<span>2</span>、<span>3</span>项设置</strong></p><p><span class="confluence-embedded-file-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image confluence-thumbnail" height="250" src="./VPN登录_files/image2022-3-25_15-56-15.png" data-image-src="/download/attachments/140476854/image2022-3-25_15-56-15.png?version=2&amp;modificationDate=1649749219295&amp;api=v2" data-unresolved-comment-count="0" data-linked-resource-id="173804441" data-linked-resource-version="2" data-linked-resource-type="attachment" data-linked-resource-default-alias="image2022-3-25_15-56-15.png" data-base-url="https://confluence.amlogic.com" data-linked-resource-content-type="image/png" data-linked-resource-container-id="140476854" data-linked-resource-container-version="8"></span></p><p><br></p><p><span>6</span>、点击客户端<span>connect</span>连接服务器选择<span>”Connect Anyway” </span></p><p><span class="confluence-embedded-file-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image" height="250" src="./VPN登录_files/image2021-10-14_14-28-6.png" data-image-src="/download/attachments/140476854/image2021-10-14_14-28-6.png?version=2&amp;modificationDate=1652301100957&amp;api=v2" data-unresolved-comment-count="0" data-linked-resource-id="140476868" data-linked-resource-version="2" data-linked-resource-type="attachment" data-linked-resource-default-alias="image2021-10-14_14-28-6.png" data-base-url="https://confluence.amlogic.com" data-linked-resource-content-type="image/png" data-linked-resource-container-id="140476854" data-linked-resource-container-version="8"></span></p><p><span>&nbsp;</span><span>&nbsp;</span></p><p><span>&nbsp;</span><span>7</span>、输入邮箱账号和密码点击<span>OK</span>完成<span>Ciscovpn</span>连接。连接成功后你就可以访问内网应用了。<span>&nbsp;</span></p><p><span>&nbsp;<span class="confluence-embedded-file-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image" height="250" src="./VPN登录_files/image2022-3-25_15-59-24.png" data-image-src="/download/attachments/140476854/image2022-3-25_15-59-24.png?version=1&amp;modificationDate=1648195164356&amp;api=v2" data-unresolved-comment-count="0" data-linked-resource-id="173804442" data-linked-resource-version="1" data-linked-resource-type="attachment" data-linked-resource-default-alias="image2022-3-25_15-59-24.png" data-base-url="https://confluence.amlogic.com" data-linked-resource-content-type="image/png" data-linked-resource-container-id="140476854" data-linked-resource-container-version="8"></span></span></p><p><br></p><p><br></p><p><strong><span>&nbsp;</span></strong><strong>四、<span>Ubuntu</span>系统<span>CiscoVPN</span>配置（<span>Anyconnect </span>协议）</strong></p><p><strong><span>&nbsp;</span></strong><span>1</span>、安装<span> OpenConnect</span></p><p><span>&nbsp;&nbsp;&nbsp; sudo apt-get install network-manager-openconnect network-manager-openconnect-gnome openconnect</span></p><p><span>&nbsp;</span></p><p><span>2、desktop</span>桌面配置方法</p><p><span>1</span>）、通过网卡添加<span>vpn</span>连接如图 选择<span>”Cisco Anyconnect Compatible VPN” </span>然后<span>Create</span></p><p><span class="confluence-embedded-file-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image" height="250" src="./VPN登录_files/image2021-10-14_14-31-48.png" data-image-src="/download/attachments/140476854/image2021-10-14_14-31-48.png?version=1&amp;modificationDate=1634193109175&amp;api=v2" data-unresolved-comment-count="0" data-linked-resource-id="140476876" data-linked-resource-version="1" data-linked-resource-type="attachment" data-linked-resource-default-alias="image2021-10-14_14-31-48.png" data-base-url="https://confluence.amlogic.com" data-linked-resource-content-type="image/png" data-linked-resource-container-id="140476854" data-linked-resource-container-version="8"></span></p><p><br><span>&nbsp;2</span>）、输入服务器地址：<span><a class="external-link" href="http://vpn-sh.amlogic.com/vpn-sz.amlogic.com/vpn-bj.amlogic.com" rel="nofollow">vpn-sh.amlogic.com/vpn-sz.amlogic.com/vpn-bj.amlogic.com</a></span></p><p><span class="confluence-embedded-file-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image" height="250" src="./VPN登录_files/image2021-10-14_14-33-1.png" data-image-src="/download/attachments/140476854/image2021-10-14_14-33-1.png?version=1&amp;modificationDate=1634193182152&amp;api=v2" data-unresolved-comment-count="0" data-linked-resource-id="140476878" data-linked-resource-version="1" data-linked-resource-type="attachment" data-linked-resource-default-alias="image2021-10-14_14-33-1.png" data-base-url="https://confluence.amlogic.com" data-linked-resource-content-type="image/png" data-linked-resource-container-id="140476854" data-linked-resource-container-version="8"></span></p><p><br><span>3)</span>、确定点击新添加的<span>vpn</span>连接。输入账户名和密码（邮箱账号名和密码）然后点击<span>longin </span>完成登录。</p><p><span>&nbsp;<span class="confluence-embedded-file-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image" height="250" src="./VPN登录_files/image2021-10-14_14-33-22.png" data-image-src="/download/attachments/140476854/image2021-10-14_14-33-22.png?version=1&amp;modificationDate=1634193203171&amp;api=v2" data-unresolved-comment-count="0" data-linked-resource-id="140476879" data-linked-resource-version="1" data-linked-resource-type="attachment" data-linked-resource-default-alias="image2021-10-14_14-33-22.png" data-base-url="https://confluence.amlogic.com" data-linked-resource-content-type="image/png" data-linked-resource-container-id="140476854" data-linked-resource-container-version="8"></span></span></p><p><br></p><p><span>3</span>、命令行</p><p>使用脚本配置：<span>password=</span>你的密码</p><p><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; server=</span>服务器地址</p><p><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; username=</span>用户名</p><p><span>#!/bin/bash</span></p><p><span>##############&nbsp;&nbsp; ####################</span></p><p><span>PATH=/usr/local/<a class="external-link" href="http://sbin/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/root/bin" rel="nofollow">sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/root/bin</a></span></p><p><span>VPN=`/sbin/ifconfig | grep tun0 | wc -l`</span></p><p><span>if [ $VPN -eq 0 ];then</span></p><p><span>echo password | openconnect server&nbsp; -u username -s /usr/share/vpnc-scripts/vpnc-script --no-cert-check&nbsp; --passwd-on-stdin --background --no-dtls</span></p><p><span>fi</span></p><p><span>&nbsp;</span></p><p><span>4</span>、<span>Ubuntu18.04</span>之后的版本</p><p>使用脚本配置：<span>password=</span>你的密码</p><p><span>server=</span>服务器地址</p><p><span>username=</span>用户名</p><p><span>#!/bin/bash</span></p><p><br></p><p><span>##############&nbsp;&nbsp; ####################</span></p><p><span>PATH=/usr/local/<a class="external-link" href="http://sbin/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/root/bin" rel="nofollow">sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/root/bin</a></span></p><p><span>VPN=`/sbin/ifconfig | grep tun0 | wc -l`</span></p><p><span>if [ $VPN -eq 0 ];then</span></p><p><span>echo password | openconnect server&nbsp; -u username -s /usr/share/vpnc-scripts/vpnc-script&nbsp; --passwd-on-stdin --background --no-dtls</span></p><p><span>fi</span></p><p>使用脚本后获取到<span>certificate</span></p><p><span>&nbsp;<span class="confluence-embedded-file-wrapper confluence-embedded-manual-size"><img class="confluence-embedded-image" height="400" src="./VPN登录_files/image2021-10-14_14-34-12.png" data-image-src="/download/attachments/140476854/image2021-10-14_14-34-12.png?version=1&amp;modificationDate=1634193253266&amp;api=v2" data-unresolved-comment-count="0" data-linked-resource-id="140476881" data-linked-resource-version="1" data-linked-resource-type="attachment" data-linked-resource-default-alias="image2021-10-14_14-34-12.png" data-base-url="https://confluence.amlogic.com" data-linked-resource-content-type="image/png" data-linked-resource-container-id="140476854" data-linked-resource-container-version="8"></span></span></p><p>然后用新<span>certificate</span>代替</p><p><span>#!/bin/bash</span></p><p><span>##############&nbsp;&nbsp; ####################</span></p><p><span>PATH=/usr/local/<a class="external-link" href="http://sbin/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/root/bin" rel="nofollow">sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/root/bin</a></span></p><p><span>VPN=`/sbin/ifconfig | grep tun0 | wc -l`</span></p><p><span>if [ $VPN -eq 0 ];then</span></p><p><span>echo password | openconnect 211.162.65.116&nbsp; -u&nbsp; username -s /usr/share/vpnc-scripts/vpnc-script&nbsp;&nbsp; --passwd-on-stdin --background --no-dtls --servercert sha256:70cd9a890084f90cf8d5a082d010fcd0b4ab8273034ac8cc442edeb75b0c1e15</span></p><p><span>fi</span></p><p><br></p><p><br></p>
+
+                
+        
+    
+        </div>
+
+                        
+    
+
+
+
+<div id="likes-and-labels-container"><div id="likes-section" class="no-print"><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows" class="like-button"><span class="aui-icon aui-icon-small aui-iconfont-like"></span><span class="like-button-text">赞</span></a><span class="like-summary like-summary-margin-left">成为第一个赞同者</span></div><div id="labels-section" class="pageSection group">
+    <div class="labels-section-content content-column" entityid="140476854" entitytype="page">
+	<div class="labels-content">
+		
+    <ul class="label-list label-list-right  has-pen">
+            <li class="no-labels-message">
+            无标签
+        </li>
+                <li class="labels-edit-container">
+            <a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" class="show-labels-editor" title="编辑标签 (Type &#39;l&#39;)">
+                <span class="aui-icon aui-icon-small aui-iconfont-devtools-tag-small">编辑标签</span>
+            </a>
+        </li>
+        </ul>
+
+    </div>
+</div>
+</div></div>
+        
+		
+            
+
+
+
+
+            
+        
+
+
+
+
+
+
+
+
+                        
+    
+<div id="comments-section" class="pageSection group">
+        
+    
+
+
+    <div class="bottom-comment-panels comment-panels">
+                
+                    
+    
+
+
+        
+        
+    
+    <div class="quick-comment-container comment add"><p class="comment-user-logo"><a class="userLogoLink userlink-1" data-username="Shengken.Lin" href="https://confluence.amlogic.com/users/profile/editmyprofilepicture.action" title="" data-user-hover-bound="true"><img class="userLogo logo defaultLogo" src="./VPN登录_files/add_profile_pic.svg" alt="用户图标: 添加头像" title=""></a></p><div class="quick-comment-body"><div class="quick-comment-loading-container" style="display:none;"></div><div id="editor-messages"></div><div id="any-messages"></div><form style="display:block;" class="quick-comment-form aui" method="post" name="inlinecommentform" action="https://confluence.amlogic.com/pages/doaddcomment.action?pageId=140476854"><div title="添加评论 (Type &#39;m&#39;)" role="button" tabindex="0" aria-label="添加评论" class="quick-comment-prompt"><span>写评论...</span></div></form></div></div>
+
+            </div>
+
+            <div id="comments-actions" class="aui-toolbar noprint" style="display: none;">
+            <p class="toolbar-group">
+                <span class="toolbar-item"><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows?showComments=true&amp;showCommentArea=true#addcomment" id="add-comment-rte" accesskey="m" class="toolbar-trigger">添加评论</a></span>
+            </p>
+        </div>
+    </div>
+        
+
+
+                
+    
+            
+</div>
+
+    
+
+    
+
+
+
+
+    
+    
+
+    
+    
+    
+
+
+    
+<div id="space-tools-web-items" class="hidden">
+                <div data-label="概览" data-href="/spaces/viewspacesummary.action?key=IT">概览</div>
+            <div data-label="内容工具" data-href="/pages/reorderpages.action?key=IT">内容工具</div>
+            <div data-label="活动" data-href="/spaces/usage/report.action?key=IT">活动</div>
+    </div>
+        
+
+
+
+            </div><!-- \#main -->
+            
+    
+    
+        
+            
+            
+
+<div id="footer" role="contentinfo" style="margin-left: 285px;">
+    <section class="footer-body">
+
+                                                    
+        
+
+        <ul id="poweredby">
+            <li class="noprint">基于 <a href="http://www.atlassian.com/software/confluence" class="hover-footer-link" rel="nofollow">Atlassian Confluence</a> <span id="footer-build-information">7.13.1</span> 技术构建</li>
+            <li class="print-only">由 Atlassian 合流7.13.1 打印</li>
+            <li class="noprint"><a href="https://support.atlassian.com/help/confluence" class="hover-footer-link" rel="nofollow">报告缺陷</a></li>
+            <li class="noprint"><a href="https://www.atlassian.com/company" class="hover-footer-link" rel="nofollow">Atlassian 新闻</a></li>
+        </ul>
+
+        
+
+        <div id="footer-logo"><a href="http://www.atlassian.com/" rel="nofollow">Atlassian</a></div>
+
+                    
+        
+    </section>
+</div>
+
+    
+</div>
+
+</div><!-- \#full-height-container -->
+</div><!-- \#page -->
+
+    <span style="display:none;" id="confluence-server-performance">{"serverDuration": 188, "requestCorrelationId": "a844f395586a5838"}</span>
+
+
+    
+<div id="editor-preload-container" style="display: none;">
+ 
+
+<div class="hidden">
+        
+
+
+<content tag="breadcrumbs">
+    
+    
+    <ol id="quickedit-breadcrumbs">
+                                        
+                        
+        <li class="first">
+                        
+                            <span class=""><a href="https://confluence.amlogic.com/display/IT" target="_blank">IT Team</a></span>
+                                                                                    
+                        
+        </li><li>
+                        
+                            <span class=""><a href="https://confluence.amlogic.com/collector/pages.action?key=IT" target="_blank">页面</a></span>
+                                                                                    
+                        
+        </li><li>
+                        
+                            <span class=""><a href="https://confluence.amlogic.com/display/IT/IT+Team+Home" target="_blank">IT Team Home</a></span>
+                                                                                    
+                        
+        </li><li>
+                        
+                            <span class=""><a href="https://confluence.amlogic.com/display/IT/IT+manual" target="_blank">IT manual</a></span>
+                                                                                    
+                        
+        </li><li>
+                        
+                            <span class="edited-page-title"><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows" target="_blank">How to connect remote VPN on Windows</a></span>
+                                                                    </li></ol>
+
+</content>
+</div>
+
+
+        
+    
+
+                                                                                        
+
+<script type="text/x-template" title="editor-css" id="editor-css-resources">
+    <link type="text/css" rel="stylesheet" href="/s/942a95deb3b97e2ef8ee8cb2d7b67060-CDN/yn4s1b/8703/1nlnn84/c6e6f0b92344890dea3436b4f49cc880/_/download/contextbatch/css/editor-content/batch.css?frontend.editor.v4=true" data-wrm-key="editor-content" data-wrm-batch-type="context" media="all">
+
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+
+<div class="editor-container">
+
+        
+            
+
+<div id="link-browser-tab-items" class="hidden">
+                <div title="搜索" data-weight="10">search</div>
+            <div title="最近浏览过" data-weight="20">recentlyviewed</div>
+            <div title="文件" data-weight="30">attachments</div>
+            <div title="Web链接" data-weight="40">weblink</div>
+            <div title="高级" data-weight="50">advanced</div>
+    </div>
+            <div id="image-properties-tab-items" class="hidden">
+                <div title="效果" data-weight="10">image-effects</div>
+            <div title="标题" data-weight="20">image-attributes</div>
+    </div>
+            
+
+ 
+
+
+
+
+
+
+
+
+
+
+<div id="toolbar">
+    <div id="rte-toolbar" class="aui-toolbar aui-toolbar2">
+
+        <div class="aui-toolbar2-primary toolbar-primary">
+            <ul class="aui-buttons rte-toolbar-group-formatting">
+                            <li id="format-dropdown" class="toolbar-item toolbar-dropdown">
+                    <div class="aui-dd-parent">
+                        <a id="format-dropdown-display" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" class="toolbar-trigger aui-dd-trigger aui-button" data-control-id="formatselect" resolved="">
+                            <span class="dropdown-text">正文</span>
+                                        
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-dropdown "></span>
+                        </a>
+                        <ul id="format-dropdown-display-menu" class="aui-dropdown hidden">
+                            <li class="dropdown-item format-p" data-format="p" data-tooltip="正文 (Ctrl+0)">
+    <a class="item-link" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#">正文</a>
+</li>
+                                <li class="dropdown-item format-h1" data-format="h1" data-tooltip="标题 1 (Ctrl+1)">
+    <a class="item-link" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#">标题 1</a>
+</li>
+                                <li class="dropdown-item format-h2" data-format="h2" data-tooltip="标题 2 (Ctrl+2)">
+    <a class="item-link" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#">标题 2</a>
+</li>
+                                <li class="dropdown-item format-h3" data-format="h3" data-tooltip="标题 3 (Ctrl+3)">
+    <a class="item-link" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#">标题 3</a>
+</li>
+                                <li class="dropdown-item format-h4" data-format="h4" data-tooltip="标题 4 (Ctrl+4)">
+    <a class="item-link" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#">标题 4</a>
+</li>
+                                <li class="dropdown-item format-h5" data-format="h5" data-tooltip="标题 5 (Ctrl+5)">
+    <a class="item-link" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#">标题 5</a>
+</li>
+                                <li class="dropdown-item format-h6" data-format="h6" data-tooltip="标题 6 (Ctrl+6)">
+    <a class="item-link" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#">标题 6</a>
+</li>
+                                <li class="dropdown-item format-pre" data-format="pre" data-tooltip="预格式化 (Ctrl+7)">
+    <a class="item-link" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#">预格式化</a>
+</li>
+                                <li class="dropdown-item format-blockquote" data-format="blockquote" data-tooltip="引用 (Ctrl+8)">
+    <a class="item-link" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#">引用</a>
+</li>
+                        </ul>
+                    </div>
+                </li>
+            </ul>
+
+            <ul class="aui-buttons rte-toolbar-group-style">
+                
+            <li class="toolbar-item aui-button aui-button-subtle" id="rte-button-bold" data-tooltip="粗体 (Ctrl+B)" resolved="">
+    <a class="toolbar-trigger" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" data-control-id="bold">
+                    
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-editor-bold ">粗体</span>
+    </a>
+</li>
+                
+            <li class="toolbar-item aui-button aui-button-subtle" id="rte-button-italic" data-tooltip="斜体 (Ctrl+I)" resolved="">
+    <a class="toolbar-trigger" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" data-control-id="italic">
+                    
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-editor-italic ">斜体</span>
+    </a>
+</li>
+                
+            <li class="toolbar-item aui-button aui-button-subtle" id="rte-button-underline" data-tooltip="下划线 (Ctrl+U)" resolved="">
+    <a class="toolbar-trigger" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" data-control-id="underline">
+                    
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-editor-underline ">下划线</span>
+    </a>
+</li>
+                            <li id="color-picker-control" class="toolbar-item toolbar-splitbutton">
+                    <a class="toolbar-trigger aui-button" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" id="rte-button-color" data-color="003366" data-tooltip="颜色" resolved=""><span class="icon aui-icon aui-icon-small aui-iconfont-editor-color ">颜色选取器</span><span class="selected-color"></span></a><div class="aui-dd-parent"><a class="toolbar-trigger aui-dd-trigger aui-button" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" id="rte-button-color-selector" data-control-id="colorSelector" data-tooltip="更多颜色" resolved=""><span class="icon aui-icon aui-icon-small aui-iconfont-dropdown ">更多颜色</span></a><div class="color-picker-container"><div class="color-picker aui-dropdown hidden"><ul><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-label="黑色" data-tooltip="黑色" style="background-color: #000000" data-color="000000">&nbsp;</a></li><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-label="深橙黄色" data-tooltip="深橙黄色" style="background-color: #993300" data-color="993300">&nbsp;</a></li><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-label="深橄榄绿色" data-tooltip="深橄榄绿色" style="background-color: #333300" data-color="333300">&nbsp;</a></li><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-label="深绿色" data-tooltip="深绿色" style="background-color: #003300" data-color="003300">&nbsp;</a></li><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-label="藏青色" data-tooltip="藏青色" style="background-color: #003366" data-color="003366">&nbsp;</a></li><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-label="海蓝色" data-tooltip="海蓝色" style="background-color: #000080" data-color="000080">&nbsp;</a></li><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-label="靛蓝色" data-tooltip="靛蓝色" style="background-color: #333399" data-color="333399">&nbsp;</a></li><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-label="深灰色" data-tooltip="深灰色" style="background-color: #333333" data-color="333333">&nbsp;</a></li><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-label="褐红色" data-tooltip="褐红色" style="background-color: #800000" data-color="800000">&nbsp;</a></li><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-label="橙色" data-tooltip="橙色" style="background-color: #FF6600" data-color="FF6600">&nbsp;</a></li><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-label="橄榄绿色" data-tooltip="橄榄绿色" style="background-color: #808000" data-color="808000">&nbsp;</a></li><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-label="绿色" data-tooltip="绿色" style="background-color: #008000" data-color="008000">&nbsp;</a></li><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-label="蓝绿色" data-tooltip="蓝绿色" style="background-color: #008080" data-color="008080">&nbsp;</a></li><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-label="蓝色" data-tooltip="蓝色" style="background-color: #0000FF" data-color="0000FF">&nbsp;</a></li><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-label="灰蓝色" data-tooltip="灰蓝色" style="background-color: #666699" data-color="666699">&nbsp;</a></li><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-label="灰色" data-tooltip="灰色" style="background-color: #7A869A" data-color="7A869A">&nbsp;</a></li><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-label="红色" data-tooltip="红色" style="background-color: #FF0000" data-color="FF0000">&nbsp;</a></li><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-label="琥珀色" data-tooltip="琥珀色" style="background-color: #FF9900" data-color="FF9900">&nbsp;</a></li><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-label="黄绿色" data-tooltip="黄绿色" style="background-color: #99CC00" data-color="99CC00">&nbsp;</a></li><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-label="海绿色" data-tooltip="海绿色" style="background-color: #339966" data-color="339966">&nbsp;</a></li><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-label="青绿色" data-tooltip="青绿色" style="background-color: #33CCCC" data-color="33CCCC">&nbsp;</a></li><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-label="宝蓝色" data-tooltip="宝蓝色" style="background-color: #3366FF" data-color="3366FF">&nbsp;</a></li><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-label="紫色" data-tooltip="紫色" style="background-color: #800080" data-color="800080">&nbsp;</a></li><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-label="中灰色" data-tooltip="中灰色" style="background-color: #A5ADBA" data-color="A5ADBA">&nbsp;</a></li><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-label="洋红色" data-tooltip="洋红色" style="background-color: #FF00FF" data-color="FF00FF">&nbsp;</a></li><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-label="金色" data-tooltip="金色" style="background-color: #FFCC00" data-color="FFCC00">&nbsp;</a></li><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-label="黄色" data-tooltip="黄色" style="background-color: #FFFF00" data-color="FFFF00">&nbsp;</a></li><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-label="绿黄色" data-tooltip="绿黄色" style="background-color: #00FF00" data-color="00FF00">&nbsp;</a></li><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-label="湖绿色" data-tooltip="湖绿色" style="background-color: #00FFFF" data-color="00FFFF">&nbsp;</a></li><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-label="天蓝色" data-tooltip="天蓝色" style="background-color: #00CCFF" data-color="00CCFF">&nbsp;</a></li><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-label="红紫色" data-tooltip="红紫色" style="background-color: #993366" data-color="993366">&nbsp;</a></li><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-label="浅灰色" data-tooltip="浅灰色" style="background-color: #C1C7D0" data-color="C1C7D0">&nbsp;</a></li><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-label="粉色" data-tooltip="粉色" style="background-color: #FF99CC" data-color="FF99CC">&nbsp;</a></li><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-label="桃红色" data-tooltip="桃红色" style="background-color: #FFCC99" data-color="FFCC99">&nbsp;</a></li><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-label="浅黄色" data-tooltip="浅黄色" style="background-color: #FFFF99" data-color="FFFF99">&nbsp;</a></li><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-label="浅绿色" data-tooltip="浅绿色" style="background-color: #CCFFCC" data-color="CCFFCC">&nbsp;</a></li><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-label="浅蓝绿色" data-tooltip="浅蓝绿色" style="background-color: #CCFFFF" data-color="CCFFFF">&nbsp;</a></li><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-label="浅天蓝色" data-tooltip="浅天蓝色" style="background-color: #99CCFF" data-color="99CCFF">&nbsp;</a></li><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-label="绛紫色" data-tooltip="绛紫色" style="background-color: #CC99FF" data-color="CC99FF">&nbsp;</a></li><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" aria-label="白色" data-tooltip="白色" style="background-color: #FFFFFF" data-color="FFFFFF">&nbsp;</a></li></ul></div></div></div>
+                </li>
+                <li id="more-menu" class="toolbar-item toolbar-dropdown">
+                    <div class="aui-dd-parent">
+                        <a id="rte-button-more" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" class="toolbar-trigger aui-dd-trigger aui-button" data-tooltip="更多" resolved="">
+                                        
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-editor-styles ">格式</span>
+                                            
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-dropdown "></span>
+                        </a>
+                        <div id="rte-button-more-menu" class="aui-dropdown grouped hidden">
+                            <div class="grouped-dropdown-item">
+                                <ul>
+                                                        <li class="dropdown-item more-menu-trigger" data-control-id="strikethrough" data-tooltip="删除线 (Ctrl+Shift+S)">
+    <a id="rte-strikethrough" class="item-link" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#">
+                    
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-check hidden"></span>
+删除线
+    </a>
+</li>
+                                                             <li class="dropdown-item more-menu-trigger" data-control-id="sub" data-tooltip="">
+    <a id="rte-sub" class="item-link" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#">
+                    
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-check hidden"></span>
+下标
+    </a>
+</li>
+                                                             <li class="dropdown-item more-menu-trigger" data-control-id="sup" data-tooltip="">
+    <a id="rte-sup" class="item-link" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#">
+                    
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-check hidden"></span>
+上标
+    </a>
+</li>
+                                                    <li class="dropdown-item more-menu-trigger" data-control-id="monospace" data-tooltip="用等宽字体格式化文本">
+    <a id="rte-monospace" class="item-link" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#">
+                    
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-check hidden"></span>
+等宽
+    </a>
+</li>
+
+                                                                                                                </ul>
+                            </div>
+                            <div class="grouped-dropdown-item">
+                                <ul>
+                                    <li class="dropdown-item more-menu-trigger no-icon" data-format="removeformat" data-tooltip="当前选中文本清除格式">
+<a id="rte-removeformat" class="item-link" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#">
+    清除格式
+</a>
+</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                </li>
+            </ul>
+
+            <ul class="aui-buttons rte-toolbar-group-lists">
+                
+            <li class="toolbar-item aui-button aui-button-subtle" id="rte-button-bullist" data-tooltip="无序列表 (Ctrl+Shift+B)" resolved="">
+    <a class="toolbar-trigger" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" data-control-id="bullist">
+                    
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-editor-list-bullet ">无序列表</span>
+    </a>
+</li>
+                    
+            <li class="toolbar-item aui-button aui-button-subtle" id="rte-button-numlist" data-tooltip="有序列表 (Ctrl+Shift+N)" resolved="">
+    <a class="toolbar-trigger" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" data-control-id="numlist">
+                    
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-editor-list-number ">有序列表</span>
+    </a>
+</li>
+            </ul>
+                            <ul class="aui-buttons rte-toolbar-group-task-lists">
+                    
+            <li class="toolbar-item aui-button aui-button-subtle" id="rte-button-tasklist" data-tooltip="任务列表 ([ then ])" resolved="">
+    <a class="toolbar-trigger" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" data-control-id="tasklist">
+                    
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-editor-task ">任务列表</span>
+    </a>
+</li>
+                </ul>
+            
+            <ul class="aui-buttons rte-toolbar-group-indentation">
+                
+            <li class="toolbar-item aui-button aui-button-subtle" id="rte-button-outdent" data-tooltip="减小缩进" resolved="">
+    <a class="toolbar-trigger" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" data-control-id="outdent">
+                    
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-indent-left ">减小缩进</span>
+    </a>
+</li>
+                    
+            <li class="toolbar-item aui-button aui-button-subtle" id="rte-button-indent" data-tooltip="增大缩进" resolved="">
+    <a class="toolbar-trigger" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" data-control-id="indent">
+                    
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-indent-right ">增大缩进</span>
+    </a>
+</li>
+            </ul>
+
+            <ul class="aui-buttons rte-toolbar-group-justification">
+                
+            <li class="toolbar-item aui-button aui-button-subtle" id="rte-button-justifyleft" data-tooltip="左对齐" resolved="">
+    <a class="toolbar-trigger" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" data-control-id="justifyleft">
+                    
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-editor-align-left ">左对齐</span>
+    </a>
+</li>
+                    
+            <li class="toolbar-item aui-button aui-button-subtle" id="rte-button-justifycenter" data-tooltip="居中" resolved="">
+    <a class="toolbar-trigger" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" data-control-id="justifycenter">
+                    
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-editor-align-center ">居中</span>
+    </a>
+</li>
+                    
+            <li class="toolbar-item aui-button aui-button-subtle" id="rte-button-justifyright" data-tooltip="右对齐" resolved="">
+    <a class="toolbar-trigger" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" data-control-id="justifyright">
+                    
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-editor-align-right ">右对齐</span>
+    </a>
+</li>
+            </ul>
+
+                            <ul class="aui-buttons hidden" id="page-layout-2-group">
+                    <li id="page-layout-2" class="toolbar-item" data-tooltip="页面布局">
+                        <a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" class="aui-button aui-button-subtle toolbar-trigger" id="rte-button-pagelayout-2" resolved="">
+                                        
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-editor-layout ">页面布局</span>
+                        </a>
+                    </li>
+                </ul>
+            
+
+            <ul class="aui-buttons rte-toolbar-group-files hidden"></ul>
+
+            <ul class="aui-buttons rte-toolbar-group-link no-separator">
+                <li class="toolbar-item" data-tooltip="插入链接 (Ctrl+K)">
+                    <a id="rte-button-link" class="toolbar-trigger aui-button aui-button-subtle" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" data-control-id="linkbrowserButton" aria-label="插入链接" resolved="">
+                                    
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-link "></span>
+                        <span class="trigger-text">链接</span>
+                    </a>
+                </li>
+            </ul>
+
+            <ul class="aui-buttons rte-toolbar-group-table no-separator">
+                <li class="toolbar-item toolbar-dropdown" id="insert-table-dropdown">
+                    <div class="aui-dd-parent">
+                        <a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" class="toolbar-trigger aui-dd-trigger aui-button aui-button-subtle" id="rte-button-insert-table" data-tooltip="插入表格" aria-label="插入表格" resolved="">
+                                        
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-editor-table "></span>
+                            <span class="dropdown-text">表格</span>
+                                        
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-dropdown "></span>
+                        </a>
+
+                        <div id="table-picker-container" class="hidden aui-box-shadow">
+                            <div class="table-picker-box" data-tooltip="按住 SHIFT键，创建无表头表格 。">
+                                <div class="table-picker-background">
+                                    <div class="picker picker-cell"></div>
+                                    <div class="picker picker-heading heading"></div>
+                                    <div class="picker picker-selected-cell"></div>
+                                    <div class="picker picker-selected-heading heading"></div>
+                                </div>
+                                <p class="desc"></p>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+
+                                    
+            
+            <ul class="aui-buttons rte-toolbar-group-insert no-separator">
+                <li class="toolbar-item toolbar-dropdown" id="insert-menu">
+                    <div class="aui-dd-parent">
+                        <a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" class="toolbar-trigger aui-dd-trigger aui-button aui-button-subtle" id="rte-button-insert" data-tooltip="插入更多内容" aria-label="插入更多内容" resolved="">
+                                        
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-add "></span>
+                            <span class="dropdown-text">插入</span>
+                                        
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-dropdown "></span>
+                        </a>
+
+                        <div id="insert-menu-options" class="aui-dropdown grouped hidden">
+                            <div class="grouped-dropdown-item">
+                                <span class="assistive">插入内容</span>
+                                <ul id="content-insert-list">
+                                    
+        
+                <li class="dropdown-item content-image" data-command="mceConfimage" data-tooltip="插入文件和图片 (Ctrl+M)">
+<a id="rte-insert-image" class="item-link" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#">
+                
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-image "></span>
+ 文件和图片
+</a>
+</li>
+                                            
+        
+                <li class="dropdown-item content-link" data-control-id="linkbrowserButton" data-tooltip="插入链接 (Ctrl+K)">
+<a id="rte-insert-link" class="item-link" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#">
+                
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-link "></span>
+ 链接
+</a>
+</li>
+                                            
+        
+                <li class="dropdown-item content-wikimarkup" data-command="InsertWikiMarkup" data-tooltip="插入Wiki标记 (Ctrl+Shift+D)">
+<a id="rte-insert-wikimarkup" class="item-link" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#">
+                
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-code "></span>
+ Wiki标记
+</a>
+</li>
+                                            
+    
+                <li class="dropdown-item content-hr" data-command="InsertHorizontalRule" data-tooltip="插入水平线(----)">
+<a id="rte-insert-hr" class="item-link" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#">
+                
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-horizontal-rule "></span>
+ 水平线
+</a>
+</li>
+                                                                                
+        
+                <li class="dropdown-item content-tasklist" data-command="InsertInlineTaskListNoToggle" data-tooltip="插入任务列表 ([ then ])">
+<a id="rte-insert-tasklist" class="item-link" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#">
+                
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-task "></span>
+ 任务列表
+</a>
+</li>
+                                                                            
+        
+                <li class="dropdown-item content-date" data-command="confMenuInsertDate" data-tooltip="插入日期 (/ then /)">
+<a id="rte-insert-date" class="item-link" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#">
+                
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-calendar "></span>
+ 日期
+</a>
+</li>
+                                            
+    
+                <li class="dropdown-item content-emoticon" data-command="mceEmotion" data-tooltip="插入表情">
+<a id="rte-insert-emoticon" class="item-link" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#">
+                
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-emoji "></span>
+ 表情符号
+</a>
+</li>
+                                            
+    
+                <li class="dropdown-item content-symbol" data-command="confCharmap" data-tooltip="插入符号">
+<a id="rte-insert-symbol" class="item-link" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#">
+                
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-symbol "></span>
+ 符号
+</a>
+</li>
+                                    </ul>
+                                <span class="assistive">插入宏</span>
+                                <ul id="macro-insert-list">
+                                                                                                                                                                                                <li class="dropdown-item macro-insertmention-button" data-macro-name="insertmention-button" data-tooltip="插入&#39;用户提及&#39;宏">
+<a id="insertmention-button" class="item-link" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#">
+                
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-mention "></span>
+ 用户提及
+</a>
+</li>
+                                                                                                                                                            <li class="dropdown-item macro-jiralink" data-macro-name="jiralink" data-tooltip="插入&#39;Jira问题/过滤器&#39;宏">
+<a id="jiralink" class="item-link" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#">
+                
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-jira "></span>
+ Jira问题/过滤器
+</a>
+</li>
+                                                                                                                                                            <li class="dropdown-item macro-info" data-macro-name="info" data-tooltip="插入&#39;信息&#39;宏">
+<a id="info" class="item-link" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#">
+                
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-info-filled "></span>
+ 信息
+</a>
+</li>
+                                                                                                                                                            <li class="dropdown-item macro-lucidchart" data-macro-name="lucidchart" data-tooltip="插入&#39;Add Lucidchart Diagram&#39;宏">
+<a id="lucidchart" class="item-link" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#">
+                        
+    
+    <span class="icon "></span>
+ Add Lucidchart Diagram
+</a>
+</li>
+                                                                                                                                                            <li class="dropdown-item macro-status" data-macro-name="status" data-tooltip="插入&#39;状态&#39;宏">
+<a id="status" class="item-link" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#">
+                        
+    
+    <span class="icon confluence-icon-status-macro"></span>
+ 状态
+</a>
+</li>
+                                                                                                                                                            <li class="dropdown-item macro-gallery" data-macro-name="gallery" data-tooltip="插入&#39;画廊&#39;宏">
+<a id="gallery" class="item-link" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#">
+                
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-gallery "></span>
+ 画廊
+</a>
+</li>
+                                                                                                                                                            <li class="dropdown-item macro-toc" data-macro-name="toc" data-tooltip="插入&#39;目录&#39;宏">
+<a id="toc" class="item-link" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#">
+                
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-overview "></span>
+ 目录
+</a>
+</li>
+                                                                    </ul>
+                            </div>
+                            <div class="grouped-dropdown-item">
+                                <ul id="more-macros-list">
+                                    
+        
+                <li class="dropdown-item content-macro" data-command="mceConfMacroBrowser" data-tooltip="打开宏浏览器 (Ctrl+Shift+A)">
+<a id="rte-insert-macro" class="item-link" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#">
+    其它宏
+</a>
+</li>
+                                    </ul>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+
+                            <ul class="aui-buttons rte-toolbar-group-page-layouts-section-types">
+                    <li id="pagelayout-menu" class="toolbar-item toolbar-dropdown">
+                        <div class="aui-dd-parent">
+                            <a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" class="toolbar-trigger aui-dd-trigger aui-button aui-button-subtle" id="rte-button-pagelayout" data-tooltip="页面布局" resolved="">
+                                            
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-layout pagelayout-default">页面布局</span>
+                                            
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-dropdown "></span>
+                            </a>
+
+                            <ul id="pagelayout-menu-options" class="aui-dropdown hidden">
+                                <li class="dropdown-item" data-tooltip="无布局">
+    <a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" class="item-link" data-atlassian-layout="{&quot;name&quot;: &quot;pagelayout-none&quot;, &quot;columns&quot;: 0   }">
+                    
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-check hidden"></span>
+                    
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-layout pagelayout-none">无布局</span>
+    </a>
+</li>
+                                <li class="dropdown-item" data-tooltip="两栏 (简单)">
+    <a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" class="item-link" data-atlassian-layout="{&quot;name&quot;: &quot;pagelayout-two-simple&quot;, &quot;columns&quot;: [&quot;&quot;, &quot;&quot;]   }">
+                    
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-check hidden"></span>
+                    
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-layout pagelayout-two-simple">两栏 (简单)</span>
+    </a>
+</li>
+                                <li class="dropdown-item" data-tooltip="两栏 (简单，左侧栏)">
+    <a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" class="item-link" data-atlassian-layout="{&quot;name&quot;: &quot;pagelayout-two-simple-left&quot;, &quot;columns&quot;: [&quot;aside&quot;, &quot;large&quot;]   }">
+                    
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-check hidden"></span>
+                    
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-layout pagelayout-two-simple-left">两栏 (简单，左侧栏)</span>
+    </a>
+</li>
+                                <li class="dropdown-item" data-tooltip="两栏 (简单，右侧栏)">
+    <a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" class="item-link" data-atlassian-layout="{&quot;name&quot;: &quot;pagelayout-two-simple-right&quot;, &quot;columns&quot;: [&quot;large&quot;, &quot;aside&quot;]   }">
+                    
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-check hidden"></span>
+                    
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-layout pagelayout-two-simple-right">两栏 (简单，右侧栏)</span>
+    </a>
+</li>
+                                <li class="dropdown-item" data-tooltip="三栏 (简单)">
+    <a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" class="item-link" data-atlassian-layout="{&quot;name&quot;: &quot;pagelayout-three-simple&quot;, &quot;columns&quot;: [&quot;&quot;, &quot;&quot;, &quot;&quot;]   }">
+                    
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-check hidden"></span>
+                    
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-layout pagelayout-three-simple">三栏 (简单)</span>
+    </a>
+</li>
+                                <li class="dropdown-item" data-tooltip="两栏">
+    <a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" class="item-link" data-atlassian-layout="{&quot;name&quot;: &quot;pagelayout-two&quot;, &quot;columns&quot;: [&quot;&quot;, &quot;&quot;] , &quot;header&quot;: true  , &quot;footer&quot;:true  }">
+                    
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-check hidden"></span>
+                    
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-layout pagelayout-two">两栏</span>
+    </a>
+</li>
+                                <li class="dropdown-item" data-tooltip="两栏 (左侧栏)">
+    <a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" class="item-link" data-atlassian-layout="{&quot;name&quot;: &quot;pagelayout-two-left&quot;, &quot;columns&quot;: [&quot;aside&quot;, &quot;large&quot;] , &quot;header&quot;: true  , &quot;footer&quot;:true  }">
+                    
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-check hidden"></span>
+                    
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-layout pagelayout-two-left">两栏 (左侧栏)</span>
+    </a>
+</li>
+                                <li class="dropdown-item" data-tooltip="两栏 (右侧栏)">
+    <a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" class="item-link" data-atlassian-layout="{&quot;name&quot;: &quot;pagelayout-two-right&quot;, &quot;columns&quot;: [&quot;large&quot;, &quot;aside&quot;] , &quot;header&quot;: true  , &quot;footer&quot;:true  }">
+                    
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-check hidden"></span>
+                    
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-layout pagelayout-two-right">两栏 (右侧栏)</span>
+    </a>
+</li>
+                                <li class="dropdown-item" data-tooltip="三列">
+    <a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" class="item-link" data-atlassian-layout="{&quot;name&quot;: &quot;pagelayout-three&quot;, &quot;columns&quot;: [&quot;&quot;, &quot;&quot;, &quot;&quot;] , &quot;header&quot;: true  , &quot;footer&quot;:true  }">
+                    
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-check hidden"></span>
+                    
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-layout pagelayout-three">三列</span>
+    </a>
+</li>
+                                <li class="dropdown-item" data-tooltip="三栏 (左边和右侧栏)">
+    <a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" class="item-link" data-atlassian-layout="{&quot;name&quot;: &quot;pagelayout-three-sidebars&quot;, &quot;columns&quot;: [&quot;sidebars&quot;, &quot;large&quot;, &quot;sidebars&quot;] , &quot;header&quot;: true  , &quot;footer&quot;:true  }">
+                    
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-check hidden"></span>
+                    
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-layout pagelayout-three-sidebars">三栏 (左边和右侧栏)</span>
+    </a>
+</li>
+                            </ul>
+                        </div>
+                    </li>
+                </ul>
+            
+                        
+            <ul class="aui-buttons aui-button-subtle rte-toolbar-group-undo">
+                
+            <li class="toolbar-item aui-button aui-button-subtle" id="rte-button-undo" data-tooltip="回退 (Ctrl+Z)" resolved="">
+    <a class="toolbar-trigger" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" data-control-id="undo">
+                    
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-undo ">回退</span>
+    </a>
+</li>
+                    
+            <li class="toolbar-item aui-button aui-button-subtle" id="rte-button-redo" data-tooltip="重做 (Ctrl+Y)" resolved="">
+    <a class="toolbar-trigger" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" data-control-id="redo">
+                    
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-redo ">重做</span>
+    </a>
+</li>
+            </ul>
+        </div>                                                    <div id="draft-status" style="display:none"></div>
+                <div class="aui-toolbar2-secondary">
+            <ul class="aui-buttons aui-button-subtle rte-toolbar-group-searchreplace">
+                <li class="toolbar-item aui-button aui-button-subtle" id="rte-button-searchreplace" data-tooltip="查找/替换" resolved="">
+    <a class="toolbar-trigger" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" data-control-id="searchreplace">
+                    
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-search ">查找/替换</span>
+    </a>
+</li>
+            </ul>
+            <ul class="aui-buttons aui-button-subtle rte-toolbar-group-help">
+                <li class="toolbar-item aui-button aui-button-subtle" id="rte-button-help" data-tooltip="帮助" resolved="">
+    <a class="toolbar-trigger" href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" data-control-id="help">
+                    
+    
+    <span class="icon aui-icon aui-icon-small aui-iconfont-editor-help ">键盘快捷方式帮助</span>
+    </a>
+</li>
+            </ul>
+        </div>    </div></div>
+
+
+                <div id="editor-notifications-container"><div id="all-messages"><div id="action-messages-notifications"></div></div></div><div id="editor-precursor"><div class="cell"><div class="aui-buttons aui-toolbar2"><button class="aui-button aui-button-subtle rte-button-labels" type="button" data-tooltip="标签" id="rte-button-labels" data-explicit-restrictions="" data-inherited-restrictions="" aria-label="编辑页标签" resolved=""><span class="icon aui-icon aui-icon-small aui-iconfont-devtools-tag"></span></button><button class="aui-button aui-button-subtle rte-button-restrictions" type="button" data-tooltip="未限制" id="rte-button-restrictions" data-explicit-restrictions="false" data-inherited-restrictions="false" aria-label="编辑页面限制。当前状态：无限制" resolved=""><span class="icon aui-icon aui-icon-small aui-iconfont-unlocked"></span></button></div><div id="content-title-div" class="collaborative"><input type="text" name="title" id="content-title" tabindex="1" class="text pagetitle" autocomplete="off" value="How to connect remote VPN on Windows" placeholder="页面标题"></div></div></div>
+    
+<div id="wysiwyg">
+    <div id="rte" class="cell editor-default collaborative">
+        <textarea id="wysiwygTextarea" name="wysiwygContent" class="hidden tinymce-editor"></textarea>
+    </div>
+</div>
+<div id="editor-html-source-container" class="hidden">
+    <textarea id="editor-html-source" class="monospaceInput"></textarea>
+</div>
+
+<div id="preview">
+    <div id="previewArea" class="cell">
+    </div>
+</div>
+
+    <div id="savebar-container"><div id="rte-savebar" class="aui-toolbar aui-toolbar2"><div class="toolbar-split toolbar-split-row"><div class="toolbar-split toolbar-split-left"><div class="aui-buttons"></div></div><div class="toolbar-split toolbar-split-right"><div id="pluggable-status-container" class="toolbar-item rte-toolbar-pluggable-status"><div id="pluggable-status" class="synchrony"><div class="synchrony-status-indicator"><div class="status-indicator-icon aui-icon aui-icon-small aui-iconfont-devtools-task-in-progress" data-tooltip="自动保存所有修改到草稿中"></div><div class="status-indicator-message" data-tooltip="自动保存所有修改到草稿中">连接中...</div></div></div></div><div class="aui-buttons" id="rte-savebar-tinymce-plugin-point"></div><div class="aui-buttons"><span id="rte-spinner" class="toolbar-item shared-drafts">&nbsp;</span></div><div class="aui-buttons toolbar-group-edit assistive"><button id="rte-button-edit" class="aui-button" title="返回编辑模式" type="button" resolved=""><span class="trigger-text">编辑</span></button></div><div class="aui-buttons toolbar-group-preview toolbar-group-preview-page toolbar-group-preview-shared-draft"></div><div class="save-button-container"><button class="aui-button aui-button-primary" type="submit" id="rte-button-publish" name="confirm" value="Save" title="保存" resolved=""><span class="trigger-text">保存</span></button></div><div class="aui-buttons cancel-button-container-shared-draft"><button class="aui-button" type="submit" id="rte-button-cancel" name="cancel" value="cancel" resolved="">取消</button></div><div class="aui-buttons toolbar-group-preview toolbar-group-ellipsis"><button class="aui-button toolbar-item aui-dropdown2-trigger aui-dropdown2-trigger-arrowless" aria-haspopup="true" id="rte-button-ellipsis" type="button" aria-label="更多选项" resolved="" aria-controls="rte-ellipsis-menu" aria-expanded="false"><span class="aui-icon aui-icon-small aui-iconfont-more"></span></button></div><div id="rte-ellipsis-menu" data-aui-alignment="top auto" class="aui-style-default aui-dropdown2 aui-layer" resolved="" tabindex="-1"><div class="aui-dropdown2-section"><ul class="aui-list-truncate"><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" id="rte-button-preview">预览</a></li><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" id="rte-show-changes">查看更改</a></li></ul></div><div class="aui-dropdown2-section"><ul class="aui-list-truncate"><li><a href="https://confluence.amlogic.com/display/IT/How+to+connect+remote+VPN+on+Windows#" id="rte-show-revert">恢复到最新已发布版本</a></li></ul></div></div></div></div></div></div>
+
+    <section role="dialog" id="quit-editor-dialog" class="aui-layer aui-dialog2 aui-dialog2-medium" aria-hidden="true"><header class="aui-dialog2-header"></header><div class="aui-dialog2-content"></div><footer class="aui-dialog2-footer"><div class="aui-dialog2-footer-actions"><button id="qed-publish-button" class="aui-button aui-button-primary update" resolved="">更新</button><button id="qed-discard-button" title="丢弃所有未发布的变更" class="aui-button toolbar-item exit" resolved="">恢复页面</button><button id="qed-save-exit-button" class="aui-button aui-button-primary exit" resolved="">保留草稿</button><button id="qed-close-button" class="aui-button toolbar-item" resolved="">取消</button></div></footer></section>
+
+    
+</div>
+
+
+
+<script type="text/x-template" title="dynamic-editor-metadata" id="dynamic-editor-metadata-template">
+            <meta name="ajs-use-watch" content="true">
+            <meta name="ajs-attachment-source-content-id" content="140476854">
+            <meta name="ajs-use-inline-tasks" content="true">
+            <meta name="ajs-heartbeat" content="true">
+            <meta name="ajs-action-locale" content="zh_CN">
+            <meta name="ajs-editor-plugin-resource-prefix" content="/s/yn4s1b/8703/1nlnn84/7.13.1/_">
+            <meta name="ajs-edit-mode" content="collaborative">
+            <meta name="ajs-user-watching-own-content" content="true">
+            <meta name="ajs-new-page" content="false">
+            <meta name="ajs-editor-mode" content="richtext">
+            <meta name="ajs-auto-start" content="false">
+            <meta name="ajs-conf-revision" content="confluence$content$140476854.219">
+            <meta name="ajs-sync-revision-source" content="synchrony-ack">
+            <meta name="ajs-draft-id" content="140476855">
+            <meta name="ajs-draft-share-id" content="b7c07bc1-7a6c-4b20-a186-4b511d1c0885">
+            <meta name="ajs-content-type" content="page">
+            <meta name="ajs-collaborative-editor-status" content="">
+            <meta name="ajs-existing-draft-id" content="0">
+            <meta name="ajs-content-id" content="140476854">
+            <meta name="ajs-form-name" content="inlinecommentform">
+            <meta name="ajs-can-attach-files" content="true">
+            <meta name="ajs-show-draft-message" content="false">
+            <meta name="ajs-shared-drafts" content="true">
+            <meta name="ajs-collaborative-content" content="true">
+            <meta name="ajs-min-editor-height" content="150">
+            <meta name="ajs-version-comment" content="">
+            <meta name="ajs-draft-type" content="page">
+                
+                <meta name="ajs-synchrony-token" content="eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJodHRwczpcL1wvY29uZmx1ZW5jZS5hbWxvZ2ljLmNvbVwvc3luY2hyb255XC92MSIsInN1YiI6IjJjOTNmODkyN2ZkYTljZjAwMTgxOGY0OGRjYzAwMGNmIiwiYWNjZXNzIjp7IlwvZGF0YVwvU3luY2hyb255LTlmNTlkZGQzLTUxMmMtMzM4ZC1iM2UzLTI1Yzk5OGM5MWM4NFwvY29uZmx1ZW5jZS0xNDA0NzY4NTQiOiJmdWxsIiwiXC9kYXRhXC9TeW5jaHJvbnktOWY1OWRkZDMtNTEyYy0zMzhkLWIzZTMtMjVjOTk4YzkxYzg0XC9jb25mbHVlbmNlLTE0MDQ3Njg1NC10aXRsZSI6ImZ1bGwifSwicmV2aXNpb25NZXRhIjp7InVzZXJLZXkiOiIyYzkzZjg5MjdmZGE5Y2YwMDE4MThmNDhkY2MwMDBjZiJ9LCJzZXNzaW9uIjp7ImF2YXRhclVSTCI6IlwvaW1hZ2VzXC9pY29uc1wvcHJvZmlsZXBpY3NcL2RlZmF1bHQuc3ZnIiwibmFtZSI6IlNoZW5na2VuLkxpbiIsImZ1bGxuYW1lIjoiU2hlbmdrZW4gTGluIn0sImlzcyI6IlN5bmNocm9ueS05ZjU5ZGRkMy01MTJjLTMzOGQtYjNlMy0yNWM5OThjOTFjODQiLCJleHAiOjE2NTc2MTg3ODgsImlhdCI6MTY1NzUzMjM4OH0.2cHuuT5C78_3b-TzoyxGRdHdd4K4iKb3O4M9FA9A8Q8">
+    <meta name="ajs-synchrony-base-url" content="https://confluence.amlogic.com/synchrony,https://confluence.amlogic.com/synchrony-proxy">
+    <meta name="ajs-synchrony-app-id" content="Synchrony-9f59ddd3-512c-338d-b3e3-25c998c91c84">
+    <meta name="ajs-synchrony-expiry" content="1657617888">
+    <meta name="ajs-use-xhr-fallback" content="true">
+
+            		    <meta name="ajs-max-thumb-width" content="300">
+		    <meta name="ajs-max-thumb-height" content="300">
+		    <meta name="ajs-can-send-email" content="true">
+		    <meta name="ajs-is-dev-mode" content="false">
+		    <meta name="ajs-draft-save-interval" content="30000">
+		    <meta name="ajs-show-hidden-user-macros" content="false">
+		    <meta name="ajs-can-view-profile" content="true">
+		    <meta name="ajs-is-admin" content="false">
+		    <meta name="ajs-confluence.prefs.editor.disable.autocomplete" content="false">
+		    <meta name="ajs-confluence.prefs.editor.disable.autoformat" content="false">
+		    <meta name="ajs-heartbeat-interval" content="30000">
+	
+    </script>
+
+<script type="text/x-template" title="tableForm" id="table-form-template">
+    <form id="tinymce-table-form" class="aui">
+        <div class="field-group">
+            <label for="rows">行</label>
+            <input id="rows" name="rows" type="text" size="3" autocomplete="off" value="{0}">
+        </div>
+        <div class="field-group">
+            <label for="cols">列</label>
+            <input id="cols" name="cols" type="text" size="3" autocomplete="off" value="{1}">
+        </div>
+        <div class="field-group hidden">
+            <input id="width" type="hidden" name="width" value="">
+            <label for="width">宽</label>
+        </div>
+        <div class="group">
+            <div class="checkbox">
+                <input id="table-heading-checkbox" class="checkbox" type="checkbox" name="heading" checked="checked" value="true">
+                <label for="table-heading-checkbox">首行设为表头</label>
+            </div>
+        </div>
+        <div class="group hidden">
+            <div class="checkbox">
+                <input id="table-equal-width-columns-checkbox" class="checkbox" type="checkbox" name="equal-width-columns" value="false">
+                <label for="table-equal-width-columns-checkbox">等宽列</label>
+            </div>
+        </div>
+    </form>
+</script>
+<input type="hidden" name="draftId" value="140476855" id="draftId"><input type="hidden" name="originalVersion" value="8" id="originalVersion">
+<input type="hidden" name="syncRev" value="0.lrI92Jx6dsWTZiGvRMdWYg.0" id="syncRev">    <input type="hidden" name="atl_token" value="966f0779c43d79e5bb238cbd991a4a8616ddf1e7">
+</div><div id="inline-dialog-notifications-miniview" class="aui-inline-dialog"><div class="aui-inline-dialog-contents contents" style="width: 500px;"><iframe id="notifications-miniview-iframe" src="./VPN登录_files/notifications-miniview.html" frameborder="0"></iframe></div><div id="arrow-notifications-miniview" class="aui-inline-dialog-arrow arrow aui-css-arrow"></div></div></body><div id="pvtMessageDiv" class="pvt-message-div"></div></html>

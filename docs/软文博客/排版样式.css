@@ -30,7 +30,7 @@ color:#2b2b2b;
   color: #2b2b2b;
   margin: 10px 0px;
   letter-spacing: 2px;
-  font-size: 16px;
+  font-size: 17px;
   word-spacing: 2px;
 }
 
@@ -245,6 +245,7 @@ color:#2b2b2b;
   border-radius:2px;
   height:21px;
   line-height:22px;
+  font-size: 14px;
 }
 
 /* 非微信代码块
@@ -254,6 +255,7 @@ color:#2b2b2b;
 #nice .code-snippet__fix {
   background: #f7f7f7;
   border-radius: 2px;
+  font-size: 14px;
 }
 
 #nice pre code {
