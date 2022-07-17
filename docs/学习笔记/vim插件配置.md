@@ -1,4 +1,18 @@
 
+- [vim插件安装和配置](#vim插件安装和配置)
+- [主题colorsheme](#主题colorsheme)
+- [YouCompleteMe 的安装和使用](#youcompleteme-的安装和使用)
+  - [安装](#安装)
+  - [使用](#使用)
+- [ctags 使用](#ctags-使用)
+  - [安装 ctags](#安装-ctags)
+  - [使用 ctags](#使用-ctags)
+  - [函数变量查找](#函数变量查找)
+- [Ack 插件安装](#ack-插件安装)
+  - [ubuntu 安装 ag](#ubuntu-安装-ag)
+  - [结合使用](#结合使用)
+- [vim 命令记录](#vim-命令记录)
+
 
 ------
 
@@ -38,18 +52,12 @@ auto-pairs
 
 -----
 
-自动对齐：自动对齐：（gg=G）
 
-块模式 ctrl+v
-
-d 删除
-
-I 进入编辑 
 
 
 ----
 
-## 安装和配置
+## vim插件安装和配置
 
 在 Linux 系统上安装 Vundle 需要 Git 支持
 
@@ -60,7 +68,7 @@ git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
 > 参考：https://vim80.readthedocs.io/zh/latest/plugin/vundle.html
 
 
-## 安装主题colorsheme
+## 主题colorsheme
 
 去这里的 colors 下下载自己想要的主题 https://github.com/flazz/vim-colorschemes
 
@@ -93,19 +101,6 @@ cd ~/.vim/bundles/YouCompleteMe
 python3 install.py --clang-completer
 ```
 
-报错
-
-```
-./install.py --clang-completer
-Searching Python 3.6 libraries... ERROR: Python headers are missing in /usr/include/python3.6m.
-```
-
-解决
-
-```
-
-```
-
 
 ### 使用
 
@@ -113,8 +108,6 @@ Searching Python 3.6 libraries... ERROR: Python headers are missing in /usr/incl
 - 也可以使用原有的<c-x><c-o>来补全, ycm 将其功能增强了.
 - 按照本文配置, 可用<c-j>跳转到定义处.
 - 默认配置<TAB>会选择补全内容, 本文的配置将其屏蔽了, 为了不会与snipmate等需要tab的冲突, 选择补全改为了.
-
-
 
 
 ## ctags 使用
@@ -178,8 +171,6 @@ q           关闭Quickfix
 
 
 
-
-
 -----
 
 ## vim 命令记录
@@ -224,3 +215,9 @@ q           关闭Quickfix
   - `>>` 将当前行右移一个单位
   - `<<` 将当前行左移一个单位(一个tab符)
   - `==` 自动缩进当前行
+
+- 自动对齐：自动对齐：（gg=G）
+
+- 块模式 ctrl+v
+  - d 删除
+  - I 进入编辑，编辑完按 ESC 退出

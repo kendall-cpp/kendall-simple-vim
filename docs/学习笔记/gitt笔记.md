@@ -1,6 +1,21 @@
 
 
-
+- [git 三个分区](#git-三个分区)
+	- [提交到暂存区](#提交到暂存区)
+	- [提交到对象区](#提交到对象区)
+	- [后悔还原](#后悔还原)
+	- [checkout](#checkout)
+	- [查看日志](#查看日志)
+	- [重命名](#重命名)
+	- [查重提交说明/修改注释](#查重提交说明修改注释)
+	- [branch 分支](#branch-分支)
+		- [保存线程 stash](#保存线程-stash)
+		- [在分支下修改文件](#在分支下修改文件)
+	- [分支修改冲突](#分支修改冲突)
+	- [版本回退--commit回退](#版本回退--commit回退)
+- [tag标签](#tag标签)
+- [diff 命令](#diff-命令)
+- [邮箱设置](#邮箱设置)
 
 -----
 
@@ -68,9 +83,9 @@ git atatus  查看可以看到 `(use "git checkout -- <file>..." to discard chan
 
 意思就是放弃修改，将代码从 对象区 又拷贝回来 工作区
 
-git checkout -- hello.txt
+git checkout -- hello.txt  	注意：放弃的是工作区中的修改
 
-> 注意 checkout 不佳斜杠 git checkout new_branch   切换分支
+> 注意 checkout 不加 '--' git checkout new_branch  是创建新分支
 
 
 ### 查看日志
@@ -95,7 +110,7 @@ git checkout -- aaa.txt
 
 > 这时候生成两个文件
 
-### 查重提交说明
+### 查重提交说明/修改注释
 
 git commit --amend -m "修正最近一次的提交信息"
 
@@ -107,10 +122,30 @@ git branch new_branche   创建新的分支
 
 git checkout new_branch   切换分支
 
+> 当一个工作未 commit 完成不能切换分支
+
 git checkout -b new_branch   创建并切换分支
 
-git checkout -d new_branch   删除分支，但是不能删除自己，得切换到其他分支，		
+git branch -d new_branch   删除分支，但是不能删除自己，得切换到其他分支，		
 	而且**当前分支如果有文件也不能删除**，建议想先合并
+
+#### 保存线程 stash
+
+如果还没有将某个功能开发完毕，就要切换防止，建议保存现场（临时保存，stash），再切换
+
+git stash    保存现场，还原到上一个时刻
+
+git stash save "mystash"  保存现场，并命名为 mystash，还原到上一个时刻
+
+gir stash list   查看所有保存的现场
+
+git stash pop    还原到上一个现场，同时删除现场
+
+git stash apply  还原现场，但不删除现场内容
+
+git stash pop stash@{0}    指定恢复到某一次现场
+
+git stash drop stash@{0}   手动删除某个现场
 
 #### 在分支下修改文件
 
@@ -142,6 +177,8 @@ git branch -D new_branch   强制删除，不提示合并
 
 git branch -v  查看每个分支最近一次提交的 sta1 值
 
+git branch -m main main2   分支重命名
+
 ### 分支修改冲突
 
 就是两个分支都对文件进行修改并且 add commit 了
@@ -157,6 +194,47 @@ git branch -v  查看每个分支最近一次提交的 sta1 值
 这时候就可以合并了
 
 git merge bash
+
+### 版本回退--commit回退 
+
+git commit -am  "合并 add 和 commit" （工程的第一次提交不能用）
+
+git commit --amend "aaaa22222"   修改上次注释
+
+git reset --hard HEAD^^  回退2个版本，一个 ^ 表示回退一个
+
+git reset --hard HEAD~n  回退前n个版本
+
+
+git reset --hard  536ab2	回头某一次， 通过 sha1 值前几个字符就可以
+
+git reflog       查看所有记录
+
+git reset --hard 709a929   通过 git reflog 得到被删除的 commit 的 sha1 值并回退
+
+
+## tag标签
+
+标签是针对这个项目的，而不是针对某个分支
+
+git tag v1.0  打标签
+
+git tag      查看标签（版本）
+
+git tag -a tag_name -m "注释“  
+
+git tag -d v1.0  	删除标签
+
+git tag -l "v*“       模糊查询
+
+git blame aaa.txt		追求某个文件是谁写的谁创建的
+
+
+## diff 命令
+
+比较 对象区 和 工作区 的差异，相对于对象区比较
+
+git diff   查看文件差异
 
 ## 邮箱设置
 
