@@ -8,6 +8,8 @@
   - [linux 文件系统](#linux-文件系统)
     - [file结构体](#file结构体)
     - [devfs 设备文件系统](#devfs-设备文件系统)
+    - [udev](#udev)
+- [字符设备](#字符设备)
 
 ----
 
@@ -308,6 +310,8 @@ struct inode {
 
 ### devfs 设备文件系统
 
+> **已经被 udev 取代**
+
 - 可以通过程序在设备初始化时在 `/dev` 目录下创建设备文件，卸载设备时将它删除
 
 - 设备驱动程序可以指定设备名、所有者和权限位，用户空间程序仍可以修改所有者和权限位。
@@ -343,3 +347,56 @@ static int _ _init xxx_init(void)
  module_init(xxx_init);
  module_exit(xxx_exit);
 ```
+
+---
+
+在Linux内核中，设备和驱动是分开注册的，注册 1 个设备的时候，并不需要驱动已经存在，而 1 个驱动被注册的时候，也不需要对应的设备已经被注册。设备和驱动各自涌向内核，而每个设备和驱动涌入内核的时候，都会去寻找自己的另一半，而正是 `bus_type` 的 `match()` 成员函数将两者捆绑在一起。
+
+就是说  `bus_type` 的 `match()`  能识别什么设备与什么驱动配对，一旦配对成功，xxx_drive 和 probe() 就被执行（xxx 是总线，比如i2c,pci,usb等）。
+
+> 注意：总线、驱动和设备最终都会落实为 sysfs 中的1个目录，进一步追踪代码会发现，它们实际上都可以认为是 kobject 的派生类，kobject 可看作是所有总线、设备和驱动的抽象基类，1个 kobject 对应 sysfs 中的1个目录。
+
+### udev
+
+udev的工作过程如下:
+
+- 当内核检测到系统中出现了新设备后，内核会通过netlink套接字发送uevent。
+- udev获取内核发送的信息，进行规则的匹配。匹配的事物包括 SUBSYSTEM、ACTION、atttribute、内核提供的名称（通过 KERNEL= ）以及其他的环境变量。
+
+> devfs 和 udev 分别是Linux 2.4和Linux 2.6以后的内核生成设备文件节点的方法，前者运行于内核空间，后者运行于用户空间。
+
+> udev 可以利用内核通过 netlink 发出的 uevent 信息动态创建设备文件节点。
+
+
+# 字符设备
+
+在Linux内核中，使用 cdev 结构体描述一个字符设备。
+
+```c
+struct cdev {
+	struct kobject kobj;    //内嵌的kobject对象
+	struct module *owner;   // 所述模块
+	const struct file_operations *ops;    // 文件操作结构体
+	struct list_head list; 
+	dev_t dev;                            // 设备树
+	unsigned int count;
+} __randomize_layout;
+```
+
+cdev 结构体的 dev_t 成员定义了设备号，为 32 位，其中 12 位为主设备号，20 位为次设备号。使用下列宏可以从 dev_t 获得主设备号和次设备号：
+
+```c
+MAJOR(dev_t dev)
+MINOR(dev_t dev)
+```
+
+而使用下列宏则可以通过主设备号和次设备号生成 dev_t
+
+```c
+// #define MKDEV(ma,mi)	((ma)<<8 | (mi))
+
+MKDEV(int major, int minor)
+```
+
+
+
