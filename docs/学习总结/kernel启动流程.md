@@ -57,9 +57,10 @@ Linux 内核启动的下一过程是启动第一个进程 init ，但必须以�
 
 ## kernel 挂载文件系统
 
-在 main.c 中的 kernel_init 线程函数中会调用 kernel_init_freeable() 函数，在 kernel_init_freeable 函数中将调用 prepare_namespace() 函数挂载指定的根文件系统
+在 main.c 中的 kernel_init 线程函数中会调用 kernel_init_freeable() 函数，在 kernel_init_freeable 函数中将调用 prepare_namespace() 函数挂载指定的根文件系统。
 
 ```c
+  //kernel_init_freeable 主要功能: 等待内核线程创建完
   static noinline void __init kernel_init_freeable(void)
   {
     /*
