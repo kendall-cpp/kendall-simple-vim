@@ -11,3 +11,6 @@
 
 * Summarize
   * [kernel启动流程](/学习总结/kernel启动流程.md)
+  
+* 工作记录
+  * [01Google项目熟悉](/工作记录/01Google项目熟悉.md)
