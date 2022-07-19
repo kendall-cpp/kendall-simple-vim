@@ -1,14 +1,14 @@
 
 
 - [第4章 Linux内核模块](#第4章-linux内核模块)
-  - [Linux内核的编译](#linux内核的编译)
-    - [Kconfig](#kconfig)
-      - [配置选项](#配置选项)
-- [第5章 Linux文件系统与设备文件](#第5章-linux文件系统与设备文件)
-  - [linux 文件系统](#linux-文件系统)
-    - [file结构体](#file结构体)
-    - [devfs 设备文件系统](#devfs-设备文件系统)
-    - [udev](#udev)
+	- [Linux内核的编译](#linux内核的编译)
+		- [Kconfig](#kconfig)
+			- [配置选项](#配置选项)
+- [5.Linux文件系统与设备文件](#5linux文件系统与设备文件)
+	- [linux 文件系统](#linux-文件系统)
+		- [file结构体](#file结构体)
+		- [devfs 设备文件系统](#devfs-设备文件系统)
+		- [udev](#udev)
 - [字符设备](#字符设备)
 
 ----
@@ -151,7 +151,7 @@ range <symbol> <symbol> [if <expr>]
     <expr> '||' <expr>
 ```
 
-# 第5章 Linux文件系统与设备文件
+# 5.Linux文件系统与设备文件
 
 ## linux 文件系统
 
