@@ -1,4 +1,4 @@
-* [零 K 同学](/README.md)
+* [Kendall Memory](/README.md)
 
 
 * 读书笔记
