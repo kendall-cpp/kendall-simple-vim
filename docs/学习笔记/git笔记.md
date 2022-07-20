@@ -16,6 +16,7 @@
 - [tag标签](#tag标签)
 - [diff 命令](#diff-命令)
 - [邮箱设置](#邮箱设置)
+- [git-review](#git-review)
 
 -----
 
@@ -256,6 +257,8 @@ git config --local user.email "lsken00@foxmail.com"
 git config --local --unset user.name   删除
 
 git config --local --unset user.email  删除 
+
+## git-review
 
 
 
