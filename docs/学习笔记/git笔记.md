@@ -19,12 +19,12 @@
 - [push pull](#push-pull)
 	- [和远程发生冲突](#和远程发生冲突)
 	- [git-review](#git-review)
-<<<<<<< HEAD
-- [push pull](#push-pull)
-	- [和远程发生冲突](#和远程发生冲突)
-=======
-- [git-review](#git-review)
->>>>>>> d7de4380af14a1a26998e3b56a34dd20ffcd006e
+- [git patch](#git-patch)
+	- [git format-patch：生成commit的内容](#git-format-patch生成commit的内容)
+	- [检查 patch](#检查-patch)
+	- [git am 对应 git format-patch](#git-am-对应-git-format-patch)
+	- [git apply 与 git am的区别](#git-apply-与-git-am的区别)
+	- [打patch发生冲突](#打patch发生冲突)
 
 -----
 
@@ -284,6 +284,8 @@ git config --local --unset user.email  删除
 
 ### 和远程发生冲突
 
+- 需要 git add 和 commit 再进行 pull
+
 - git pull 
 
 - vim 修改文件
@@ -294,17 +296,97 @@ git config --local --unset user.email  删除
 
 - git push
 
+- 再重新拉下来 git pull
+
 > **解决完冲突提交且 push 之后，另一个用户需要 pull **
 
 
 - git merge		 合并分支
 
-### git-review
-
----
 
 > pull = fecth + merge   (marge:  origin/master 和 master 合并)
 
 - git fetch   拉去到本地，origin/master 分支，还未合并
+
+### git-review
+
+---
+
+## git patch
+
+### git format-patch：生成commit的内容
+
+```
+生成最近1次的commit的patch
+git format-patch HEAD^
+
+生成最近2次的commit的patch
+git format-patch HEAD^^
+
+生成最近3次的commit的patch
+git format-patch HEAD^^^
+
+生成最近4次commit的patch
+git format-patch HEAD^^^^
+
+将两个commit以及中间的所有commit生成patch
+git format-patch <commit1_hash>..<commit2_hash>
+
+生成单个commit的patch
+git format-patch -1 <commit_hash>
+
+将某个commit（不包括）之后的提交，打成patch
+git format-patch <commit_hash>
+
+将某个commit（包括）之前的所有提交，打成patch
+git format-patch --root <commit_hash>
+```
+
+### 检查 patch
+
+```
+查看patch的情况
+git apply --stat xx.patch
+
+检查patch与当前分支合并时，是否有冲突
+git apply --check xx.patch
+```
+
+
+### git am 对应 git format-patch
+
+```
+合并新来的commit patch
+git am *.patch
+
+合并时，签上打patch人的名字
+git am --signoff *.patch
+
+放弃本次打的patch
+git am --abort
+
+当git am 失败，解决完冲突后，接着执行未完成的patch
+git am --resolved
+```
+
+### git apply 与 git am的区别
+
+- git apply 只更新改动内容，打完之后需要自己 git add 和 git commit
+- git am 是更新的 commit，会将 commit 的所有信息打上去，author 也是 patch 的 author 而不打 patch的人。
+
+### 打patch发生冲突
+
+如果不想打这次 patch 了，直接 git am --abort 。
+
+如果还想继续，采用以下方法：
+
+- 根据 git am 失败的信息，找到发生冲突的具体 patch 文件，然后 `git apply --reject <patch_name>`，发生冲突的部分会保存为 patch_name.rej 文件；
+
+- 根据 patch_name.rej 文件，修改该 patch 文件来解决冲突；
+
+- 执行 git am --abort 命令，取消第一步的操作；
+
+- 再重新执行 git am *.patch 命令即可
+
 
 
