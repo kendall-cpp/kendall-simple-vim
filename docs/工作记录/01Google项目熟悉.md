@@ -198,7 +198,7 @@ pr_info(" kendall ========>>> Kernel TE entry: %llu\n", meson_timestamp_hw_get(t
 
 当选中这个选项后，启动内核，会在日志信息前面加上时间戳。
 
-### ramdisk.img解包
+### ramdisk.img 解包
 
 ```sh
 mv ramdisk.img ramdisk.img.xz

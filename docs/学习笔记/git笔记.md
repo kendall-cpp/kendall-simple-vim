@@ -16,6 +16,8 @@
 - [tag标签](#tag标签)
 - [diff 命令](#diff-命令)
 - [邮箱设置](#邮箱设置)
+- [push pull](#push-pull)
+	- [和远程发生冲突](#和远程发生冲突)
 
 -----
 
@@ -161,7 +163,7 @@ git checkout main  切换分支
 
 想要多个分支都删出，需要合并“写”操作
 
-git checkout main
+git checkout main   切换分支
 
 git merge new_branch   合并分支
 
@@ -178,6 +180,8 @@ git branch -D new_branch   强制删除，不提示合并
 git branch -v  查看每个分支最近一次提交的 sta1 值
 
 git branch -m main main2   分支重命名
+
+git branch -a       查看本地所有分支，红色表示远程分支（只读）
 
 ### 分支修改冲突
 
@@ -257,5 +261,38 @@ git config --local --unset user.name   删除
 
 git config --local --unset user.email  删除 
 
+## push pull
 
+- git remote add origin github_url  将本地和远程关联
 
+- git push -u origin master     第一次要指定分支
+  - git push 				后续不需要加 -u
+  - git push origin master  查看远程状态
+
+- git pull -u pull       
+
+- git remote show     查看远程项目链接的名字，origin
+
+- git remote show origin   查看origin的详细信息
+
+### 和远程发生冲突
+
+- git pull 
+
+- vim 修改文件
+
+- git add  文件名
+
+- git commit -m "解决冲突"
+
+- git push
+
+---
+
+> pull = fecth + merge   (marge:  origin/master 和 master 合并)
+
+- git fetch   拉去到本地，origin/master 分支，还未合并
+
+- git merge		 合并分支
+
+> **解决完冲突提交且 push 之后，另一个用户需要 pull **
