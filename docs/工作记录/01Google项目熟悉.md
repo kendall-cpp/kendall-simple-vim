@@ -231,7 +231,7 @@ unxz   env.xz   解压
                     压缩，6-9极好的压缩；默认值为6
 ```
 
-# 2002年7月19日
+# 2020年7月19日
 
 ### 挂载文件系统前后时间
 
@@ -253,4 +253,25 @@ find . |cpio -ov -H newc | xz -9  --check=crc32  > ../ramdisk.img
 kernel 中执行 dmesg 查看日志 -- 带时间戳
 
 修改 kernel/init/do_mounts.c
+
+## 2020年7月20日
+
+- 1 bootloader阶段：bl2,bl31,bl32,bl33(uboot)
+  - 4261435652
+- 2 kernel 阶段
+  - 2.936989@0
+
+
+- 3 ramdisk init阶段：
+	- 1） 挂载文件系统前
+    - [    3.416286@0] INIT: mount squashfs /dev/mapper/system /system.ro ro nodev noatime ===> end
+	- 2） 挂载文件系统后
+    [    4.526793@1] INIT: mount pstore none /sys/fs/pstore kmsg_bytes=8000 ===> end
+
+
+## 找到 hw_id 怎么来的
+
+```c
+[    0.000000@0] Kernel command line: otg_device=1 hw_id=0x04 warm_boot=1 androidboot.reboot_mode=watchdog_reboot androidboot.hardware=korlan-p2 rootfstype=ramfs init=/init console=ttyUSB0,115200 console=ttyS0,115200 no_console_suspend earlycon=aml_uart,0xfe002000 quiet loglevel=7 ramoops.pstore_en=1 ramoops.record_size=0x8000 ramoops.console_size=0x4000 selinux=1 enforcing=0
+```
 

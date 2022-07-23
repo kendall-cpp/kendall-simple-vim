@@ -18,6 +18,13 @@
 - [邮箱设置](#邮箱设置)
 - [push pull](#push-pull)
 	- [和远程发生冲突](#和远程发生冲突)
+	- [git-review](#git-review)
+<<<<<<< HEAD
+- [push pull](#push-pull)
+	- [和远程发生冲突](#和远程发生冲突)
+=======
+- [git-review](#git-review)
+>>>>>>> d7de4380af14a1a26998e3b56a34dd20ffcd006e
 
 -----
 
@@ -287,12 +294,17 @@ git config --local --unset user.email  删除
 
 - git push
 
+> **解决完冲突提交且 push 之后，另一个用户需要 pull **
+
+
+- git merge		 合并分支
+
+### git-review
+
 ---
 
 > pull = fecth + merge   (marge:  origin/master 和 master 合并)
 
 - git fetch   拉去到本地，origin/master 分支，还未合并
 
-- git merge		 合并分支
 
-> **解决完冲突提交且 push 之后，另一个用户需要 pull **
