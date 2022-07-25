@@ -25,6 +25,7 @@
 	- [git am 对应 git format-patch](#git-am-对应-git-format-patch)
 	- [git apply 与 git am的区别](#git-apply-与-git-am的区别)
 	- [打patch发生冲突](#打patch发生冲突)
+	- [例子](#例子)
 
 -----
 
@@ -365,7 +366,7 @@ git am --signoff *.patch
 放弃本次打的patch
 git am --abort
 
-当git am 失败，解决完冲突后，接着执行未完成的patch
+当 git am 失败，解决完冲突后，接着执行未完成的 patch
 git am --resolved
 ```
 
@@ -388,5 +389,26 @@ git am --resolved
 
 - 再重新执行 git am *.patch 命令即可
 
+### 例子
 
+```sh
+修改最新文件并 commit
+
+然后打 patch
+
+git format-patch -1 <commit_hash>
+
+## 注意 patch 不能保存在当前目录下，否则 reset 会被删掉
+
+然后 reset 到某个版本
+
+
+git reset --hard 761ac81568
+
+如果需要退回某个 patch 的地方
+
+git am --abort
+
+git am <commit_hash>
+```
 

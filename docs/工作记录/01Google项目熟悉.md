@@ -275,6 +275,29 @@ kernel 中执行 dmesg 查看日志 -- 带时间戳
 [    0.000000@0] Kernel command line: otg_device=1 hw_id=0x04 warm_boot=1 androidboot.reboot_mode=watchdog_reboot androidboot.hardware=korlan-p2 rootfstype=ramfs init=/init console=ttyUSB0,115200 console=ttyS0,115200 no_console_suspend earlycon=aml_uart,0xfe002000 quiet loglevel=7 ramoops.pstore_en=1 ramoops.record_size=0x8000 ramoops.console_size=0x4000 selinux=1 enforcing=0
 ```
 
+
+寻找
+
+```c
+#define PADCTRL_GPIOX_I                            ((0x0040  << 2) + 0xfe004000)
+
+
+// ./u-boot/board/amlogic/a1_korlan_p2/a1_korlan_p2.c
+  /* read hw id */
+  ret = readl(PADCTRL_GPIOX_I);
+  hw_id = (ret >> 0) & 0x1F;
+    
+  snprintf(hw_id_str, sizeof(hw_id_str), "0x%02x", hw_id);
+  env_set("hw_id", hw_id_str);
+  return 0;
+}  
+    
+U_BOOT_CMD(
+  get_board_hw_id, 1, 0, do_get_board_hw_id,
+  "get GQ/NQ HW_ID and env_set 'hw_id'\n",                                                                                                  
+  "get_board_hw_id"
+); 
+
 ```
 vim bl2/plat/a1/plat_init.c +300
 
