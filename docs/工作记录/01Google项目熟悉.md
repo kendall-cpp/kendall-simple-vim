@@ -297,8 +297,8 @@ U_BOOT_CMD(
   "get GQ/NQ HW_ID and env_set 'hw_id'\n",                                                                                                  
   "get_board_hw_id"
 ); 
-
 ```
-vim bl2/plat/a1/plat_init.c +300
 
-```
+## 2022年7月26日
+
+参考文档：http://www.wowotech.net/gpio_subsystem/io-port-control.html
