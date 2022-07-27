@@ -75,6 +75,8 @@ u-boot/board/amlogic/defconfigs/a1_korlan_p2_defconfig
 
 ### 板子和芯片相关型号
 
+只需关注
+
 - u-boot
 
 > - meson-a1-a113l-korlan.dts
@@ -302,3 +304,18 @@ U_BOOT_CMD(
 ## 2022年7月26日
 
 参考文档：http://www.wowotech.net/gpio_subsystem/io-port-control.html
+
+检索记录：
+
+```sh
+u-boot/drivers/pinctrl/meson/pinctrl-meson-axg.c
+```
+
+ Meson 系列的 SOC 有两个pinctrl 控制器，分别是： pinctrl_aobus 和 pinctrl_periphs
+ 
+- pinctrl_aobus -- AO domain
+- pinctrl_periphs -- EE domain
+
+设备树文件
+
+> ./arch/arm/dts/meson-a1-a113l-korlan.dts

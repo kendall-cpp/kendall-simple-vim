@@ -10,7 +10,8 @@
   * [vim插件配置](/学习笔记/vim插件配置.md)
 
 * Summarize
-  * [kernel启动流程](/学习总结/kernel启动流程.md)
+  * [kernel启动流程](/知识点/kernel启动流程.md)
+  * [学习GPIO](知识点总结/学习GPIO.md)
   
 * 工作记录
   * [01Google项目熟悉](/工作记录/01Google项目熟悉.md)

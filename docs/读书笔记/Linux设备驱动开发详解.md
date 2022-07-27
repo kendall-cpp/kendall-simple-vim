@@ -1,6 +1,6 @@
 
 
-- [第4章 Linux内核模块](#第4章-linux内核模块)
+- [4.Linux内核模块](#4linux内核模块)
 	- [Linux内核的编译](#linux内核的编译)
 		- [Kconfig](#kconfig)
 			- [配置选项](#配置选项)
@@ -13,7 +13,7 @@
 
 ----
 
-# 第4章 Linux内核模块
+# 4.Linux内核模块
 
 ## Linux内核的编译
 
@@ -378,7 +378,7 @@ struct cdev {
 	struct module *owner;   // 所述模块
 	const struct file_operations *ops;    // 文件操作结构体
 	struct list_head list; 
-	dev_t dev;                            // 设备树
+	dev_t dev;                            // 设备号
 	unsigned int count;
 } __randomize_layout;
 ```
@@ -390,12 +390,22 @@ MAJOR(dev_t dev)
 MINOR(dev_t dev)
 ```
 
-而使用下列宏则可以通过主设备号和次设备号生成 dev_t
+而使用下列宏则可以通过 主设备号 和 次设备号 生成 dev_t
 
 ```c
 // #define MKDEV(ma,mi)	((ma)<<8 | (mi))
 
 MKDEV(int major, int minor)
+```
+
+操作 cdev 结构体的函数
+
+```c
+void cdev_init(struct cdev *, const struct file_operations *); 
+struct cdev *cdev_alloc(void);  
+void cdev_put(struct cdev *p);
+int cdev_add(struct cdev *, dev_t, unsigned);   //从系统添加有一个 cdev
+void cdev_del(struct cdev *)   		//从系统删除有一个 cdev
 ```
 
 
