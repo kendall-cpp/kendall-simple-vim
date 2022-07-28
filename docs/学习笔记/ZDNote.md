@@ -814,6 +814,6 @@ setenv bootcmd 'tftp 80800000 zImage;tftp 83000000 imx6ull-alientek-emmc.dtb;boo
 bootargs=console=ttymxc0,115200 rw root=/dev/nfs nfsroot=192.168.91.130:/home/book/kenspace/zd-linux/tftpboots ip=192.168.237.1:192.168.91.130:192.168.91.1:255.255.255.0::eth0:off
 
 
-----> 在系统一直环节没做好
+----> 在系统环节没做好
 
 
