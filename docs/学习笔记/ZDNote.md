@@ -349,7 +349,8 @@ chmod +x imx6mksdboot.sh imx6mkemmcboot.sh
  sudo ./imx6mksdboot.sh -device /dev/sdb -flash emmc -ddrsize 512
 ```
 
-点击回车 --> 等待烧写完成即可，这时候查看 Ubuntu 中的文件夹可以看到多了个 rootfs 文件夹。往 EMMC 中烧写，所以需要将系存到 rootfs 中，存到 rootfs 的 home/root 文件夹下。直接将 ubuntu 下的 files 文件夹复制到 rootfs 的 home/root 文件夹下。然后执行 sync 同步操作。
+点击回车 --> 等待烧写完成即可，这时候查看 Ubuntu 中的文件夹可以看到多了个 rootfs 文件夹。往 EMMC 中烧写，所以需要将其存到 rootfs 中，存到 rootfs 的 home/root 文件夹下。直接将 ubuntu 下的 files 文件夹复制到 rootfs 的 home/root 文件夹下。然后执行 sync 同步操作。
+
 
 拔掉 SD 卡，并使用 SD 卡系统。
 
@@ -814,4 +815,5 @@ bootargs=console=ttymxc0,115200 rw root=/dev/nfs nfsroot=192.168.91.130:/home/bo
 
 
 ----> 在系统一直环节没做好
+
 

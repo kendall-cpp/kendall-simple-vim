@@ -318,4 +318,5 @@ u-boot/drivers/pinctrl/meson/pinctrl-meson-axg.c
 
 设备树文件
 
-> ./arch/arm/dts/meson-a1-a113l-korlan.dts
+> kernel/arch/arm/dts/meson-a1-a113l-korlan.dts
+> kernel/arch/arm/boot/dts/meson.dtsi
