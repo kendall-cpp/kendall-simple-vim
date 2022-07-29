@@ -60,7 +60,7 @@ nothing to commit, working tree clean
 
 git rm hello.txt  从对象区中删除一个数据（会删除本地文件），会回到暂存区，可以用 git reset head 退回到 工作区，但是也可以再执行 git commit hello.txt 彻底删除
 
-> 所以彻底阐述：git rm file_name ; git commit file_name
+> 所以彻底删除：git rm file_name ; git commit file_name
 
 
 ### 后悔还原
