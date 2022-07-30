@@ -21,8 +21,11 @@
   - [启动 Uboot 分析](#启动-uboot-分析)
     - [uboot 源码目录](#uboot-源码目录)
     - [uboot 启动流程](#uboot-启动流程)
-    - [linux 内核移植](#linux-内核移植)
-      - [在 U-Boot 中添加自己的开发板](#在-u-boot-中添加自己的开发板)
+  - [linux 内核移植](#linux-内核移植)
+    - [编译 NXP 官方开发板对应的 linux 系统](#编译-nxp-官方开发板对应的-linux-系统)
+    - [设置开发板、主机和ubuntu网络互连](#设置开发板主机和ubuntu网络互连)
+    - [在 U-Boot 中添加正点原子的开发板](#在-u-boot-中添加正点原子的开发板)
+  - [CPU 主频和网络驱动修改](#cpu-主频和网络驱动修改)
   - [构建根文件系统](#构建根文件系统)
     - [配置 busybox](#配置-busybox)
 - [第四期 驱动开发](#第四期-驱动开发)
@@ -33,7 +36,6 @@
     - [编写字符驱动模块加载和卸载程序](#编写字符驱动模块加载和卸载程序)
     - [编译烧写](#编译烧写)
     - [测试 .ko](#测试-ko)
-      - [修改 u-boot 环境变量](#修改-u-boot-环境变量)
 
 ------
 
@@ -507,14 +509,17 @@ reset 函数在 arch/arm/cpu/armv7/start.S 里面
 
 
 
-### linux 内核移植
+## linux 内核移植
+
+> E:\学习资源\正点原子\【正点原子】阿尔法Linux开发板（A盘）-基础资料\01、例程源码\01、例程源码\04、NXP官方原版Uboot和Linux\
 
 拷贝 linux-imx-rel_imx_4.1.15_2.1.0_ga.tar 到  `/home/book/kenspace/zd-linux/IMX6ULL/linux`。
 
 ```sh
 tar xjf linux-imx-rel_imx_4.1.15_2.1.0_ga.tar.bz2 
 ```
-编译 NXP 官方开发板对应的 linux 系统
+
+### 编译 NXP 官方开发板对应的 linux 系统
 
 创建 imx6ull_14x14_evk.sh 文件
 
@@ -540,14 +545,17 @@ chmod  +x imx6ull_14x14_evk.sh
 编译完成生成的设备树文件在
 
 ```sh
-/home/book/kenspace/zd-linux/IMX6ULL/linux/linux-imx-rel_imx_4.1.15_2.1.0_ga/arch/arm/boot/dts
+# /home/book/kenspace/zd-linux/IMX6ULL/linux/linux-imx-rel_imx_4.1.15_2.1.0_ga/arch/arm/boot/dts
 
 ls imx6ull*.dts
+
+# /home/book/kenspace/zd-linux/IMX6ULL/linux/linux-imx-rel_imx_4.1.15_2.1.0_ga/arch/arm/boot
+ls zIamge
 ```
 
-最终生成 imx6ull-14x14-evk-emmc.dtb 和 imx6ull-14x14-evk-emmc.dts。
+最终编译出 zImage 和生成 imx6ull-14x14-evk-emmc.dtb 
 
-需要将 imx6ull-14x14-evk-emmc.dtb 和 imx6ull-14x14-evk-emmc.dts 这两个文件拷贝到 tftpboot 目录下，然后在 uboot 通过网络 tftp 服务启动。
+需要将 imx6ull-14x14-evk-emmc.dtb 和 zImage 这两个文件拷贝到 tftpboot 目录下，然后在 uboot 通过网络 tftp 服务启动。
 
 ```sh
 cp IMX6ULL/linux/linux-imx-rel_imx_4.1.15_2.1.0_ga/arch/arm/boot/zImage ./tftpboot -f
@@ -557,18 +565,122 @@ cp IMX6ULL/linux/linux-imx-rel_imx_4.1.15_2.1.0_ga/arch/arm/boot/dts/imx6ull-14x
 
 **使用 SD 卡启动开发板，进入 uboot 命令行模式**
 
-#### 在 U-Boot 中添加自己的开发板
+通过 => tftp 80800000 zImage 这个命令下载 ZImage 
+
+可以尝试 uboot 上 ping 一下 UBunut 的 ip 地址
+
+```sh
+=> ping 192.168.91.130
+# ERROR: `ipaddr' not set
+```
+
+- 原因：没有网络配置
+- 解决：设置网络信息
+
+### 设置开发板、主机和ubuntu网络互连
+
+参考：https://blog.csdn.net/lylg_ban/article/details/121657952
+
+参考：`E:\学习资源\正点原子\【正点原子】阿尔法Linux开发板（A盘）-基础资料\10、用户手册\10、用户手册\【正点原子】I.MX6U网络环境TFTP&NFS搭建手册V1.3.1.pdf`
+
+
+设置 uboot ip
+
+> 在 EMMC 模式执行 ifconfig 拷贝的：88:f8:d2:4b:bf:f2
+
+```sh
+setenv ipaddr 192.168.10.50
+setenv ethaddr 88:f8:d2:4b:bf:f2
+setenv gatewayip 192.168.10.1
+setenv netmask 255.255.255.0
+setenv serverip 192.168.10.100
+saveenv
+
+Saving Environment to MMC...
+Writing to MMC(0)... done
+=> ping 192.168.10.100
+FEC1 Waiting for PHY auto negotiation to complete.... done
+Using FEC1 device
+host 192.168.10.100 is alive
+```
+
+继续参考上面文档配置 TFTP
+
+```
+server tftp
+    {
+        socket_type = dgram
+        wait = yes
+        disable = no
+        user = root
+        protocol = udp
+        server = /usr/sbin/in.tftpd
+        server_args = -s /home/book/kenspace/zd-linux/tftpboot -c
+        #log_on_success += PID HOST DURATION
+        #log_on_failure += HOST
+        per_source = 11
+        cps =100 2
+        flags =IPv4
+    }
+```
+
+在 uboot 执行 tftp 80800000 zImag
+
+```
+=> tftp 80800000 zImage
+Using FEC1 device
+TFTP from server 192.168.10.100; our IP address is 192.168.10.50
+Filename 'zImage'.
+Load address: 0x80800000
+Loading: #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         #################################################################
+         ########################################################
+
+
+=> tftp 83000000 imx6ull-14x14-evk-emmc.dtb
+Using FEC1 device
+TFTP from server 192.168.10.100; our IP address is 192.168.10.50
+Filename 'imx6ull-14x14-evk-emmc.dtb'.
+Load address: 0x83000000
+Loading: ###
+         1.1 MiB/s
+done
+Bytes transferred = 36093 (8cfd hex)
+
+
+# 启动
+=> bootz 80800000 - 83000000
+
+...
+hub 1-1:1.0: USB hub found
+Kernel panic - not syncing: VFS: Unable to mount root fs on unknown-block(0,0)
+---[ end Kernel panic - not syncing: VFS: Unable to mount root fs on unknown-block(0,0)
+```
+
+出现上面信息是因为没有根文件系统导致的。
+
+综上所述，NPX 官网的 ZImage 和 dtb 可以在正点原子开发板启动。
+
+
+
+### 在 U-Boot 中添加正点原子的开发板
+
+- 复制 `arch/arm/configs/imx_v7_mfg_defconfig` 文件为`imx_alientek_emmc_defconfig`。
+- 复制`arch/arm/boot/dts/imx6ull-14x14-evk.dts`文件为`imx6ull-alientek-emmc.dts`
 
 ```sh
 # /home/book/kenspace/zd-linux/IMX6ULL/linux/linux-imx-rel_imx_4.1.15_2.1.0_ga/arch/arm/configs
-cp imx_v7_mfg_defconfig mx6ull_alientek_emmc_defconfig
+cp imx_v7_mfg_defconfig imx_alientek_emmc_defconfig
 
 # 设备树
 # /home/book/kenspace/zd-linux/IMX6ULL/linux/linux-imx-rel_imx_4.1.15_2.1.0_ga/arch/arm/boot/dts
-cp imx6ull-14x14-evk-emmc.dts imx6ull-alientek-emmc.dts
+cp imx6ull-14x14-evk.dts imx6ull-alientek-emmc.dts
 ```
 
-修改 Makefile
+修改 dts 的 Makefile
 
 ```mk
 # /home/book/kenspace/zd-linux/IMX6ULL/linux/linux-imx-rel_imx_4.1.15_2.1.0_ga/arch/arm/boot/dts
@@ -578,19 +690,22 @@ cp imx6ull-14x14-evk-emmc.dts imx6ull-alientek-emmc.dts
 编写脚本
 
 ```sh
+# /home/book/kenspace/zd-linux/IMX6ULL/linux/linux-imx-rel_imx_4.1.15_2.1.0_ga
 book@kendall:linux-imx-rel_imx_4.1.15_2.1.0_ga$ cp imx6ull_14x14_evk.sh imx6ull-alientek-emmc.sh
 ```
+
+vim imx6ull-alientek-emmc.sh 
 
 ```sh
 #!/bin/bash                                                                                                                                   
 make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- distclean
 
-# /home/book/kenspace/zd-linux/IMX6ULL/linux/linux-imx-rel_imx_4.1.15_2.1.0_ga/arch/arm/configs/imx_v7_mfg_defconfig
-make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- mx6ull_alientek_emmc_defconfig
+# /home/book/kenspace/zd-linux/IMX6ULL/linux/linux-imx-rel_imx_4.1.15_2.1.0_ga/arch/arm/configs/imx_alientek_emmc_defconfig
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- imx_alientek_emmc_defconfig
 
-make V=1 ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- menuconfig
+make  ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- menuconfig
 
-make V=1 ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- -j4 
+make  ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- -j4 
 ```
 
 
@@ -601,42 +716,114 @@ make V=1 ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- -j4
 - 为了快速编译，修改顶层 Makefile
 
 ```mk
-ARCH		?= arm
-CROSS_COMPILE	?= arm-linux-gnueabihf- 
+ 257 ARCH ?= arm  
+ 258 CROSS_COMPILE ?= arm-linux-gnueabihf-
 ```
 
 - 之后执行 make 编译就可以了
 
 
+```sh
+make distclean
+make CROSS_COMPILE=imx6ull_alientek_emmc_defconfig
+make -j4
+```
+
+编译出来的 zImage `arch/arm/boot/Image`
+
+编译出来的 imx6ull-alientek-emmc.dtb  `arch/arm/boot/dts`
+
 拷贝
 
 ```sh
-cp IMX6ULL/linux/linux-imx-rel_imx_4.1.15_2.1.0_ga/arch/arm/boot/zImage ./tftpboot/
+# /home/book/kenspace/zd-linux/IMX6ULL/linux/linux-imx-rel_imx_4.1.15_2.1.0_ga/arch/arm/boot/dts
+cp imx6ull-alientek-emmc.dtb ~/kenspace/zd-linux/tftpboot/
 
-cp IMX6ULL/linux/linux-imx-rel_imx_4.1.15_2.1.0_ga/arch/arm/boot/dts/imx6ull-alientek-emmc.dtb ./tftpboot/
+# /home/book/kenspace/zd-linux/IMX6ULL/linux/linux-imx-rel_imx_4.1.15_2.1.0_ga/arch/arm/boot
+cp zImage ~/kenspace/zd-linux/tftpboot/
 ```
 
 
-- 复位开发板
+- 拷贝完成后复位开发板
 
-设置 bootcmd 和 bootargs
-
-```sh
-setenv bootcmd 'tftp 80800000 zImage;tftp 83000000 imx6ull-alientek-emmc.dtb;bootz 80800000 - 83000000'
-
-bootargs=console=ttymxc0,115200 rw root=/dev/nfs nfsroot=192.168.91.130:/home/book/kenspace/zd-linux/tftpboots ip=192.168.237.1:192.168.91.130:192.168.91.1:255.255.255.0::eth0:off
-
-setenv bootargs 'console=ttymxc0,115200 root=/dev/nfs nfsroot=192.168.91.130:
-/home/book/kenspace/zd-linux/nfs/rootfs,proto=tcp rw ip=192.168.1.251:192.168.1.250:192.168.1.1:
-255.255.255.0::eth0:off
-```
 
 
 ```sh
+# 下载镜像
 tftp 80800000 zImage
 
-tftp 83000000 imx6ull-14x14-evk-emmc.dtb
+# 下载设备树
+tftp 83000000 imx6ull-alientek-emmc.dtb
+
+bootz 80800000 - 83000000
 ```
+
+
+## CPU 主频和网络驱动修改
+
+- 设置通过网络启动的 bootcmd ，这样直接复位，不需要，如果【不回车】就会自动进入 kernel 了。
+
+```
+setenv bootcmd 'tftp 80800000 zImage;tftp 83000000 imx6ull-alientek-emmc.dtb;bootz 80800000 - 83000000;'
+
+saveenv
+```
+
+- 设置默认的 根文件系统， 设置 bootargs
+
+
+```sh
+# onsole=ttymxc0 是 imx6uLL 开发板串口 1 的设备，也就是控制台使用串口 1
+# root=根文件系统位置，p2 表示 EMMC 的第二个分区
+setenv bootargs 'console=ttymxc0,115200 root=/dev/mmcblk1p2 rootwait rw'
+saveenv
+```
+
+- 修改解决驱动问题
+
+```sh
+book@kendall:tftpboot$ vim ../IMX6ULL/linux/linux-imx-rel_imx_4.1.15_2.1.0_ga/arch/arm/boot/dts/imx6ull-alientek-emmc.dts
+
+# 找到描述 EMMC 板子设备信息的节点
+&usdhc2 {                                                                                                                                     
+    pinctrl-names = "default";
+    pinctrl-0 = <&pinctrl_usdhc2>;
+    non-removable;
+    status = "okay";
+};
+
+# 找到 book@kendall:tftpboot$ vim ../IMX6ULL/linux/linux-imx-rel_imx_4.1.15_2.1.0_ga/arch/arm/boot/dts/imx6ull-14x14-evk-emmc.dts
+&usdhc2 {
+    pinctrl-names = "default", "state_100mhz", "state_200mhz";
+    pinctrl-0 = <&pinctrl_usdhc2_8bit>;
+    pinctrl-1 = <&pinctrl_usdhc2_8bit_100mhz>;
+    pinctrl-2 = <&pinctrl_usdhc2_8bit_200mhz>;
+    bus-width = <8>;
+    non-removable;
+    status = "okay";
+};
+```
+
+将 imx6ull-14x14-evk-emmc.dts 的 &usdhc2 信息复制到 imx6ull-alientek-emmc.dts 的 &usdhc2 下（覆盖掉原来的），如下所示：
+
+```
+&usdhc2 {
+    pinctrl-names = "default", "state_100mhz", "state_200mhz";
+    pinctrl-0 = <&pinctrl_usdhc2_8bit>;
+    pinctrl-1 = <&pinctrl_usdhc2_8bit_100mhz>;
+    pinctrl-2 = <&pinctrl_usdhc2_8bit_200mhz>;
+    bus-width = <8>;
+    non-removable;
+    status = "okay";
+};
+```
+
+直接编译被修改过的设备树
+
+make dtbs
+
+> 注意第一次执行的话需要先需要通过 ./imx6ull-alientek-emmc.sh 来进行编译。
+
 
 
 ## 构建根文件系统
@@ -803,15 +990,6 @@ ls /dev/sd*
 ./imxdownload u-boot.bin /dev/sdb
 ```
 
-#### 修改 u-boot 环境变量
-
-通过 SD 卡启动 u-boot，
-
-设置 bootcmd 和 bootargs
-
-setenv bootcmd 'tftp 80800000 zImage;tftp 83000000 imx6ull-alientek-emmc.dtb;bootz 80800000 - 83000000'
-
-bootargs=console=ttymxc0,115200 rw root=/dev/nfs nfsroot=192.168.91.130:/home/book/kenspace/zd-linux/tftpboots ip=192.168.237.1:192.168.91.130:192.168.91.1:255.255.255.0::eth0:off
 
 
 ----> 在系统环节没做好
