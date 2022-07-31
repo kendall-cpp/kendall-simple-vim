@@ -26,16 +26,22 @@
     - [设置开发板、主机和ubuntu网络互连](#设置开发板主机和ubuntu网络互连)
     - [在 U-Boot 中添加正点原子的开发板](#在-u-boot-中添加正点原子的开发板)
   - [CPU 主频和网络驱动修改](#cpu-主频和网络驱动修改)
+    - [修改 bootcmd 和 bootargs](#修改-bootcmd-和-bootargs)
+    - [CPU 主频修改](#cpu-主频修改)
+      - [设置超频，添加频率](#设置超频添加频率)
+    - [使能 8 线 EMMC 驱动](#使能-8-线-emmc-驱动)
+    - [修改网络驱动](#修改网络驱动)
+    - [网络驱动测试](#网络驱动测试)
+    - [保存修改后的图形化配置](#保存修改后的图形化配置)
   - [构建根文件系统](#构建根文件系统)
-    - [配置 busybox](#配置-busybox)
+    - [使用 busybox](#使用-busybox)
+      - [NFS 服务开启](#nfs-服务开启)
+      - [拷贝解压 busybox](#拷贝解压-busybox)
+      - [编译 busybox](#编译-busybox)
+    - [向根文件系统添加 lib 库](#向根文件系统添加-lib-库)
 - [第四期 驱动开发](#第四期-驱动开发)
   - [配置 vscode 开发环境](#配置-vscode-开发环境)
-  - [环境搭建](#环境搭建)
   - [字符设备开发基础实验](#字符设备开发基础实验)
-    - [编写 Makefile](#编写-makefile)
-    - [编写字符驱动模块加载和卸载程序](#编写字符驱动模块加载和卸载程序)
-    - [编译烧写](#编译烧写)
-    - [测试 .ko](#测试-ko)
 
 ------
 
@@ -763,13 +769,17 @@ bootz 80800000 - 83000000
 
 - 设置通过网络启动的 bootcmd ，这样直接复位，不需要，如果【不回车】就会自动进入 kernel 了。
 
+### 修改 bootcmd 和 bootargs
+
+- 修改 bootcmd
+
 ```
 setenv bootcmd 'tftp 80800000 zImage;tftp 83000000 imx6ull-alientek-emmc.dtb;bootz 80800000 - 83000000;'
 
 saveenv
 ```
 
-- 设置默认的 根文件系统， 设置 bootargs
+- 设置加载默认的 根文件系统， 设置 bootargs
 
 
 ```sh
@@ -778,6 +788,8 @@ saveenv
 setenv bootargs 'console=ttymxc0,115200 root=/dev/mmcblk1p2 rootwait rw'
 saveenv
 ```
+
+> 修改完成之后再启动 uboot 的时候会自动去执行这些命令去加载 zImage 和 dtb
 
 - 修改解决驱动问题
 
@@ -804,7 +816,7 @@ book@kendall:tftpboot$ vim ../IMX6ULL/linux/linux-imx-rel_imx_4.1.15_2.1.0_ga/ar
 };
 ```
 
-将 imx6ull-14x14-evk-emmc.dts 的 &usdhc2 信息复制到 imx6ull-alientek-emmc.dts 的 &usdhc2 下（覆盖掉原来的），如下所示：
+- 将 imx6ull-14x14-evk-emmc.dts 的 &usdhc2 信息复制到 imx6ull-alientek-emmc.dts 的 &usdhc2 下（覆盖掉原来的），如下所示：
 
 ```
 &usdhc2 {
@@ -818,72 +830,654 @@ book@kendall:tftpboot$ vim ../IMX6ULL/linux/linux-imx-rel_imx_4.1.15_2.1.0_ga/ar
 };
 ```
 
-直接编译被修改过的设备树
+- 直接编译被修改过的设备树
 
 make dtbs
 
 > 注意第一次执行的话需要先需要通过 ./imx6ull-alientek-emmc.sh 来进行编译。
 
+- 复位开发板，启动 kernel
+
+### CPU 主频修改
+
+- 查看 CPU 信息 
+
+root@ATK-IMX6U:/# cat /proc/cpuinfo 
+  
+- 查看 CPU 的工作频率
+
+```
+cd /sys/bus/cpu/devices/cpu0/cpufreq/
+cat cpuinfo_cur_freq 
+792000
+```
+
+- 找到配置文件
+
+```sh
+# /home/book/kenspace/zd-linux/IMX6ULL/linux/linux-imx-rel_imx_4.1.15_2.1.0_ga/arch/arm
+$ vim imx_alientek_emmc_defconfig
+
+ 42 CONFIG_CPU_FREQ=y                                                                                                                         
+ 43 CONFIG_CPU_FREQ_GOV_POWERSAVE=y
+ 44 CONFIG_CPU_FREQ_GOV_USERSPACE=y
+ 45 CONFIG_CPU_FREQ_GOV_ONDEMAND=y
+ 46 CONFIG_CPU_FREQ_GOV_CONSERVATIVE=y
+```
+
+- 可以看到所有的 CPU 都使能了，我们可以通过图形化界面进行配置
+
+```sh
+# /home/book/kenspace/zd-linux/IMX6ULL/linux/linux-imx-rel_imx_4.1.15_2.1.0_ga
+$ make menuconfig
+
+CPU Power Management  ---> 
+  ==>  CPU Frequency scaling
+    ==>  Default CPUFreq governor (ondemand)  ---> 
+      ==>  (X) ondemand 
+```
+
+- YES 保存退出，更改成根据负载动态调频
+
+make -j4
+
+- 编译完成之后，需要将 zImage 拷贝到 tftpboot 
+
+cp arch/arm/boot/zImage ../../../tftpboot/
+
+- 复位启动 kernel
+
+#### 设置超频，添加频率
+
+- 重新查看 CPU 频率 
+
+root@ATK-IMX6U:/# cat /proc/cpuinfo 
+  
+- 查看 CPU 的工作频率
+
+```
+root@ATK-IMX6U:/sys/devices/system/cpu/cpu0/cpufreq# cat cpuinfo_cur_freq 
+528000
+```
+
+- 可以看到主频从原来的 792000 变成 396000 了。
+
+- 查看当前支持的频率
+
+可以看出当前的 CPU 支持的 198MHz、196MHz、528MHz 和 518MHz 四种频率切换，其中调频策略为 ondemand，也就是定期检测负载，然后根据负载情况调节 CPU 频率。因为我们当前开发板还没做什么工作，因此 CPU 频率降低为 198MHz 以省电。但是如果开发板做一些高负载的工作，比如播放视频等，那么 CPU 频率就会提升扇区。查看 stats 目录下的 time_in_state 可以看到 CPU 在各个频率下的工作时间。
+
+```sh
+root@ATK-IMX6U:/sys/devices/system/cpu/cpu0/cpufreq# cat stats/time_in_state 
+198000 66262
+396000 251232
+528000 800
+792000 2313
+```
+
+从上面的打印结果可以看出，CPU 在 198MHz、396MHz、528MHz 和 792MHz 都工作过，其
+中 198MHz 的工作时间最长！
+
+
+
+### 使能 8 线 EMMC 驱动
+
+Linux 内核驱动里面 EMMC 默认是 4 线模式的，4 线模式肯定没有 8 线模式的速度快，所以本节我们将 EMMC 的驱动修改为 8 线模式
+
+> 通过修改设备树实现，imx6ull-alientek-emmc.dts 的 usdhc2 节点
+
+> **开发板中已经做好了**
+
+修改完成以后保存一下 imx6ull-alientek-emmc.dts，然后使用命令“ make dtbs ”重新编译一下设备树，编译完成以后使用新的设备树重启 Linux 系统即可。
+
+### 修改网络驱动
+
+我们通过网络挂载进行驱动 kernel，直接把镜像文件和设备树文件放在 ubuntu 里面，然后通过网络挂载到开发板。
+
+- 修改 LAN8720 的复位以及网络时钟引脚驱动【不改】
+
+ENET1 复位引脚 ENET1_RST 连接在 I.M6ULL 的 SNVS_TAMPER7 这个引脚上。ENET2 的复位引脚 ENET2_RST 连接在 I.MX6ULL 的 SNVS_TAMPER8 上。打开设备树文件 imx6ull-alientek-emmc.dts ，并找到
+
+```c
+		pinctrl_spi4: spi4grp {
+                        fsl,pins = <
+                                MX6ULL_PAD_BOOT_MODE0__GPIO5_IO10        0x70a1
+                                MX6ULL_PAD_BOOT_MODE1__GPIO5_IO11        0x70a1
+							                	/* comment out following two lines */
+                                /* MX6ULL_PAD_SNVS_TAMPER7__GPIO5_IO07      0x70a1 */
+                                /* MX6ULL_PAD_SNVS_TAMPER8__GPIO5_IO08      0x80000000 */
+                        >;
+                };
+```
+
+- 继续找到 spi4 【不改】
+
+ GPIO5_IO07 和 GPIO5_IO08 分别作为 ENET1 和 ENET2 的复位引脚，而不是 SPI4 的什么功能引脚
+
+```c
+    spi4 {
+        compatible = "spi-gpio";
+        pinctrl-names = "default";
+        pinctrl-0 = <&pinctrl_spi4>;
+        /* pinctrl-assert-gpios = <&gpio5 8 GPIO_ACTIVE_LOW>; */
+        status = "okay";
+        gpio-sck = <&gpio5 11 0>; 
+        gpio-mosi = <&gpio5 10 0>;
+        /* cs-gpios = <&gpio5 7 0>; */
+        num-chipselects = <1>;
+        #address-cells = <1>;                                                                                                                 
+        #size-cells = <0>;
+```
+
+- 添加网络引脚信息，修改 iomuxc_snvs
+
+```c
+&iomuxc_snvs {
+	pinctrl-names = "default_snvs";
+        pinctrl-0 = <&pinctrl_hog_2>;
+        imx6ul-evk {
+			pinctrl_hog_2: hoggrp-2 {
+							fsl,pins = <
+									MX6ULL_PAD_SNVS_TAMPER0__GPIO5_IO00      0x80000000
+							>;
+					};
+
+			pinctrl_dvfs: dvfsgrp {
+							fsl,pins = <
+									MX6ULL_PAD_SNVS_TAMPER3__GPIO5_IO03      0x79
+							>;
+					};
+			
+			pinctrl_lcdif_reset: lcdifresetgrp {
+							fsl,pins = <
+									/* used for lcd reset */
+									MX6ULL_PAD_SNVS_TAMPER9__GPIO5_IO09  0x49
+							>;
+					};
+
+			pinctrl_spi4: spi4grp {
+							fsl,pins = <
+									MX6ULL_PAD_BOOT_MODE0__GPIO5_IO10        0x70a1
+									MX6ULL_PAD_BOOT_MODE1__GPIO5_IO11        0x70a1
+									MX6ULL_PAD_SNVS_TAMPER7__GPIO5_IO07      0x70a1
+									MX6ULL_PAD_SNVS_TAMPER8__GPIO5_IO08      0x80000000
+							>;
+					};
+
+			pinctrl_fec1_reset: fec1_resetgrp {
+				fsl,pins = <
+					MX6ULL_PAD_SNVS_TAMPER7__GPIO5_IO07	0x79
+				>;
+			};
+
+			pinctrl_fec2_reset: fec2_resetgrp {
+				fsl,pins = <
+					MX6ULL_PAD_SNVS_TAMPER8__GPIO5_IO08	0x79
+				>;
+			};
+
+			pinctrl_sai2_hp_det_b: sai2_hp_det_grp {
+					fsl,pins = <
+							MX6ULL_PAD_SNVS_TAMPER4__GPIO5_IO04   0x17059
+					>;
+			};
+
+			ts_reset_pin: ts_reset_pin_mux {
+				fsl,pins = <
+					MX6ULL_PAD_SNVS_TAMPER9__GPIO5_IO09	0x49
+				>;
+			};
+
+			pinctrl_beep: beep {
+				fsl,pins = <
+					MX6ULL_PAD_SNVS_TAMPER1__GPIO5_IO01	0x17059
+				>;
+			};
+        };
+};
+```
+
+- 接着修改 pinctrl_enet1: enet1grp 【可以不改】
+
+分别为 ENET1 和 ENET2 的网络时钟引脚配置信息，将这两个引脚的电气属性值改为 0x4001b009，原来默认值为 0x4001b031。
+
+```c
+		pinctrl_enet1: enet1grp {
+			fsl,pins = <
+				MX6UL_PAD_ENET1_RX_EN__ENET1_RX_EN	0x1b0b0
+				MX6UL_PAD_ENET1_RX_ER__ENET1_RX_ER	0x1b0b0
+				MX6UL_PAD_ENET1_RX_DATA0__ENET1_RDATA00	0x1b0b0
+				MX6UL_PAD_ENET1_RX_DATA1__ENET1_RDATA01	0x1b0b0
+				MX6UL_PAD_ENET1_TX_EN__ENET1_TX_EN	0x1b0b0
+				MX6UL_PAD_ENET1_TX_DATA0__ENET1_TDATA00	0x1b0b0
+				MX6UL_PAD_ENET1_TX_DATA1__ENET1_TDATA01	0x1b0b0
+				/* MX6UL_PAD_ENET1_TX_CLK__ENET1_REF_CLK1	0x4001b031 */
+				MX6UL_PAD_ENET1_TX_CLK__ENET1_REF_CLK1 0x4001b009
+			>;
+		};
+
+		pinctrl_enet2: enet2grp {
+			fsl,pins = <
+				MX6UL_PAD_GPIO1_IO07__ENET2_MDC		0x1b0b0
+				MX6UL_PAD_GPIO1_IO06__ENET2_MDIO	0x1b0b0
+				MX6UL_PAD_ENET2_RX_EN__ENET2_RX_EN	0x1b0b0
+				MX6UL_PAD_ENET2_RX_ER__ENET2_RX_ER	0x1b0b0
+				MX6UL_PAD_ENET2_RX_DATA0__ENET2_RDATA00	0x1b0b0
+				MX6UL_PAD_ENET2_RX_DATA1__ENET2_RDATA01	0x1b0b0
+				MX6UL_PAD_ENET2_TX_EN__ENET2_TX_EN	0x1b0b0
+				MX6UL_PAD_ENET2_TX_DATA0__ENET2_TDATA00	0x1b0b0
+				MX6UL_PAD_ENET2_TX_DATA1__ENET2_TDATA01	0x1b0b0
+				/* MX6UL_PAD_ENET2_TX_CLK__ENET2_REF_CLK2	0x4001b031 */
+				MX6UL_PAD_ENET2_TX_CLK__ENET2_REF_CLK2	0x4001b009
+			>;
+		};
+```
+
+编译 make dtbs
+
+- 修改 fec1 和 fec2 节点的 pinctrl-0 属性
+
+在 imx6ull-alientek-emmc.dts 文件中找到名为“fec1”和“fec2”的这两个节点，修改其中的 “pinctrl-0” 属性值。
+
+找到 &fec1
+
+```c
+&fec1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_enet1
+		     &pinctrl_fec1_reset>;
+	phy-mode = "rmii";
+	phy-handle = <&ethphy0>;
+	phy-reset-gpios = <&gpio5 7 GPIO_ACTIVE_LOW>;
+	phy-reset-duration = <200>;
+	status = "okay";
+};
+&fec2 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_enet2
+		     &pinctrl_fec2_reset>;
+	phy-mode = "rmii";
+	phy-handle = <&ethphy1>;
+	phy-reset-gpios = <&gpio5 8 GPIO_ACTIVE_LOW>;
+	phy-reset-duration = <200>;
+	status = "okay";
+```
+
+ENET1 的 LAN8720A 地址为 0x0，ENET2 的 LAN8720A 地址为 0x1。在 imx6ull-alientek-emmc.dts 中找到如下代码
+
+
+- 修改 LAN8720A 的 PHY 地址
+
+```c
+	mdio {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		ethphy0: ethernet-phy@2 {
+			compatible = "ethernet-phy-ieee802.3-c22";
+			reg = <0>;
+		};
+
+		ethphy1: ethernet-phy@1 {
+			compatible = "ethernet-phy-ieee802.3-c22";
+			reg = <1>;
+		};
+	};
+```
+
+- 修改 fec_main.c 文件
+
+要 在 I.MX6ULL 上 使 用 LAN8720A ， 需 要 修 改 一 下 Linux 内 核 源 码 ， 打开 `drivers/net/ethernet/freescale/fec_main.c`，找到函数 fec_probe ，在 fec_probe 中加入如下代码，设置 `MX6UL_PAD_ENET1_TX_CLK` 和 `MX6UL_PAD_ENET2_TX_CLK` 这两个 IO 的复用寄存器的 SION 位为 1。
+
+
+```c
+	/* add code  start*/
+	void __iomem *IMX6U_ENET1_TX_CLK;
+	void __iomem *IMX6U_ENET2_TX_CLK;
+
+	IMX6U_ENET1_TX_CLK = ioremap(0X020E00DC, 4);
+	writel(0X14, IMX6U_ENET1_TX_CLK);
+
+	IMX6U_ENET2_TX_CLK = ioremap(0X020E00FC, 4);
+	writel(0X14, IMX6U_ENET2_TX_CLK);
+	/* add code  end*/
+```
+
+输入命令“ make menuconfig ”，打开图形化配置界面，选择使能 LAN8720A 的驱动
+
+```
+-> Device Drivers  --->  
+  -> Network device support  --->  
+    -> PHY Device support and infrastructure  --->
+       -> <*>   Drivers for SMSC PHYs    
+```
+
+编译拷贝
+
+```sh
+make dtbs
+cp arch/arm/boot/dts/imx6ull-alientek-emmc.dtb ~/kenspace/zd-linux/tftpboot/
+```
+
+- 修改 smsc.c 文件
+
+到 LAN8720A 的驱动文件，LAN8720A 的驱动文件是 drivers/net/phy/smsc.c ，在此文件中有个叫做 smsc_phy_reset 的函数。
+
+```c
+// $ vim drivers/net/phy/smsc.c
+
+
+static int smsc_phy_reset(struct phy_device *phydev)
+{
+	int err, phy_reset;
+	int msec = 1;
+	int rc;
+	int timeout = 50000;
+	struct device_node *np;
+
+	np = NULL;
+
+	if(phydev->addr == 0) /* FEC1  */ {
+		np = of_find_node_by_path("/soc/aips-bus@02100000/ethernet@02188000");
+		if(np == NULL) {
+			return -EINVAL;
+		}
+	}
+
+	if(phydev->addr == 1) /* FEC2  */ {
+		np = of_find_node_by_path("/soc/aips-bus@02000000/ethernet@020b4000");
+		if(np == NULL) {
+			return -EINVAL;
+		}
+	}
+
+	err = of_property_read_u32(np, "phy-reset-duration", &msec);
+	/* A sane reset duration should not be longer than 1s */
+	if (!err && msec > 1000)
+		msec = 1;
+	phy_reset = of_get_named_gpio(np, "phy-reset-gpios", 0);
+	if (!gpio_is_valid(phy_reset))
+		gpio_free(phy_reset);
+
+	gpio_direction_output(phy_reset, 0);
+	gpio_set_value(phy_reset, 0);
+	msleep(msec);
+	gpio_set_value(phy_reset, 1);
+
+	rc = phy_read(phydev, MII_LAN83C185_SPECIAL_MODES);
+	if (rc < 0)
+		return rc;
+
+	/* If the SMSC PHY is in power down mode, then set it
+	 * in all capable mode before using it.
+	 */
+	if ((rc & MII_LAN83C185_MODE_MASK) == MII_LAN83C185_MODE_POWERDOWN) {
+
+		/* set "all capable" mode and reset the phy */
+		rc |= MII_LAN83C185_MODE_ALL;
+		phy_write(phydev, MII_LAN83C185_SPECIAL_MODES, rc);
+	}
+
+	phy_write(phydev, MII_BMCR, BMCR_RESET);
+	/* wait end of reset (max 500 ms) */
+	do {
+		udelay(10);
+		if (timeout-- == 0)
+			return -1;
+		rc = phy_read(phydev, MII_BMCR);
+	} while (rc & BMCR_RESET);
+
+	return 0;
+}
+```
+
+修改好设备树和 Linux 内核以后重新编译一下，得到新的 zImage 镜像文件和 imx6ull-alientek-emmc.dtb 设备树文件，最后使用新的文件启动 Linux 内核。启动以后使用“ifconfig”命令查看一下当前活动的网卡有哪些。
+
+make -j4
+
+拷贝
+
+```sh
+cp arch/arm/boot/zImage ~/kenspace/zd-linux/tftpboot/
+cp arch/arm/boot/dts/imx6ull-alientek-emmc.dtb ~/kenspace/zd-linux/tftpboot/
+```
+
+**重新复位开发板**
+
+### 网络驱动测试
+
+通过 ifconfig -a 查看所有网卡
+
+启动网卡
+
+```sh
+ifconfig eth0 up
+ifconfig eth1 up
+```
+
+输入“ifconfig”命令来查看一下当前活动的网卡
+
+可以看出，此时 eth0 和 eth1 两个网卡都已经打开，并且工作正常，但是这两个网卡都还没有 IP 地址，所以不能进行 ping 等操作。使用如下命令给两个网卡配置 IP 地址
+
+```sh
+ifconfig eth0 192.168.111.251
+ifconfig eth1 192.168.111.252
+
+ping 192.168.111.128
+```
+
+### 保存修改后的图形化配置
+
+make menuconfig --> save -> 输入：arch/arm/configs/imx_alientek_emmc_defconfig  可能需要按住 ctrl+back 才能删除。
+
+---------
 
 
 ## 构建根文件系统
 
-- 修改 Makefile
+### 使用 busybox
+
+> 可以去 busybox 官网下载
+
+构建根文件系统调试，通过 nfs 网络挂载，也就是根文件系统放在 Ubuntu 下，开发板启动后通过 nfs 服务使用 ubuntu 下的根文件系统。 
+
+#### NFS 服务开启
+
+sudo apt-get install nfs-kernel-server rpcbind
+
+以后我们可以在开发板上通过网络文件系统来访问 nfs 文件夹，要先配置 nfs，使用如下命令打开 nfs 配置文件 `/etc/exports`：
+
+打开 `vim /etc/exports` 以后在后面添加如下所示内容
+
+```
+/home/book/kenspace/zd-linux/nfs *(rw,sync,no_root_squash)
+```
+
+重启 NFS 服务，使用命令如下
+
+sudo /etc/init.d/nfs-kernel-server restart
+
+给 nfs 共享目录权限
+
+chmod 777 nfs
+
+------
+
+#### 拷贝解压 busybox
+
+```sh
+tar -xjf busybox-1.29.0.tar.bz2
+
+/home/book/kenspace/zd-linux/IMX6ULL/tools/busybox-1.29.0
+```
+
+
+#### 编译 busybox
+
+- 修改 Makefile，添加交叉编译器
 
 ```mk
- 164 CROSS_COMPILE ?= /usr/local/arm/gcc-linaro-4.9.4-2017.01-x86_64_arm-linux-gnueabihf/bin/arm-linux-gnueabihf-  
- 191 ARCH ?= arm    
+ 191 CROSS_COMPILE ?= /usr/local/arm/gcc-linaro-4.9.4-2017.01-x86_64_arm-linux-gnueabihf/bin/arm-linux-gnueabihf-                             
+ 192 ARCH ?= arm  
 ```
 
-打开文件 busybox-1.29.0/libbb/printable_string.c，找到函数 printable_string
-
+- busybox 中文字符支持
 
 ```c
- 31     //  if (c >= 0x7f)
- 32     //      break;
- 33         s++;
+// 修改 libbb/printable_string.c 
 
+	/*	if (c >= 0x7f) */
+	/*		break;  */
 
- 44                 break;
- 45         //  if (c < ' ' || c >= 0x7f)
- 46             if (c < ' ')
- 47                 *d = '?';                                                                                                                 
- 48             d++;
- 49         }
+		//	if (c < ' ' || c >= 0x7f)
+			if (c < ' ')
+
+// libbb/unicode.c 
+// *d++ = (c >= ' ' && c < 0x7f) ? c : '?';
+  *d++ = (c >= ' ') ? c : '?';
+
+//				if (c < ' ' || c >= 0x7f)
+				if (c < ' ')    
 ```
 
-busybox-1.29.0/libbb/unicode.c
 
-```c
-1022 //              *d++ = (c >= ' ' && c < 0x7f) ? c : '?';
-1023                 *d++ = (c >= ' ') ? c : '?';                                                                                             
-1024                 src++;
-
-1031 //              if (c < ' ' || c >= 0x7f)                                                                                                
-1032                 if (c < ' ')
-1033                     *d = '?';
-1034                 d++;
-```
-
-### 配置 busybox
+- 配置 busybox
 
 make defconfig
 
-出现 `.config` 就表示配置成功
+出现 .config 说明配置成功，但是这只是默认配置，可以通过图形界面进行配置
 
-make menuconfig
+```sh
+book@kendall:busybox-1.29.0$ make menuconfig
 
+Location:
+-> Settings
+-> Build static binary (no shared libs)   (不要选中)
+
+# 继续配置如下路径配置项
+
+Location:
+-> Settings
+-> [*]   vi-style line editing commands
+
+# 继续配置如下路径配置项
+
+Location:
+-> Linux Module Utilities
+-> [ ] Simplified modutils 
+
+# 继续配置如下路径配置项
+
+Location:
+-> Linux System Utilities
+-> mdev (16 kb) //确保下面的全部选中，默认都是选中的
+
+# 最后就是使能 busybox 的 unicode 编码以支持中文
+
+Location:
+-> Settings
+->  [*] Support Unicode          # 选中
+-> [*]   Check $LC_ALL, $LC_CTYPE and $LANG environment variables   # //选中
+```
+
+
+- 现在可以编译 busybox 了
+
+COFIG_PREFIX 指定编译结果的存放目录
+
+```sh
 book@kendall:busybox-1.29.0$ make install CONFIG_PREFIX=/home/book/kenspace/zd-linux/nfs/rootfs
 
+book@kendall:rootfs$ ls
+bin  linuxrc  sbin  usr
+```
 
+编译完成以后会在 busybox 的所有工具和文件就会被安装到 rootfs 目录中，rootfs 目录下有 bin、sbin 和 usr 这三个目录，以及 linuxrc 这个文件。前面说过 Linux 内核 init 进程最后会查找用户空间的 init 程序，找到以后就会运行这个用户空间的 init 程序，从而切换到用户态。如果 bootargs 设置 `init=/linuxrc`，那么 linuxrc 就是可以作为用户空间的 init 程序，所以用户态空间的 init 程序是 busybox 来生成的。
 
-----
+### 向根文件系统添加 lib 库
+
+- 向 rootfs 的“/lib”目录添加库文件
+
+Linux 中的应用程序一般都是需要动态库的，当然你也可以编译成静态的，但是静态的可执行文件会很大。如果编译为动态的话就需要动态库，所以我们需要向根文件系统中添加动态库。在 rootfs 中创建一个名为“`lib`”的文件夹:  `mkdir lib`
+
+lib 库文件从交叉编译器中获取，前面我们搭建交叉编译环境的时候将交叉编译器存放到了“`/usr/local/arm/`”目录中。交叉编译器里面有很多的库文件，
+
+```sh
+cp /usr/local/arm/gcc-linaro-4.9.4-2017.01-x86_64_arm-linux-gnueabihf/arm-linux-gnueabihf/libc/lib/*so* ~/kenspace/zd-linux/nfs/rootfs/lib/ -d
+
+cp /usr/local/arm/gcc-linaro-4.9.4-2017.01-x86_64_arm-linux-gnueabihf/arm-linux-gnueabihf/libc/lib/*.a* ~/kenspace/zd-linux/nfs/rootfs/lib/ -d
+```
+
+需要将 `ld-linux-armhf.so.3 -> ld-2.19-2014.08-1-git.so*` 软连接改成真正的**源文件**
+
+```sh
+rm -rf ~/kenspace/zd-linux/nfs/rootfs/lib/ld-linux-armhf.so.3
+
+cp /usr/local/arm/gcc-linaro-4.9.4-2017.01-x86_64_arm-linux-gnueabihf/arm-linux-gnueabihf/libc/lib/ld-linux-armhf.so.3 ~/kenspace/zd-linux/nfs/rootfs/lib/
+```
+
+还需要拷贝其他 so 和 .a 文件。
+
+```sh
+cp /usr/local/arm/gcc-linaro-4.9.4-2017.01-x86_64_arm-linux-gnueabihf/arm-linux-gnueabihf/lib/*so* ~/kenspace/zd-linux/nfs/rootfs/lib/ -d
+
+cp /usr/local/arm/gcc-linaro-4.9.4-2017.01-x86_64_arm-linux-gnueabihf/arm-linux-gnueabihf/lib/*.a* ~/kenspace/zd-linux/nfs/rootfs/lib/ -d
+```
+
+- 向 rootfs 的“usr/lib”目录添加库文件
+
+在 rootfs 的 usr 目录下创建一个名为 lib 的目录
+
+```sh
+cp /usr/local/arm/gcc-linaro-4.9.4-2017.01-x86_64_arm-linux-gnueabihf/arm-linux-gnueabihf/libc/usr/lib/*so* ~/kenspace/zd-linux/nfs/rootfs/usr/lib/ -d
+
+cp /usr/local/arm/gcc-linaro-4.9.4-2017.01-x86_64_arm-linux-gnueabihf/arm-linux-gnueabihf/libc/usr/lib/*.a* ~/kenspace/zd-linux/nfs/rootfs/usr/lib/ -d
+
+# 查看文件夹大小
+$ du lib usr/lib -sh
+57M     lib
+67M     usr/lib
+```
+
+- 创建其他文件夹
+
+在根文件系统中创建其他文件夹，如 dev、proc、mnt、sys、tmp 和 root 等
+
+```sh
+book@kendall:rootfs$ mkdir dev proc mnt sys tmp root
+```
+
+- 根文件系统初步测试
+
+从 ubunut 加载我们前面移植的 zImage 和 dtb，设置 bootcmd 
+
+```sh
+# bootargs=console=ttymxc0,115200 root=/dev/mmcblk1p2 rootwait rw
+# 设置  ubuntu2018 版本之后需要加上 v3
+setenv bootargs 'console=ttymxc0,115200 root=/dev/nfs rw\
+nfsroot=192.168.10.100:/home/book/kenspace/zd-linux/nfs/rootfs,proto=tcp,v3 \
+ip=192.168.10.50:192.168.10.100:192.168.10.1:255.255.255.0::eth0:off'
+
+saveenv
+
+# 启动
+boot
+
+/ # ls
+bin      lib      mnt      root     sys      usr
+dev      linuxrc  proc     sbin     tmp
+```
+
+> 还没完善根文件系统
+
+-----
 -----
 
 
 # 第四期 驱动开发
 
 ## 配置 vscode 开发环境
+
+> 参考：https://blog.csdn.net/lizy_fish/article/details/106385958
 
 打开 c_cpp_properties.json
 
@@ -894,9 +1488,9 @@ book@kendall:busybox-1.29.0$ make install CONFIG_PREFIX=/home/book/kenspace/zd-l
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/home/book/kenspace/zd-linux/linux-kernel/linux-imx-rel_imx_4.1.15_2.1.0_ga_alientek/include",
-                "/home/book/kenspace/zd-linux/linux-kernel/linux-imx-rel_imx_4.1.15_2.1.0_ga_alientek/arch/arm/include",
-                "/home/book/kenspace/zd-linux/linux-kernel/linux-imx-rel_imx_4.1.15_2.1.0_ga_alientek/arch/arm/include/generated"
+                "/home/book/kenspace/zd-linux/IMX6ULL/linux/linux-imx-rel_imx_4.1.15_2.1.0_ga/include",
+                "/home/book/kenspace/zd-linux/IMX6ULL/linux/linux-imx-rel_imx_4.1.15_2.1.0_ga/arch/arm/include",
+                "/home/book/kenspace/zd-linux/IMX6ULL/linux/linux-imx-rel_imx_4.1.15_2.1.0_ga/arch/arm/include/generated"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
@@ -909,30 +1503,13 @@ book@kendall:busybox-1.29.0$ make install CONFIG_PREFIX=/home/book/kenspace/zd-l
 }
 ```
 
-## 环境搭建
-
-```
-sudo apt-get install nfs-kernel-server rpcbind
-```
-
-以后我们可以在开发板上通过网络文件系统来访问 nfs 文件夹，要先配置 nfs，使用如下命令打开 nfs 配置文件 /etc/exports
-
-```
-sudo vim /etc/exports
-```
-
 ## 字符设备开发基础实验
 
-在 linux 内核源码中
 
-```
-kernel_source$ vim include/linux/fs.h +1606
-```
-
-### 编写 Makefile
+- 编写 Makefile
 
 ```mk
-KERNELDIR := /home/book/kenspace/zd-linux/linux-kernel/linux-imx-rel_imx_4.1.15_2.1.0_ga_alientek
+KERNELDIR := /home/book/kenspace/zd-linux/IMX6ULL/linux/linux-imx-rel_imx_4.1.15_2.1.0_ga
 
 CURRENT_PATH := $(shell pwd)
 
@@ -947,7 +1524,7 @@ clean:
 	$(MAKE) -C $(KERNELDIR) M=$(CURRENT_PATH) clean 
 ```
 
-### 编写字符驱动模块加载和卸载程序
+- 编写字符驱动模块加载和卸载程序
 
 ```c
 #include <linux/module.h>
@@ -973,25 +1550,77 @@ module_init(chardevbase_init);
 module_exit(chardevbase_exit);
 ```
 
-### 编译烧写
+- 编译烧写
 
 make
 
-### 测试 .ko
+生成的 chardevbase.ko 文件就是要测试的驱动模块
+
+- 测试 .ko
+
+将编译出来的 .ko 文件复制到自己制作的根文件系统里面，
+
+加载 chardevbase.ko 驱动文件 `insmod chardevbase.ko` 或者 `modprobe chardevbase.ko` 
+
+卸载 .ko 模块 `rmmod chardevbase.ko`
+
+- 设置使用 modprobe 命令
 
 ```sh
-cd /home/book/kenspace/zd-linux/linux-kernel/three/uboot-imx-rel_imx_4.1.15_2.1.0_ga_alientek
+cd /lib/
 
-## 编译 EMMC 核心板
-./imx6ull_alientek_emmc.sh 
+mkdir modules
+cd modules
+mkdir 4.1.15
+modprobe   # 缺少什么文件夹就创建
+```
 
-# 烧录进 SD 卡
-ls /dev/sd*
-./imxdownload u-boot.bin /dev/sdb
+去 ubuntu 上拷贝编译出来的 .ko 文件
+
+```sh
+book@kendall:1_charDriversBase$ sudo cp chardevbase.ko /home/book/kenspace/zd-linux/nfs/rootfs/lib/modules/4.1.15
+```
+
+在 kernel 上执行
+
+```
+# modprobe chardevbase.ko 
+modprobe: can't open 'modules.dep': No such file or directory
+```
+
+modprobe 提示无法打开“modules.dep”这个文件，因此驱动挂载失败了。我们不用手动创建 modules.dep 这个文件，直接输入 depmod 命令即可自动生成
+modules.dep，有些根文件系统可能没有 depmod 这个命令，如果没有这个命令就只能重新配置 busybox，使能此命令，然后重新编译 busybox。输入“depmod”命令以后会自动生成 modules.alias、modules.symbols 和 modules.dep 这三个文件，然后重新使用 modprobe 加载 chrdevbase.ko 。
+
+```c
+# depmod
+# modprobe chardevbase.ko 
+# lsmod chardevbase.ko  查看挂载的模块
+
+//可能需要创建 # mkdir /proc/modules
+
+# rmmod chardevbase.ko   卸载模块
 ```
 
 
+如果提示这些信息
 
-----> 在系统环节没做好
+```
+chardevbase: module license 'unspecified' taints kernel.
+Disabling lock debugging due to kernel taint
+```
+
+
+需要修改代码，在源码后面添加
+
+```c
+MODULE_AUTHOR("kendall");
+MODULE_DESCRIPTION("kendall test chardevice");
+MODULE_LICENSE("GPL v2"); 
+···
+
+在复制 
+
+sudo cp chardevbase.ko /home/book/kenspace/zd-linux/nfs/rootfs/lib/modules/4.1.15
+
 
 
