@@ -39,9 +39,15 @@
       - [拷贝解压 busybox](#拷贝解压-busybox)
       - [编译 busybox](#编译-busybox)
     - [向根文件系统添加 lib 库](#向根文件系统添加-lib-库)
+    - [完善根文件系统](#完善根文件系统)
+    - [软件运行测试](#软件运行测试)
+    - [中文测试](#中文测试)
+    - [开发板外网连接](#开发板外网连接)
 - [第四期 驱动开发](#第四期-驱动开发)
   - [配置 vscode 开发环境](#配置-vscode-开发环境)
   - [字符设备开发基础实验](#字符设备开发基础实验)
+  - [linux LED 灯驱动实验](#linux-led-灯驱动实验)
+  - [设备树](#设备树)
 
 ------
 
@@ -1467,7 +1473,142 @@ bin      lib      mnt      root     sys      usr
 dev      linuxrc  proc     sbin     tmp
 ```
 
-> 还没完善根文件系统
+### 完善根文件系统
+
+进入开发板 kernel
+
+```sh
+mkdir /etc
+mkdir /etc/init.d
+
+vim /etc/init.d/rcS
+sudo chmod +x rcS 
+```
+
+```sh
+#!/bin/sh
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin:$PATH
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/lib:/usr/lib
+export PATH LD_LIBRARY_PATH
+
+mount -a
+mkdir /dev/pts
+
+mount -t devpts devpts /dev/pts
+
+echo /sbin/mdev > /proc/sys/kernel/hotplug
+mdev -s
+```
+
+reboot 重启查看是否还提示 `can't run '/etc/init.d/rcS': No such file or directory`。
+
+但是提示：
+
+```
+mount: can't read '/etc/fstab': No such file or directory
+/etc/init.d/rcS: line 12: can't create /proc/sys/kernel/hotplug: nonexistent directory
+```
+
+book@kendall:etc$ sudo vim fstab
+
+```sh
+#<file system>	<mount point>	<type>	<options>	<dump>	<pass>
+proc	/proc	proc	defaults	0	0
+tmpfs	/tmp	tmpfs	defaults	0	0
+sysfs	/sys	sysfs	defaults	0	0
+```
+
+继续 reboot 重启发现没有出现任何错误提示，但是我们要还需要创建一个文件 `/etc/inittab`
+
+```sh
+#etc/inittab
+::sysinit:/etc/init.d/rcS
+console::askfirst:-/bin/sh
+::restart:/sbin/init
+::ctrlaltdel:/sbin/reboot
+::shutdown:/bin/umount -a -r
+::shutdown:/sbin/swapoff -a
+```
+
+- 第 2 行，系统启动以后运行 /etc/init.d/rcS 这个脚本文件
+
+- 第 3 行，将 console 作为控制台终端，也就是 ttymxc0。
+
+- 第 4 行，重启的话运行/sbin/init
+
+- 第 5 行，按下 ctrl+alt+del 组合键的话就运行/sbin/reboot，看来 ctrl+alt+del 组合键用于重
+启系统。
+
+- 第 6 行，关机的时候执行/bin/umount，也就是卸载各个文件系统
+
+- 第 7 行，关机的时候执行/sbin/swapoff，也就是关闭交换分区
+
+`/etc/inittab` 文件创建好以后就可以重启开发板即可，至此！根文件系统要创建的文件就已经
+全部完成了
+
+### 软件运行测试
+
+在 ubuntu 下使用 vim 编辑器新建一个 hello.c 文件，在 hello.c 里面输入如下内容：
+
+```c
+#include <stdio.h>
+
+int main(void)
+{
+	while(1) {
+	printf("hello world!\r\n");
+	sleep(2);
+	}
+	return 0;
+}
+```
+
+```sh
+arm-linux-gnueabihf-gcc hello.c -o hello
+
+file hello
+# 查看 hello 的文件类型以及编码格式
+
+cp hello drivers 拷贝到 drivers
+```
+
+进入 kernel
+
+```sh
+/ # cd drivers/
+/drivers # ./hello 
+hello world!
+hello world!
+```
+
+### 中文测试
+
+可以看出“`中文测试`”这个文件夹显示正常，接着“`touch`”命令在“`中文测试`”文件夹中新建一个名为“`测试文档.txt`”的文件，并且使用 vim 编辑器在其中输入“这是一个中文测试文件”，借此来测试一下中文文件名和中文内容显示是否正常。
+
+在 kernel 中使用“`cat`”命令来查看“`测试文档.txt`”中的内容。
+
+```
+/中文测试 # cat 测试文档.txt 
+这是一个中文测试文件
+```
+
+### 开发板外网连接
+
+```sh
+book@kendall:etc$ sudo touch resolv.conf
+# 添加如下内容
+
+nameserver 114.114.114.114
+nameserver 192.168.10.1
+```
+
+
+reboot 重启开发板，重新 ping www.baidu.com
+
+> 还是无法访问外网
+
+
 
 -----
 -----
@@ -1584,18 +1725,19 @@ book@kendall:1_charDriversBase$ sudo cp chardevbase.ko /home/book/kenspace/zd-li
 在 kernel 上执行
 
 ```
-# modprobe chardevbase.ko 
+/lib/modules/4.1.15 # modprobe chardevbase.ko 
 modprobe: can't open 'modules.dep': No such file or directory
 ```
 
-modprobe 提示无法打开“modules.dep”这个文件，因此驱动挂载失败了。我们不用手动创建 modules.dep 这个文件，直接输入 depmod 命令即可自动生成
-modules.dep，有些根文件系统可能没有 depmod 这个命令，如果没有这个命令就只能重新配置 busybox，使能此命令，然后重新编译 busybox。输入“depmod”命令以后会自动生成 modules.alias、modules.symbols 和 modules.dep 这三个文件，然后重新使用 modprobe 加载 chrdevbase.ko 。
+modprobe 提示无法打开“`modules.dep`”这个文件，因此驱动挂载失败了。我们不用手动创建 `modules.dep` 这个文件，直接输入 depmod 命令即可自动生成
+modules.dep，有些根文件系统可能没有 depmod 这个命令，如果没有这个命令就只能重新配置 busybox，使能此命令，然后重新编译 busybox。输入“`depmod`”命令以后会自动生成 modules.alias、modules.symbols 和 modules.dep 这三个文件，然后重新使用 modprobe 加载 chrdevbase.ko 。
 
 ```c
 # depmod
 # modprobe chardevbase.ko 
-# lsmod chardevbase.ko  查看挂载的模块
-
+/lib/modules/4.1.15 # lsmod   查看挂载的模块
+Module                  Size  Used by    Tainted: G  
+chardevbase              672  0 
 //可能需要创建 # mkdir /proc/modules
 
 # rmmod chardevbase.ko   卸载模块
@@ -1618,9 +1760,71 @@ MODULE_DESCRIPTION("kendall test chardevice");
 MODULE_LICENSE("GPL v2"); 
 ···
 
-在复制 
+再复制 
 
 sudo cp chardevbase.ko /home/book/kenspace/zd-linux/nfs/rootfs/lib/modules/4.1.15
+
+重新加载 chardevbase.ko 
+
+输入命令“`cat /proc/devices`”可以查看当前已经被使用掉的设备号
+
+### 编写完善字符设备代码
+
+#### 注册和注销字符设备
+
+对于字符设备驱动而言，当驱动模块加载成功以后需要注册字符设备，同样，卸载驱动模块的时候也需要注销掉字符设备。
+
+```c
+// 注册字符设备
+// major: 主设备号
+// name: 设备名字
+// fops: 设备操作函数集合
+static inline int register_chrdev(unsigned int major, const char *name,
+                                    const struct file_operations *fops);
+
+// 注销字符设备
+// major：要注销的设备号
+// name: 设备名字
+static inline void unregister_chrdev(unsigned int major, const char *name);
+```
+
+- 编写 chardevbase.c 和 chardevbaseAPP.c
+
+- 编译
+
+make
+
+arm-linux-gnueabihf-gcc chardevbaseAPP.c  -o chardevbaseAPP
+
+sudo cp chardevbase.ko chardevbaseAPP ~/kenspace/zd-linux/nfs/rootfs/lib/modules/4.1.15/ -f
+
+进入 kernel
+
+modprobe chardevbase.ko 
+
+lsmod
+
+cat /proc/devices
+
+
+创建设备节点，然后
+
+```sh
+/lib/modules/4.1.15 # mknod /dev/chardevbase c 200 0
+/lib/modules/4.1.15 # ./chardevbaseAPP /dev/chardevbase 1
+
+# 查看
+/lib/modules/4.1.15 # ls /dev/chardevbase -l
+```
+
+“mknod”是创建节点命令，“c”表示这是个字符设备，“200”是设备的主设备号，“0”是设备的次设备号。创建完成以后就会存在 `/dev/chardevbase` 这个文件
+
+卸载 `rmmod chardevbase.ko` 之后，`/dev/chardevbase` 也没有了。
+
+## linux LED 灯驱动实验
+
+## 设备树
+
 
 
 
