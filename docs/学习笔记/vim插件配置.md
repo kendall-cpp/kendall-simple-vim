@@ -48,7 +48,9 @@ github参考：https://github.com/chxuan/vimplus
 auto-pairs
 
 
+Participate in the company's SW training courses
 
+The company holds mid-career training for the graduates
 
 -----
 
