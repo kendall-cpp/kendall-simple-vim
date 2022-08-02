@@ -48,6 +48,7 @@
   - [字符设备开发基础实验](#字符设备开发基础实验)
   - [linux LED 灯驱动实验](#linux-led-灯驱动实验)
   - [设备树](#设备树)
+    - [dts语法](#dts语法)
 
 ------
 
@@ -1825,6 +1826,17 @@ cat /proc/devices
 
 ## 设备树
 
+可以使用 make dtbs 来编译设备树文件，设备树文件位于
+
+`/home/book/kenspace/zd-linux/IMX6ULL/linux/linux-imx-rel_imx_4.1.15_2.1.0_ga/arch/arm/boot/dts`
+
+编译指定的设备树文件 
+
+```sh
+/home/book/kenspace/zd-linux/IMX6ULL/linux/linux-imx-rel_imx_4.1.15_2.1.0_ga/$ make imx6ull-alientek-emmc.dtb 
+```
+
+### dts语法
 
 
 
