@@ -50,6 +50,7 @@
   - [设备树](#设备树)
     - [自定义节点](#自定义节点)
     - [特殊节点](#特殊节点)
+  - [基于设备树的LED等实验](#基于设备树的led等实验)
 
 ------
 
@@ -1926,3 +1927,53 @@ compatible 属性用于将设备和驱动绑定起来。字符串列表用于选
 
 
 
+## 基于设备树的LED等实验
+
+- 修改设备树节点
+
+vim imx6ull-alientek-emmc.dts
+
+```c
+// 根节点下添加
+	alphaled {
+		#address-cell = <1>;
+		#size-cell = <1>;
+		statis = "okay";
+		reg = < 0X020C406C 0x04
+				0X020E0068 0x04
+				0X020E02F4 0x04
+				0X0209C000 0x04
+				0X0209C004 0x04				
+			>;
+	};
+```
+
+linux-imx-rel_imx_4.1.15_2.1.0_ga$ make dtbs
+
+cp imx6ull-alientek-emmc.dtb ~/kenspace/zd-linux/tftpboot/
+
+重新启动 kernel
+
+查看有没有 alphaled 节点
+
+/sys/firmware/devicetree/base # ls 
+
+
+
+编写代码
+
+```sh
+/home/book/kenspace/zd-linux/linux-kernel/drivers_code/4_desled
+
+make
+
+sudo cp dtsled.ko ~/kenspace/zd-linux/nfs/rootfs/lib/modules/4.1.15/ -f
+```
+
+去 kernel 加载运行
+
+depmod
+
+modprobe dtsled.ko
+
+> 未完成
