@@ -1,11 +1,11 @@
 ## PCM 转 wav
 
-> 未发表，没理解
 
+> 参考
 
-https://blog.csdn.net/u010011236/article/details/53026127
+> https://blog.csdn.net/u010011236/article/details/53026127
 
-https://blog.csdn.net/ownwell/article/details/8114121/
+> https://blog.csdn.net/ownwell/article/details/8114121/
 
 
 首先我们知道，播放器是无法播放 pcm 音频数据的，因为播放器并不知道 PCM 的采样率、声道数、位深度等参数。所以我们可以将 PCM 音频数据转成播放器能播放的特定格式，比如：WAV。

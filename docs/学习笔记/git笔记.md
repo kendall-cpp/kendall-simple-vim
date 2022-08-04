@@ -4,6 +4,7 @@
 	- [提交到暂存区](#提交到暂存区)
 	- [提交到对象区](#提交到对象区)
 	- [后悔还原](#后悔还原)
+		- [误删/改了某个文件还原](#误删改了某个文件还原)
 	- [checkout](#checkout)
 	- [查看日志](#查看日志)
 	- [重命名](#重命名)
@@ -45,10 +46,11 @@ git reset HEAD hello.txt    从暂存区退回到工作区 和上面一样
 
 git status        			查看目前工作区状态
 
+git commit -a --no-verify   忽略掉代码不规范错误
 
 ### 提交到对象区
 
-git commit 
+git commit  或者 git commit -a
 
 填写信息，shift+zz 可以保存退出
 
@@ -84,6 +86,10 @@ git commit        提交删除操作，会彻底删除
 git reset HEAD bbb.txt  退回到工作区（但是还是删除指令）
 
 git checkout -- hello.txt  还原回工作区
+
+#### 误删/改了某个文件还原
+
+git restore <file>
 
 ### checkout
 
@@ -123,6 +129,9 @@ git checkout -- aaa.txt
 ### 查重提交说明/修改注释
 
 git commit --amend -m "修正最近一次的提交信息"
+
+释
+git commit --amend -s  查看提交的注释
 
 ### branch 分支
 
@@ -388,6 +397,8 @@ git am --resolved
 - 执行 git am --abort 命令，取消第一步的操作；
 
 - 再重新执行 git am *.patch 命令即可
+
+- 或者：patch -p1 < 0001-a5-av400-enable-nand.patch   打 patch
 
 ### 例子
 
