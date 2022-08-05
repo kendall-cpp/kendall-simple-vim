@@ -48,7 +48,9 @@
   - [字符设备开发基础实验](#字符设备开发基础实验)
   - [linux LED 灯驱动实验](#linux-led-灯驱动实验)
   - [设备树](#设备树)
-    - [dts语法](#dts语法)
+    - [自定义节点](#自定义节点)
+    - [特殊节点](#特殊节点)
+  - [基于设备树的LED等实验](#基于设备树的led等实验)
 
 ------
 
@@ -1828,7 +1830,9 @@ cat /proc/devices
 
 可以使用 make dtbs 来编译设备树文件，设备树文件位于
 
-`/home/book/kenspace/zd-linux/IMX6ULL/linux/linux-imx-rel_imx_4.1.15_2.1.0_ga/arch/arm/boot/dts`
+`/home/book/kenspace/zd-linux/IMX6ULL/linux/linux-imx-rel_imx_4.1.15_2.1.0_ga/arch/arm/boot/dts/imx6ull-alientek-emmc.dts`
+
+对应 kernel 的 `/proc/device-tree/`
 
 编译指定的设备树文件 
 
@@ -1836,7 +1840,140 @@ cat /proc/devices
 /home/book/kenspace/zd-linux/IMX6ULL/linux/linux-imx-rel_imx_4.1.15_2.1.0_ga/$ make imx6ull-alientek-emmc.dtb 
 ```
 
-### dts语法
+### 自定义节点
+
+```c
+// book@kendall:dts$ vim imx6ull
+
+ // 自定义节点
+ mytestnode {
+     
+ }; 
+
+// book@kendall:linux-imx-rel_imx_4.1.15_2.1.0_ga$ make dtbs
+```
+
+拷贝并重新启动
+
+cp arch/arm/boot/dts/imx6ull-alientek-emmc.dtb  ~/kenspace/zd-linux/tftpboot/ -f
+
+在 `/proc/device-tree/` 去查看添加的节点是否存在。
+
+### 特殊节点
+
+- aliases 子节点
+
+aliases 节点的主要功能就是定义别名，定义别名的目的就是为了方便访问节点。不过我们一般会在节点命名的时候会加上 label，然后通过 &label 来访问节点，这样也很方便，而且设备树里面大量的使用 &label 的形式来访问节点。
+
+- chosen 子节点
+
+chosen 节点主要是为了 uboot 向 Linux 内核传递数据，重点是 bootargs 参数，属性值和 uboot 的 bootargs 一样。
+
+uboot 在启动内核的时候通过 bootz 80800000 0 83000000 来启动，可以通过在 uboot 源码中搜索 chosen 来查看。
+
+```c
+// /home/book/kenspace/zd-linux/IMX6ULL/uboot
+
+//在 common/fdt_support.c 文件中
 
 
 
+int fdt_chosen(void *fdt)
+{
+    int   nodeoffset;
+    int   err; 
+    char  *str;     /* used to set string properties */
+
+    err = fdt_check_header(fdt);
+    if (err < 0) { 
+        printf("fdt_chosen: %s\n", fdt_strerror(err));
+        return err; 
+    }    
+
+    /* find or create "/chosen" node. */
+    nodeoffset = fdt_find_or_add_subnode(fdt, 0, "chosen");
+    if (nodeoffset < 0) 
+        return nodeoffset;                                                                                                                    
+
+    str = getenv("bootargs");   // 获取 bootargs 环境变量的值
+    if (str) {
+        err = fdt_setprop(fdt, nodeoffset, "bootargs", str, 
+                  strlen(str) + 1);
+        if (err < 0) { 
+            printf("WARNING: could not set bootargs %s.\n",
+                   fdt_strerror(err));
+            return err; 
+        }    
+    }    
+
+    return fdt_fixup_stdout(fdt, nodeoffset);
+}
+```
+
+![](../img/bootz命令执行流程.png)
+
+- compatible 属性
+
+compatible 属性用于将设备和驱动绑定起来。字符串列表用于选择设备所要
+使用的驱动程序。compatible 属性的值格式如下所示：
+```c
+"manufacturer,model"   // manufacturer 表示厂商，model 一般是模块对应的驱动名字
+```
+
+- `#address-cells` 和 `#size-cells` 属性
+
+`#address-cells` 和 `#size-cells` 这两个属性可以用在任
+何拥有子节点的设备中，用于描述子节点的地址信息。`#address-cells` 属性值决定了子节点 reg 属性中地址信息所占用的字长(32 位)，`#size-cells` 属性值决定了子节点 reg 属性中长度信息所占的字长(32 位)。 `#address-cells` 和 `#size-cells` 表明了子节点应该如何编写 reg 属性值，一般 reg 属性都是和地址有关的内容，和地址相关的信息有两种：起始地址和地址长度
+
+
+
+## 基于设备树的LED等实验
+
+- 修改设备树节点
+
+vim imx6ull-alientek-emmc.dts
+
+```c
+// 根节点下添加
+	alphaled {
+		#address-cell = <1>;
+		#size-cell = <1>;
+		statis = "okay";
+		reg = < 0X020C406C 0x04
+				0X020E0068 0x04
+				0X020E02F4 0x04
+				0X0209C000 0x04
+				0X0209C004 0x04				
+			>;
+	};
+```
+
+linux-imx-rel_imx_4.1.15_2.1.0_ga$ make dtbs
+
+cp imx6ull-alientek-emmc.dtb ~/kenspace/zd-linux/tftpboot/
+
+重新启动 kernel
+
+查看有没有 alphaled 节点
+
+/sys/firmware/devicetree/base # ls 
+
+
+
+编写代码
+
+```sh
+/home/book/kenspace/zd-linux/linux-kernel/drivers_code/4_desled
+
+make
+
+sudo cp dtsled.ko ~/kenspace/zd-linux/nfs/rootfs/lib/modules/4.1.15/ -f
+```
+
+去 kernel 加载运行
+
+depmod
+
+modprobe dtsled.ko
+
+> 未完成
