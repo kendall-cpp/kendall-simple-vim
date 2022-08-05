@@ -26,7 +26,7 @@
 	- [git am 对应 git format-patch](#git-am-对应-git-format-patch)
 	- [git apply 与 git am的区别](#git-apply-与-git-am的区别)
 	- [打patch发生冲突](#打patch发生冲突)
-	- [例子](#例子)
+	- [patch 例子](#patch-例子)
 
 -----
 
@@ -405,7 +405,7 @@ git am --resolved
 -f：该参数遇到这种情况则继续打补丁，当然一般情况下会报错，毕竟对比不一致了
 -N：忽略该文件
 
-### 例子
+### patch 例子
 
 ```sh
 修改最新文件并 commit
@@ -428,4 +428,4 @@ git am --abort
 git am <commit_hash>
 ```
 
-> https://www.cnblogs.com/lueguo/p/3544114.html
+> 学习参考：https://www.cnblogs.com/lueguo/p/3544114.html

@@ -327,3 +327,93 @@ u-boot/drivers/pinctrl/meson/pinctrl-meson-axg.c
 
 - 培训结课作业：完成 a5_amlogictest bps 添加，并提交到 girrit
 
+
+## uboot 编译脚本流程
+
+- main.sh
+
+```sh
+# ./main.sh  /mnt/fileroot/shengken.lin/workspace/google_source/eureka/amlogic_sdk/ u-boot korlan p2 /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome
+uboot_compile() {
+  ./build_bl2.sh ${COMPILE_PRO_VER_BOARD_NAME} ../u-boot ${Release_macro}  
+  # COMPILE_PRO_VER_BOARD_NAME = korlan-p2
+  # Release_macro = release
+  # ./build_bl2.sh korlan-p2 ../u-boot release
+
+  ./build_bl31.sh ${COMPILE_PRO_VER_BOARD_NAME} ../u-boot  ${Release_macro}
+  # ./build_bl31.sh korlan-p2 ../u-boot release
+
+  ./build_bl32.sh ${COMPILE_PRO_VER_BOARD_NAME} ../u-boot  ${Release_macro}
+  # ./build_bl32.sh korlan-p2 ../u-boot release
+
+   ./build_uboot.sh ${COMPILE_PRO_VER_BOARD_NAME}  ${CHROME_DIR}  ${Release_macro}  
+   # ./build_uboot.sh korlan-p2 /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome release
+}
+```
+
+- build_bl2.sh
+
+```sh
+case $product in    # product=$1=korlan-p2
+  # 所以走的是  korlan*)
+
+# 会生成一个 bl2.bin 然后拷贝到 u-boot/fip/a1/
+
+# 然后执行 plat/a1/ddr/gen_ddr_fw.sh 去写 fw_new 文件，完成 DDR fw 生成
+
+cp ./aml_ddr.fw ../u-boot/fip/a1/
+
+```
+
+- build_bl31.sh
+
+```sh
+# 生成 bl131.img 并拷贝到 u-boot/fip/c2/
+cp -v build/c2/release/bl31.img ../u-boot/fip/c2/
+```
+
+- build_bl32.sh
+
+```sh
+# 生成一个 bl32.img 并拷贝到 u-boot/fip/a1
+cp -v out/bl32.img ../u-boot/fip/${PLATFORM_FLAVOR}/
+```
+
+- build_uboot.sh
+
+```sh
+# 进入 building_uboot 函数
+# soc_family_name=a1
+# local_name=a1_korlan
+# rev=p2
+# board_name=korlan-p2
+# cfg_suffix=
+building_uboot a1 a1_korlan p2 $board $dbg_flag  # $board=korlan-p2 $dbg_flag=release
+
+config=${local_name}_${rev}${cfg_suffix} # config=a1_korlan_p2
+
+./mk ${config} --board_name $board_name --bl2 fip/${soc_family_name}/bl2.bin --bl30 fip/${soc_family_name}/bl30.bin --bl31 fip/${soc_family_name}/bl31.img --bl32 fip/${soc_family_name}/bl32.img $5
+# ./mk a1_korlan_p2 --board_name korlan-p2 --bl2 fip/a1/bl2.bin --bl30 fip/${soc_family_name}/bl30.bin --bl31 fip/${soc_family_name}/bl31.img --bl32 fip/${soc_family_name}/bl32.img $5
+```
+
+## 播放音频测试
+
+开启 kernel 模式下，window 上，push 上去
+
+```sh
+adb push .\the-stars-48k-60s.wav /data/
+```
+
+驱动源码 
+
+```sh
+/mnt/fileroot/shengken.lin/workspace/google_source/eureka/amlogic_sdk/kernel$ ls sound/soc/amlogic/auge/tdm.c 
+
+# 更改代码
+
+# 到 kernel
+dmesg  -n 8   # 开 log
+amixer cset numid=2 150  # 修改音量
+amixer cget numid=2       # 查看音量
+aplay -Dhw:0,0 /data/the-stars-48k-60s.wav   # 播放  -Dhw:0,0 声卡和 device
+```
