@@ -19,7 +19,7 @@
 
 ### 编译u-boot和kernel
 
-- 先将下载的boot.img 拷贝到 unpack_boot_ramdisk_script 
+- 先将下载的 boot.img 拷贝到 unpack_boot_ramdisk_script 
 - 编译 uboot
 - 拷贝 ramdisk 到 `To_shengken_sign/korlan/`
 - 编译 kernel
@@ -29,9 +29,9 @@
 > 将 D:\KendallFile\GoogleHome\internal_master_korlan-eng_309703_korlan-ota-korlan-p2-309703\boot.img 拷贝到 Z:\workspace\google_source\eureka\amlogic_sdk\unpack_boot_ramdisk_script 
 
 
-- kendall-complie_uboot_kernel.sh u-boot 编译签名 u-boot
+- kendall-complie_uboot_kernel.sh u-boot 编译 u-boot
 - kendall-unpack_boot_copyRamdisk.sh
-- kendall-complie_uboot_kernel.sh kernel  编译签名 kernel
+- kendall-complie_uboot_kernel.sh kernel  编译 kernel
 
 > 生成的文件在 /mnt/fileroot/shengken.lin/workspace/google_source/eureka/amlogic_sdk/To_shengken_sign/korlan/korlan-p2
 
@@ -320,3 +320,10 @@ u-boot/drivers/pinctrl/meson/pinctrl-meson-axg.c
 
 > kernel/arch/arm/dts/meson-a1-a113l-korlan.dts
 > kernel/arch/arm/boot/dts/meson.dtsi
+
+-----
+
+## 2022年8月5日
+
+- 培训结课作业：完成 a5_amlogictest bps 添加，并提交到 girrit
+

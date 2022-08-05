@@ -130,7 +130,6 @@ git checkout -- aaa.txt
 
 git commit --amend -m "修正最近一次的提交信息"
 
-释
 git commit --amend -s  查看提交的注释
 
 ### branch 分支
@@ -259,7 +258,7 @@ git diff   查看文件差异
 
 ## 邮箱设置
 
- git config  常看使用
+ git config -l 常看使用
 
  git config --global  (整个计算机设置)
 
@@ -400,6 +399,12 @@ git am --resolved
 
 - 或者：patch -p1 < 0001-a5-av400-enable-nand.patch   打 patch
 
+在遇到打了一次补丁之后继续运行patch命令时，patch会提示 `Reversed (or previously applied) patch detected! Assume -R? [n]`。对此：
+
+-t：该参数遇到这种情况直接将打过补丁的文件恢复原样，即未打补丁之前的状态
+-f：该参数遇到这种情况则继续打补丁，当然一般情况下会报错，毕竟对比不一致了
+-N：忽略该文件
+
 ### 例子
 
 ```sh
@@ -423,3 +428,4 @@ git am --abort
 git am <commit_hash>
 ```
 
+> https://www.cnblogs.com/lueguo/p/3544114.html
