@@ -328,7 +328,9 @@ u-boot/drivers/pinctrl/meson/pinctrl-meson-axg.c
 - 培训结课作业：完成 a5_amlogictest bps 添加，并提交到 girrit
 
 
-## uboot 编译脚本流程
+## **uboot 编译脚本流程**
+
+> ./To_shengken_sign/main.sh
 
 - main.sh
 
@@ -393,8 +395,115 @@ building_uboot a1 a1_korlan p2 $board $dbg_flag  # $board=korlan-p2 $dbg_flag=re
 config=${local_name}_${rev}${cfg_suffix} # config=a1_korlan_p2
 
 ./mk ${config} --board_name $board_name --bl2 fip/${soc_family_name}/bl2.bin --bl30 fip/${soc_family_name}/bl30.bin --bl31 fip/${soc_family_name}/bl31.img --bl32 fip/${soc_family_name}/bl32.img $5
-# ./mk a1_korlan_p2 --board_name korlan-p2 --bl2 fip/a1/bl2.bin --bl30 fip/${soc_family_name}/bl30.bin --bl31 fip/${soc_family_name}/bl31.img --bl32 fip/${soc_family_name}/bl32.img $5
+# ./mk a1_korlan_p2 --board_name korlan-p2 --bl2 fip/a1/bl2.bin --bl30 fip/a1/bl30.bin --bl31 fip/a1/bl31.img --bl32 fip/a1/bl32.img release
+# 这行命令主要的工作时 source 前面所有的 脚本
+
+local bootloader_path=${workspace_path}/vendor/amlogic/${product}/prebuilt/${folder}
+# bootloader_path=/mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/korlan/prebuilt/bootloader
+# board = korlan-p2
+
+cp fip/build/bl2_new.bin ${bootloader_path}/bl2_new.bin.${board}
+cp fip/build/bl31.img ${bootloader_path}/bl31.img.${board}
+cp fip/build/bl32.img ${bootloader_path}/bl32.img.${board}
+cp fip/build/bl33.bin ${bootloader_path}/bl33.bin.${board}
+
+# 拷贝ddr bin用于eureka源下的引导加载程序签名
+# 删除vendor/amlogic下的ddr文件的硬代码
+cp fip/${soc_family_name}/aml_ddr.fw ${bootloader_path}
 ```
+
+-----
+
+> **至目前为止 u-boot 编译完成**
+
+------
+
+## **kernel 编译脚本流程**
+
+> ./To_shengken_sign/main.sh
+
+- main.sh
+
+```sh
+# ./main.sh /mnt/fileroot/shengken.lin/workspace/google_source/eureka/amlogic_sdk/ aaa korlan p2 /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome
+kernel_compile()
+{
+  cd kernel/
+    ./build_kernel.sh ${COMPILE_PRO_VER_BOARD_NAME}  ${CHROME_DIR}
+    #  ./build_kernel.sh korlan-p2  /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome
+
+    cd ${CURRENT_DIR}
+    # CURRENT_DIR=/mnt/fileroot/shengken.lin/workspace/google_source/eureka/amlogic_sdk/To_shengken_sign
+
+    korlan_sign ${CHROME_DIR} ${OUTPUT_SIGNED_DIR}
+    korlan_sign /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome korlan/korlan-p2
+
+  # 开始通过这两个脚本对 uboot 和 kernel 进行签名
+  # ./build-bootimg-sign_venus.sh
+  # ./ssign-uboot_korlan.sh
+}
+```
+
+**编译 kernel 脚本（不签名）**
+
+- build_kernel.sh
+
+```sh
+build_kernel ${kernel_dir} ${board}_defconfig
+# build_kernel /mnt/fileroot/shengken.lin/workspace/google_source/eureka/amlogic_sdk/kernel korlan-p2_defconfig
+
+function build_kernel()
+run_kernel_make $cross_compile $cpu_num $arch $defconfig_file_name
+# run_kernel_make ../prebuilt/toolchain/aarch64/bin/aarch64-cros-linux-gnu- 40 arm64 korlan-p2_defconfig
+
+# make kernel 并设置 CONFIG_DEBUG_SECTION_MISMATCH=y
+make CLANG_TRIPLE=$clang_triple CC=$cc_clang CROSS_COMPILE=$1 ARCH=$3 -j$2 $4 CONFIG_DEBUG_SECTION_MISMATCH=y
+
+# 再编译 all
+run_kernel_make $cross_compile $cpu_num $arch all
+
+# 编译设备树
+dtb_file_name=${board}.dtb
+# dtb_file_name=korlan-p2.dtb
+# path_to_dtb_file=arch/arm64/boot/dts/amlogic/korlan-p2.dtb
+build_dtb ${kernel_dir} ${dtb_file_name}
+# build_dtb /mnt/fileroot/shengken.lin/workspace/google_source/eureka/amlogic_sdk/kernel korlan-p2.dtb
+
+function build_dtb()
+run_kernel_make $cross_compile $cpu_num $arch $dtb_file_name
+# run_kernel_make $cross_compile 40 arm64 korlan-p2.dtb
+
+pack_kernel $path_to_dtb_file ${product} ${board}
+# path_to_dtb_file=  product=korlan board=korlan-p2 fctname=fct
+
+pack_kernel() 
+cat ${compressed_kernel} ${dtb_file} >> ${packed_kernel}
+# cat ${compressed_kernel} korlan-p2.dtb >> ./arch/arm64/boot/kernel.korlan.gz-dtb.korlan-p2
+
+# 编译工厂kernel
+
+path_to_fct_dtb_file=arch/arm64/boot/dts/amlo gic/${fct_dtb_file_name}
+# path_to_fct_dtb_file=arch/arm64/boot/dts/amlogic/fct_korlan-p2.dtb
+build_dtb ${kernel_dir} ${fct_dtb_file_name}
+# build_dtb ${kernel_dir} arch/arm64/boot/dts/amlogic/fct_korlan-p2.dtb
+pack_kernel $path_to_fct_dtb_file ${product} ${board} ${fctname}
+# pack_kernel arch/arm64/boot/dts/amlogic/fct_korlan-p2.dtb korlan korlan fct
+
+pack_kernel() 
+cat ${compressed_kernel} ${dtb_file} >> ${packed_kernel}
+# cat ${compressed_kernel} arch/arm64/boot/dts/amlogic/fct_korlan-p2.dtb >> ./arch/arm64/boot/fct_kernel.korlan.gz-dtb.korlan-p2
+
+
+ cp ${bootdir}/kernel.${product}.gz-dtb.${board} \
+        ${kernel_path}
+# cp ./arch/arm64/boot/kernel.korlan.gz-dtb.korlan-p2 /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/korlan/prebuilt/kernel                
+cp ${path_to_dtb_file} ${kernel_path}/${board}.dtb
+# cp arch/arm64/boot/dts/amlogic/korlan-p2.dtb /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/korlan/prebuilt/kernel/korlan-p2.dtb
+cp ${bootdir}/${fctname}_kernel.${product}.gz-dtb.${board}  \
+    ${fct_kernel_path}/kernel.${product}.gz-dtb.${board}
+# cp ./arch/arm64/boot/fct_kernel.korlan.gz-dtb.korlan-p2  /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/korlan/prebuilt/factory/kernel/kernel.korlan.gz-dtb.korlan-p2
+```
+
 
 ## 播放音频测试
 
