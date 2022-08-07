@@ -355,6 +355,8 @@ uboot_compile() {
 
 - build_bl2.sh
 
+> 完成 DDR 的初始化
+
 ```sh
 case $product in    # product=$1=korlan-p2
   # 所以走的是  korlan*)
@@ -382,6 +384,8 @@ cp -v out/bl32.img ../u-boot/fip/${PLATFORM_FLAVOR}/
 ```
 
 - build_uboot.sh
+
+> BL33 一般指 uboot，一般通过它最终启动操作系统内核
 
 ```sh
 # 进入 building_uboot 函数
