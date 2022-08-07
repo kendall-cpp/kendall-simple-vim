@@ -210,5 +210,7 @@ book@kendall:~/kenspace/linux$ sudo dmesg -c | grep Exit
 book@kendall:~/kenspace/linux$ sudo dmesg -c | grep Hello
 book@kendall:~/kenspace/linux$ sudo dmesg -c | grep Exit
 ```
+----
+
 
 
