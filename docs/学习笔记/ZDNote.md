@@ -51,6 +51,9 @@
     - [自定义节点](#自定义节点)
     - [特殊节点](#特殊节点)
   - [基于设备树的LED等实验](#基于设备树的led等实验)
+  - [pinctl 和 gpio 子系统试验](#pinctl-和-gpio-子系统试验)
+    - [如何找到 pinctl 子系统驱动](#如何找到-pinctl-子系统驱动)
+    - [如何从设备树中获取 GPIO 信息](#如何从设备树中获取-gpio-信息)
 
 ------
 
@@ -1861,6 +1864,19 @@ cp arch/arm/boot/dts/imx6ull-alientek-emmc.dtb  ~/kenspace/zd-linux/tftpboot/ -f
 
 ### 特殊节点
 
+
+soc 节点设置 `#address-cells = <1>，#size-cells = <1>`，这样 soc 子节点的 reg 属性中起始地占用一个字长，地址空间长度也占用一个字长。
+
+
+- ocram 是 I.MX6ULL 内部 RAM ,因此 ocram 节点应该是 soc 节点的子节点
+
+```c 
+ocram: sram@0x00900000 {   // ocram 起始地址为 0x00900000
+  compatible = "mmio-sram";
+  reg = <0x00900000 0x20000>;  //大小为 128KB(0x20000)
+};
+```
+
 - aliases 子节点
 
 aliases 节点的主要功能就是定义别名，定义别名的目的就是为了方便访问节点。不过我们一般会在节点命名的时候会加上 label，然后通过 &label 来访问节点，这样也很方便，而且设备树里面大量的使用 &label 的形式来访问节点。
@@ -1977,3 +1993,100 @@ depmod
 modprobe dtsled.ko
 
 > 未完成
+
+
+## pinctl 和 gpio 子系统试验
+
+pinctrl 子系统主要工作内容如下：
+- ①、获取设备树中 pin 信息。
+- ②、根据获取到的 pin 信息来设置 pin 的复用功能
+- ③、根据获取到的 pin 信息来设置 pin 的电气特性，比如上/下拉、速度、驱动能力等。
+  
+对于我们使用者来讲，只需要在设备树里面设置好某个 pin 的相关属性即可，其他的初始化工作均由 pinctrl 子系统来完成，pinctrl 子系统源码目录为 `drivers/pinctrl`
+
+imx6ul.dtsi
+
+```c
+iomuxc: iomuxc@020e0000 {
+  compatible = "fsl,imx6ul-iomuxc";
+  reg = <0x020e0000 0x4000>;
+};
+```
+
+在 IMX6ULL 手册上找 IOMUXC 
+
+在 imx6ull-alientek-emmc.dts 中能找到 iomuxc 追加的节点
+
+
+```c
+		pinctrl_hog_1: hoggrp-1 {
+			fsl,pins = <  // 引脚节点
+				MX6UL_PAD_UART1_RTS_B__GPIO1_IO19	0x17059 /* SD1 CD */
+				MX6UL_PAD_GPIO1_IO05__USDHC1_VSELECT	0x17059 /* SD1 VSELECT */
+				MX6UL_PAD_GPIO1_IO09__GPIO1_IO09        0x17059 /* SD1 RESET */
+			>;
+		};
+```
+
+宏在 imx6ul-pinfunc.h 这里定义
+
+```c
+#define MX6UL_PAD_UART1_RTS_B__GPIO1_IO19                         0x0090 0x031C 0x0000 0x5 0x0
+
+
+mux_reg conf_reg input_reg mux_mode input_val
+0x0090   0x031C    0x0000    0x5        0x0
+```
+
+如果搜 MX6UL_PAD_UART1_RTS_B 会有 8 个，说明 MX6UL_PAD_UART1_RTS_B 可以复用成 8 个引脚。
+
+IOMUXC 父节点首地址是 020e0000 ，因此 UART1_RTS_B 这个 PIN 的 mux 寄存器地址就是 020e0000 + 0x0090 = 0x020e0090
+
+conf_reg: 020e0000 + 0x031C = 0x020e 031C ,这个寄存器就是 UART1_RTS_B 的电气属性配置寄存器，值就是 0x17059 。
+
+mux_mode：5 表示复用为 GPIO1_IO19 ，将其写入 0x020e0090
+
+
+### 如何找到 pinctl 子系统驱动
+
+设备树里面的设备节点是通过 compatible 跟驱动匹配的。当设备树节点的 compatible 属性和驱动里面的兼容性字符串匹配，也就是一模一样的时候就表示驱动匹配了。
+
+所以我们只需要全局搜索，设备节点里面的compatible属性的值，看看在哪个.c文件里面有，那么此.c文件就是驱动文件。
+	
+找到 `pinctrl-imx6ul.c` 文件，那么此文件就是6UL/6ULL的`pinctrl` 驱动文件。当驱动和设备匹配以后执行 `probe` 函数
+
+```c
+static int imx6ul_pinctrl_probe(struct platform_device *pdev)
+{
+	const struct of_device_id *match;
+	struct imx_pinctrl_soc_info *pinctrl_info;
+
+	match = of_match_device(imx6ul_pinctrl_of_match, &pdev->dev);
+
+	if (!match)
+		return -ENODEV;
+
+	pinctrl_info = (struct imx_pinctrl_soc_info *) match->data;
+
+	return imx_pinctrl_probe(pdev, pinctrl_info);
+}
+```
+
+![](../img/imx6ul_pinctrl_probe执行流程.jpg)
+
+### 如何从设备树中获取 GPIO 信息
+
+- gpio_request 函数：用于申请一个 GPIO 管脚，在使用一个 GPIO 之前一定要使用 gpio_request 进行申请
+
+- gpio_free 函数：如果不使用某个 GPIO 了，那么就可以调用 gpio_free 函数进行释放
+
+- gpio_direction_input 函数：用于设置某个 GPIO 为输入
+
+- gpio：要设置为输入的 GPIO 标号
+
+- gpio_direction_output 函数：gpio_direction_output 函数
+
+- gpio_get_value 函数，此函数用于获取某个 GPIO 的值(0 或 1)
+
+- gpio_set_value 函数此函数用于设置某个 GPIO 的值
+
