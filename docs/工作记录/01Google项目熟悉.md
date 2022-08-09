@@ -530,3 +530,125 @@ amixer cset numid=2 150  # 修改音量
 amixer cget numid=2       # 查看音量
 aplay -Dhw:0,0 /data/the-stars-48k-60s.wav   # 播放  -Dhw:0,0 声卡和 device
 ```
+
+## 2022年8月8日
+
+### 音频播放流程分析
+
+- tdm.c 
+
+```c
+aml_tdm_driver
+
+ aml_tdm_platform_probe
+  of_device_get_match_data
+  of_get_parent
+  of_find_device_by_node
+
+  // 获取TDM通道信息。如果不设置，设置为默认0
+  of_parse_tdm_lane_slot_in
+  of_parse_tdm_lane_slot_out
+  
+  // 获取TDM通道的oe信息
+  of_parse_tdm_lane_oe_slot_in
+  of_parse_tdm_lane_oe_slot_out
+  // 获取TDM通道的lb信息
+  of_parse_tdm_lane_lb_slot_in
+
+  dev_info(&pdev->dev, "TDM ID:%d, lane_cnt:%d, lane_mask_out = %x, lane_oe_mask_out = %x\n",
+  // tdm@1: TDM ID:1, lane_cnt:10, lane_mask_out = 1, lane_oe_mask_out = 0
+
+  parse_samesrc_channel_mask
+
+```
+
+### 代码分析
+
+二进制格式dtb设备树文件需要先转化成设备节点 device_node 结构，然后再将 device_node 转换成平台设备 platform_device。
+
+- device_node
+ 
+```c
+platform_device  // 平台设备
+struct device_node {
+    const char *name; /*保存节点名称属性*/
+    const char *type; /*节点类型*/
+    phandle phandle; /*节点句柄，该成员可以用于节点引用*/
+    const char *full_name;  /*节点名称*/
+    struct fwnode_handle fwnode; /*暂时还不明白其作用*/
+  
+    struct	property *properties; /*节点属性*/
+    struct	property *deadprops;	/*暂时还不明白其作用*/
+    struct	device_node *parent; /*父节点*/
+    struct	device_node *child; /*第一个子节点*/
+    struct	device_node *sibling; /*第一个兄弟节点*/
+    struct	kobject kobj; /*节点kobj对象*/
+    unsigned long _flags; /*节点标识*/
+    void	*data; /*节点特殊数据*/
+};
+```
+
+通过结构体 snd_pcm_ops 来实现
+
+找到 audio 设备寄存器的地址 `audiobus: audiobus@0xFE050000`
+
+
+## 2022年8月9日
+
+### 用alsa播放wav文件
+
+**执行顺序**
+
+- aml_tdm_platform_probe
+
+接着调用
+
+```c
+devm_snd_soc_register_component(dev, &aml_tdm_component,
+					 &aml_tdm_dai[p_tdm->id], 1);
+
+devm_snd_soc_register_component 注册一个 component 组件
+
+devm_snd_soc_register_component 把结构体 aml_tdm_component(cmpnt_drv) 传递到 snd_soc_register_component 函数，
+
+
+snd_soc_register_component 函数将 aml_tdm_component(component_driver) 传递给 snd_soc_add_component
+
+
+snd_soc_add_component 调用 snd_soc_component_initialize 函数进行 component 部件的初始化,会根据 snd_soc_codec_driver 中的 struct snd_soc_component_driver 结构设置 snd_soc_codec 中的 component 组件
+
+// 通过上面函数的追踪可知会对 aml_tdm_component 进行注册和初始化一个 component 组件       
+	aml_tdm_component.pcm_new = aml_tdm_new,
+	aml_tdm_component.ops = &aml_tdm_ops,      //打开和播放音频函数
+
+开始调用 aml_tdm_new 函数
+
+aml_tdm_ops 打开和播放音频函数
+```
+
+到 aml_tdm_ops 结构体
+
+```c
+static struct snd_pcm_ops aml_tdm_ops = {
+	.open = aml_tdm_open,           //打开音频文件
+	.close = aml_tdm_close,
+	.ioctl = snd_pcm_lib_ioctl,
+	.hw_params = aml_tdm_hw_params,
+	.hw_free = aml_tdm_hw_free,
+	.prepare = aml_tdm_prepare,
+	.pointer = aml_tdm_pointer,
+	.mmap = aml_tdm_mmap,
+};
+```
+
+#### aml_tdm_open
+
+```
+[  129.449669@0] audio_ddr_mngr: frddrs[1] registered by device fe050000.audiobus:tdm@1
+```
+
+先找到 audio 设备寄存器的地址  fe050000
+
+aml_frddr_set_buf(fr, start_addr, end_addr); 
+
+
