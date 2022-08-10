@@ -1,4 +1,7 @@
 
+- [收到安装 vim](#收到安装-vim)
+  - [安装插件](#安装插件)
+  - [升级 cmake](#升级-cmake)
 - [vim插件安装和配置](#vim插件安装和配置)
 - [主题colorsheme](#主题colorsheme)
 - [YouCompleteMe 的安装和使用](#youcompleteme-的安装和使用)
@@ -16,48 +19,99 @@
 
 ------
 
-设置 github host
+## 收到安装 vim
 
+- 安装libncurses5-dev，否则编译时会报no terminal library found错误：
 
-参考这个：
+sudo apt install libncurses5-dev
 
-https://vim80.readthedocs.io/zh/latest/plugin/vundle.html
+- 由于这里要添加python支持，所以要装python3-dev(或者python-dev，对于python2用户)，否则编译时报Python.h: No such file or directory错误：
 
-YouCompleteMe 插件支持 C/C++ 代码补全
+如果没有 python3
 
-Plugin 'Valloric/YouCompleteMe'
+sudo apt-get install python3-dev
 
-参考：https://www.csdn.net/tags/NtjaggysOTI4Mi1ibG9n.html
+- 克隆Vim源代码，并进入目录
 
-需要安装 cmake
+git clone https://github.com/vim/vim
 
-sudo apt install cmake
+cd vim
 
-问题总结：https://www.freesion.com/article/6925855340/
+- 配置并执行
 
-解决 py 问题：https://blog.csdn.net/u014070086/article/details/88692896
+```sh
+./configure --with-features=huge \
+                  --enable-multibyte \
+                  --enable-rubyinterp=yes \
+                  --enable-python3interp=yes \
+                  --with-python3-config-dir=/usr/lib/python3.6/config-3.6m-x86_64-linux-gnu \
+                  --enable-pythoninterp=yes \
+                  --with-python-config-dir=/usr/lib/python2.7/config-x86_64-linux-gnu \
+                  --enable-perlinterp=yes \
+                  --enable-luainterp=yes \
+                  --enable-gui=auto \
+                  --enable-cscope \
+                  --prefix=/usr
 
-插件推荐和使用：https://blog.csdn.net/sctu_vroy/article/details/71310522
+# –with-features=huge：支持最大特性
+# –enable-rubyinterp：打开对ruby编写的插件的支持
+# –enable-pythoninterp：打开对python编写的插件的支持
+# –enable-python3interp：打开对python3编写的插件的支持
+# –enable-luainterp：打开对lua编写的插件的支持
+# –enable-perlinterp：打开对perl编写的插件的支持
+# –enable-multibyte：打开多字节支持，可以在Vim中输入中文
+# –enable-cscope：打开对cscope的支持
+# –with-python-config-dir=/usr/lib/python2.7/config-x86_64-linux-gnu/ 指定python config路径
+# –with-python-config-dir=/usr/lib/python3.5/config-3.5m-x86_64-linux-gnu/ 指定python3 config路径(根据自己系统实际情况配置)
+# –prefix=/usr：指定将要安装到的路径(可自行创建)
+# –enable-gui：GUI支持，可用auto、gtk2或者gnome                  
+```
 
-进入网站 https://vimawesome.com/ 寻找合适的插件
+### 安装插件
 
-github参考：https://github.com/chxuan/vimplus
+拷贝 vim.zip
 
-括号补全插件
+直接到 .vim 下执行 `./run-pathogen.sh`
 
-auto-pairs
+最后去 .vimrc 最上面添加
 
+`source /home/book/.vim/run-pathogen.vim `
 
-Participate in the company's SW training courses
+- 编译安装
+  
+make
 
-The company holds mid-career training for the graduates
+sudo make install
 
------
+### 升级 cmake
 
+如果提示错误
 
+```
+CMake 3.14 or higher is required.  You are running version 3.10.2
+```
 
+分别执行下面命令升级 cmake
 
-----
+```sh
+sudo apt remove --purge cmake
+hash -r
+sudo snap install cmake --classic
+```
+
+可能需要升级 C++ 支持 C++17
+
+```sh
+sudo apt-get install g++-8
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 700 --slave /usr/bin/g++ g++ /usr/bin/g++-7
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 800 --slave /usr/bin/g++ g++ /usr/bin/g++-8
+```
+
+然后
+
+```sh
+/usr/bin/python3 /home/book/.vim/bundle/youcompleteme/third_party/ycmd/build.py --clang-completer --racer-completer --verbose
+```
 
 ## vim插件安装和配置
 

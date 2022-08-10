@@ -1893,7 +1893,6 @@ uboot 在启动内核的时候通过 bootz 80800000 0 83000000 来启动，可�
 //在 common/fdt_support.c 文件中
 
 
-
 int fdt_chosen(void *fdt)
 {
     int   nodeoffset;
@@ -1942,7 +1941,6 @@ compatible 属性用于将设备和驱动绑定起来。字符串列表用于选
 何拥有子节点的设备中，用于描述子节点的地址信息。`#address-cells` 属性值决定了子节点 reg 属性中地址信息所占用的字长(32 位)，`#size-cells` 属性值决定了子节点 reg 属性中长度信息所占的字长(32 位)。 `#address-cells` 和 `#size-cells` 表明了子节点应该如何编写 reg 属性值，一般 reg 属性都是和地址有关的内容，和地址相关的信息有两种：起始地址和地址长度
 
 
-
 ## 基于设备树的LED等实验
 
 - 修改设备树节点
@@ -1973,7 +1971,6 @@ cp imx6ull-alientek-emmc.dtb ~/kenspace/zd-linux/tftpboot/
 查看有没有 alphaled 节点
 
 /sys/firmware/devicetree/base # ls 
-
 
 
 编写代码
