@@ -9,9 +9,11 @@
   - [使用 ctags](#使用-ctags)
   - [函数变量查找](#函数变量查找)
 - [Ack 插件安装](#ack-插件安装)
+  - [ACK使用](#ack使用)
   - [ubuntu 安装 ag](#ubuntu-安装-ag)
   - [结合使用](#结合使用)
 - [vim 命令记录](#vim-命令记录)
+- [nerdtree_red 使用](#nerdtree_red-使用)
 
 
 ------
@@ -140,6 +142,19 @@ sudo apt-get install ctags
 
 安装：在 .vimrc 中添加 `Plugin 'mileszs/ack.vim'` ,然后再 vim 下执行 `:PluginInstall` 安装。
 
+### ACK使用
+
+vim 中输入 :Ack "字符串"
+
+```sh
+?           帮助，显示所有快捷键
+Enter/o     打开文件
+O           打开文件并关闭Quickfix
+go          预览文件，焦点仍然在Quickfix
+t           新标签页打开文件
+q           关闭Quickfix
+```
+
 ### ubuntu 安装 ag
 
 sudo apt-get install silversearcher-ag
@@ -223,3 +238,24 @@ q           关闭Quickfix
 - 块模式 ctrl+v
   - d 删除
   - I 进入编辑，编辑完按 ESC 退出
+
+  ## nerdtree_red 使用
+
+```sh
+ctrl + w + h    光标 focus 左侧树形目录
+ctrl + w + l    光标 focus 右侧文件显示窗口
+ctrl + w + w    光标自动在左右侧窗口切换
+ctrl + w + r    移动当前窗口的布局位置
+
+o       在已有窗口中打开文件、目录或书签，并跳到该窗口
+go      在已有窗口 中打开文件、目录或书签，但不跳到该窗口
+t       在新 Tab 中打开选中文件/书签，并跳到新 Tab
+T       在新 Tab 中打开选中文件/书签，但不跳到新 Tab
+i       split 一个新窗口打开选中文件，并跳到该窗口
+gi      split 一个新窗口打开选中文件，但不跳到该窗口
+s       vsplit 一个新窗口打开选中文件，并跳到该窗口
+gs      vsplit 一个新 窗口打开选中文件，但不跳到该窗口
+!       执行当前文件
+O       递归打开选中 结点下的所有目录
+m    文件操作：复制、删除、移动等
+```
