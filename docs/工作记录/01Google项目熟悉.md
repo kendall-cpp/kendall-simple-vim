@@ -649,6 +649,13 @@ static struct snd_pcm_ops aml_tdm_ops = {
 
 先找到 audio 设备寄存器的地址  fe050000
 
+```c
 aml_frddr_set_buf(fr, start_addr, end_addr); 
 
+打印函数追踪
+
+dump_stack();
+```
+
+通过 git log 查看 bug id，然后在 https://partnerissuetracker.corp.google.com/issues/219670451 去搜索。
 
