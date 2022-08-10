@@ -1,5 +1,5 @@
 
-- [收到安装 vim](#收到安装-vim)
+- [重新安装 vim](#重新安装-vim)
   - [安装插件](#安装插件)
   - [升级 cmake](#升级-cmake)
 - [vim插件安装和配置](#vim插件安装和配置)
@@ -21,7 +21,7 @@
 
 ------
 
-## 收到安装 vim
+## 重新安装 vim
 
 - 安装libncurses5-dev，否则编译时会报no terminal library found错误：
 
@@ -293,7 +293,7 @@ q           关闭Quickfix
   - d 删除
   - I 进入编辑，编辑完按 ESC 退出
 
-  ## nerdtree_red 使用
+## nerdtree_red 使用
 
 ```sh
 ctrl + w + h    光标 focus 左侧树形目录
