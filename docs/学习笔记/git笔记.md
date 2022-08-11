@@ -128,9 +128,9 @@ git checkout -- aaa.txt
 
 ### 查重提交说明/修改注释
 
-git commit --amend -m "修正最近一次的提交信息"
+git commit --amend -m "修正最近一次 commit 的提交信息"
 
-git commit --amend -s  查看提交的注释
+git commit --amend -s    `-->` 修正最后一次 commit 提交的注释
 
 ### branch 分支
 
