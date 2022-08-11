@@ -144,8 +144,7 @@ git checkout new_branch   切换分支
 
 git checkout -b new_branch   创建并切换分支
 
-git branch -d new_branch   删除分支，但是不能删除自己，得切换到其他分支，		
-	而且**当前分支如果有文件也不能删除**，建议想先合并
+git branch -d new_branch   删除分支，但是不能删除自己，得切换到其他分支，而且**当前分支如果有文件也不能删除**，建议想先合并
 
 #### 保存现场 stash
 
