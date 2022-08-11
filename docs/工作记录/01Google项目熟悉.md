@@ -659,3 +659,146 @@ dump_stack();
 
 通过 git log 查看 bug id，然后在 https://partnerissuetracker.corp.google.com/issues/219670451 去搜索。
 
+## 2022年8月11日
+
+### 核对 pinmux 功能
+
+#### 记录
+
+A1 pinmux_reg.xlsx 功能表
+
+GPIO_pin_mux_ver2.xls 更新功能
+
+650-07392-04_20211011_04_mlb_k6_SCH_1.pdf 板子原理图
+
+HW -- (gpio) -->> pinmux  -->> dts -->> drive(SW)
+
+#### 寻找 GPIOP
+
+- 先找 `.c` 文件
+
+vim drivers/amlogic/pinctrl/pinctrl-meson-a1.c
+
+搜索 GPIOB
+
+```c
+static const unsigned int psram_clkn_pins[] = {GPIOP_0};                                                              
+static const unsigned int psram_clkp_pins[] = {GPIOP_1};
+static const unsigned int psram_ce_n_pins[] = {GPIOP_2};
+static const unsigned int psram_rst_n_pins[] = {GPIOP_3};
+static const unsigned int psram_adq0_pins[] = {GPIOP_4};
+static const unsigned int psram_adq1_pins[] = {GPIOP_5};
+static const unsigned int psram_adq2_pins[] = {GPIOP_6};
+static const unsigned int psram_adq3_pins[] = {GPIOP_7};
+static const unsigned int psram_adq4_pins[] = {GPIOP_8};
+static const unsigned int psram_adq5_pins[] = {GPIOP_9};
+static const unsigned int psram_adq6_pins[] = {GPIOP_10};
+static const unsigned int psram_adq7_pins[] = {GPIOP_11};
+static const unsigned int psram_dqs_dm_pins[] = {GPIOP_12};
+```
+
+然后去 dts 中查找 psram_clkn 
+
+
+```
+vim arch/arm64/boot/dts/amlogic/korlan-common.dtsi
+vim arch/arm64/boot/dts/amlogic/meson-a1.dtsi 
+```
+
+没找到，说明项目中没有用到 GPIOP_0 的 psram 功能，所以 GPIOP_0 只是作为普通额 gpio 引脚使用
+
+#### 寻找 GPIOB
+
+- 先找 `.c` 文件
+
+vim drivers/amlogic/pinctrl/pinctrl-meson-a1.c
+
+```c
+/*bank B func1 */
+static const unsigned int spif_mo_pins[] = {GPIOB_0};
+static const unsigned int spif_mi_pins[] = {GPIOB_1};
+static const unsigned int spif_wp_n_pins[] = {GPIOB_2};
+static const unsigned int spif_hold_n_pins[] = {GPIOB_3};
+static const unsigned int spif_clk_pins[] = {GPIOB_4};
+static const unsigned int spif_cs_pins[] = {GPIOB_5};
+static const unsigned int pwm_f_b_pins[] = {GPIOB_6};
+```
+
+- 根据 spif_mo 去查找
+
+vim arch/arm64/boot/dts/amlogic/meson-a1.dtsi
+
+```c
+    spifc_pins: spifc_pins {
+        mux {
+            groups = "spif_mo",                   
+                 "spif_mi",
+                 "spif_clk",
+                 "spif_cs",
+                 "spif_hold_n",
+                 "spif_wp_n";
+            function = "spif";
+            drive-strength = <4>; 
+        };   
+    }; 
+```
+
+- 根据 spifc_pins 去  arm64/boot/dts/amlogic/korlan-common.dtsi 中找
+
+```c
+&spifc {           
+    status = "okay";
+    pinctrl-names = "default";
+    pinctrl-0 = <&spifc_pins>;
+    spi-nor@1 {    
+        compatible = "jedec,spi-nor";
+        spi-max-frequency = <96000000>;
+    };             
+    spi-nand@0 {   
+        compatible = "spi-nand";
+        status = "okay";
+        reg = <0>; 
+        spi-max-frequency = <96000000>;
+        spi-tx-bus-width = <4>;
+        spi-rx-bus-width = <4>;
+        bl_mode = <1>;
+        fip_copies = <4>;
+        fip_size = <0x200000>;
+        partition = <&partitions>;
+        partitions: partitions{
+            bootloader{
+                offset=<0x0 0x0>;
+                size=<0x0 0x0>;
+            };     
+            tpl{   
+                offset=<0x0 0x0>;
+                size=<0x0 0x0>;
+            };     
+            fts{   
+                offset=<0x0 0x0>;
+                size=<0x0 0x100000>;
+            };     
+            factory{                                                                                                                                         
+                offset=<0x0 0x0>;
+                size=<0x0 0x400000>;
+            };     
+            recovery{
+                offset=<0x0 0x0>;
+                size=<0x0 0xC00000>;
+            };     
+            boot{  
+                offset=<0x0 0x0>;
+                size=<0x0 0xC00000>;
+            };     
+            system{
+                offset=<0x0 0x0>;
+                size=<0x0 0x1E00000>;
+            };     
+            cache{ 
+                offset=<0xffffffff 0xffffffff>;
+                size=<0x0 0x0>;
+            };     
+        };         
+    };             
+}; 
+```

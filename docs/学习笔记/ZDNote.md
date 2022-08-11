@@ -1689,9 +1689,19 @@ void unregister_chrdev_region(dev_t from, unsigned count)
 
 - count 从 from 开始，释放的设备号数量
 
+### chrdevbase字符设备驱动开发实验
+
+chrdevbase 不是实际存在的一个设备，chrdevbase设备有两个缓冲区，一个为读缓冲区，一个为写缓冲区，这两个缓冲区的大小都为 100 字节。
+
+- 编写程序
+
+```c
+
+```
 
 
 
+（1）我们插入一个内核模块，一般会使用工具insmod，该工具实际上调用了系统调用init_module，在该系统调用函数中，首先调用 load_module，把用户空间传入的整个内核模块文件创建成一个内核模块，返回一个struct module结构体。内核中便以这个结构体代表这个内核模块。
 
 
 - 编写 Makefile
@@ -1712,72 +1722,45 @@ clean:
 	$(MAKE) -C $(KERNELDIR) M=$(CURRENT_PATH) clean 
 ```
 
-- 编写字符驱动模块加载和卸载程序
-
-```c
-#include <linux/module.h>
-#include <linux/kernel.h>
-#include <linux/init.h>
-#include <linux/fs.h>
-#include <linux/slab.h>
-#include <linux/uaccess.h>
-#include <linux/io.h>
-
-static int __init chardevbase_init(void)
-{
-    return 0;
-}
-static void __exit chardevbase_exit(void)
-{
-   //出口函数具体逻辑 
-}
-
-
-// 模块的入口与出口
-module_init(chardevbase_init);
-module_exit(chardevbase_exit);
-```
-
-- 编译烧写
-
-make
-
-生成的 chardevbase.ko 文件就是要测试的驱动模块
-
-- 测试 .ko
-
-将编译出来的 .ko 文件复制到自己制作的根文件系统里面，
-
-加载 chardevbase.ko 驱动文件 `insmod chardevbase.ko` 或者 `modprobe chardevbase.ko` 
-
-卸载 .ko 模块 `rmmod chardevbase.ko`
-
-- 设置使用 modprobe 命令
+- 编译 APP
 
 ```sh
-cd /lib/
+arm-linux-gnueabihf-gcc chrdevbaseApp.c -o chrdevbaseApp
+```
+
+编译完成以后会生成一个叫做 chrdevbaseApp 的可执行程序
+
+- make
+
+生成的 chardevbase.ko 文件就是要测试的驱动模块，所以需要拷贝到根文件系统挂载的目录下
+
+```sh
+cd ~/kenspace/zd-linux/nfs/rootfs/lib/
 
 mkdir modules
 cd modules
 mkdir 4.1.15
 modprobe   # 缺少什么文件夹就创建
+
+sudo cp chrdevbase.ko chrdevbaseAPP ~/kenspace/zd-linux/nfs/rootfs/lib/modules/4.1.15/ -f
 ```
 
-去 ubuntu 上拷贝编译出来的 .ko 文件
+- 测试 .ko
+
+加载 chardevbase.ko 驱动文件 `insmod chardevbase.ko` 或者 `modprobe chardevbase.ko` 
 
 ```sh
-book@kendall:1_charDriversBase$ sudo cp chardevbase.ko /home/book/kenspace/zd-linux/nfs/rootfs/lib/modules/4.1.15
+ cd /lib/modules/4.1.15/
+ 
+ modprobe chrdevbase.ko 
+# modprobe: module chrdevbase.ko not found in modules.dep  可能会报这个错误
 ```
 
-在 kernel 上执行
+所以在家在 module 之前需要先手动创建 modules.dep  文件，**直接输入 depmod 命令即可自动生成 modules.dep**
 
-```
-/lib/modules/4.1.15 # modprobe chardevbase.ko 
-modprobe: can't open 'modules.dep': No such file or directory
-```
+如果没有这个命令就只能重新配置busybox，使能此命令，然后重新编译 busybox（学习指南 P1047）
 
-modprobe 提示无法打开“`modules.dep`”这个文件，因此驱动挂载失败了。我们不用手动创建 `modules.dep` 这个文件，直接输入 depmod 命令即可自动生成
-modules.dep，有些根文件系统可能没有 depmod 这个命令，如果没有这个命令就只能重新配置 busybox，使能此命令，然后重新编译 busybox。输入“`depmod`”命令以后会自动生成 modules.alias、modules.symbols 和 modules.dep 这三个文件，然后重新使用 modprobe 加载 chrdevbase.ko 。
+输入“depmod”命令以后会自动生成 modules.alias、modules.symbols 和 modules.dep 这三个文件。然后重新使用 modprobe 加载 chrdevbase.ko 。
 
 ```c
 # depmod
@@ -1785,13 +1768,14 @@ modules.dep，有些根文件系统可能没有 depmod 这个命令，如果没�
 /lib/modules/4.1.15 # lsmod   查看挂载的模块
 Module                  Size  Used by    Tainted: G  
 chardevbase              672  0 
-//可能需要创建 # mkdir /proc/modules
+
+cat /proc/devices
+    # 200 chrdevase
 
 # rmmod chardevbase.ko   卸载模块
 ```
 
-
-如果提示这些信息
+- 如果提示这些信息
 
 ```
 chardevbase: module license 'unspecified' taints kernel.
@@ -1803,70 +1787,41 @@ Disabling lock debugging due to kernel taint
 
 ```c
 MODULE_AUTHOR("kendall");
-MODULE_DESCRIPTION("kendall test chardevice");
+MODULE_DESCRIPTION("kendall test chrdevbase");
 MODULE_LICENSE("GPL v2"); 
-···
-
-再复制 
-
-sudo cp chardevbase.ko /home/book/kenspace/zd-linux/nfs/rootfs/lib/modules/4.1.15
-
-重新加载 chardevbase.ko 
-
-输入命令“`cat /proc/devices`”可以查看当前已经被使用掉的设备号
-
-### 编写完善字符设备代码
-
-#### 注册和注销字符设备
-
-对于字符设备驱动而言，当驱动模块加载成功以后需要注册字符设备，同样，卸载驱动模块的时候也需要注销掉字符设备。
-
-​```c
-// 注册字符设备
-// major: 主设备号
-// name: 设备名字
-// fops: 设备操作函数集合
-static inline int register_chrdev(unsigned int major, const char *name,
-                                    const struct file_operations *fops);
-
-// 注销字符设备
-// major：要注销的设备号
-// name: 设备名字
-static inline void unregister_chrdev(unsigned int major, const char *name);
 ```
 
-- 编写 chardevbase.c 和 chardevbaseAPP.c
-
-- 编译
-
-make
-
-arm-linux-gnueabihf-gcc chardevbaseAPP.c  -o chardevbaseAPP
-
-sudo cp chardevbase.ko chardevbaseAPP ~/kenspace/zd-linux/nfs/rootfs/lib/modules/4.1.15/ -f
-
-进入 kernel
-
-modprobe chardevbase.ko 
-
-lsmod
-
-cat /proc/devices
-
-
-创建设备节点，然后
+#### 创建设备节点文件
 
 ```sh
-/lib/modules/4.1.15 # mknod /dev/chardevbase c 200 0
-/lib/modules/4.1.15 # ./chardevbaseAPP /dev/chardevbase 1
-
-# 查看
-/lib/modules/4.1.15 # ls /dev/chardevbase -l
+/lib/modules/4.1.15 # mknod /dev/chrdevbase c 200 0
+/lib/modules/4.1.15 # ls /dev/chrdevbase -l 
+crw-r--r--    1 0        0         200,   0 Jan  6 14:12 /dev/chrdevbase
 ```
 
-“mknod”是创建节点命令，“c”表示这是个字符设备，“200”是设备的主设备号，“0”是设备的次设备号。创建完成以后就会存在 `/dev/chardevbase` 这个文件
+其中“mknod”是创建节点命令，“/dev/chrdevbase”是要创建的节点文件，“c”表示这是个字符设备，“200”是设备的主设备号，“0”是设备的次设备号。创建完成以后就会存在`/dev/chrdevbase` 这个文件，可以使用“ ls /dev/chrdevbase -l ”命令查看>
 
-卸载 `rmmod chardevbase.ko` 之后，`/dev/chardevbase` 也没有了。
+#### chrdevbase 设备操作测试
+
+```sh
+/lib/modules/4.1.15 # ls
+chardevbase.ko   chrdevbaseAPP    modules.alias    modules.symbols
+chrdevbase.ko    dtsled.ko        modules.dep
+
+# 读chrdevbase操作
+/lib/modules/4.1.15 # ./chrdevbaseAPP /dev/chrdevbase  1
+chrdevbase_open
+copy_to_user successful!
+chrdevbase_releaseel data!
+
+# 向 chrdevbase 写操作
+/lib/modules/4.1.15 # ./chrdevbaseAPP /dev/chrdevbase  2
+chrdevbase_open
+kernel recevdata:usr data!
+chrdevbase_release
+```
+
+----
 
 ## linux LED 灯驱动实验
 
