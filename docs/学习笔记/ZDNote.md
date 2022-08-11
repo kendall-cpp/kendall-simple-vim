@@ -855,7 +855,7 @@ make dtbs
 - 查看 CPU 信息 
 
 root@ATK-IMX6U:/# cat /proc/cpuinfo 
-  
+
 - 查看 CPU 的工作频率
 
 ```
@@ -904,7 +904,7 @@ cp arch/arm/boot/zImage ../../../tftpboot/
 - 重新查看 CPU 频率 
 
 root@ATK-IMX6U:/# cat /proc/cpuinfo 
-  
+
 - 查看 CPU 的工作频率
 
 ```
@@ -1652,6 +1652,47 @@ reboot 重启开发板，重新 ping www.baidu.com
 
 ## 字符设备开发基础实验
 
+### Linux 设备号
+
+Linux 中每个设备都有一个设备号，设备号由主设备号和次设备号两部分组成，主设备号表示某一个具体的驱动，次设备号表示使用这个驱动的各个设备。在 `include/linux/types.h ` 中。
+
+```c
+typedef __u32 __kernel_dev_t;    
+
+typedef __kernel_dev_t dev_t;  //设备号 dev_t
+
+//typedef unsigned int __u32;
+```
+
+dev_t 其实就是 unsigned int 类型，是一个 32 位的数据类型。这 32 位的数据构成了**主设备号**和**次设备号**两部分，其中高 12 位为主设备号，低 20 位为次设备号。因此 Linux系统中主设备号范围为 0~4095，
+
+在设置主设备号的时候需要选择没有被使用的设备号，可以在 kernel 下执行 `cat /proc/devices` 查看自己已经使用的设备号。
+
+在自测字符设备之前需要先申请一个设备号，设备号申请函数
+
+```c
+int alloc_chrdev_region(dev_t *dev, unsigned baseminor, unsigned count, const char *name);
+```
+
+- dev 保存申请到的设备号
+- baseminor 次设备号起始地址，alloc_chrdev_region 可以一次申请多个设备号，他们的注射备号一样，但是次设备号不同，次设备号以 baseminor 为起始地址地址开始递增。一般 baseminor 为 0，也就是说次设备号从 0 开始。
+- count 申请的设备号的数量
+- name 设备名字
+
+注销字符设备之后要释放掉设备号，设备号释放函数如下：
+
+```c
+void unregister_chrdev_region(dev_t from, unsigned count)
+```
+
+- from 要释放的设备号
+
+- count 从 from 开始，释放的设备号数量
+
+
+
+
+
 
 - 编写 Makefile
 
@@ -1780,7 +1821,7 @@ sudo cp chardevbase.ko /home/book/kenspace/zd-linux/nfs/rootfs/lib/modules/4.1.1
 
 对于字符设备驱动而言，当驱动模块加载成功以后需要注册字符设备，同样，卸载驱动模块的时候也需要注销掉字符设备。
 
-```c
+​```c
 // 注册字符设备
 // major: 主设备号
 // name: 设备名字
@@ -1999,6 +2040,7 @@ pinctrl 子系统主要工作内容如下：
 - ②、根据获取到的 pin 信息来设置 pin 的复用功能
 - ③、根据获取到的 pin 信息来设置 pin 的电气特性，比如上/下拉、速度、驱动能力等。
   
+
 对于我们使用者来讲，只需要在设备树里面设置好某个 pin 的相关属性即可，其他的初始化工作均由 pinctrl 子系统来完成，pinctrl 子系统源码目录为 `drivers/pinctrl`
 
 imx6ul.dtsi
