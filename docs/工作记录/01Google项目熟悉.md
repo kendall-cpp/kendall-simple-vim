@@ -802,3 +802,60 @@ vim arch/arm64/boot/dts/amlogic/meson-a1.dtsi
     };             
 }; 
 ```
+
+## 2022年8月12日
+
+### 问题记录
+
+- GPIOX_0 原理图对应的功能是作为普通的 GPIO，但是在 meson-a1.dtsi 中对应的功能是 i2c_c_scl_x0 ，而且 korlan-common.dtsi 找不到 i2c_c_scl_x0
+
+- 如何确定是普通的 GPIO
+
+
+### 分析 GPIOX_7
+
+```c
+soc {
+  ...
+
+  aobus: bus@fe000000 {
+    ...
+    
+    pinctrl_periphs: pinctrl@0400 {
+        compatible = "amlogic,meson-a1-periphs-pinctrl";
+        #address-cells = <2>;
+        #size-cells = <2>;
+        ranges;
+        
+        gpio: bank@0400 {                                                                                                                                  
+            reg = <0x0 0x0400 0x0 0x003c>,
+                  <0x0 0x0480 0x0 0x0118>;
+            reg-names = "mux",
+                    "gpio";
+            gpio-controller;
+            #gpio-cells = <2>;
+            gpio-ranges = <&pinctrl_periphs 0 0 62>;
+        };                  
+    }; 
+    ...
+  }
+  ...
+}
+
+
+&pinctrl_periphs {  
+  ...
+  
+  spicc0_pins_x7_10: spicc0_pins_x7_10 {
+      mux {                  
+          groups ="spi_a_mosi_x7",                                                 
+          "spi_a_miso_x8",                
+          "spi_a_sclk_x10";               
+          function = "spi_a";
+          drive-strength = <2>;           
+      };                     
+  }; 
+
+  ...                                                                                  
+}
+```
