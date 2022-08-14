@@ -152,11 +152,15 @@ sudo apt-get upgrade
 
 继续
 
-```
+```sh
 cd ~/.vim/bundles
 git clone https://gitee.com/zhuixixi/YouCompleteMe.git --depth=1 
 cd ~/.vim/bundles/YouCompleteMe
 python3 install.py --clang-completer
+
+# 打开 vim 如果报错，The ycmd server SHUT DOWN (restart with ':YcmRestartServer'). YCM cor...le YCM before using it. Follow the instructions in the documentation，
+# 解决方法
+/usr/bin/python3 /home/book/.vim/bundle/youcompleteme/third_party/ycmd/build.py --verbose
 ```
 
 

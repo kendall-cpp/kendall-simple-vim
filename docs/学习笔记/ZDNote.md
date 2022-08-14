@@ -51,6 +51,10 @@
       - [创建设备节点文件](#创建设备节点文件)
       - [chrdevbase 设备操作测试](#chrdevbase-设备操作测试)
   - [linux LED 灯驱动实验](#linux-led-灯驱动实验)
+    - [ioremap 函数](#ioremap-函数)
+    - [iounmap 函数](#iounmap-函数)
+    - [LED 灯驱动程序编写](#led-灯驱动程序编写)
+  - [新字符设备驱动实验](#新字符设备驱动实验)
   - [设备树](#设备树)
     - [自定义节点](#自定义节点)
     - [特殊节点](#特殊节点)
@@ -1830,6 +1834,233 @@ chrdevbase_release
 ## linux LED 灯驱动实验
 
 Linux 内核启动的时候会初始化 MMU，设置好内存映射，设置好 CPU 的访问的都是虚拟地址，比如 IMX6ULL 的 GPIO_IO03 引脚的复用寄存器 IOMUXC_SW_MUX_CTL_PAD_GPIO1_IO03 的地址为 0X020E0068。如果没有开启 MMU 的话，直接向 0X020E0068 这个寄存器地址写入数据就可以配置 GPIO1_IO03 的复用功能，开启了 MMU ，并且设置了内存映射，因此就不能直接向 0X020E0068 这个地址写入数据了，必须得到 0X020E0068 这个物理地址里面对应的虚拟地址。物理地址和虚拟地址之间的转换需要用到两个函数：ioremap 和 iounmap 。
+
+### ioremap 函数
+
+ioremap 函数用于获得指定物理地址空间对应的虚拟地址
+
+```c
+#define ioremap(cookie,size)    __arm_ioremap((cookie), (size), MT_DEVICE) 
+```
+
+如果我们需要获取 IMX6ULL 的 IOMUXC_SW_MUX_CTL_PAD_GPIO1_IO03 寄存器对应的虚拟地址，使用如下代码即可
+
+```c
+#define SW_MUX_GPIO1_IO03_BASE (0X020E0068)
+static void __iomem* SW_MUX_GPIO1_IO03;
+SW_MUX_GPIO1_IO03 = ioremap(SW_MUX_GPIO1_IO03_BASE, 4);
+```
+
+### iounmap 函数
+
+卸载驱动的时候需要使用 iounnmap 函数释放掉 ioremap 函数所做的映射
+
+```c
+void iounmap (volatile void __iomem *addr)
+```
+
+只需要将要取消映射的虚拟地址空间首地址当做参数传递给该函数即可，比如我们现在要取消  IOMUXC_SW_MUX_CTL_PAD_GPIO1_IO03 寄存器的地址映射
+
+```c
+iounmap(SW_MUX_GPIO1_IO03);
+```
+
+使用 ioremap 函数将寄存器的物理地址映射到虚拟地址以后，我们就可以直接通过指针访问这些地址，但是 Linux 内核不建议这么做，而是推荐使用一组操作函数来对映射后的内存进行读写操作。
+
+- 读操作函数
+
+```c
+u8 readb(const volatile void __iomem *addr)
+u16 readw(const volatile void __iomem *addr)
+u32 readl(const volatile void __iomem *addr)
+```
+
+addr 就是要读取写内存地址，返回值就是读取到的数据。
+
+- 写操作函数
+
+```c
+void writeb(u8 value, volatile void __iomem *addr)
+void writew(u16 value, volatile void __iomem *addr)
+void writel(u32 value, volatile void __iomem *addr)
+```
+
+value 是要写入的数值，addr 是要写入的地址。
+
+### LED 灯驱动程序编写
+
+```c
+#include <linux/module.h>
+#include <linux/kernel.h>
+#include <linux/init.h>
+#include <linux/fs.h>
+#include <linux/slab.h>
+#include <linux/uaccess.h>
+#include <linux/io.h>
+
+#define LED_MAJOR	200   // 主设备号
+#define LED_NAME	"led"  //设备名
+
+//寄存器物理地址
+#define CCM_CCGR1_BASE              (0X020C406C)
+#define SW_MUX_GPIO1_IO03_BASE      (0X020E0068)
+#define SW_PAD_GPIO1_IO03_BASE      (0X020E02F4)
+#define GPIO1_DR_BASE               (0X0209C000)
+#define GPIO1_GDIR_BASE             (0X0209C004)
+
+// 地址映射后的虚拟地址指针
+static void __iomem *IMX6U_CCM_CCGR1;
+static void __iomem *SW_MUX_GPIO1_IO03;
+static void __iomem *SW_PAD_GPIO1_IO03;
+static void __iomem *GPIO1_DR;
+static void __iomem *GPIO1_GDIR;
+
+#define LEDOFF	0	//关闭
+#define LEDON	1	//打开
+ 
+ /* LED灯打开/关闭 */
+static void led_switch(u8 sta)
+{
+    u32 val = 0;
+
+    if(sta == LEDON) {
+        val = readl(GPIO1_DR);
+        val &= ~(1 << 3);            /* bit3清零,打开LED灯 */
+        writel(val, GPIO1_DR); 
+    } else if(sta == LEDOFF) {
+        val = readl(GPIO1_DR);
+        val |= (1 << 3);            /* bit3清零,打开LED灯 */
+        writel(val, GPIO1_DR);
+    }
+}
+static int led_open(struct inode *inode, struct file *filp)
+{
+    return 0;
+}
+
+static int led_release(struct inode *inode, struct file *filp)
+{
+    return 0;
+}
+
+static ssize_t led_write(struct file *filp, const char __user *buf,
+			 size_t count, loff_t *ppos)
+{
+	int ret = 0;
+	unsigned char databuf[1];
+
+	ret = copy_from_user(databuf,buf,count);
+	if(ret < 0) {
+		printk("kernel write failed\r\n");
+		return -EFAULT;
+	}
+	//判断是开灯还是关灯
+	led_switch(databuf[0]);
+	return 0;
+}
+
+//字符设备操作集
+static const struct file_operations led_fops = {
+	.owner = THIS_MODULE,
+	.write = led_write,
+	.open = led_open,
+	.release = led_release
+};
+
+static int __init led_init(void)
+{
+	int ret = 0;
+	unsigned int val = 0;
+	//初始化LED灯，虚拟地址地址映射
+	IMX6U_CCM_CCGR1 = ioremap(CCM_CCGR1_BASE,4); //对于 I.MX6ULL 来说一个寄存器是 4 字节(32 位)的，因此映射的内存长度为 4。
+	SW_MUX_GPIO1_IO03 = ioremap(SW_MUX_GPIO1_IO03_BASE,4);
+	SW_PAD_GPIO1_IO03 = ioremap(SW_PAD_GPIO1_IO03_BASE,4);
+	GPIO1_DR = ioremap(GPIO1_DR_BASE, 4);
+    GPIO1_GDIR = ioremap(GPIO1_GDIR_BASE, 4);
+
+	// 初始化
+	val = readl(IMX6U_CCM_CCGR1);   //返回值就是读取到的数据
+	printk("IMX6U_CCM_CCGR1 val = %u\r\n",val);
+	val &= ~(3 << 26);			//先清除以前的配置 bit26,27
+	val |= 3 << 26;     /* bit26,27置1 */
+	writel(val, IMX6U_CCM_CCGR1);
+
+	// 设置复用
+	writel(0x5, SW_MUX_GPIO1_IO03);
+	//设置电气属性
+	writel(0x10B0, SW_PAD_GPIO1_IO03);
+
+	val = readl(GPIO1_GDIR);
+	printk("GPIO1_GDIR val = %u\r\n",val);
+	val |= 1 << 3;    /* bit3置1,设置为输出 */
+	writel(val,GPIO1_GDIR);
+
+	val = readl(GPIO1_DR);
+	printk("GPIO1_DR val = %u\r\n",val);
+	val |= (1 << 3);  				/* bit3置1,关闭LED灯 */	
+	printk("GPIO1_DR val = %u\r\n",val);
+	writel(val,GPIO1_DR);
+
+	// 注册字符设备
+	ret = register_chrdev(LED_MAJOR,LED_NAME,&led_fops);
+	if(ret < 0) {
+        printk("register chardev failed!\r\n");
+        return -EIO;
+	}
+	printk("led_init\r\n");
+	return 0;
+}
+
+static void  __exit led_exit(void)
+{
+	unsigned int val = 0;
+	val = readl(GPIO1_DR);
+	val |= (1 << 3);            /* bit3清零,打开LED灯 */
+	writel(val,GPIO1_DR);
+
+	//取消地址映射
+	iounmap(IMX6U_CCM_CCGR1);
+	iounmap(SW_MUX_GPIO1_IO03);
+	iounmap(SW_PAD_GPIO1_IO03);
+	iounmap(GPIO1_DR);
+	iounmap(GPIO1_GDIR);
+
+	//注销字符设备
+	unregister_chrdev(LED_MAJOR,LED_NAME);
+	printk("led_exit\r\n");
+}
+
+module_init(led_init);
+module_exit(led_exit);
+
+MODULE_LICENSE("GPL");
+MODULE_AUTHOR("kendall");
+```
+
+编译
+
+```sh
+make
+arm-linux-gnueabihf-gcc ledApp.c -o ledApp
+sudo cp ledApp led.ko ~/kenspace/zd-linux/nfs/rootfs/lib/modules/4.1.15/ -f
+
+# kernel
+depmod
+modprobe led.ko
+lsmod
+
+# 驱动加载成功以后创建“/dev/led”设备节点
+mknod /dev/led c 200 0
+./ledApp /dev/led 1   # 打开 LED 灯
+./ledApp /dev/led 0   # 关闭 LED 灯
+
+rmmod led.ko
+```
+
+## 新字符设备驱动实验
+
+
+
 
 ------
 
