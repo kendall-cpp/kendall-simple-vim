@@ -2059,8 +2059,30 @@ rmmod led.ko
 
 ## 新字符设备驱动实验
 
+使用 register_chrdev 函数注册字符设备的时候会带来两个问题
 
+- 需要我们事先确定好哪些主设备号没有使用
+- 会将一个主设备号下的所有次设备号都使用掉，比如现在设置 LED 这个主设备号为200，那么 0~1048575(2^20-1)这个区间的次设备号就全部都被 LED 一个设备分走了。这样太浪费次设备号了！一个 LED 设备肯定只能有一个主设备号，一个次设备号。
 
+如果没有指定设备号的话就使用如下函数来申请设备号
+
+```c
+int alloc_chrdev_region(dev_t *dev, unsigned baseminor, unsigned count, const char *name)
+```
+
+如果给定了设备的主设备号和次设备号就使用如下所示函数来注册设备号即可：
+
+```c
+int register_chrdev_region(dev_t from, unsigned count, const char *name)
+```
+
+参数 from 是要申请的起始设备号，也就是给定的设备号；参数 count 是要申请的数量，一般都是一个；参数 name 是设备名字。
+
+释放函数
+
+```c
+void unregister_chrdev_region(dev_t from, unsigned count)
+```
 
 ------
 
