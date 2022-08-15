@@ -11,7 +11,35 @@
   - [arch/arm 目录](#archarm-目录)
   - [kernel启动流程](#kernel启动流程)
   - [测试开启 u-boot log 和不开启的时间](#测试开启-u-boot-log-和不开启的时间)
-  - [ramdisk.img解包](#ramdiskimg解包)
+  - [ramdisk.img 解包](#ramdiskimg-解包)
+- [2020年7月19日](#2020年7月19日)
+  - [挂载文件系统前后时间](#挂载文件系统前后时间)
+- [2020年7月20日](#2020年7月20日)
+- [找到 hw_id 怎么来的](#找到-hw_id-怎么来的)
+- [2022年7月26日](#2022年7月26日)
+- [2022年8月5日](#2022年8月5日)
+  - [**uboot 编译脚本流程**](#uboot-编译脚本流程)
+  - [**kernel 编译脚本流程**](#kernel-编译脚本流程)
+- [播放音频测试](#播放音频测试)
+- [2022年8月8日](#2022年8月8日)
+  - [音频播放流程分析](#音频播放流程分析)
+  - [代码分析](#代码分析)
+- [2022年8月9日](#2022年8月9日)
+  - [用alsa播放wav文件](#用alsa播放wav文件)
+    - [aml_tdm_open](#aml_tdm_open)
+- [2022年8月11日](#2022年8月11日)
+  - [核对 pinmux 功能](#核对-pinmux-功能)
+    - [记录](#记录)
+    - [寻找 GPIOP](#寻找-gpiop)
+    - [寻找 GPIOB](#寻找-gpiob)
+- [2022年8月12日](#2022年8月12日)
+  - [问题记录](#问题记录)
+  - [分析 GPIOX_7](#分析-gpiox_7)
+- [2022年8月15日](#2022年8月15日)
+  - [问题1-ADD USB API](#问题1-add-usb-api)
+  - [google kernel git pull](#google-kernel-git-pull)
+  - [添加USB API](#添加usb-api)
+  - [问题记录](#问题记录-1)
 
 ------
 
@@ -233,7 +261,7 @@ unxz   env.xz   解压
                     压缩，6-9极好的压缩；默认值为6
 ```
 
-# 2020年7月19日
+## 2020年7月19日
 
 ### 挂载文件系统前后时间
 
@@ -328,7 +356,7 @@ u-boot/drivers/pinctrl/meson/pinctrl-meson-axg.c
 - 培训结课作业：完成 a5_amlogictest bps 添加，并提交到 girrit
 
 
-## **uboot 编译脚本流程**
+### **uboot 编译脚本流程**
 
 > ./To_shengken_sign/main.sh
 
@@ -422,7 +450,7 @@ cp fip/${soc_family_name}/aml_ddr.fw ${bootloader_path}
 
 ------
 
-## **kernel 编译脚本流程**
+### **kernel 编译脚本流程**
 
 > ./To_shengken_sign/main.sh
 
@@ -859,3 +887,63 @@ soc {
   ...                                                                                  
 }
 ```
+
+## 2022年8月15日
+
+### 问题1-ADD USB API
+
+```
+commit 375b415cd919ffbf0e66442b2bce45a820b756e4 (eureka-partner/1.63c)
+Bug: b/234889055
+```
+
+https://partnerissuetracker.corp.google.com/issues/234889055
+
+### google kernel git pull
+
+```sh
+git config --local user.name "Shengken Lin"
+git config --local user.email shengken.lin@amlogic.corp-partner.google.com
+
+# 设置代理 # 公司的
+proxy = 10.78.20.250
+proxy_type = http
+proxy_port = 3128
+
+vim ~/.gitconfig 
+
+git remote -v
+git pull https://eureka-partner.googlesource.com/amlogic/kernel refs/changes/46/244846/1  # 新的
+# https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/244846
+```
+
+
+### 添加USB API
+
+```sh
+commit 375b415cd919ffbf0e66442b2bce45a820b756e4 (eureka-partner/1.63c)
+Author: Yuegui He <yuegui.he@amlogic.corp-partner.google.com>
+Date:   Tue Jun 7 14:30:04 2022 +0800
+
+    [USB] Provide reinit usb phy sys interface
+    
+    Bug: b/234889055
+    Test: build ok, adb shell ok
+    
+    korlan,
+    echo 1 > /sys/kernel/debug/usb_mode/usb_phy_reset
+    
+    pc,
+    adb shel
+    
+# https://partnerissuetracker.corp.google.com/issues/234889055
+# https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/238688
+```
+
+### 问题记录
+
+如果去修改代码，https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/238688
+
+
+
+
