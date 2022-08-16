@@ -55,7 +55,10 @@
     - [iounmap 函数](#iounmap-函数)
     - [LED 灯驱动程序编写](#led-灯驱动程序编写)
   - [新字符设备驱动实验](#新字符设备驱动实验)
+    - [编写程序](#编写程序)
   - [设备树](#设备树)
+    - [设备节点](#设备节点)
+    - [标准属性](#标准属性)
     - [自定义节点](#自定义节点)
     - [特殊节点](#特殊节点)
   - [基于设备树的LED等实验](#基于设备树的led等实验)
@@ -2084,9 +2087,359 @@ int register_chrdev_region(dev_t from, unsigned count, const char *name)
 void unregister_chrdev_region(dev_t from, unsigned count)
 ```
 
+### 编写程序
+
+```c
+#include <linux/module.h>
+#include <linux/kernel.h>
+#include <linux/init.h>
+#include <linux/fs.h>
+#include <linux/slab.h>
+#include <linux/uaccess.h>
+#include <linux/io.h>
+#include <linux/cdev.h>
+#include <linux/device.h>
+
+#define NEWCHRLED_NAME  "newchrled"
+#define NEWCHRLED_COUNT 1
+
+/* 寄存器物理地址 */
+#define CCM_CCGR1_BASE              (0X020C406C)
+#define SW_MUX_GPIO1_IO03_BASE      (0X020E0068)
+#define SW_PAD_GPIO1_IO03_BASE      (0X020E02F4)
+#define GPIO1_DR_BASE               (0X0209C000)
+#define GPIO1_GDIR_BASE             (0X0209C004)
+
+
+/* 地址映射后的虚拟地址指针 */
+static void __iomem *IMX6U_CCM_CCGR1;
+static void __iomem *SW_MUX_GPIO1_IO03;
+static void __iomem *SW_PAD_GPIO1_IO03;
+static void __iomem *GPIO1_DR;
+static void __iomem *GPIO1_GDIR;
+
+#define LEDOFF  0       /* 关闭 */
+#define LEDON   1       /* 打开 */
+
+// LED设备结构体
+struct newchrled_dev
+{
+    struct cdev cdev;       /* 字符设备 */
+    dev_t   devid;          /* 设备号 */
+    struct class *class;    /* 类 */
+    struct device *device;  /* 设备 */
+    int major;              /* 主设备号 */
+    int minor;              /* 次设备号 */
+};
+struct newchrled_dev newchrled; /* led设备 */
+
+
+/* LED灯打开/关闭 */
+static void led_switch(u8 sta)
+{
+    u32 val = 0;
+
+    if(sta == LEDON) {
+        val = readl(GPIO1_DR);
+        val &= ~(1 << 3);            /* bit3清零,打开LED灯 */
+        writel(val, GPIO1_DR); 
+    } else if(sta == LEDOFF) {
+        val = readl(GPIO1_DR);
+        val |= (1 << 3);            /* bit3清零,打开LED灯 */
+        writel(val, GPIO1_DR);
+    }
+}
+
+static int newchrled_open(struct inode *inode, struct file *filp)
+{
+    filp->private_data = &newchrled;
+    return 0;
+}
+
+static int newchrled_release(struct inode *inode, struct file *filp)
+{
+   // struct newchrled_dev *dev = (struct newchrled_dev*)filp->private_data;
+    // 否则会出现警告
+    
+    return 0;
+}
+
+static ssize_t newchrled_write(struct file *filp, const char __user *buf,
+			 size_t count, loff_t *ppos)
+{
+    int retvalue;
+    unsigned char databuf[1];
+
+    retvalue = copy_from_user(databuf, buf, count);
+    if(retvalue < 0) {
+        printk("kernel write failed!\r\n");
+        return -EFAULT;
+    }
+
+    /* 判断是开灯还是关灯 */
+    led_switch(databuf[0]);
+
+    return 0;
+}
+
+static const struct file_operations newchrled_fops = {
+    .owner = THIS_MODULE,
+    .write	= newchrled_write,
+	.open	= newchrled_open,
+	.release= newchrled_release,
+};
+
+
+static int __init newchrled_init(void) 
+{
+	int ret = 0;
+	unsigned int val = 0;
+	//初始化led灯，地址映射
+	IMX6U_CCM_CCGR1 = ioremap(CCM_CCGR1_BASE,4);
+	SW_MUX_GPIO1_IO03 = ioremap(SW_MUX_GPIO1_IO03_BASE,4);
+	SW_PAD_GPIO1_IO03 = ioremap(SW_PAD_GPIO1_IO03_BASE,4);
+    GPIO1_DR = ioremap(GPIO1_DR_BASE, 4);
+    GPIO1_GDIR = ioremap(GPIO1_GDIR_BASE, 4);
+
+	//初始化
+	val = readl(IMX6U_CCM_CCGR1);
+	val &= ~(3 << 26);  //先清除以前的配置bit26,27 
+	val |= 3 << 26;   	//bit26,27置1 
+
+	// 设置复用
+	writel(0x5,SW_MUX_GPIO1_IO03);
+	//设置电气属性
+	writel(0x10B0,SW_PAD_GPIO1_IO03);
+
+    val = readl(GPIO1_GDIR);
+    val |= 1 << 3;              /* bit3置1,设置为输出 */
+    writel(val, GPIO1_GDIR);
+
+    val = readl(GPIO1_DR);
+    val |= (1 << 3);            /* bit3置1,关闭LED灯 */
+    writel(val, GPIO1_DR);
+
+	// 设置为0,表示由系统申请设备号 
+	newchrled.major = 0;
+
+	//注册字符设备
+	if(newchrled.major) {
+		newchrled.major = MKDEV(newchrled.major, 0);//如果 major 有效的话就使用 MKDEV 来构建设备号，次设备号选择 0
+		ret = register_chrdev_region(newchrled.devid,NEWCHRLED_COUNT,NEWCHRLED_NAME);
+	} else {
+		ret = alloc_chrdev_region(&newchrled.devid, 0, NEWCHRLED_COUNT,NEWCHRLED_NAME);
+        newchrled.major = MAJOR(newchrled.devid);	//获取分配号的主设备号
+        newchrled.minor = MINOR(newchrled.devid);	//获取分配号的次设备号
+	}
+	if(ret < 0) {
+        printk("newchrled chrdev_region err!\r\n");
+        goto fail_devid;
+    }
+	printk("newchrled major=%d, minor=%d\r\n", newchrled.major, newchrled.minor);
+
+	//注册字符设备
+	newchrled.cdev.owner = THIS_MODULE;
+	cdev_init(&newchrled.cdev, &newchrled_fops);
+    ret = cdev_add(&newchrled.cdev, newchrled.devid, NEWCHRLED_COUNT);
+    if(ret < 0) {
+        goto fail_cdev;
+    }	
+	//自动创建设备节点
+    newchrled.class = class_create(THIS_MODULE, NEWCHRLED_NAME);
+	if (IS_ERR(newchrled.class)) {
+        ret = PTR_ERR(newchrled.class);
+		goto fail_class;
+    }
+
+	newchrled.device = device_create(newchrled.class, NULL, newchrled.devid,NULL,NEWCHRLED_NAME);
+	if (IS_ERR(newchrled.device)) {
+        ret = PTR_ERR(newchrled.device);
+        goto fail_device;
+    }
+	
+	return 0;
+
+fail_device:
+    class_destroy(newchrled.class);
+fail_class:
+    cdev_del(&newchrled.cdev);
+fail_cdev:
+    unregister_chrdev_region(newchrled.devid, NEWCHRLED_COUNT);
+fail_devid:
+	return ret; 
+}
+/* 出口 */
+static void __exit newchrled_exit(void)
+{
+   
+    unsigned int val = 0;
+    printk("newchrled_exit\r\n");
+
+    val = readl(GPIO1_DR);
+    val |= (1 << 3);            /* bit3清零,打开LED灯 */
+    writel(val, GPIO1_DR);
+
+    /* 1,取消地址映射 */
+    iounmap(IMX6U_CCM_CCGR1);
+    iounmap(SW_MUX_GPIO1_IO03);
+    iounmap(SW_PAD_GPIO1_IO03);
+    iounmap(GPIO1_DR);
+    iounmap(GPIO1_GDIR);
+
+    /* 1,删除字符设备 */
+    cdev_del(&newchrled.cdev);
+
+    /* 2,注销设备号 */
+    unregister_chrdev_region(newchrled.devid, NEWCHRLED_COUNT);
+
+    /* 3,摧毁设备 */
+    device_destroy(newchrled.class, newchrled.devid);
+
+    /* 4,摧毁类 */
+    class_destroy(newchrled.class);
+}
+
+module_init(newchrled_init);
+module_exit(newchrled_exit);
+MODULE_LICENSE("GPL");
+MODULE_AUTHOR("kendall");
+```
+
 ------
 
 ## 设备树
+
+一般 `.dts` 描述板级信息(也就是开发板上有哪些 IIC 设备、SPI 设备等)，`.dtsi` 描述 SOC 级信息(也就是 SOC 有几个 CPU、主频是多少、各个外设控制器信息等)。
+
+DTC 工具源码在 Linux 内核的 scripts/dtc 目录下，基于 ARM 架构的 SOC 有很多种，一种 SOC 又可以制作出很多款板子，每个板子都有一个对应的 DTS 文件，确定编译哪一个 DTS 文件，在 `arch/arm/boot/dts/Makefile` 中测试
+
+```c
+dtb-$(CONFIG_SOC_IMX6ULL) += \
+    imx6ull-14x14-ddr3-arm2.dtb \
+    imx6ull-14x14-ddr3-arm2-adc.dtb \
+    imx6ull-14x14-ddr3-arm2-cs42888.dtb \
+    imx6ull-14x14-ddr3-arm2-ecspi.dtb \
+    imx6ull-14x14-ddr3-arm2-emmc.dtb \
+    imx6ull-14x14-ddr3-arm2-epdc.dtb \
+    imx6ull-14x14-ddr3-arm2-flexcan2.dtb \
+    imx6ull-14x14-ddr3-arm2-gpmi-weim.dtb \
+    imx6ull-14x14-ddr3-arm2-lcdif.dtb \
+    imx6ull-14x14-ddr3-arm2-ldo.dtb \
+    imx6ull-14x14-ddr3-arm2-qspi.dtb \
+    imx6ull-14x14-ddr3-arm2-qspi-all.dtb \
+    imx6ull-14x14-ddr3-arm2-tsc.dtb \
+    imx6ull-14x14-ddr3-arm2-uart2.dtb \
+    imx6ull-14x14-ddr3-arm2-usb.dtb \
+    imx6ull-14x14-ddr3-arm2-wm8958.dtb \
+    imx6ull-14x14-evk.dtb \
+    imx6ull-alientek-emmc.dtb \
+    imx6ull-14x14-evk-btwifi.dtb \
+    imx6ull-14x14-evk-emmc.dtb \
+    imx6ull-14x14-evk-gpmi-weim.dtb \
+    imx6ull-14x14-evk-usb-certi.dtb \
+    imx6ull-9x9-evk.dtb \
+    imx6ull-9x9-evk-btwifi.dtb \
+    imx6ull-9x9-evk-ldo.dtb
+```
+
+可以看出，当选中 I.MX6ULL 这个 SOC 以后(`CONFIG_SOC_IMX6ULL=y`)，所有使用到 I.MX6ULL 这个 SOC 的板子对应的 `.dts` 文件都会被编译为 `.dtb`。如果我们使用 I.MX6ULL 新做了一个板子，只需要新建一个此板子对应的`.dts` 文件，然后将对应的`.dtb` 文件名添加到 `dtb-$(CONFIG_SOC_IMX6ULL)`下，这样在编译设备树的时候就会将对应的`.dts` 编译为二进制的`.dtb`文件。uboot 中使用 bootz 或 bootm 命令向 Linux 内核传递二进制设备树文件(`.dtb`)。
+
+
+### 设备节点
+
+```c
+/ {
+    aliases {
+        can0 = &flexcan1
+        ...
+    };
+    cpus {
+      #address-cells = <1>;
+      #size-cells = <0>;
+  
+      cpu0: cpu@0 {
+          compatible = "arm,cortex-a7";
+          device_type = "cpu";
+          reg = <0>;
+          ...
+      }
+    };
+    intc: interrupt-controller@00a01000 {
+      compatible = "arm,cortex-a7-gic";
+      #interrupt-cells = <3>;
+      interrupt-controller;
+      reg = <0x00a01000 0x1000>,
+            <0x00a02000 0x100>;
+    };
+
+}
+```
+
+aliases、cpus 和 intc 是三个子节点，在设备树中节点命名格式如下：
+
+```
+label:node-name@unit-address
+```
+
+引入 label 的目的就是为了方便访问节点，可以直接通过&label 来访问这个节点，比如通过 &cpu0 就可以访问“cpu@0”这个节点，而不需要输入完整的节点名字。
+
+### 标准属性
+
+- compatible 属性
+
+compatible 属性也叫做“兼容性”属性，compatible 属性用于将设备和驱动绑定起来。字符串列表用于选择设备所要使用的驱动程序。
+
+```
+"manufacturer,model"
+```
+
+其中 manufacturer 表示厂商，model 一般是模块对应的驱动名字。比如 `imx6ull-alientek-emmc.dts` 中 sound 节点是 I.MX6U-ALPHA 开发板的音频设备节点，I.MX6U-ALPHA 开发板上的音频芯片采用的欧胜(WOLFSON)出品的 WM8960，sound 节点的 compatible 属性值如下：
+
+```
+compatible = "fsl,imx6ul-evk-wm8960","fsl,imx-audio-wm8960";
+```
+
+sound 这个设备首先使用第一个兼容值在 Linux 内核里面查找，看看能不能找到与之匹配的驱动文件，
+
+```c
+// ./sound/soc/fsl/imx-wm8960.c
+
+static const struct of_device_id imx_wm8960_dt_ids[] = { 
+  { .compatible = "fsl,imx-audio-wm8960", },
+  { /* sentinel */ }                
+};                                  
+MODULE_DEVICE_TABLE(of, imx_wm8960_dt_ids);
+                                    
+static struct platform_driver imx_wm8960_driver = { 
+  .driver = {                       
+    .name = "imx-wm8960",           
+    .pm = &snd_soc_pm_ops,          
+    .of_match_table = imx_wm8960_dt_ids,
+  },                                
+  .probe = imx_wm8960_probe,        
+  .remove = imx_wm8960_remove,   
+};                                  
+module_platform_driver(imx_wm8960_driver);
+```
+
+一般驱动程序文件都会有一个 OF 匹配表，此 OF 匹配表保存着一些 compatible 值，如果设备节点的 compatible 属性值和 OF 匹配表中的任何一个值相等，那么就表示设备可以使用这个驱动。数组 imx_wm8960_dt_ids 就是 `imx-wm8960.c` 这个驱动文件的匹配表，此匹配表只有一个匹配值“fsl,imx-audio-wm8960”。如果在设备树中有哪个节点的 compatible 属性值与此相等，那么这个节点就会使用此驱动文件。此行设置.of_match_table 为 imx_wm8960_dt_ids，也就是设置这个 platform_driver 所使用的 OF 匹配表。
+
+- model 属性
+
+一般 model 属性描述设备模块信息，比如名字什么的 `model = "wm8960-audio";`
+
+- `#address-cells` 和 `#size-cells` 属性
+
+这两个属性的值都是无符号 32 位整形，#address-cells 和#size-cells 这两个属性可以用在任何拥有子节点的设备中，用于描述子节点的地址信息。#address-cells 属性值决定了子节点 reg 属性中地址信息所占用的字长(32 位)，#size-cells 属性值决定了子节点 reg 属性中长度信息所占的字长(32 位)。#address-cells 和#size-cells 表明了子节点应该如何编写 reg 属性值，一般 reg 属性都是和地址有关的内容，和地址相关的信息有两种：起始地址和地址长度，reg 属性的格式一为：
+
+```
+reg = <address1 length1 address2 length2 address3 length3……>
+```
+
+每个“address length”组合表示一个地址范围，其中 address 是起始地址，length 是地址长度，`#address-cells` 表明 address 这个数据所占用的字长，#size-cells 表明 length 这个数据所占用的字长.
+
+----
+
 
 可以使用 make dtbs 来编译设备树文件，设备树文件位于
 
