@@ -40,6 +40,7 @@
   - [google kernel git pull](#google-kernel-git-pull)
   - [添加USB API](#添加usb-api)
   - [问题记录](#问题记录-1)
+  - [记录](#记录-1)
 
 ------
 
@@ -942,7 +943,21 @@ Date:   Tue Jun 7 14:30:04 2022 +0800
 
 ### 问题记录
 
-如果去修改代码，https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/238688
+如何去修改代码，https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/238688
+
+如何找到 ko 文件
+
+writel 写入的 0x21 怎么确定
+
+### 记录
+
+```
+kernel/drivers/amlogic/usb$ vi ../../../arch/arm64/configs/korlan-p2_defconfig 
+
+在第一个 Makefile 中找到，然后去上层 config 中看是否为 y，如果为 y 就表示已经编译进去了，没有 ko 文件
+  3 obj-$(CONFIG_AMLOGIC_USB2PHY)           += phy-aml-new-usb2-v2.o
+  4 obj-$(CONFIG_AMLOGIC_USB3PHY)           += phy-aml-new-usb3-v2.o
+```
 
 
 

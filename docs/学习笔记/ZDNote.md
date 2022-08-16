@@ -59,6 +59,7 @@
   - [设备树](#设备树)
     - [设备节点](#设备节点)
     - [标准属性](#标准属性)
+    - [设备树设备匹配方法](#设备树设备匹配方法)
     - [自定义节点](#自定义节点)
     - [特殊节点](#特殊节点)
   - [基于设备树的LED等实验](#基于设备树的led等实验)
@@ -2311,7 +2312,7 @@ MODULE_AUTHOR("kendall");
 
 一般 `.dts` 描述板级信息(也就是开发板上有哪些 IIC 设备、SPI 设备等)，`.dtsi` 描述 SOC 级信息(也就是 SOC 有几个 CPU、主频是多少、各个外设控制器信息等)。
 
-DTC 工具源码在 Linux 内核的 scripts/dtc 目录下，基于 ARM 架构的 SOC 有很多种，一种 SOC 又可以制作出很多款板子，每个板子都有一个对应的 DTS 文件，确定编译哪一个 DTS 文件，在 `arch/arm/boot/dts/Makefile` 中测试
+DTC 工具源码在 Linux 内核的 `scripts/dtc` 目录下，基于 ARM 架构的 SOC 有很多种，一种 SOC 又可以制作出很多款板子，每个板子都有一个对应的 DTS 文件，确定编译哪一个 DTS 文件，在 `arch/arm/boot/dts/Makefile` 中设置。
 
 ```c
 dtb-$(CONFIG_SOC_IMX6ULL) += \
@@ -2422,21 +2423,82 @@ static struct platform_driver imx_wm8960_driver = {
 module_platform_driver(imx_wm8960_driver);
 ```
 
-一般驱动程序文件都会有一个 OF 匹配表，此 OF 匹配表保存着一些 compatible 值，如果设备节点的 compatible 属性值和 OF 匹配表中的任何一个值相等，那么就表示设备可以使用这个驱动。数组 imx_wm8960_dt_ids 就是 `imx-wm8960.c` 这个驱动文件的匹配表，此匹配表只有一个匹配值“fsl,imx-audio-wm8960”。如果在设备树中有哪个节点的 compatible 属性值与此相等，那么这个节点就会使用此驱动文件。此行设置.of_match_table 为 imx_wm8960_dt_ids，也就是设置这个 platform_driver 所使用的 OF 匹配表。
+一般驱动程序文件都会有一个 OF 匹配表，此 OF 匹配表保存着一些 compatible 值，如果设备节点的 compatible 属性值和 OF 匹配表中的任何一个值相等，那么就表示设备可以使用这个驱动。数组 imx_wm8960_dt_ids 就是 `imx-wm8960.c` 这个驱动文件的匹配表，此匹配表只有一个匹配值“fsl,imx-audio-wm8960”。如果在设备树中有哪个节点的 compatible 属性值与此相等，那么这个节点就会使用此驱动文件。此行设置 `.of_match_table` 为 `imx_wm8960_dt_ids` ，也就是设置这个 platform_driver 所使用的 OF 匹配表。
 
 - model 属性
 
 一般 model 属性描述设备模块信息，比如名字什么的 `model = "wm8960-audio";`
 
+
 - `#address-cells` 和 `#size-cells` 属性
 
-这两个属性的值都是无符号 32 位整形，#address-cells 和#size-cells 这两个属性可以用在任何拥有子节点的设备中，用于描述子节点的地址信息。#address-cells 属性值决定了子节点 reg 属性中地址信息所占用的字长(32 位)，#size-cells 属性值决定了子节点 reg 属性中长度信息所占的字长(32 位)。#address-cells 和#size-cells 表明了子节点应该如何编写 reg 属性值，一般 reg 属性都是和地址有关的内容，和地址相关的信息有两种：起始地址和地址长度，reg 属性的格式一为：
+这两个属性的值都是无符号 32 位整形，`#address-cells` 和 `#size-cells` 这两个属性可以用在任何拥有子节点的设备中，用于**描述子节点的地址信息**。`#address-cells` 属性值决定了子节点 reg 属性中地址信息所占用的字长(32 位)，`#size-cells` 属性值决定了子节点 reg 属性中长度信息所占的字长(32 位)。`#address-cells` 和`#size-cells` 表明了子节点应该如何编写 reg 属性值，一般 reg 属性都是和地址有关的内容，和地址相关的信息有两种：起始地址和地址长度，reg 属性的格式一为：
 
 ```
 reg = <address1 length1 address2 length2 address3 length3……>
 ```
 
-每个“address length”组合表示一个地址范围，其中 address 是起始地址，length 是地址长度，`#address-cells` 表明 address 这个数据所占用的字长，#size-cells 表明 length 这个数据所占用的字长.
+每个“address length”组合表示一个地址范围，其中 address 是起始地址，length 是地址长度，`#address-cells` 表明 address 这个数据的起始地址，#size-cells 表明 length 这个数据所占用的字长.
+
+- reg 属性
+
+reg 属性的值一般是(address，length)对。reg 属性一般用于描述设备地址空间资源信息，一般都是某个外设的寄存器地址范围信息。比如 
+
+```c
+uart1: serial@02020000 { 
+  ...
+  reg = <0x02020000 0x4000>;
+}
+```
+
+其中 uart1 的父节点 `aips1: aips-bus@02000000` 设置了`#address-cells = <1>、#size-cells = <1>`，因此 reg 属性中 `address=0x02020000，length=0x4000` 。
+
+
+### 设备树设备匹配方法
+
+通过 DT_MACHINE_START 来匹配，在 `arch/arm/include/asm/mach/arch.h` 中。
+
+```c
+  #define DT_MACHINE_START(_name, _namestr)   \                                             
+  static const struct machine_desc __mach_desc_##_name  \
+   __used             \
+   __attribute__((__section__(".arch.info.init"))) = {  \
+    .nr   = ~0,       \
+    .name   = _namestr,
+```
+
+打开文件 `arch/arm/mach-imx/mach-imx6ul.c`
+
+```c
+static const char * const imx6ul_dt_compat[] __initconst = {                                                                                           
+  "fsl,imx6ul",                     
+  "fsl,imx6ull",                    
+  NULL,                             
+};                                  
+                                      
+DT_MACHINE_START(IMX6UL, "Freescale i.MX6 Ultralite (Device Tree)")
+  .init_irq = imx6ul_init_irq,   
+  .init_machine = imx6ul_init_machine,
+  .init_late  = imx6ul_init_late,
+  .dt_compat  = imx6ul_dt_compat,
+MACHINE_END  
+```
+
+`machine_desc` 结构体中有个`.dt_compat` 成员变量，此成员变量保存着本设备兼容属性，`.dt_compat = imx6ul_dt_compat，imx6ul_dt_compat` 表里面有"fsl,`imx6ul`" 和"`fsl,imx6ull`"这两个兼容值。只要某个设备(板子)根节点“/”的 compatible 属性值与
+`imx6ul_dt_compat` 表中的任何一个值相等，那么就表示 Linux 内核支持此设备。`imx6ull-alientek-
+emmc.dts` 中根节点的 compatible 属性值如下：
+
+```c
+compatible = "fsl,imx6ull-14x14-evk", "fsl,imx6ull";
+```
+
+其中“fsl,imx6ull”与 imx6ul_dt_compat 中的“fsl,imx6ull”匹配，因此 I.MX6U-ALPHA 开发板可以正常启动Linux 内核。如果将 imx6ull-alientek-emmc.dts 根节点的 compatible 属性改为其他的值，比如：
+
+```c
+compatible = "fsl,imx6ull-14x14-evk", "fsl,imx6ullll"
+```
+
+
 
 ----
 
@@ -2544,11 +2606,6 @@ compatible 属性用于将设备和驱动绑定起来。字符串列表用于选
 ```c
 "manufacturer,model"   // manufacturer 表示厂商，model 一般是模块对应的驱动名字
 ```
-
-- `#address-cells` 和 `#size-cells` 属性
-
-`#address-cells` 和 `#size-cells` 这两个属性可以用在任
-何拥有子节点的设备中，用于描述子节点的地址信息。`#address-cells` 属性值决定了子节点 reg 属性中地址信息所占用的字长(32 位)，`#size-cells` 属性值决定了子节点 reg 属性中长度信息所占的字长(32 位)。 `#address-cells` 和 `#size-cells` 表明了子节点应该如何编写 reg 属性值，一般 reg 属性都是和地址有关的内容，和地址相关的信息有两种：起始地址和地址长度
 
 
 ## 基于设备树的LED等实验

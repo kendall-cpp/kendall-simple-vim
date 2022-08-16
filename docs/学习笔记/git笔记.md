@@ -95,7 +95,7 @@ git restore <file>
 
 commit 之后再修改文件
 
-git atatus  查看可以看到 `(use "git checkout -- <file>..." to discard changes in working directory)`
+git status  查看可以看到 `(use "git checkout -- <file>..." to discard changes in working directory)`
 
 意思就是放弃修改，将代码从 对象区 又拷贝回来 工作区
 
