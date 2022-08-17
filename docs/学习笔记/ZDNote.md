@@ -60,6 +60,8 @@
     - [设备节点](#设备节点)
     - [标准属性](#标准属性)
     - [设备树设备匹配方法](#设备树设备匹配方法)
+      - [匹配 machine_desc](#匹配-machine_desc)
+    - [向节点追加或修改内容](#向节点追加或修改内容)
     - [自定义节点](#自定义节点)
     - [特殊节点](#特殊节点)
   - [基于设备树的LED等实验](#基于设备树的led等实验)
@@ -2485,8 +2487,7 @@ MACHINE_END
 ```
 
 `machine_desc` 结构体中有个`.dt_compat` 成员变量，此成员变量保存着本设备兼容属性，`.dt_compat = imx6ul_dt_compat，imx6ul_dt_compat` 表里面有"fsl,`imx6ul`" 和"`fsl,imx6ull`"这两个兼容值。只要某个设备(板子)根节点“/”的 compatible 属性值与
-`imx6ul_dt_compat` 表中的任何一个值相等，那么就表示 Linux 内核支持此设备。`imx6ull-alientek-
-emmc.dts` 中根节点的 compatible 属性值如下：
+`imx6ul_dt_compat` 表中的任何一个值相等，那么就表示 Linux 内核支持此设备。`imx6ull-alientek-emmc.dts` 中根节点的 compatible 属性值如下：
 
 ```c
 compatible = "fsl,imx6ull-14x14-evk", "fsl,imx6ull";
@@ -2497,6 +2498,57 @@ compatible = "fsl,imx6ull-14x14-evk", "fsl,imx6ull";
 ```c
 compatible = "fsl,imx6ull-14x14-evk", "fsl,imx6ullll"
 ```
+
+这时再编译 DTS，以新的 DTS 启动 kernel 会失败。
+
+**所以 `arch/arm/mach-imx/mach-imx6ul.c` 和 `arch/arm/boot/dts/imx6ull-alientek-emmc.dts`  中的 compatible 匹配。**
+
+#### 匹配 machine_desc
+
+Linux 内核是如何根据设备树根节点的 compatible 属性来匹配出对应的 machine_desc ，Linux 内核调用 start_kernel 函数来启动内核，start_kernel 函数会调用setup_arch 函数来匹配 machine_desc，setup_arch 函数定义在文件 `arch/arm/kernel/setup.c` 中
+
+```c
+void __init setup_arch(char **cmdline_p)
+{
+  setup_processor();
+  // 匹配的 machine_desc,参数就是 atags 的首地址，也就是 uboot 传递给 Linux 内核的 dtb 文件首地址,返回找到的最匹配的 machine_desc
+  mdesc = setup_machine_fdt(__atags_pointer);
+  if (!mdesc)
+    mdesc = setup_machine_tags(__atags_pointer, __machine_arch_type);
+}
+```
+
+setup_machine_fdt 调用函数 of_flat_dt_match_machine 来获取匹配的 machine_desc ，找到匹配的 machine_desc 的过程就是用设备树根节点的 compatible 属性值和 Linux 内核中 machine_desc 下.dt_compat 的值比较，看看那个相等，如果相等的话就表示找到匹配的 machine_desc，arch_get_next_mach 函数的工作就是获取 Linux 内核中下一个 machine_desc 结构体。
+
+![](../img/查找匹配设备过程.jpg)
+
+**Linux 内核通过根节点 compatible 属性找到对应的设备的函数调用过程**
+
+### 向节点追加或修改内容
+
+假设现在有个六轴芯片fxls8471，fxls8471 要接到 I.MX6U-ALPHA 开发板的 I2C1 接口上，那么相当于需要在 i2c1 这个节点上添加一个 fxls8471 子节点。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
