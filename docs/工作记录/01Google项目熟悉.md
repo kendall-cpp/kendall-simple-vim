@@ -41,6 +41,11 @@
   - [添加USB API](#添加usb-api)
   - [问题记录](#问题记录-1)
   - [记录](#记录-1)
+- [2022年8月17日](#2022年8月17日)
+  - [打印 iomem 地址](#打印-iomem-地址)
+  - [配置 make menuconfig](#配置-make-menuconfig)
+- [2022年8月17日](#2022年8月17日-1)
+  - [模仿添加codec init时间戳](#模仿添加codec-init时间戳)
 
 ------
 
@@ -943,21 +948,77 @@ Date:   Tue Jun 7 14:30:04 2022 +0800
 
 ### 问题记录
 
-如何去修改代码，https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/238688
-
-如何找到 ko 文件
-
-writel 写入的 0x21 怎么确定
 
 ### 记录
 
 ```
 kernel/drivers/amlogic/usb$ vi ../../../arch/arm64/configs/korlan-p2_defconfig 
 
-在第一个 Makefile 中找到，然后去上层 config 中看是否为 y，如果为 y 就表示已经编译进去了，没有 ko 文件
+在第一个 Makefile 中找到，然后去上层 arch/arm64/configs/korlan-p2_defconfig 中看是否为 y，如果为 y 就表示已经编译进去了，没有 ko 文件
   3 obj-$(CONFIG_AMLOGIC_USB2PHY)           += phy-aml-new-usb2-v2.o
   4 obj-$(CONFIG_AMLOGIC_USB3PHY)           += phy-aml-new-usb3-v2.o
 ```
+
+## 2022年8月17日
+
+### 打印 iomem 地址
+
+```c
+void __iomem *reg
+printk("kendall reg: 0x%x \n", readl(ioremap(reg, 1))); 
+```
+
+
+### 配置 make menuconfig 
+
+先配置 make menuconfig，保存之后会自动生成 `.config` 文件，然后再去配置  arch/arm64/configs/korlan-p2_defconfig , 将两个 config 配置成一样
+
+```
+CONFIG_AMLOGIC_USBPHY=y
+CONFIG_AMLOGIC_USB2PHY=y
+CONFIG_AMLOGIC_USB3PHY=y
+```
+
+可以使用 vim -d .config ./arch/arm64/configs/korlan-p2_defconfig  对比修改
+
+然后就可以 编译了
+
+## 2022年8月17日
+
+### 模仿添加codec init时间戳
+
+回退到 422791e3be522c49d72d56142ef4a64df8cfbb73
+
+```
+[tas5805] add codec init timestamp
+
+read system timer((0x0041  << 2) + 0xfe005800), The unit is us.
+
+Bug:b/236912216
+Test:
+/ # cat /sys/kernel/debug/tas5805_debug/seq_timestamp
+tas5805 prepare init:4832768
+tas5805 pull /PDN high:4839277
+tas5805 enable i2s clock:4913956
+tas5805 Set hiz state:4989655
+tas5805 Initialize device in sleep mode:5000245
+tas5805 init done:501312
+```
+
+git reset --hard 422791e3be522c49d72d56142ef4a64df8cfbb73
+
+完成 bug ID : 236912216 
+
+bug ID 链接：https://partnerissuetracker.corp.google.com/issues/236912216
+
+参考提交地址： https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/243752
+
+
+
+
+
+
+
 
 
 

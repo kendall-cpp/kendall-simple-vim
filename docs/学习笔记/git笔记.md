@@ -19,7 +19,6 @@
 - [邮箱设置](#邮箱设置)
 - [push pull](#push-pull)
 	- [和远程发生冲突](#和远程发生冲突)
-	- [git-review](#git-review)
 - [git patch](#git-patch)
 	- [git format-patch：生成commit的内容](#git-format-patch生成commit的内容)
 	- [检查 patch](#检查-patch)
@@ -319,7 +318,6 @@ git config --local --unset user.email  删除
 
 - git fetch   拉去到本地，origin/master 分支，还未合并
 
-### git-review
 
 ---
 

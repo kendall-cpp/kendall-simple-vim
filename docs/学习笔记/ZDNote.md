@@ -2518,7 +2518,7 @@ void __init setup_arch(char **cmdline_p)
 }
 ```
 
-setup_machine_fdt 调用函数 of_flat_dt_match_machine 来获取匹配的 machine_desc ，找到匹配的 machine_desc 的过程就是用设备树根节点的 compatible 属性值和 Linux 内核中 machine_desc 下.dt_compat 的值比较，看看那个相等，如果相等的话就表示找到匹配的 machine_desc，arch_get_next_mach 函数的工作就是获取 Linux 内核中下一个 machine_desc 结构体。
+setup_machine_fdt 调用函数 of_flat_dt_match_machine 来获取匹配的 machine_desc ，找到匹配的 machine_desc 的过程就是用设备树根节点的 compatible 属性值和 Linux 内核中 machine_desc 下 `.dt_compat` 的值比较，看看那个相等，如果相等的话就表示找到匹配的 machine_desc，arch_get_next_mach 函数的工作就是获取 Linux 内核中下一个 machine_desc 结构体。
 
 ![](../img/查找匹配设备过程.jpg)
 
