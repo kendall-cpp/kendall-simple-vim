@@ -62,9 +62,21 @@
     - [设备树设备匹配方法](#设备树设备匹配方法)
       - [匹配 machine_desc](#匹配-machine_desc)
     - [向节点追加或修改内容](#向节点追加或修改内容)
-    - [自定义节点](#自定义节点)
-    - [特殊节点](#特殊节点)
+    - [创建小型模板设备树](#创建小型模板设备树)
+    - [设备树节点解析流程](#设备树节点解析流程)
+    - [设备树常用 OF 操作函数](#设备树常用-of-操作函数)
+    - [查找节点的 OF 函数](#查找节点的-of-函数)
+      - [of_find_node_by_name 函数](#of_find_node_by_name-函数)
+      - [of_find_node_by_type 函数](#of_find_node_by_type-函数)
+      - [of_find_compatible_node 函数](#of_find_compatible_node-函数)
+      - [of_find_matching_node_and_match 函数](#of_find_matching_node_and_match-函数)
+      - [of_find_node_by_path 函数](#of_find_node_by_path-函数)
+      - [of_get_parent 和 of_get_next_child](#of_get_parent-和-of_get_next_child)
+      - [of_find_property 函数](#of_find_property-函数)
+      - [of_property_read_string 函数](#of_property_read_string-函数)
   - [基于设备树的LED等实验](#基于设备树的led等实验)
+    - [添加设备树节点](#添加设备树节点)
+    - [LED 灯驱动程序编写](#led-灯驱动程序编写-1)
   - [pinctl 和 gpio 子系统试验](#pinctl-和-gpio-子系统试验)
     - [如何找到 pinctl 子系统驱动](#如何找到-pinctl-子系统驱动)
     - [如何从设备树中获取 GPIO 信息](#如何从设备树中获取-gpio-信息)
@@ -2555,69 +2567,106 @@ i2c1: i2c@021a0000 {
 };
 ```
 
+### 创建小型模板设备树
 
+在设备树里面描述的内容如下
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-----
-
-
-可以使用 make dtbs 来编译设备树文件，设备树文件位于
-
-`/home/book/kenspace/zd-linux/IMX6ULL/linux/linux-imx-rel_imx_4.1.15_2.1.0_ga/arch/arm/boot/dts/imx6ull-alientek-emmc.dts`
-
-对应 kernel 的 `/proc/device-tree/`
-
-编译指定的设备树文件 
-
-```sh
-/home/book/kenspace/zd-linux/IMX6ULL/linux/linux-imx-rel_imx_4.1.15_2.1.0_ga/$ make imx6ull-alientek-emmc.dtb 
-```
-
-### 自定义节点
+- I.MX6ULL 这个 Cortex-A7 架构的 32 位 CPU
+- I.MX6ULL 内部 ocram，起始地址 0x00900000，大小为 128KB(0x20000)
+- I.MX6ULL 内部 aips1 域下的 ecspi1 外设控制器，寄存器起始地址为 0x02008000，大小为 0x4000。
+- I.MX6ULL 内部 aips2 域下的 usbotg1 外设控制器，寄存器起始地址为 0x02184000，大小为 0x4000
+- I.MX6ULL 内部 aips3 域下的 rngb 外设控制器，寄存器起始地址为 0x02284000，大小为 0x4000
 
 ```c
-// book@kendall:dts$ vim imx6ull
+// /home/book/kenspace/zd-linux/IMX6ULL/linux/linux-imx-rel_imx_4.1.15_2.1.0_ga/arch/arm/boot/dts
+// touch myfirst.dts
 
- // 自定义节点
- mytestnode {
-     
- }; 
 
-// book@kendall:linux-imx-rel_imx_4.1.15_2.1.0_ga$ make dtbs
+/ {
+	compatible = "fsl,imx6ull-alientek-evk", "fsl,imx6ull";
+
+	cpus {
+		#address-cells = <1>;
+		@size-cells = <0>;
+
+		//CPU0节点
+		cpu0: cpu0@0 {
+			compatible = "arm,cortex-a7";
+			device_type = "cpu";
+			reg = <0>;
+		};
+	};
+
+	//soc节点
+	soc {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		compatible = "simple-bus";
+		ranges;    // 子空间和父空间地址范围相同
+	};
+
+	// ocram 节点
+	ocram: sram@0x00900000 {   // ocram 起始地址为 0x00900000
+		compatible = "mmio-sram";
+		reg = <0x00900000 0x20000>;  //大小为 128KB(0x20000)
+	};
+
+	//aips1 节点
+	aips1: aips-bus@02000000 {
+		compatible = "fsl,aips-bus", "simple-bus";
+		#address-cells = <1>;
+		@size-cells = <1>;
+		reg = <0x02000000 0x100000>;
+		ranges;
+
+		// ecspi1 节点
+		ecspi1: ecspi@02008000 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			compatible = "fsl,imx6ul-ecspi", "fsl,imx51-ecspi";
+			reg = <0x02008000 0x4000>;
+			status = "disabled";
+		};
+	};
+	//aips2 节点
+	aips1: aips-bus@02000000 {
+		compatible = "fsl,aips-bus", "simple-bus";
+		#address-cells = <1>;
+		@size-cells = <1>;
+		reg = <0x02100000 0x100000>;
+		ranges;
+
+		//usbotg1 节点
+		usbotg1: usb@02184000 {
+			compatible = "fsl,imx6ul-usb", "fsl,imx27-usb";
+			reg = <0x02184000 0x4000>;
+			status = "disabled";
+		};
+	};
+	//aips3 节点
+	aips1: aips-bus@02000000 {
+		compatible = "fsl,aips-bus", "simple-bus";
+		#address-cells = <1>;
+		@size-cells = <1>;
+		reg = <0x02200000 0x100000>;
+		ranges;
+
+		//rngb 节点
+		rngb: rngb@02284000 {
+			compatible = "fsl,imx6sl-rng", "fsl,imx-rng", "imx-rng";
+			reg = <0x02284000 0x4000>;
+		};
+	};
+};
 ```
 
-拷贝并重新启动
-
-cp arch/arm/boot/dts/imx6ull-alientek-emmc.dtb  ~/kenspace/zd-linux/tftpboot/ -f
-
-在 `/proc/device-tree/` 去查看添加的节点是否存在。
-
-### 特殊节点
-
+- 添加 SOC 节点
 
 soc 节点设置 `#address-cells = <1>，#size-cells = <1>`，这样 soc 子节点的 reg 属性中起始地占用一个字长，地址空间长度也占用一个字长。
 
+- 添加 ocram 节点
 
-- ocram 是 I.MX6ULL 内部 RAM ,因此 ocram 节点应该是 soc 节点的子节点
+ocram 是 I.MX6ULL 内部 RAM ,因此 ocram 节点应该是 soc 节点的子节点
 
 ```c 
 ocram: sram@0x00900000 {   // ocram 起始地址为 0x00900000
@@ -2626,6 +2675,19 @@ ocram: sram@0x00900000 {   // ocram 起始地址为 0x00900000
 };
 ```
 
+- 添加 aips1、aips2 和 aips3 这三个子节点
+
+I.MX6ULL 内部分为三个域：aips1~3，这三个域分管不同的外设控制器
+
+- 添加 ecspi1、usbotg1 和 rngb 这三个外设控制器节点
+
+其中 ecspi1 属于 aips1 的子节点，usbotg1 属于 aips2 的子节点，rngb 属于 aips3 的子节点
+
+
+> Linux 内核启动的时候会解析设备树中各个节点的信息，并且在根文件系统的 `/proc/device-tree` 目录下根据节点名字创建不同文件夹
+
+
+
 - aliases 子节点
 
 aliases 节点的主要功能就是定义别名，定义别名的目的就是为了方便访问节点。不过我们一般会在节点命名的时候会加上 label，然后通过 &label 来访问节点，这样也很方便，而且设备树里面大量的使用 &label 的形式来访问节点。
@@ -2633,8 +2695,6 @@ aliases 节点的主要功能就是定义别名，定义别名的目的就是为
 - chosen 子节点
 
 chosen 节点主要是为了 uboot 向 Linux 内核传递数据，重点是 bootargs 参数，属性值和 uboot 的 bootargs 一样。
-
-uboot 在启动内核的时候通过 bootz 80800000 0 83000000 来启动，可以通过在 uboot 源码中搜索 chosen 来查看。
 
 ```c
 // /home/book/kenspace/zd-linux/IMX6ULL/uboot
@@ -2674,7 +2734,18 @@ int fdt_chosen(void *fdt)
 }
 ```
 
+调用函数 fdt_find_or_add_subnode 从设备树(.dtb)中找到 chosen 节点，如果没有找到的话就会自己创建一个 chosen 节点。
+
+读取 uboot 中 bootargs 环境变量的内容。
+
+调用函数 fdt_setprop 向 chosen 节点添加 bootargs 属性，并且 bootargs 属性的值就是环境变量 bootargs 的内容。
+
+> uboot 中的 fdt_chosen 函数在设备树的 chosen 节点中加入了 bootargs 属性，并且还设置了 bootargs 属性值,do_bootm_linux 函数会通过一系列复杂的调用，最终通过 fdt_chosen 函数在 chosen 节点中加入了 bootargs 属性。而我们通过 bootz 命令启动 Linux 内核的时候会运行 do_bootm_linux 函数，
+
+
 ![](../img/bootz命令执行流程.png)
+
+当我们输入上述命令【`bootz 80800000 – 83000000`】并执行以后，do_bootz 函数就会执行，然后按照上图流程运行。
 
 - compatible 属性
 
@@ -2684,16 +2755,118 @@ compatible 属性用于将设备和驱动绑定起来。字符串列表用于选
 "manufacturer,model"   // manufacturer 表示厂商，model 一般是模块对应的驱动名字
 ```
 
+### 设备树节点解析流程
+
+![](../img/设备树节点解析流程.jpg)
+
+### 设备树常用 OF 操作函数
+
+### 查找节点的 OF 函数
+
+Linux 内核使用 device_node 结构体来描述一个节点，在文件 include/linux/of.h 中定义。
+
+#### of_find_node_by_name 函数
+
+of_find_node_by_name 函数通过节点名字查找指定的节点
+
+```c
+struct device_node *of_find_node_by_name(struct device_node *from,
+	const char *name);
+```
+
+- from：开始查找的节点，如果为 NULL 表示从根节点开始查找整个设备树。
+
+- name：要查找的节点名字。
+
+- 返回值：找到的节点，如果为 NULL 表示查找失败
+
+#### of_find_node_by_type 函数
+
+of_find_node_by_type 函数通过 device_type 属性查找指定的节点
+
+```c
+struct device_node *of_find_node_by_type(struct device_node *from,
+	const char *type);
+```
+
+#### of_find_compatible_node 函数
+
+of_find_compatible_node 函数根据 device_type 和 compatible 这两个属性查找指定的节点
+
+```c
+struct device_node *of_find_compatible_node(
+						struct device_node *from,
+						const char *type,
+						const char *compat)
+```
+
+#### of_find_matching_node_and_match 函数
+
+of_find_matching_node_and_match 函数通过 of_device_id 匹配表来查找指定的节点
+
+```c
+struct device_node *of_find_matching_node_and_match(
+	struct device_node *from,
+	const struct of_device_id *matches,  //matches：of_device_id 匹配表，也就是在此匹配表里面查找节点
+	const struct of_device_id **match)
+```
+
+#### of_find_node_by_path 函数
+
+of_find_node_by_path 函数通过路径来查找指定的节点
+
+```c
+inline struct device_node *of_find_node_by_path(const char *path)
+```
+
+path：带有全路径的节点名，可以使用节点的别名，比如“`/backlight`”就是 backlight 这个节点的全路径.
+
+#### of_get_parent 和 of_get_next_child
+
+- of_get_parent 函数用于获取指定节点的父节点(如果有父节点的话)
+
+- of_get_next_child 函数用迭代的方式查找子节点
+
+```c
+struct device_node *of_get_parent(const struct device_node *node);
+
+struct device_node *of_get_next_child(
+	const struct device_node *node, struct device_node *prev)
+```
+
+#### of_find_property 函数
+
+of_find_property 函数用于查找指定的属性
+
+```c
+struct property *of_find_property(const struct device_node *np,  //设备节点
+						const char *name,  //属性名字
+						int *lenp)    // 属性值的字节数
+// 返回找到的属性的值
+```
+
+#### of_property_read_string 函数
+
+of_property_read_string 函数用于读取属性中字符串值
+
+```c
+static inline int of_property_read_string(struct device_node *np,
+					  const char *propname,   //要读取的属性名字
+					  const char **out_string)  //读取到的字符串值。
+```
+
+
 
 ## 基于设备树的LED等实验
 
-- 修改设备树节点
+### 添加设备树节点
 
 vim imx6ull-alientek-emmc.dts
 
 ```c
 // 根节点下添加
 	alphaled {
+		//  reg 属性中起始地址占用一个字长(cell)，地址长度也占用一个字长(cell)
 		#address-cell = <1>;
 		#size-cell = <1>;
 		statis = "okay";
@@ -2706,18 +2879,29 @@ vim imx6ull-alientek-emmc.dts
 	};
 ```
 
+reg 属性设置了驱动里面所要使用的寄存器物理地址，比如第 7 行的 “0X020C406C 0X04”表示 I.MX6ULL 的 CCM_CCGR1 寄存器，其中寄存器首地址为 0X020C406C ，长度为 4 个字节
+
+- 重新编译
+
 linux-imx-rel_imx_4.1.15_2.1.0_ga$ make dtbs
 
-cp imx6ull-alientek-emmc.dtb ~/kenspace/zd-linux/tftpboot/
+cp arch/arm/boot/dts/imx6ull-alientek-emmc.dtb ~/kenspace/zd-linux/tftpboot/
 
 重新启动 kernel
 
 查看有没有 alphaled 节点
 
+```sh
+cd /proc/device-tree
+
 /sys/firmware/devicetree/base # ls 
+```
+
+### LED 灯驱动程序编写
+
+- 编写代码
 
 
-编写代码
 
 ```sh
 /home/book/kenspace/zd-linux/linux-kernel/drivers_code/4_desled
