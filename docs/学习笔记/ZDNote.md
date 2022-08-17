@@ -2526,9 +2526,34 @@ setup_machine_fdt 调用函数 of_flat_dt_match_machine 来获取匹配的 machi
 
 ### 向节点追加或修改内容
 
-假设现在有个六轴芯片fxls8471，fxls8471 要接到 I.MX6U-ALPHA 开发板的 I2C1 接口上，那么相当于需要在 i2c1 这个节点上添加一个 fxls8471 子节点。
+一旦硬件修改了，我们就要同步的修改设备树文件，毕竟设备树是描述板子硬件信息的文件。假设现在有个六轴芯片fxls8471，fxls8471 要接到 I.MX6U-ALPHA 开发板的 I2C1 接口上，那么相当于需要在 i2c1 这个节点上添加一个 fxls8471 子节点。打开文件 imx6ull.dtsi 文件
+
+```c
+i2c1: i2c@021a0000 {
+  #address-cells = <1>;
+  #size-cells = <0>;
+  compatible = "fsl,imx6ul-i2c", "fsl,imx21-i2c";
+  reg = <0x021a0000 0x4000>;
+  interrupts = <GIC_SPI 36 IRQ_TYPE_LEVEL_HIGH>;
+  clocks = <&clks IMX6UL_CLK_I2C1>;
+  status = "disabled";
+};
+```
 
 
+向 i2c1 节点追加一个名为 fxls8471 的子节点，而且不能影响到其他使用到 I.MX6ULL 的板子。I.MX6U-ALPHA 开发板使用的设备树文件为 imx6ull-alientek-emmc.dts
+
+```c
+&i2c1 {
+  fxls8471@1e {
+    compatible = "fsl,fxls8471";
+    reg = <0x1e>;
+    position = <0>;
+    interrupt-parent = <&gpio5>;
+    interrupts = <0 8>;
+  };
+};
+```
 
 
 
