@@ -38,7 +38,7 @@
 - [2022年8月15日](#2022年8月15日)
   - [问题1-ADD USB API](#问题1-add-usb-api)
   - [google kernel git pull](#google-kernel-git-pull)
-  - [添加USB API](#添加usb-api)
+  - [添加 USB API](#添加-usb-api)
   - [问题记录](#问题记录-1)
   - [记录](#记录-1)
 - [2022年8月17日](#2022年8月17日)
@@ -924,7 +924,7 @@ git pull https://eureka-partner.googlesource.com/amlogic/kernel refs/changes/46/
 ```
 
 
-### 添加USB API
+### 添加 USB API
 
 ```sh
 commit 375b415cd919ffbf0e66442b2bce45a820b756e4 (eureka-partner/1.63c)
@@ -942,8 +942,8 @@ Date:   Tue Jun 7 14:30:04 2022 +0800
     pc,
     adb shel
     
-# https://partnerissuetracker.corp.google.com/issues/234889055
-# https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/238688
+# Bug ID 链接：https://partnerissuetracker.corp.google.com/issues/234889055
+# 代码提交链接：https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/238688
 ```
 
 ### 问题记录
@@ -1007,11 +1007,11 @@ tas5805 init done:501312
 
 git reset --hard 422791e3be522c49d72d56142ef4a64df8cfbb73
 
-完成 bug ID : 236912216 
+bug ID : 236912216 
 
 bug ID 链接：https://partnerissuetracker.corp.google.com/issues/236912216
 
-参考提交地址： https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/243752
+参考提交地址： https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/239745
 
 
 

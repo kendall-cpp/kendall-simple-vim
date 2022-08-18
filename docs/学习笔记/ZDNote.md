@@ -2943,8 +2943,15 @@ iomuxc: iomuxc@020e0000 {
 
 在 imx6ull-alientek-emmc.dts 中能找到 iomuxc 追加的节点
 
+比如 pinctrl_hog_1 子节点就是和热插拔有关的 PIN 集合，比如 USB OTG 的 ID 引脚。
+
+pinctrl_flexcan1 子节点是 flexcan1 这个外设所使用的 PIN
 
 ```c
+&iomuxc {
+  pinctrl-names = "default";
+  pinctrl-0 = <&pinctrl_hog_1>;
+  imx6ul-evk {
 		pinctrl_hog_1: hoggrp-1 {
 			fsl,pins = <  // 引脚节点
 				MX6UL_PAD_UART1_RTS_B__GPIO1_IO19	0x17059 /* SD1 CD */
@@ -2952,19 +2959,65 @@ iomuxc: iomuxc@020e0000 {
 				MX6UL_PAD_GPIO1_IO09__GPIO1_IO09        0x17059 /* SD1 RESET */
 			>;
 		};
+
+    pinctrl_flexcan1: flexcan1grp{
+      fsl,pins = <
+        MX6UL_PAD_UART3_RTS_B__FLEXCAN1_RX  0x1b020
+        MX6UL_PAD_UART3_CTS_B__FLEXCAN1_TX  0x1b020
+      >;
+    };
+...
+  };
+}
 ```
 
-宏在 imx6ul-pinfunc.h 这里定义
+可以得到完成的 imx6ul.dtsi 节点信息。
 
 ```c
-#define MX6UL_PAD_UART1_RTS_B__GPIO1_IO19                         0x0090 0x031C 0x0000 0x5 0x0
-
-
-mux_reg conf_reg input_reg mux_mode input_val
-0x0090   0x031C    0x0000    0x5        0x0
+iomuxc: iomuxc@020e0000 {
+  compatible = "fsl,imx6ul-iomuxc";
+  reg = <0x020e0000 0x4000>;
+  pinctrl-names = "default";
+  pinctrl-0 = <&pinctrl_hog_1>;
+  imx6ul-evk {
+    pinctrl_hog_1: hoggrp-1 {
+      fsl,pins = <
+        MX6UL_PAD_UART1_RTS_B__GPIO1_IO19     0x17059   // UART1_RTS_B
+        MX6UL_PAD_GPIO1_IO05__USDHC1_VSELECT  0x17059
+        MX6UL_PAD_GPIO1_IO09__GPIO1_IO09      0x17059
+        MX6UL_PAD_GPIO1_IO00__ANATOP_OTG1_ID  0x13058
+      >;
+      。。。
+    };
+  };
+};
 ```
 
-如果搜 MX6UL_PAD_UART1_RTS_B 会有 8 个，说明 MX6UL_PAD_UART1_RTS_B 可以复用成 8 个引脚。
+- compatible 属性值为 “fsl,imx6ul-iomuxc” ，前面讲解设备树的时候说过，Linux 内核会根据 compatbile 属性值来查找对应的驱动文件，所以在源码中查找 “fsl,imx6ul-iomuxc” 就会找到 I.MX6ULL 这颗 SOC 的 pinctrl 驱动文件。
+
+- pinctrl_hog_1 子节点所使用的 PIN 配置信息，以 UART1_RTS_B 这个 PIN 为例，学习如何添加 PIN 信息
+
+```
+MX6UL_PAD_UART1_RTS_B__GPIO1_IO19 0x17059
+```
+
+> UART1_RTS_B 这个 PIN 是作为 SD 卡的检测引脚，也就是通过此 PIN 就可以检测到 SD 卡是否有插入
+
+对于一个 PIN 的配置主要包括两方面，一个是设置这个 PIN 的复用功能，另一个就是设置这个 PIN 的电气特性（比如上/下拉、速度、驱动能力等）。
+
+- 首先来看一下 MX6UL_PAD_UART1_RTS_B__GPIO1_IO19 ，这是一个宏定义，定义在文件 `arch/arm/boot/dts/imx6ul-pinfunc.h` 中，imx6ull.dtsi 会引用 imx6ull-pinfunc.h 这个头文件，而 imx6ull-pinfunc.h 又会引用 imx6ul-pinfunc.h 这个头文件
+
+```c
+...
+define MX6UL_PAD_UART1_RTS_B__GPIO1_IO19 0x0090 0x031C 0x0000 0x5 0x0
+
+// mux_reg conf_reg input_reg mux_mode input_val
+// 0x0090   0x031C    0x0000    0x5        0x0
+...
+```
+
+一共有 8 个以“MX6UL_PAD_UART1_RTS_B”开头的宏定义, 8 个宏定义分别对应 UART1_RTS_B 这个 PIN 的 8 个复用 IO
+
 
 IOMUXC 父节点首地址是 020e0000 ，因此 UART1_RTS_B 这个 PIN 的 mux 寄存器地址就是 020e0000 + 0x0090 = 0x020e0090
 
