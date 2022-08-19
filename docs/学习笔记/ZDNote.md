@@ -79,7 +79,11 @@
     - [LED 灯驱动程序编写](#led-灯驱动程序编写-1)
   - [pinctl 和 gpio 子系统试验](#pinctl-和-gpio-子系统试验)
     - [如何找到 pinctl 子系统驱动](#如何找到-pinctl-子系统驱动)
-    - [如何从设备树中获取 GPIO 信息](#如何从设备树中获取-gpio-信息)
+    - [设备树中添加 pinctrl 节点模板](#设备树中添加-pinctrl-节点模板)
+    - [设备树中的 gpio 信息](#设备树中的-gpio-信息)
+    - [GPIO 驱动程序](#gpio-驱动程序)
+    - [gpio 子系统 API 函数](#gpio-子系统-api-函数)
+    - [实验程序编写](#实验程序编写)
 
 ------
 
@@ -3028,11 +3032,11 @@ mux_mode：5 表示复用为 GPIO1_IO19 ，将其写入 0x020e0090
 
 ### 如何找到 pinctl 子系统驱动
 
-设备树里面的设备节点是通过 compatible 跟驱动匹配的。当设备树节点的 compatible 属性和驱动里面的兼容性字符串匹配，也就是一模一样的时候就表示驱动匹配了。
+设备树里面的设备节点是通过 compatible 跟驱动匹配的。of_device_id 里面保存着这个驱动文件的兼容性值，设备树中的 compatible 属性值会和 of_device_id 中的所有兼容性字符串比较，查看是否可以使用此驱动。当设备树节点的 compatible 属性和驱动里面的兼容性字符串匹配，也就是一模一样的时候就表示驱动匹配了。
 
-所以我们只需要全局搜索，设备节点里面的compatible属性的值，看看在哪个.c文件里面有，那么此.c文件就是驱动文件。
+所以我们只需要全局搜索，设备节点里面的compatible属性的值，看看在哪个`.c`文件里面有，那么此`.c`文件就是驱动文件。
 	
-找到 `pinctrl-imx6ul.c` 文件，那么此文件就是6UL/6ULL的`pinctrl` 驱动文件。当驱动和设备匹配以后执行 `probe` 函数
+找到 `pinctrl-imx6ul.c` 文件，那么此文件就是`6UL/6ULL`的`pinctrl` 驱动文件。当驱动和设备匹配以后执行 `probe` 函数
 
 ```c
 static int imx6ul_pinctrl_probe(struct platform_device *pdev)
@@ -3053,7 +3057,98 @@ static int imx6ul_pinctrl_probe(struct platform_device *pdev)
 
 ![](../img/imx6ul_pinctrl_probe执行流程.jpg)
 
-### 如何从设备树中获取 GPIO 信息
+### 设备树中添加 pinctrl 节点模板
+
+虚拟一个名为“test”的设备，test 使用了 GPIO1_IO00 这个 PIN 的 GPIO 功能，pinctrl 节点添加过程如下：
+
+- 创建对应的节点
+
+同一个外设的 PIN 都放到一个节点里面，打开 imx6ull-alientek-emmc.dts，在 iomuxc 节点中的“imx6ul-evk”子节点下添加“pinctrl_test”节点，注意！节点前缀一定要为“`pinctrl_`”。
+
+```c
+pinctrl_test: testgrp {
+  /* 具体的 PIN 信息 */
+};
+```
+
+- 添加“fsl,pins”属性
+
+设备树是通过属性来保存信息的，因此我们需要添加一个属性，属性名字一定要为“`fsl,pins`”，
+
+```c
+pinctrl_test: testgrp {
+  fsl,pins = <
+    /* 设备所使用的 PIN 配置信息 */
+    MX6UL_PAD_GPIO1_IO00__GPIO1_IO00 config /*config 是具体设置值*/
+  >;
+};
+```
+
+### 设备树中的 gpio 信息
+
+I.MX6ULL-ALPHA 开发板上的 UART1_RTS_B 做为 SD 卡的检测引脚，UART1_RTS_B 复用为 GPIO1_IO19，通过读取这个 GPIO 的高低电平就可以知道 SD 卡有没有插入。首先肯定是将 UART1_RTS_B 这个 PIN 复用为 GPIO1_IO19 ，并且设置电气属性。打开 imx6ull-alientek-emmc.dts， 对 UART1_RTS_B 这个 PIN 的 pincrtl 设置
+
+```c
+pinctrl_hog_1: hoggrp-1 {
+  fsl,pins = <
+    MX6UL_PAD_UART1_RTS_B__GPIO1_IO19 0x17059 /* SD1 CD */
+    。。。
+  >;
+};
+```
+
+pinctrl 配置好以后就是设置 gpio 了，SD 卡驱动程序通过读取 GPIO1_IO19 的值来判断 SD 卡有没有插入，但是 SD 卡驱动程序怎么知道 CD 引脚连接的 GPIO1_IO19 呢？
+
+通过设备树告诉驱动，在设备树中 SD 卡节点下添加一个属性来描述 SD 卡的 CD 引脚就行了，SD 卡驱动直接读取这个属性的值就知道 SD 卡的 CD 引脚使用的是哪个 GPIO 了，SD 卡连接在 IMX6ULL 的 usdhc1 接口上，在 imx6ull-alientek-emmc.dts 中找到名为“usdhc1”的节点
+
+```c
+&usdhc1 {                                                                                                                                     
+    pinctrl-names = "default", "state_100mhz", "state_200mhz";
+    pinctrl-0 = <&pinctrl_usdhc1>;
+    pinctrl-1 = <&pinctrl_usdhc1_100mhz>;
+    pinctrl-2 = <&pinctrl_usdhc1_200mhz>;
+    cd-gpios = <&gpio1 19 GPIO_ACTIVE_LOW>;  // 描述了 SD 卡的 CD 引脚使用的哪个 IO
+    keep-power-in-suspend;
+    enable-sdio-wakeup;
+    vmmc-supply = <&reg_sd1_vmmc>;
+    status = "okay";
+};
+```
+
+usdhc1 节点作为 SD 卡设备总节点，usdhc1 节点需要描述 SD 卡所有的信息，因为驱动要使用。SD 卡驱动需要根据 pincrtl 节点信息来设置 CD 引脚的复用功能等。
+
+### GPIO 驱动程序
+
+gpio1 节点的 compatible 属性描述了兼容性，在 Linux 内核中搜索“fsl,imx6ul-gpio”和 “fsl,imx35-gpio”这两个字符串，查找 GPIO 驱动文件。drivers/gpio/gpio-mxc.c 就是 I.MX6ULL 的 GPIO 驱动文件，在此文件中有如下所示 of_device_id 匹配表
+
+
+```c
+static const struct of_device_id mxc_gpio_dt_ids[] = {                                                                                        
+  { .compatible = "fsl,imx1-gpio", .data = &mxc_gpio_devtype[IMX1_GPIO], },
+  { .compatible = "fsl,imx21-gpio", .data = &mxc_gpio_devtype[IMX21_GPIO], },
+  { .compatible = "fsl,imx31-gpio", .data = &mxc_gpio_devtype[IMX31_GPIO], },
+  { .compatible = "fsl,imx35-gpio", .data = &mxc_gpio_devtype[IMX35_GPIO], }, // “fsl,imx35-gpio”，和 gpio1 的 compatible 属性匹配
+  { /* sentinel */ } 
+};
+```
+
+gpio-mxc.c 所在的目录为 `drivers/gpio`
+
+```c
+static struct platform_driver mxc_gpio_driver = {                                                                                             
+  .driver   = {                   
+    .name = "gpio-mxc",           
+    .of_match_table = mxc_gpio_dt_ids,
+  },                              
+  .probe    = mxc_gpio_probe,  
+  .id_table = mxc_gpio_devtype,
+};
+```
+
+当设备树中的设备节点与驱动的of_device_id 匹配以后 probe 函数就会执行，
+
+
+### gpio 子系统 API 函数
 
 - gpio_request 函数：用于申请一个 GPIO 管脚，在使用一个 GPIO 之前一定要使用 gpio_request 进行申请
 
@@ -3068,4 +3163,6 @@ static int imx6ul_pinctrl_probe(struct platform_device *pdev)
 - gpio_get_value 函数，此函数用于获取某个 GPIO 的值(0 或 1)
 
 - gpio_set_value 函数此函数用于设置某个 GPIO 的值
+
+### 实验程序编写
 
