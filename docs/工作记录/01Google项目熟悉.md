@@ -46,6 +46,7 @@
   - [配置 make menuconfig](#配置-make-menuconfig)
 - [2022年8月17日](#2022年8月17日-1)
   - [模仿添加codec init时间戳](#模仿添加codec-init时间戳)
+- [2022年8月19日](#2022年8月19日)
 
 ------
 
@@ -1013,11 +1014,81 @@ bug ID 链接：https://partnerissuetracker.corp.google.com/issues/236912216
 
 参考提交地址： https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/239745
 
+## 2022年8月19日
 
+任务：https://partnerissuetracker.corp.google.com/issues/243087651
 
+tas5805m.pdf  P43
 
+参考这个复制
 
+```c
+581:    aml_tdm_enable_bclk(gp_tdm->actrl, gp_tdm->clk_sel, 1);
+648:    aml_tdm_enable_bclk(gp_tdm->actrl, gp_tdm->clk_sel, 1);
+```
 
+aml_tdm_enable_bclk 函数在 /sound/soc/amlogic/auge/tdm_hw.c 中实现
+
+关注
+
+```
+# cat  /sys/kernel/debug/aml_clkmsr/clkmsr  | grep tdm*
+ tdmout_b_sclk           3068750    +/-3125Hz
+ tdmout_a_sclk                 0    +/-3125Hz
+ tdmin_lb_sclk                 0    +/-3125Hz
+ tdmin_b_sclk            3067188    +/-3125Hz
+ tdmin_a_sclk                  0    +/-3125Hz
+ tdmin_vad_clk                 0    +/-3125Hz
+```
+
+```
+/sys/kernel/debug/tas5805_debug # cat seq_timestamp 
+tas5805 prepare init:6549978
+tas5805 pull /PDN high:6555052
+tas5805 enable i2s clock:6629877
+tas5805 Set hiz state:6710051
+tas5805 Initialize device in sleep mode:6716802
+tas5805 init done:6729760
+```
+
+参考：drivers/amlogic/usb/phy/phy-aml-new-usb3-v2.c 
+
+```c
+   640 static ssize_t usb_mode_write(struct file *filp, const char __user *buf, size_t len, loff_t *off)
+   641 {                           
+   642   char val[20];             
+   643   int tmp_val = 0;          
+   644   struct amlogic_usb_v2 *phy = g_phy_v2;
+   645                             
+   646    if (len > 20)             
+   647     return -1;
+   648                
+   649   if(copy_from_user(val, buf, len))
+   650   {                         
+   651     return -EFAULT;         
+   652   } else {                  
+   653     sscanf(val, "%d", &tmp_val);
+   654     usb_mode_val = tmp_val; 
+   655   }                         
+   656                             
+   657   schedule_delayed_work(&phy->work, msecs_to_jiffies(10));
+   658   schedule_delayed_work(&phy->id_gpio_work, msecs_to_jiffies(10));
+   659                             
+   660   return len;               
+   661 }                           
+   662                             
+   663 struct file_operations usb_mode_file_ops = {
+   664   .open   = simple_open,    
+   665   .read = usb_mode_read,    
+   666   .write = usb_mode_write,  
+   667 };
+```
+
+dmesg  -n 8
+
+cat /sys/kernel/debug/tas5805_debug/seq_timestamp
+
+echo 0 > /sys/kernel/debug/tas5805_debug/seq_timestamp
 
 
 

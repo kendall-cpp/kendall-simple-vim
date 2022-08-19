@@ -397,7 +397,7 @@ git am --resolved
 
 - 再重新执行 git am *.patch 命令即可
 
-- 或者：patch -p1 < 0001-a5-av400-enable-nand.patch   打 patch
+  - 或者：patch -p1 < 0001-a5-av400-enable-nand.patch   打 patch
 
 在遇到打了一次补丁之后继续运行patch命令时，patch会提示 `Reversed (or previously applied) patch detected! Assume -R? [n]`。对此：
 
