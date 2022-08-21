@@ -1023,6 +1023,7 @@ tas5805m.pdf  P43
 参考这个复制
 
 ```c
+// sound/soc/amlogic/auge/tdm_bridge.c
 581:    aml_tdm_enable_bclk(gp_tdm->actrl, gp_tdm->clk_sel, 1);
 648:    aml_tdm_enable_bclk(gp_tdm->actrl, gp_tdm->clk_sel, 1);
 ```
@@ -1090,7 +1091,7 @@ cat /sys/kernel/debug/tas5805_debug/seq_timestamp
 
 echo 0 > /sys/kernel/debug/tas5805_debug/seq_timestamp
 
-
+echo 1 > /sys/kernel/debug/tas5805_debug/seq_timestamp
 
 
 

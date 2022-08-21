@@ -84,6 +84,14 @@
     - [GPIO 驱动程序](#gpio-驱动程序)
     - [gpio 子系统 API 函数](#gpio-子系统-api-函数)
     - [实验程序编写](#实验程序编写)
+      - [添加pinctrl节点](#添加pinctrl节点)
+      - [添加 LED 设备节点](#添加-led-设备节点)
+      - [检查 PIN 是否被其他外设使用](#检查-pin-是否被其他外设使用)
+    - [LED 驱动程序编写](#led-驱动程序编写)
+  - [蜂鸣器驱动](#蜂鸣器驱动)
+    - [修改设备树文件](#修改设备树文件)
+      - [添加 pinctrl 节点](#添加-pinctrl-节点)
+    - [编写程序](#编写程序-1)
 
 ------
 
@@ -2243,7 +2251,7 @@ static int __init newchrled_init(void)
 
 	//注册字符设备
 	if(newchrled.major) {
-		newchrled.major = MKDEV(newchrled.major, 0);//如果 major 有效的话就使用 MKDEV 来构建设备号，次设备号选择 0
+		newchrled.devid = MKDEV(newchrled.major, 0);//如果 major 有效的话就使用 MKDEV 来构建设备号，次设备号选择 0
 		ret = register_chrdev_region(newchrled.devid,NEWCHRLED_COUNT,NEWCHRLED_NAME);
 	} else {
 		ret = alloc_chrdev_region(&newchrled.devid, 0, NEWCHRLED_COUNT,NEWCHRLED_NAME);
@@ -2256,7 +2264,7 @@ static int __init newchrled_init(void)
     }
 	printk("newchrled major=%d, minor=%d\r\n", newchrled.major, newchrled.minor);
 
-	//注册字符设备
+	//初始化cdev
 	newchrled.cdev.owner = THIS_MODULE;
 	cdev_init(&newchrled.cdev, &newchrled_fops);
     ret = cdev_add(&newchrled.cdev, newchrled.devid, NEWCHRLED_COUNT);
@@ -2934,7 +2942,7 @@ pinctrl 子系统主要工作内容如下：
 
 对于我们使用者来讲，只需要在设备树里面设置好某个 pin 的相关属性即可，其他的初始化工作均由 pinctrl 子系统来完成，pinctrl 子系统源码目录为 `drivers/pinctrl`
 
-imx6ul.dtsi
+arch/arm/boot/dts/imx6ull.dtsi
 
 ```c
 iomuxc: iomuxc@020e0000 {
@@ -2975,7 +2983,7 @@ pinctrl_flexcan1 子节点是 flexcan1 这个外设所使用的 PIN
 }
 ```
 
-可以得到完成的 imx6ul.dtsi 节点信息。
+可以得到完整的 imx6ul.dtsi 节点信息。
 
 ```c
 iomuxc: iomuxc@020e0000 {
@@ -2997,7 +3005,7 @@ iomuxc: iomuxc@020e0000 {
 };
 ```
 
-- compatible 属性值为 “fsl,imx6ul-iomuxc” ，前面讲解设备树的时候说过，Linux 内核会根据 compatbile 属性值来查找对应的驱动文件，所以在源码中查找 “fsl,imx6ul-iomuxc” 就会找到 I.MX6ULL 这颗 SOC 的 pinctrl 驱动文件。
+- compatible 属性值为 “fsl,imx6ul-iomuxc” ，前面讲解设备树的时候说过，Linux 内核会根据 compatbile 属性值来查找对应的驱动文件，所以在源码中查找 “fsl,imx6ul-iomuxc” 就会找到 I.MX6ULL 这颗 SOC 的 pinctrl 驱动文件。在 `drivers/pinctrl` 搜索找到子啊 `freescale/pinctrl-imx6ul.c` 有 “fsl,imx6ul-iomuxc” 。
 
 - pinctrl_hog_1 子节点所使用的 PIN 配置信息，以 UART1_RTS_B 这个 PIN 为例，学习如何添加 PIN 信息
 
@@ -3032,13 +3040,19 @@ mux_mode：5 表示复用为 GPIO1_IO19 ，将其写入 0x020e0090
 
 ### 如何找到 pinctl 子系统驱动
 
-设备树里面的设备节点是通过 compatible 跟驱动匹配的。of_device_id 里面保存着这个驱动文件的兼容性值，设备树中的 compatible 属性值会和 of_device_id 中的所有兼容性字符串比较，查看是否可以使用此驱动。当设备树节点的 compatible 属性和驱动里面的兼容性字符串匹配，也就是一模一样的时候就表示驱动匹配了。
+设备树里面的设备节点是通过 compatible 跟驱动匹配的。 **of_device_id 变量里面保存着这个驱动文件的兼容性值**，设备树中的 compatible 属性值会和 of_device_id 中的所有兼容性字符串比较，查看是否可以使用此驱动。当设备树节点的 compatible 属性和驱动里面的兼容性字符串匹配，也就是一模一样的时候就表示驱动匹配了。
 
-所以我们只需要全局搜索，设备节点里面的compatible属性的值，看看在哪个`.c`文件里面有，那么此`.c`文件就是驱动文件。
+所以我们只需要在 `drivers/pinctrl` 下全局搜索，设备节点里面的 compatible 属性的值（fsl,imx6ul-iomuxc），看看在哪个`.c`文件里面有，那么此`.c`文件就是驱动文件。
 	
 找到 `pinctrl-imx6ul.c` 文件，那么此文件就是`6UL/6ULL`的`pinctrl` 驱动文件。当驱动和设备匹配以后执行 `probe` 函数
 
 ```c
+static struct of_device_id imx6ul_pinctrl_of_match[] = {                                                                                      
+  { .compatible = "fsl,imx6ul-iomuxc", .data = &imx6ul_pinctrl_info, },
+  { .compatible = "fsl,imx6ull-iomuxc-snvs", .data = &imx6ull_snvs_pinctrl_info, },
+  { /* sentinel */ }
+};
+
 static int imx6ul_pinctrl_probe(struct platform_device *pdev)
 {
 	const struct of_device_id *match;
@@ -3102,7 +3116,7 @@ pinctrl 配置好以后就是设置 gpio 了，SD 卡驱动程序通过读取 GP
 通过设备树告诉驱动，在设备树中 SD 卡节点下添加一个属性来描述 SD 卡的 CD 引脚就行了，SD 卡驱动直接读取这个属性的值就知道 SD 卡的 CD 引脚使用的是哪个 GPIO 了，SD 卡连接在 IMX6ULL 的 usdhc1 接口上，在 imx6ull-alientek-emmc.dts 中找到名为“usdhc1”的节点
 
 ```c
-&usdhc1 {                                                                                                                                     
+&usdhc1 {    
     pinctrl-names = "default", "state_100mhz", "state_200mhz";
     pinctrl-0 = <&pinctrl_usdhc1>;
     pinctrl-1 = <&pinctrl_usdhc1_100mhz>;
@@ -3119,11 +3133,11 @@ usdhc1 节点作为 SD 卡设备总节点，usdhc1 节点需要描述 SD 卡所�
 
 ### GPIO 驱动程序
 
-gpio1 节点的 compatible 属性描述了兼容性，在 Linux 内核中搜索“fsl,imx6ul-gpio”和 “fsl,imx35-gpio”这两个字符串，查找 GPIO 驱动文件。drivers/gpio/gpio-mxc.c 就是 I.MX6ULL 的 GPIO 驱动文件，在此文件中有如下所示 of_device_id 匹配表
+gpio1 节点的 compatible 属性描述了兼容性，在 Linux 内核中搜索“fsl,imx6ul-gpio”和 “fsl,imx35-gpio”这两个字符串，查找 GPIO 驱动文件。`drivers/gpio/gpio-mxc.c` 就是 I.MX6ULL 的 GPIO 驱动文件，在此文件中有如下所示 of_device_id 匹配表
 
 
 ```c
-static const struct of_device_id mxc_gpio_dt_ids[] = {                                                                                        
+static const struct of_device_id mxc_gpio_dt_ids[] = {
   { .compatible = "fsl,imx1-gpio", .data = &mxc_gpio_devtype[IMX1_GPIO], },
   { .compatible = "fsl,imx21-gpio", .data = &mxc_gpio_devtype[IMX21_GPIO], },
   { .compatible = "fsl,imx31-gpio", .data = &mxc_gpio_devtype[IMX31_GPIO], },
@@ -3165,4 +3179,523 @@ static struct platform_driver mxc_gpio_driver = {
 - gpio_set_value 函数此函数用于设置某个 GPIO 的值
 
 ### 实验程序编写
+
+#### 添加pinctrl节点
+
+.MX6U-ALPHA 开发板上的 LED 灯使用了 GPIO1_IO03 这个 PIN，打开 imx6ull-alientek-emmc.dts，在 iomuxc 节点的 imx6ul-evk 子节点下创建一个名为“pinctrl_led”的子节点。
+
+```c
+pinctrl_led: ledgrp {
+    fsl.pins = < 
+        MX6UL_PAD_GPIO1_IO03__GPIO1_IO03 0x10B0 /* LED0*/
+    >;   
+} 
+```
+
+#### 添加 LED 设备节点
+
+在根节点“/”下创建 LED 灯节点，节点名为“gpioled”。
+
+```c
+    gpioled {            
+        #address-cells = <1>;                 
+        #size-cells = <1>;                    
+        compatible = "atkalpha-gpioled";      
+        pinctrl-names = "default";            
+        pinctrl-0 = <&pinctrl_led>; // pinctrl-0 属性设置 LED 灯所使用的 PIN 对应的 pinctrl 节点        
+        led-gpio = <&gpio1 3 GPIO_ACTIVE_LOW>;  // led-gpio 属性指定了 LED 灯所使用的 GPIO
+        status = "okay"; 
+    }; 
+```
+
+#### 检查 PIN 是否被其他外设使用
+
+- 检查 pinctrl 设置
+- 如果这个 PIN 配置为 GPIO 的话，检查这个 GPIO 有没有被别的外设使用。
+
+LED 灯使用的 PIN 为 GPIO1_IO03，因此先检查 GPIO1_IO03 这个 PIN 有没有被其他的 pinctrl 节点使用，在 imx6ull-alientek-emmc.dts 中找到如下内容
+
+```c
+pinctrl_tsc: tscgrp { 
+    fsl,pins = <
+        MX6UL_PAD_GPIO1_IO01__GPIO1_IO01    0xb0
+        MX6UL_PAD_GPIO1_IO02__GPIO1_IO02    0xb0
+        // MX6UL_PAD_GPIO1_IO03__GPIO1_IO03    0xb0
+        MX6UL_PAD_GPIO1_IO04__GPIO1_IO04    0xb0
+    >;
+};
+```
+
+pinctrl_tsc 节点是 TSC(电阻触摸屏接口)的 pinctrl 节点，从上面可以看出默认情况下， GPIO1_IO03 作为了 TSC 外设的 PIN。所以我们需要将其屏蔽掉。继续搜索 “gpio1 3” ，除了 LED 等以外的都屏蔽掉
+
+```c
+//  xnur-gpio = <&gpio1 3 GPIO_ACTIVE_LOW>;  
+```
+
+编译和去 kernel 中的 /proc/device-tree 下看有没有 gpioled
+
+```
+linux-imx-rel_imx_4.1.15_2.1.0_ga$ make dtbs
+
+dts$ cp imx6ull-alientek-emmc.dtb ~/kenspace/zd-linux/tftpboot/ -f
+
+# ls /proc/device-tree/
+```
+
+### LED 驱动程序编写
+
+
+
+```c
+#include <linux/types.h>
+#include <linux/kernel.h>
+#include <linux/delay.h>
+#include <linux/ide.h>
+#include <linux/init.h>
+#include <linux/module.h>
+#include <linux/errno.h>
+#include <linux/gpio.h>
+#include <linux/cdev.h>
+#include <linux/device.h>
+#include <linux/of.h>
+#include <linux/of_address.h>
+#include <linux/of_gpio.h>
+#include <asm/mach/map.h>
+#include <asm/uaccess.h>
+#include <asm/io.h>
+
+#define GPIOLED_CNT			1		  	/* 设备号个数 */
+#define GPIOLED_NAME		"gpioled"	/* 名字 */
+#define LEDOFF 				0			/* 关灯 */
+#define LEDON 				1			/* 开灯 */
+
+struct gpioled_dev {
+	dev_t devid;			/* 设备号 	 */
+	struct cdev cdev;		/* cdev 	*/
+	struct class *class;	/* 类 		*/
+	struct device *device;	/* 设备 	 */
+	int major;				/* 主设备号	  */
+	int minor;				/* 次设备号   */
+	struct device_node	*nd; /* 设备节点 */
+	int led_gpio;			/* led所使用的GPIO编号		*/
+};
+static struct gpioled_dev gpioled;
+
+/*
+ * @description			: 打开设备
+ * @param - inode 	: 传递给驱动的 inode
+ * @param - filp 		: 设备文件，file结构体有个叫做private_data的成员变量
+ * 					 				 一般在open的时候将private_data指向设备结构体。
+ * @return 					: 0 成功;其他 失败
+ */
+static int led_open(struct inode *inode, struct file *filp)
+{
+	filp->private_data = &gpioled;		//设置私有数据
+	return 0;
+}
+
+/*
+ * @description		: 从设备读取数据 
+ * @param - filp 	: 要打开的设备文件(文件描述符)
+ * @param - buf 	: 返回给用户空间的数据缓冲区
+ * @param - cnt 	: 要读取的数据长度
+ * @param - offt 	: 相对于文件首地址的偏移
+ * @return 			: 读取的字节数，如果为负值，表示读取失败
+ */
+static ssize_t led_read(struct file *filp, char __user *buf, size_t cnt, loff_t *offt)
+{
+	return 0;
+}
+
+/*
+ * @description		: 向设备写数据 
+ * @param - filp 	: 设备文件，表示打开的文件描述符
+ * @param - buf 	: 要写给设备写入的数据
+ * @param - cnt 	: 要写入的数据长度
+ * @param - offt 	: 相对于文件首地址的偏移
+ * @return 			: 写入的字节数，如果为负值，表示写入失败
+ */
+static ssize_t led_write(struct file *filp, const char __user *buf, size_t cnt, loff_t *offt)
+{
+	int ret;
+	unsigned char databuf[1];
+	unsigned char ledstat;
+	struct gpioled_dev *dev = filp->private_data;
+
+	ret = copy_from_user(databuf,buf,cnt);
+	if(ret < 0) {
+		printk("kernel write failed!\r\n");
+		return -EFAULT;
+	}
+
+	ledstat = databuf[0];		//获取状态值
+	if(ledstat == LEDON) {
+		gpio_set_value(dev->led_gpio, 0);		//关闭LED灯
+	} else if(ledstat == LEDOFF) {
+		gpio_set_value(dev->led_gpio, 1);	  //打开LED灯
+	}
+	return 0;
+}
+
+/*
+ * @description		: 关闭/释放设备
+ * @param - filp 	: 要关闭的设备文件(文件描述符)
+ * @return 			: 0 成功;其他 失败
+ */
+static int led_release(struct inode *inode, struct file *filp)
+{
+	return 0;
+}
+
+
+//设备操作函数
+static struct file_operations gpioled_fops = {
+	.owner = THIS_MODULE,
+	.open = led_open,
+	.read = led_read,
+	.write = led_write,
+	.release = led_release,
+};
+
+static int __init led_init(void) 
+{
+	int ret;
+	//获取设备节点
+	gpioled.nd = of_find_node_by_path("/gpioled");
+	if(!gpioled.nd) {
+		printk("%s\n","gpioled node not find");;
+		return -EINVAL;
+	}	else {
+		printk("%s\n","gpioled node find!");;
+	}
+	//从设备树中获取gpio节点中的属性，得到LED灯所使用的LED编号
+	gpioled.led_gpio = of_get_named_gpio(gpioled.nd,"led-gpio", 0);
+	if(gpioled.led_gpio < 0) {
+		printk("%s\n","can't get led-gpio");;
+		return -EINVAL;
+	}
+	printk("led-gpio num = %d\n",gpioled.led_gpio);
+
+	//设置 GPIO01_IO03 为输出，并且输出高电平，默认关闭LED灯
+	ret = gpio_direction_output(gpioled.led_gpio, 1);		//设置GPIO为输出
+	if(ret < 0) {
+		printk("can't set gpio output\n");
+		return -EINVAL;
+	}
+
+	//注册字符设备驱动
+	//创建设备号
+	if(gpioled.major) { //如果已经定义了设备号
+		gpioled.devid = MKDEV(gpioled.major, 0);   //如果 major 有效的话就使用 MKDEV 来构建设备号，次设备号选择 0
+		register_chrdev_region(gpioled.devid, GPIOLED_CNT, GPIOLED_NAME);
+	} else {
+		alloc_chrdev_region(&gpioled.devid, 0, GPIOLED_CNT, GPIOLED_NAME);  //申请设备号
+		gpioled.major = MAJOR(gpioled.devid);	//获取分配号的主设备号
+		gpioled.minor = MINOR(gpioled.devid); //获取分配号的次设备号
+	}
+	printk("gpioled major=%d,minor=%d\r\n",gpioled.major, gpioled.minor);	
+
+	//初始化cdev
+	gpioled.cdev.owner = THIS_MODULE;   //拥有该结构体的模块的指针，一般设置为 THIS_MODULE。
+	cdev_init(&gpioled.cdev, &gpioled_fops) ;   //gpioled_fops 设备操作函数
+
+	//添加一个cdev
+	cdev_add(&gpioled.cdev, gpioled.devid,GPIOLED_CNT);
+
+	//创建类
+	gpioled.class = class_create(THIS_MODULE,GPIOLED_NAME);
+	if(IS_ERR(gpioled.class)) {
+		return PTR_ERR(gpioled.class);
+	}
+
+	//创建设备
+	gpioled.device = device_create(gpioled.class, NULL,gpioled.devid, NULL, GPIOLED_NAME);
+	if(IS_ERR(gpioled.device)) {
+		return PTR_ERR(gpioled.device);
+		class_destroy(gpioled.class);
+	}
+	return 0;
+}
+static void __exit led_exit(void)
+{
+	//注销字符设备驱动
+	cdev_del(&gpioled.cdev);		//深处cdev
+	unregister_chrdev_region(gpioled.devid,GPIOLED_CNT);  //注销设备号
+
+	device_destroy(gpioled.class, gpioled.devid);
+	class_destroy(gpioled.class);
+}
+
+module_init(led_init);
+module_exit(led_exit);
+
+MODULE_LICENSE("GPL");
+MODULE_AUTHOR("kendall");
+```
+
+
+测试
+
+```sh
+sudo cp gpioled.ko ~/kenspace/zd-linux/nfs/rootfs/lib/modules/4.1.15/
+
+depmod 
+modprobe gpioled.ko 
+# gpioled node find!
+# led-gpio num = 3
+# gpioled major=249,minor=0
+lsmod
+# Module                  Size  Used by    Tainted: G  
+# gpioled                 1643  0 
+
+rmmod gpioled.ko  # 卸载驱动
+```
+
+可以看出，gpioled 这个节点找到了，并且 GPIO1_IO03 这个 GPIO 的编号为 3。驱动加载成功以后就可以使用 ledApp 软件来测试驱动是否工作正常，
+
+```sh
+./ledApp /dev/gpioled 1     # 打开 LED 灯
+```
+
+## 蜂鸣器驱动
+
+ Linux 下编写蜂鸣器驱动需要做哪些工作：
+
+- 在设备树中添加 SNVS_TAMPER1 引脚的 pinctrl 信息。
+- 在设备树中创建蜂鸣器节点，在蜂鸣器节点中加入 GPIO 信息。
+- 编写驱动程序和测试 APP
+
+### 修改设备树文件
+
+#### 添加 pinctrl 节点
+
+在 arch/arm/boot/dts/imx6ull-alientek-emmc.dts 的 iomuxc 节点的 imx6ul-evk 下创建 pinctrl_beep 子节点
+
+```c
+pinctrl_beep: beepgrp {
+    fsl,pins = < 
+        X6ULL_PAD_SNVS_TAMPER1__GPIO5_IO01 0x10B0 /* beep */
+    >;
+};
+```
+
+将 SNVS_TAMPER1 这个 PIN 复用为 GPIO5_IO01 ，MX6ULL_PAD_SNVS_TAMPER1__GPIO5_IO01 定义在 `arch/arm/boot/dts/imx6ull-pinfunc-snvs.h` 。
+
+在根节点“/”下创建 BEEP 节点，节点名为“beep”
+
+```c
+beep {               
+    #address-cells = <1>;                   
+    #size-cells = <1>;                      
+    compatible = "atkalpha-beep";           
+    pinctrl-names = "default"               
+    pinctrl-0 = <&pinctrl_beep>;    //pinctrl-0 属性设置蜂鸣器所使用的 PIN 对应的 pinctrl 节点
+    beep-gpio = <&gpio5 1 GPIO_ACTIVE_HIGH>; // beep-gpio 属性指定了蜂鸣器所使用的 GPIO
+    status = "okay";                   
+};
+```
+
+测试
+
+```
+cp arch/arm/boot/dts/imx6ull-alientek-emmc.dtb ~/kenspace/zd-linux/tftpboot/ -f
+
+ls /proc/device-tree/
+```
+
+### 编写程序
+
+```c
+#include <linux/types.h>
+#include <linux/kernel.h>
+#include <linux/delay.h>
+#include <linux/ide.h>
+#include <linux/init.h>
+#include <linux/module.h>
+#include <linux/errno.h>
+#include <linux/gpio.h>
+#include <linux/cdev.h>
+#include <linux/device.h>
+#include <linux/of.h>
+#include <linux/of_address.h>
+#include <linux/of_gpio.h>
+#include <asm/mach/map.h>
+#include <asm/uaccess.h>
+#include <asm/io.h>
+
+#define BEEP_CNT   1      /* 设备号个数 */
+#define BEEP_NAME "beep"  	/* 名字 */
+#define BEEPOFF    0		/* 关蜂鸣器 */
+#define BEEPON     1		/* 开蜂鸣器 */
+
+
+//beep设备结构体
+struct beep_dev {
+	dev_t devid;
+	struct cdev cdev;					//设备号
+	struct class *class;			//类
+	struct device *device;		//设备
+	int major;								//主设备号
+	int minor;								//次设备号
+	struct device_node *nd;		//设备节点
+	int beep_gpio;						//beep所使用的GPIO编号
+};
+struct beep_dev beep;
+
+/*
+ * @description		: 打开设备
+ * @param - inode 	: 传递给驱动的inode
+ * @param - filp 	: 设备文件，file结构体有个叫做private_data的成员变量
+ * 					  一般在open的时候将private_data指向设备结构体。
+ * @return 			: 0 成功;其他 失败
+ */
+static int beep_open(struct inode *inode, struct file *filp)
+{
+	filp->private_data = &beep; /* 设置私有数据 */
+	return 0;
+}
+
+/*
+ * @description		: 向设备写数据 
+ * @param - filp 	: 设备文件，表示打开的文件描述符
+ * @param - buf 	: 要写给设备写入的数据
+ * @param - cnt 	: 要写入的数据长度
+ * @param - offt 	: 相对于文件首地址的偏移
+ * @return 			: 写入的字节数，如果为负值，表示写入失败
+ */
+static ssize_t beep_write(struct file *filp, const char __user *buf, size_t cnt, loff_t *offt)
+{
+	int ret;
+	unsigned char databuf[1];
+	unsigned char beepstat;
+	struct beep_dev *dev = filp->private_data;
+
+	ret = copy_from_user(databuf,buf,cnt);
+	if(ret < 0) {
+		printk("kernel write failed!\r\n");
+		return -EFAULT;
+	}
+	beepstat = databuf[0];		/* 获取状态值 */
+
+	if(beepstat == BEEPON) {	
+		gpio_set_value(dev->beep_gpio, 0);	/* 打开蜂鸣器 */
+	} else if(beepstat == BEEPOFF) {
+		gpio_set_value(dev->beep_gpio, 1);	/* 关闭蜂鸣器 */
+	}
+	return 0;
+}
+static int beep_release(struct inode *inode, struct file *filp)
+{
+	return 0;
+}
+
+//设备操作函数
+static struct file_operations beep_fops = {
+	.owner = THIS_MODULE,
+	.open = beep_open,
+	.write = beep_write,
+	.release = beep_release,
+};
+
+static int __init beep_init(void)
+{
+	int ret = 0;
+	// 设置beep所使用的gpio
+	
+	//获取gpio设备节点
+	beep.nd = of_find_node_by_path("/beep");
+	if(beep.nd == NULL) {
+		printk("beep node not find!\r\n");
+		return -EINVAL;
+	} else {
+		printk("beep node find!\r\n");
+	}
+
+	// 获取设备树中的gpio属性，得到BEEP所使用的BEEP编号
+	beep.beep_gpio = of_get_named_gpio(beep.nd, "beep-gpio", 0);
+	if(beep.beep_gpio < 0) {
+		printk("can't get beep-gpio");
+		return -EINVAL;
+	}
+	printk("led-gpio num = %d\r\n", beep.beep_gpio);
+
+	// 设置GPIO5_IO01为输出，并且输出高电平，默认关闭BEE
+	ret = gpio_direction_output(beep.beep_gpio, 1);
+	if(ret < 0) {
+		printk("can't set gpio!\r\n");
+	}
+
+	//注册字符设备驱动
+	//创建设备号
+	if(beep.major) {
+		beep.devid = MKDEV(beep.major, 0);
+		register_chrdev_region(beep.devid, BEEP_CNT, BEEP_NAME);
+	} else {
+		alloc_chrdev_region(&beep.devid, 0 ,BEEP_CNT, BEEP_NAME);
+		beep.major = MAJOR(beep.devid);	/* 获取分配号的主设备号 */
+		beep.minor = MINOR(beep.devid);	/* 获取分配号的次设备号 */
+	}
+	printk("beep major=%d,minor=%d\r\n",beep.major, beep.minor);	
+
+
+	// 初始化cdev
+	beep.cdev.owner = THIS_MODULE;
+	cdev_init(&beep.cdev, &beep_fops);
+
+	//添加一个cdev
+	cdev_add(&beep.cdev, beep.devid, BEEP_CNT);
+
+	//创建类
+	beep.class = class_create(THIS_MODULE, BEEP_NAME);
+	if(IS_ERR(beep.class)) {
+		return PTR_ERR(beep.class);
+	}
+	//创建设备
+	beep.device = device_create(beep.class,NULL,beep.devid, NULL, BEEP_NAME);
+	if(IS_ERR(beep.device)) {
+		return PTR_ERR(beep.device);
+	}
+	return 0;
+}
+
+static void __exit beep_exit(void) {
+	//注销赋设备驱动
+	cdev_del(&beep.cdev);
+	unregister_chrdev_region(beep.devid,BEEP_CNT); //注销设备号
+
+  device_destroy(beep.class, beep.devid);
+  class_destroy(beep.class);
+
+}
+
+module_init(beep_init);
+module_exit(beep_exit);
+MODULE_LICENSE("GPL");
+MODULE_AUTHOR("kendall");
+```
+
+
+
+测试
+
+```
+make
+arm-linux-gnueabihf-gcc beepApp.c -o beepApp
+
+sudo cp beep.ko ~/kenspace/zd-linux/nfs/rootfs/lib/modules/4.1.15/ -f
+sudo cp beepApp ~/kenspace/zd-linux/nfs/rootfs/lib/modules/4.1.15/ -f
+
+depmod 
+modprobe beep.ko
+lsmod
+
+./beepApp /dev/beep 1 //打开蜂鸣器
+./beepApp /dev/beep 0 //打开蜂鸣器
+
+rmmod gpioled.ko  # 卸载驱动
+```
+
+
+
+
 
