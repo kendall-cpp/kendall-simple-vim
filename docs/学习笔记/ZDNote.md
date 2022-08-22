@@ -1,97 +1,98 @@
 
 - [裸机程序](#裸机程序)
-  - [开发环境的搭建](#开发环境的搭建)
-    - [安装 NFS](#安装-nfs)
-    - [CH340 驱动](#ch340-驱动)
-    - [安装交叉编译器](#安装交叉编译器)
-  - [汇编语言编写 LED 驱动](#汇编语言编写-led-驱动)
-    - [编译驱动](#编译驱动)
-    - [将板子连接到 PC](#将板子连接到-pc)
-    - [makefile 的编写](#makefile-的编写)
-  - [C 语言编写 LED 驱动](#c-语言编写-led-驱动)
-    - [设置处理器模式](#设置处理器模式)
-    - [设置 SP 指针](#设置-sp-指针)
-    - [编译烧录](#编译烧录)
-  - [stm32 模式编写LED驱动](#stm32-模式编写led驱动)
+	- [开发环境的搭建](#开发环境的搭建)
+		- [安装 NFS](#安装-nfs)
+		- [CH340 驱动](#ch340-驱动)
+		- [安装交叉编译器](#安装交叉编译器)
+	- [汇编语言编写 LED 驱动](#汇编语言编写-led-驱动)
+		- [编译驱动](#编译驱动)
+		- [将板子连接到 PC](#将板子连接到-pc)
+		- [makefile 的编写](#makefile-的编写)
+	- [C 语言编写 LED 驱动](#c-语言编写-led-驱动)
+		- [设置处理器模式](#设置处理器模式)
+		- [设置 SP 指针](#设置-sp-指针)
+		- [编译烧录](#编译烧录)
+	- [stm32 模式编写LED驱动](#stm32-模式编写led驱动)
 - [第三期 系统移植](#第三期-系统移植)
-  - [烧写实验](#烧写实验)
-    - [使用 OTG 烧写](#使用-otg-烧写)
-    - [Ubuntu 脚本烧写](#ubuntu-脚本烧写)
-  - [Uboot 编译和烧写](#uboot-编译和烧写)
-  - [启动 Uboot 分析](#启动-uboot-分析)
-    - [uboot 源码目录](#uboot-源码目录)
-    - [uboot 启动流程](#uboot-启动流程)
-  - [linux 内核移植](#linux-内核移植)
-    - [编译 NXP 官方开发板对应的 linux 系统](#编译-nxp-官方开发板对应的-linux-系统)
-    - [设置开发板、主机和ubuntu网络互连](#设置开发板主机和ubuntu网络互连)
-    - [在 U-Boot 中添加正点原子的开发板](#在-u-boot-中添加正点原子的开发板)
-  - [CPU 主频和网络驱动修改](#cpu-主频和网络驱动修改)
-    - [修改 bootcmd 和 bootargs](#修改-bootcmd-和-bootargs)
-    - [CPU 主频修改](#cpu-主频修改)
-      - [设置超频，添加频率](#设置超频添加频率)
-    - [使能 8 线 EMMC 驱动](#使能-8-线-emmc-驱动)
-    - [修改网络驱动](#修改网络驱动)
-    - [网络驱动测试](#网络驱动测试)
-    - [保存修改后的图形化配置](#保存修改后的图形化配置)
-  - [构建根文件系统](#构建根文件系统)
-    - [使用 busybox](#使用-busybox)
-      - [NFS 服务开启](#nfs-服务开启)
-      - [拷贝解压 busybox](#拷贝解压-busybox)
-      - [编译 busybox](#编译-busybox)
-    - [向根文件系统添加 lib 库](#向根文件系统添加-lib-库)
-    - [完善根文件系统](#完善根文件系统)
-    - [软件运行测试](#软件运行测试)
-    - [中文测试](#中文测试)
-    - [开发板外网连接](#开发板外网连接)
+	- [烧写实验](#烧写实验)
+		- [使用 OTG 烧写](#使用-otg-烧写)
+		- [Ubuntu 脚本烧写](#ubuntu-脚本烧写)
+	- [Uboot 编译和烧写](#uboot-编译和烧写)
+	- [启动 Uboot 分析](#启动-uboot-分析)
+		- [uboot 源码目录](#uboot-源码目录)
+		- [uboot 启动流程](#uboot-启动流程)
+	- [linux 内核移植](#linux-内核移植)
+		- [编译 NXP 官方开发板对应的 linux 系统](#编译-nxp-官方开发板对应的-linux-系统)
+		- [设置开发板、主机和ubuntu网络互连](#设置开发板主机和ubuntu网络互连)
+		- [在 U-Boot 中添加正点原子的开发板](#在-u-boot-中添加正点原子的开发板)
+	- [CPU 主频和网络驱动修改](#cpu-主频和网络驱动修改)
+		- [修改 bootcmd 和 bootargs](#修改-bootcmd-和-bootargs)
+		- [CPU 主频修改](#cpu-主频修改)
+			- [设置超频，添加频率](#设置超频添加频率)
+		- [使能 8 线 EMMC 驱动](#使能-8-线-emmc-驱动)
+		- [修改网络驱动](#修改网络驱动)
+		- [网络驱动测试](#网络驱动测试)
+		- [保存修改后的图形化配置](#保存修改后的图形化配置)
+	- [构建根文件系统](#构建根文件系统)
+		- [使用 busybox](#使用-busybox)
+			- [NFS 服务开启](#nfs-服务开启)
+			- [拷贝解压 busybox](#拷贝解压-busybox)
+			- [编译 busybox](#编译-busybox)
+		- [向根文件系统添加 lib 库](#向根文件系统添加-lib-库)
+		- [完善根文件系统](#完善根文件系统)
+		- [软件运行测试](#软件运行测试)
+		- [中文测试](#中文测试)
+		- [开发板外网连接](#开发板外网连接)
 - [第四期 驱动开发](#第四期-驱动开发)
-  - [配置 vscode 开发环境](#配置-vscode-开发环境)
-  - [字符设备开发基础实验](#字符设备开发基础实验)
-    - [Linux 设备号](#linux-设备号)
-    - [chrdevbase字符设备驱动开发实验](#chrdevbase字符设备驱动开发实验)
-      - [创建设备节点文件](#创建设备节点文件)
-      - [chrdevbase 设备操作测试](#chrdevbase-设备操作测试)
-  - [linux LED 灯驱动实验](#linux-led-灯驱动实验)
-    - [ioremap 函数](#ioremap-函数)
-    - [iounmap 函数](#iounmap-函数)
-    - [LED 灯驱动程序编写](#led-灯驱动程序编写)
-  - [新字符设备驱动实验](#新字符设备驱动实验)
-    - [编写程序](#编写程序)
-  - [设备树](#设备树)
-    - [设备节点](#设备节点)
-    - [标准属性](#标准属性)
-    - [设备树设备匹配方法](#设备树设备匹配方法)
-      - [匹配 machine_desc](#匹配-machine_desc)
-    - [向节点追加或修改内容](#向节点追加或修改内容)
-    - [创建小型模板设备树](#创建小型模板设备树)
-    - [设备树节点解析流程](#设备树节点解析流程)
-    - [设备树常用 OF 操作函数](#设备树常用-of-操作函数)
-    - [查找节点的 OF 函数](#查找节点的-of-函数)
-      - [of_find_node_by_name 函数](#of_find_node_by_name-函数)
-      - [of_find_node_by_type 函数](#of_find_node_by_type-函数)
-      - [of_find_compatible_node 函数](#of_find_compatible_node-函数)
-      - [of_find_matching_node_and_match 函数](#of_find_matching_node_and_match-函数)
-      - [of_find_node_by_path 函数](#of_find_node_by_path-函数)
-      - [of_get_parent 和 of_get_next_child](#of_get_parent-和-of_get_next_child)
-      - [of_find_property 函数](#of_find_property-函数)
-      - [of_property_read_string 函数](#of_property_read_string-函数)
-  - [基于设备树的LED等实验](#基于设备树的led等实验)
-    - [添加设备树节点](#添加设备树节点)
-    - [LED 灯驱动程序编写](#led-灯驱动程序编写-1)
-  - [pinctl 和 gpio 子系统试验](#pinctl-和-gpio-子系统试验)
-    - [如何找到 pinctl 子系统驱动](#如何找到-pinctl-子系统驱动)
-    - [设备树中添加 pinctrl 节点模板](#设备树中添加-pinctrl-节点模板)
-    - [设备树中的 gpio 信息](#设备树中的-gpio-信息)
-    - [GPIO 驱动程序](#gpio-驱动程序)
-    - [gpio 子系统 API 函数](#gpio-子系统-api-函数)
-    - [实验程序编写](#实验程序编写)
-      - [添加pinctrl节点](#添加pinctrl节点)
-      - [添加 LED 设备节点](#添加-led-设备节点)
-      - [检查 PIN 是否被其他外设使用](#检查-pin-是否被其他外设使用)
-    - [LED 驱动程序编写](#led-驱动程序编写)
-  - [蜂鸣器驱动](#蜂鸣器驱动)
-    - [修改设备树文件](#修改设备树文件)
-      - [添加 pinctrl 节点](#添加-pinctrl-节点)
-    - [编写程序](#编写程序-1)
+	- [配置 vscode 开发环境](#配置-vscode-开发环境)
+	- [字符设备开发基础实验](#字符设备开发基础实验)
+		- [Linux 设备号](#linux-设备号)
+		- [chrdevbase字符设备驱动开发实验](#chrdevbase字符设备驱动开发实验)
+			- [创建设备节点文件](#创建设备节点文件)
+			- [chrdevbase 设备操作测试](#chrdevbase-设备操作测试)
+	- [linux LED 灯驱动实验](#linux-led-灯驱动实验)
+		- [ioremap 函数](#ioremap-函数)
+		- [iounmap 函数](#iounmap-函数)
+		- [LED 灯驱动程序编写](#led-灯驱动程序编写)
+	- [新字符设备驱动实验](#新字符设备驱动实验)
+		- [编写程序](#编写程序)
+	- [设备树](#设备树)
+		- [设备节点](#设备节点)
+		- [标准属性](#标准属性)
+		- [设备树设备匹配方法](#设备树设备匹配方法)
+			- [匹配 machine_desc](#匹配-machine_desc)
+		- [向节点追加或修改内容](#向节点追加或修改内容)
+		- [创建小型模板设备树](#创建小型模板设备树)
+		- [设备树节点解析流程](#设备树节点解析流程)
+		- [设备树常用 OF 操作函数](#设备树常用-of-操作函数)
+		- [查找节点的 OF 函数](#查找节点的-of-函数)
+			- [of_find_node_by_name 函数](#of_find_node_by_name-函数)
+			- [of_find_node_by_type 函数](#of_find_node_by_type-函数)
+			- [of_find_compatible_node 函数](#of_find_compatible_node-函数)
+			- [of_find_matching_node_and_match 函数](#of_find_matching_node_and_match-函数)
+			- [of_find_node_by_path 函数](#of_find_node_by_path-函数)
+			- [of_get_parent 和 of_get_next_child](#of_get_parent-和-of_get_next_child)
+			- [of_find_property 函数](#of_find_property-函数)
+			- [of_property_read_string 函数](#of_property_read_string-函数)
+	- [基于设备树的LED等实验](#基于设备树的led等实验)
+		- [添加设备树节点](#添加设备树节点)
+		- [LED 灯驱动程序编写](#led-灯驱动程序编写-1)
+	- [pinctl 和 gpio 子系统试验](#pinctl-和-gpio-子系统试验)
+		- [如何找到 pinctl 子系统驱动](#如何找到-pinctl-子系统驱动)
+		- [设备树中添加 pinctrl 节点模板](#设备树中添加-pinctrl-节点模板)
+		- [设备树中的 gpio 信息](#设备树中的-gpio-信息)
+		- [GPIO 驱动程序](#gpio-驱动程序)
+		- [gpio 子系统 API 函数](#gpio-子系统-api-函数)
+		- [实验程序编写](#实验程序编写)
+			- [添加pinctrl节点](#添加pinctrl节点)
+			- [添加 LED 设备节点](#添加-led-设备节点)
+			- [检查 PIN 是否被其他外设使用](#检查-pin-是否被其他外设使用)
+		- [LED 驱动程序编写](#led-驱动程序编写)
+	- [蜂鸣器驱动](#蜂鸣器驱动)
+		- [修改设备树文件](#修改设备树文件)
+			- [添加 pinctrl 节点](#添加-pinctrl-节点)
+		- [编写程序](#编写程序-1)
+	- [Linux开发与竞争](#linux开发与竞争)
 
 ------
 
@@ -3695,7 +3696,60 @@ lsmod
 rmmod gpioled.ko  # 卸载驱动
 ```
 
+## Linux开发与竞争
+
+- 原子操作
+
+Linux 内核中定义了 atomic_t 的结构体来完成整形数据的原子操作，在使用中用原子变量来代替整形变量，此结构体定义在 `include/linux/types.h` 文件中。
+
+```c
+  typedef struct {
+    int counter;
+  } atomic_t;
+
+//64位 SOC
+	typedef struct {
+    long counter;
+  } atomic64_t;
+```
+
+使用原子操作 API 函数，需要定义一个 atomic_t 变量
+
+```c
+atomic_t a; 
+atomic_t b = ATOMIC_INIT(0); //定义原子变量 b 并赋初值为 0
+```
+
+- 信号量 API 函数
+
+```c
+struct semaphore {
+	raw_spinlock_t lock;
+	unsigned int count;
+	struct list_head wait_list;
+};
+
+struct semaphore sem; /* 定义信号量 */
+sema_init(&sem, 1);		/* 初始化信号量 */
+
+down(&sem);						/* 申请信号量 */
+/* 临界区 */
+up(&sem);							/* 释放信号量 */
+```
+
+- 互斥体
+
+互斥体 ——— mutex。互斥访问表示一次只有一个线程可以访问共享资源，不能递归申请互斥体。在我们编写 Linux 驱动的时候遇到需要互斥访问的地方建议使用 mutex
 
 
+```c
+struct mutex {
+	/* 1: unlocked, 0: locked, negative: locked, possible waiters */
+	atomic_t count;
+	spinlock_t wait_lock;
+};
+```
 
-
+- mutex 可以导致休眠，因此不能在中断中使用 mutex，中断中只能使用自旋锁
+- 和信号量一样，mutex 保护的临界区可以调用引起阻塞的 API 函数
+- 因为一次只有一个线程可以持有 mutex，因此，必须由 mutex 的持有者释放 mutex。并且 mutex 不能递归上锁和解锁。

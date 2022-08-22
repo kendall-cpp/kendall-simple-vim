@@ -45,7 +45,7 @@ git reset HEAD hello.txt    从暂存区退回到工作区 和上面一样
 
 git status        			查看目前工作区状态
 
-git commit -a --no-verify   忽略掉代码不规范错误
+git commit -a -s --no-verify   忽略掉代码不规范错误 -s 加签名
 
 ### 提交到对象区
 
@@ -220,7 +220,7 @@ git merge bash
 
 git commit -am  "合并 add 和 commit" （工程的第一次提交不能用）
 
-git commit --amend "aaaa22222"   修改上次注释
+git commit --amend "aaaa22222"   修改上次注释加 --amend
 
 git reset --hard HEAD^^  回退2个版本，一个 ^ 表示回退一个
 
