@@ -1138,14 +1138,8 @@ git commit  -s --no-verify
 ```sh
 [tas5805]  codec driver power on/off to enable/disable i2s clock
 
-
 Bug:b/236912216
-Test:
-/ # echo 1 > /sys/kernel/debug/tas5805_debug/seq_timestamp
-/ # echo 0 > /sys/kernel/debug/tas5805_debug/seq_timestamp
-
-You can view clkmsr with the following command
-cat /sys/kernel/debug/aml_clkmsr/clkmsr | grep tdm*
+Test: build ok
 ```
 
 ```
@@ -1156,7 +1150,7 @@ git push eureka-partner HEAD:refs/for/korlan-master
 
 git add sound/soc/codecs/tas5825m.c
 
-git commit -s --no-verify    // git commit --amend -s --no-verify     第二次 加changeID
+git commit -s --no-verify    // git commit --amend  --no-verify     第二次 加changeID
 
 ```sh
 [tas5805]  codec driver power on/off to enable/disable i2s clock
@@ -1176,37 +1170,53 @@ git push eureka-partner HEAD:refs/for/korlan-master
 
 https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/247301
 
-static struct tas5825m_priv *write_priv; 
- write_priv = priv; 
+
 
 #### 最终提交2
 
+git add 
+
+git commit -s --no-verify    // git commit --amend  --no-verify     第二次 加changeID
+
+
+
+```sh
+[Dont't merge]  codec driver power on/off to enable/disable i2s clock
+
+Bug:b/236912216
+Test:
+/ # echo 1 > /sys/kernel/debug/tas5805_debug/seq_timestamp
+/ # echo 0 > /sys/kernel/debug/tas5805_debug/seq_timestamp
+
+You can view clkmsr with the following command
+cat /sys/kernel/debug/aml_clkmsr/clkmsr | grep tdm*
+```
+
 ```c
-  static ssize_t ta5805_i2s_write(struct file *file,                                                                                                                                                                         
-          const char __user *buf, size_t count, loff_t *pos)
-  {                          
-    char val[10];            
-    int tmp_val = 0;         
-                             
-    if (count > 10)          
-      return -1;             
-                             
-  #if 0                      
-    get_gp_aml_tdm();    
-    local_gp_tdm = to_tas5825_tdm;
-  #endif                     
-    if(copy_from_user(val, buf, count)) {
-      return -EFAULT;    
-    } else {                 
-      sscanf(val, "%d", &tmp_val);
-      if(tmp_val == 1)   
-        tas5805m_power_on(write_priv);
-      else if(tmp_val == 0)
-        tas5805m_power_off(write_priv);
-      else                   
-        pr_err("echo 1 or 0 to enable i2c clock or disable i2c clock");
-    }                        
-    return count;            
+static struct tas5825m_priv *write_priv; 
+write_priv = priv; 
+
+
+  static ssize_t ta5805_i2s_write(struct file *filp, const char __user *buf, size_t count, loff_t *off)                                                                            
+  {
+          char val[10];
+          int tmp_val = 0; 
+   
+          if (count > 10)
+                  return -1;
+   
+          if(copy_from_user(val, buf, count))
+                  return -EFAULT;
+          else {
+                  sscanf(val, "%d", &tmp_val);
+                  if (tmp_val == 1)
+                          tas5805m_power_on(write_priv);
+                  else if (tmp_val == 0)
+                          tas5805m_power_off(write_priv);
+                  else 
+                          pr_err("echo 1 or 0 to enable i2c clock or disable i2c clock");
+          }    
+          return count;
   }
 
 
@@ -1217,3 +1227,7 @@ static struct tas5825m_priv *write_priv;
   };  
 ```
 
+git push eureka-partner HEAD:refs/for/korlan-master
+
+
+https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/247425
