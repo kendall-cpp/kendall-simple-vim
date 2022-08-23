@@ -53,6 +53,8 @@
   - [提交](#提交)
     - [最终提交1](#最终提交1)
     - [最终提交2](#最终提交2)
+  - [更改以前 commit 的注释](#更改以前-commit-的注释)
+- [2022年08月23日](#2022年08月23日)
 
 ------
 
@@ -1153,16 +1155,13 @@ git add sound/soc/codecs/tas5825m.c
 git commit -s --no-verify    // git commit --amend  --no-verify     第二次 加changeID
 
 ```sh
-[tas5805]  codec driver power on/off to enable/disable i2s clock
+[tas5805] Enable/disable i2s clock when power on/off codec
 
 Bug:b/236912216
-Test:
-/ # echo 1 > /sys/kernel/debug/tas5805_debug/seq_timestamp
-/ # echo 0 > /sys/kernel/debug/tas5805_debug/seq_timestamp
-build ok
+Test: build ok
 
-You can view clkmsr with the following command
-cat /sys/kernel/debug/aml_clkmsr/clkmsr | grep tdm*
+Signed-off-by: Shengken Lin <shengken.lin@amlogic.corp-partner.google.com>
+Change-Id: Iad9dba635ddd890457398c6bed8cba324feb80f0
 ```
 
 git push eureka-partner HEAD:refs/for/korlan-master
@@ -1181,15 +1180,32 @@ git commit -s --no-verify    // git commit --amend  --no-verify     第二次 �
 
 
 ```sh
-[Dont't merge]  codec driver power on/off to enable/disable i2s clock
-
-Bug:b/236912216
-Test:
-/ # echo 1 > /sys/kernel/debug/tas5805_debug/seq_timestamp
-/ # echo 0 > /sys/kernel/debug/tas5805_debug/seq_timestamp
-
-You can view clkmsr with the following command
-cat /sys/kernel/debug/aml_clkmsr/clkmsr | grep tdm*
+    [Dont't merge] Test enable/disable i2s clock when power on/off codec
+    
+    Bug:b/236912216
+    Test:
+    case 1:power off codec(disable i2s clock)
+    / # echo 0 > /sys/kernel/debug/tas5805_debug/seq_timestamp
+    / # cat /sys/kernel/debug/aml_clkmsr/clkmsr | grep tdm*
+     tdmout_b_sclk                 0    +/-3125Hz
+     tdmout_a_sclk                 0    +/-3125Hz
+     tdmin_lb_sclk                 0    +/-3125Hz
+     tdmin_b_sclk                  0    +/-3125Hz
+     tdmin_a_sclk                  0    +/-3125Hz
+     tdmin_vad_clk                 0    +/-3125Hz
+    
+    case 2:power on codec(enable i2s clock)
+    / # echo 1 > /sys/kernel/debug/tas5805_debug/seq_timestamp
+    / # cat /sys/kernel/debug/aml_clkmsr/clkmsr | grep tdm*
+     tdmout_b_sclk           3067188    +/-3125Hz
+     tdmout_a_sclk                 0    +/-3125Hz
+     tdmin_lb_sclk                 0    +/-3125Hz
+     tdmin_b_sclk            3068750    +/-3125Hz
+     tdmin_a_sclk                  0    +/-3125Hz
+     tdmin_vad_clk                 0    +/-3125Hz
+    
+    Signed-off-by: Shengken Lin <shengken.lin@amlogic.corp-partner.google.com>
+    Change-Id: I8c5fc26d97b1643f0074e8823cae98fc42ba9e70
 ```
 
 ```c
@@ -1231,3 +1247,18 @@ git push eureka-partner HEAD:refs/for/korlan-master
 
 
 https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/247425
+
+### 更改以前 commit 的注释
+
+例，修改倒数第三个
+
+git rebase -i HEAD~3
+
+把 pick 改为 edit
+
+git commit --amend
+
+git rebase --continue
+
+
+## 2022年08月23日

@@ -2551,7 +2551,7 @@ setup_machine_fdt 调用函数 of_flat_dt_match_machine 来获取匹配的 machi
 
 ### 向节点追加或修改内容
 
-一旦硬件修改了，我们就要同步的修改设备树文件，毕竟设备树是描述板子硬件信息的文件。假设现在有个六轴芯片fxls8471，fxls8471 要接到 I.MX6U-ALPHA 开发板的 I2C1 接口上，那么相当于需要在 i2c1 这个节点上添加一个 fxls8471 子节点。打开文件 imx6ull.dtsi 文件
+一旦硬件修改了，我们就要同步的修改设备树文件，毕竟设备树是描述板子硬件信息的文件。假设现在有个六轴芯片 fxls8471，fxls8471 要接到 I.MX6U-ALPHA 开发板的 I2C1 接口上，那么相当于需要在 i2c1 这个节点上添加一个 fxls8471 子节点。打开文件 imx6ull.dtsi 文件
 
 ```c
 i2c1: i2c@021a0000 {
@@ -3160,7 +3160,7 @@ static struct platform_driver mxc_gpio_driver = {
 };
 ```
 
-当设备树中的设备节点与驱动的of_device_id 匹配以后 probe 函数就会执行，
+当设备树中的设备节点与驱动的 of_device_id 匹配以后 probe 函数就会执行，
 
 
 ### gpio 子系统 API 函数
@@ -3214,7 +3214,7 @@ pinctrl_led: ledgrp {
 - 检查 pinctrl 设置
 - 如果这个 PIN 配置为 GPIO 的话，检查这个 GPIO 有没有被别的外设使用。
 
-LED 灯使用的 PIN 为 GPIO1_IO03，因此先检查 GPIO1_IO03 这个 PIN 有没有被其他的 pinctrl 节点使用，在 imx6ull-alientek-emmc.dts 中找到如下内容
+LED 灯使用的 PIN 为 GPIO1_IO03 ，因此先检查 GPIO1_IO03 这个 PIN 有没有被其他的 pinctrl 节点使用，在 imx6ull-alientek-emmc.dts 中找到如下内容
 
 ```c
 pinctrl_tsc: tscgrp { 
@@ -3244,7 +3244,6 @@ dts$ cp imx6ull-alientek-emmc.dtb ~/kenspace/zd-linux/tftpboot/ -f
 ```
 
 ### LED 驱动程序编写
-
 
 
 ```c
