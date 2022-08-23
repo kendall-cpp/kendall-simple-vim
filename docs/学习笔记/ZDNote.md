@@ -3674,8 +3674,6 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("kendall");
 ```
 
-
-
 测试
 
 ```
@@ -3749,6 +3747,6 @@ struct mutex {
 };
 ```
 
-- mutex 可以导致休眠，因此不能在中断中使用 mutex，中断中只能使用自旋锁
+- mutex 可以导致休眠，因此不能在中断中使用 mutex ，中断中只能使用自旋锁
 - 和信号量一样，mutex 保护的临界区可以调用引起阻塞的 API 函数
 - 因为一次只有一个线程可以持有 mutex，因此，必须由 mutex 的持有者释放 mutex。并且 mutex 不能递归上锁和解锁。
