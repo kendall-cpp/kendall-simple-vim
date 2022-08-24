@@ -95,6 +95,11 @@
 	- [Linux开发与竞争](#linux开发与竞争)
 		- [Linux 竞争与并发实验](#linux-竞争与并发实验)
 	- [Linux音频驱动实验](#linux音频驱动实验)
+		- [I2S 接口协议](#i2s-接口协议)
+		- [音频驱动使能](#音频驱动使能)
+			- [编译烧录](#编译烧录-1)
+		- [alsa-lib 和 alsa-utils 移植](#alsa-lib-和-alsa-utils-移植)
+			- [alsa-utils 移植](#alsa-utils-移植)
 
 ------
 
@@ -783,8 +788,7 @@ make  ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- -j4
 
 
 ```sh
-make distclean
-make CROSS_COMPILE=imx6ull_alientek_emmc_defconfig
+# make distclean
 make -j4
 ```
 
@@ -795,11 +799,9 @@ make -j4
 拷贝
 
 ```sh
-# /home/book/kenspace/zd-linux/IMX6ULL/linux/linux-imx-rel_imx_4.1.15_2.1.0_ga/arch/arm/boot/dts
-cp imx6ull-alientek-emmc.dtb ~/kenspace/zd-linux/tftpboot/
+cp arch/arm/boot/dts/imx6ull-alientek-emmc.dtb ~/kenspace/zd-linux/tftpboot/
 
-# /home/book/kenspace/zd-linux/IMX6ULL/linux/linux-imx-rel_imx_4.1.15_2.1.0_ga/arch/arm/boot
-cp zImage ~/kenspace/zd-linux/tftpboot/
+cp arch/arm/boot/zImage ~/kenspace/zd-linux/tftpboot/
 ```
 
 
@@ -3758,11 +3760,130 @@ struct mutex {
 
 ## Linux音频驱动实验
 
-- DAC 芯片：听到声音
-- ADC 芯片：播放声音
+- DAC 芯片：放出声音
+- ADC 芯片：录音声音（采集）
 - DSP 单元：声音处理
 
 - 将以上所有功能叠加到 ADC 和 ADX 芯片上，就是音频编码芯片，即 Audio Codec.
 
 音频越能接近真实的声音，也就是 HIFI 值。
+
+- I2C -- WM8960 控制数据传输（比如：音量控制）控制接口
+- I2S -- 音频接口，传输音频数据
+
+### I2S 接口协议
+
+- SCK：串行时钟信号，也叫做位时钟(BCLK)，音频数据的每一位数据都对应一个 SCK，立体声都是双声道的，因此 SCK=2×采样率×采样位数。比如采样率为 44.1KHz、16 位的立体声
+音频，那么 SCK=2×44100×16=1411200Hz=1.4112MHz。
+
+- WS：字段(声道)选择信号，也叫做 LRCK，也叫做帧时钟，用于切换左右声道数据，WS 为“1”表示正在传输左声道的数据，WS 为“0”表示正在传输右声道的数据。WS 的频率等于采
+样率，比如采样率为 44.1KHz 的音频，WS=44.1KHz。
+
+- SD：串行数据信号，也就是我们实际的音频数据，如果要同时实现放音和录音，那么就需要 2 根数据线，比如 WM8960 的 ADCDAT 和 DACDAT，就是分别用于录音和放音。不管音频
+数据是多少位的，数据的最高位都是最先传输的。数据的最高位总是出现在一帧开始后(LRCK变化)的第 2 个 SCK 脉冲处。
+
+### 音频驱动使能
+
+WM8960 与 I.MX6ULL 之间有两个通信接口：I2C 和 SAI，因此设备树中会涉及到 I2C 和 SAI 两个设备节点。其中 I2C 用于配置 WM8960，SAI 接口用于音频数据传输
+
+- wm8960 i2c 接口设备树
+
+根据原理图我们知道 WM8960 连接到了 I.MX6ULL 的 I2C2 接口上，因此在设备树中的“i2c2”节点下需要添加 wm8960 信息
+
+compatible：兼容属性，属性值要设置为“wlf,wm8960”。找到 `sound/soc/codecs/wm8960.c`
+
+reg：设置 WM8960 的 I2C 地址,WM8960 的 I2C 地址为 0X1A。
+
+#### 编译烧录
+
+修改 make menuconfig
+
+- 可以使用脚本编译
+
+./imx6ull-alientek-emmc.sh
+
+- 为了快速编译，也可以修改顶层 Makefile
+
+```mk
+ 257 ARCH ?= arm  
+ 258 CROSS_COMPILE ?= arm-linux-gnueabihf-
+```
+
+- 之后执行 make 编译就可以了
+
+```sh
+# make distclean
+make -j4
+```
+
+### alsa-lib 和 alsa-utils 移植
+
+在 ubuntu 和开发板中各创建一个路径和名字完全一样的目录，这里我们都创建一个/usr/share/arm-alsa 目录
+
+- 开发板中
+
+mkdir /usr/share/arm-alsa -p
+
+- ubuntu 中
+
+sudo mkdir /usr/share/arm-alsa
+
+由于 alsa-utils 要用到 alsa-lib 库，因此要先编译 alsa-lib 库。alsa-lib 就是 ALSA 相关库文件，应用程序通过调用 ALSA 库来对 ALSA 框架下的声卡进行操作。
+
+```sh
+# zd-linux/IMX6ULL/tools/alsa-lib-1.2.2
+tar xjf alsa-lib-1.2.2.tar.bz2
+mkdir alsa-lib
+cd alsa-lib-1.2.2/
+# 配置
+./configure --host=arm-linux-gnueabihf --prefix=/home/book/kenspace/zd-linux/IMX6ULL/tools/alsa-lib --with-configdir=/usr/share/arm-alsa
+# “--with-configdir ”用于设置 alsa-lib 编译出来的配置文件存放位置
+make
+# sudo make install
+
+sudo -s
+source /etc/profile
+make install
+su book
+
+cd ../alsa-lib
+
+# /home/book/kenspace/zd-linux/IMX6ULL/tools/alsa-lib
+sudo cp lib/* ~/kenspace/zd-linux/nfs/rootfs/lib/ -af
+udo cp /usr/share/arm-alsa/* ~/kenspace/zd-linux/nfs/rootfs/usr/share/arm-alsa/ -raf
+```
+
+#### alsa-utils 移植
+
+alsa-utils 是 ALSA 的一些小工具集合，我们可以通过这些小工具还测试我们的声卡。将 alsa-utils-1.2.2.tar.bz2 复制到 ubuntu 中并解压。
+
+```sh
+tar -vxjf alsa-utils-1.2.2.tar.bz2
+mkdir alsa-utils
+
+cd alsa-utils-1.2.2/
+sudo -s
+source /etc/profile
+./configure --host=arm-linux-gnueabihf --prefix=/home/book/kenspace/zd-linux/IMX6ULL/tools/alsa-utils --with-alsa-inc-prefix=/home/book/kenspace/zd-linux/IMX6ULL/tools/alsa-lib/include/ --with-alsa-prefix=/home/book/kenspace/zd-linux/IMX6ULL/tools/alsa-lib/lib/ --disable-alsamixer --disable-xmlto
+make
+make install
+su book
+
+cd ../alsa-utils
+sudo cp bin/* ~/kenspace/zd-linux/nfs/rootfs/bin/ -rfa
+sudo cp sbin/* ~/kenspace/zd-linux/nfs/rootfs/sbin/ -rfa
+sudo cp share/* ~/kenspace/zd-linux/nfs/rootfs/usr/share/ -rfa
+```
+
+打开开发板根文件系统中的/etc/profile 文件，在里面加入如下所示内容：
+
+```sh
+# /home/book/kenspace/zd-linux/nfs/rootfs
+vim /etc/profile
+export ALSA_CONFIG_PATH=/usr/share/arm-alsa/alsa.conf   
+```
+
+
+
+
 
