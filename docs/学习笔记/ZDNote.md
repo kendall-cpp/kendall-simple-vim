@@ -94,6 +94,8 @@
 		- [编写程序](#编写程序-1)
 	- [Linux开发与竞争](#linux开发与竞争)
 		- [Linux 竞争与并发实验](#linux-竞争与并发实验)
+	- [Linux 按键输入实验](#linux-按键输入实验)
+	- [内核定时器时间](#内核定时器时间)
 	- [Linux音频驱动实验](#linux音频驱动实验)
 		- [I2S 接口协议](#i2s-接口协议)
 		- [音频驱动使能](#音频驱动使能)
@@ -3759,6 +3761,58 @@ struct mutex {
 
 ### Linux 竞争与并发实验
 
+
+## Linux 按键输入实验
+
+- 添加 pinctrl 节点
+
+imx6ull-alientek-emmc.dts，在 iomuxc 节点的 imx6ul-evk 子节点下创建一个名为“pinctrl_key”的子节点。
+
+```c
+        pinctrl_key: keygrp {                                         
+            fsl,pins = <                                              
+                MX6UL_PAD_UART1_CTS_B__GPIO1_IO18 0xF080 /* KEY0 */                                                                                                                
+            >;                                                 
+        };
+
+/ key {
+	#address-cells = <1>;
+	#size-cells = <1>;
+	compatible = "atkalpha-key";
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_key>;
+	key-gpio = <&gpio1 18 GPIO_ACTIVE_LOW>;  	/* KEY0 */
+	status = "okay";
+};
+```
+
+检查 PIN 为 UART1_CTS_B ， GPIO1_IO18 有没有被使用。
+
+make dtbs  
+
+cp arch/arm/boot/dts/imx6ull-alientek-emmc.dtb ~/kenspace/zd-linux/tftpboot/ -f
+
+- 编写按键驱动程序
+
+arm-linux-gnueabihf-gcc keyApp.c -o keyApp
+
+sudo cp keyApp ~/kenspace/zd-linux/nfs/rootfs/lib/modules/4.1.15/
+
+sudo cp key.ko ~/kenspace/zd-linux/nfs/rootfs/lib/modules/4.1.15/
+
+```sh
+depmod
+modprobe key.ko
+
+./keyApp /dev/key
+# 按键 key0
+
+rmmod key.ko
+```
+
+## 内核定时器时间
+
+-------------
 
 ## Linux音频驱动实验
 
