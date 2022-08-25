@@ -5,7 +5,6 @@
   - [板子和芯片相关型号](#板子和芯片相关型号)
   - [设置显示时间](#设置显示时间)
     - [找到寄存器](#找到寄存器)
-    - [bootm要做的事情](#bootm要做的事情)
 - [2022年7月18日](#2022年7月18日)
   - [kernel源码目录结构](#kernel源码目录结构)
   - [arch/arm 目录](#archarm-目录)
@@ -33,28 +32,20 @@
     - [寻找 GPIOP](#寻找-gpiop)
     - [寻找 GPIOB](#寻找-gpiob)
 - [2022年8月12日](#2022年8月12日)
-  - [问题记录](#问题记录)
   - [分析 GPIOX_7](#分析-gpiox_7)
 - [2022年8月15日](#2022年8月15日)
-  - [问题1-ADD USB API](#问题1-add-usb-api)
   - [google kernel git pull](#google-kernel-git-pull)
-  - [添加 USB API](#添加-usb-api)
-  - [问题记录](#问题记录-1)
-  - [记录](#记录-1)
 - [2022年8月17日](#2022年8月17日)
   - [打印 iomem 地址](#打印-iomem-地址)
   - [配置 make menuconfig](#配置-make-menuconfig)
-- [2022年8月17日](#2022年8月17日-1)
-  - [模仿添加codec init时间戳](#模仿添加codec-init时间戳)
-- [2022年8月19日](#2022年8月19日)
 - [2022年08月22日](#2022年08月22日)
-  - [测试 i2s clock](#测试-i2s-clock)
+  - [任务：测试 i2s clock](#任务测试-i2s-clock)
     - [在 Ubuntu 下测试](#在-ubuntu-下测试)
   - [提交](#提交)
     - [最终提交1](#最终提交1)
     - [最终提交2](#最终提交2)
   - [更改以前 commit 的注释](#更改以前-commit-的注释)
-- [2022年08月23日](#2022年08月23日)
+- [2022年08月25日](#2022年08月25日)
 
 ------
 
@@ -163,14 +154,6 @@ printf("\nbootm.c kendall ==========>>> kernel time: %u us\n", P_ISA_TIMERE);
 ```
 
 
-#### bootm要做的事情
-
-- a 读取头部,把内核拷贝到合适的地方 (0x30008000) 结构为头部(image_header)+真正的内核。
-    - ih_load:加载地址 内核运行时要先放在哪里（放在0x30008000）
-    - ih_ep：入口地址 运行内核时只要跳转到该地址即可
-- b 在 `do_boom_linux()` 中把参数给内核准备好,并告诉内核参数的首地址
-
-- c 在do_boom_linux()中最后使用theKernel () 引导内核. 
 
 ## 2022年7月18日
 
@@ -472,7 +455,7 @@ cp fip/${soc_family_name}/aml_ddr.fw ${bootloader_path}
 - main.sh
 
 ```sh
-# ./main.sh /mnt/fileroot/shengken.lin/workspace/google_source/eureka/amlogic_sdk/ aaa korlan p2 /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome
+# ./main.sh /mnt/fileroot/shengken.lin/workspace/google_source/eureka/amlogic_sdk/ kernel korlan p2 /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome
 kernel_compile()
 {
   cd kernel/
@@ -483,7 +466,7 @@ kernel_compile()
     # CURRENT_DIR=/mnt/fileroot/shengken.lin/workspace/google_source/eureka/amlogic_sdk/To_shengken_sign
 
     korlan_sign ${CHROME_DIR} ${OUTPUT_SIGNED_DIR}
-    korlan_sign /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome korlan/korlan-p2
+    # korlan_sign /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome korlan/korlan-p2
 
   # 开始通过这两个脚本对 uboot 和 kernel 进行签名
   # ./build-bootimg-sign_venus.sh
@@ -500,14 +483,14 @@ build_kernel ${kernel_dir} ${board}_defconfig
 # build_kernel /mnt/fileroot/shengken.lin/workspace/google_source/eureka/amlogic_sdk/kernel korlan-p2_defconfig
 
 function build_kernel()
-run_kernel_make $cross_compile $cpu_num $arch $defconfig_file_name
+run_kernel_make $cross_compile $cpu_num $arch $defconfig_file_name （会去读取 Kconfig 找到 korlan-p2_defconfig，编译生成 .config，编译内核时会去读取 .config）
 # run_kernel_make ../prebuilt/toolchain/aarch64/bin/aarch64-cros-linux-gnu- 40 arm64 korlan-p2_defconfig
 
 # make kernel 并设置 CONFIG_DEBUG_SECTION_MISMATCH=y
 make CLANG_TRIPLE=$clang_triple CC=$cc_clang CROSS_COMPILE=$1 ARCH=$3 -j$2 $4 CONFIG_DEBUG_SECTION_MISMATCH=y
 
 # 再编译 all
-run_kernel_make $cross_compile $cpu_num $arch all
+run_kernel_make $cross_compile $cpu_um $arch all
 
 # 编译设备树
 dtb_file_name=${board}.dtb
@@ -848,13 +831,6 @@ vim arch/arm64/boot/dts/amlogic/meson-a1.dtsi
 
 ## 2022年8月12日
 
-### 问题记录
-
-- GPIOX_0 原理图对应的功能是作为普通的 GPIO，但是在 meson-a1.dtsi 中对应的功能是 i2c_c_scl_x0 ，而且 korlan-common.dtsi 找不到 i2c_c_scl_x0
-
-- 如何确定是普通的 GPIO
-
-
 ### 分析 GPIOX_7
 
 ```c
@@ -905,15 +881,6 @@ soc {
 
 ## 2022年8月15日
 
-### 问题1-ADD USB API
-
-```
-commit 375b415cd919ffbf0e66442b2bce45a820b756e4 (eureka-partner/1.63c)
-Bug: b/234889055
-```
-
-https://partnerissuetracker.corp.google.com/issues/234889055
-
 ### google kernel git pull
 
 ```sh
@@ -932,41 +899,6 @@ git pull https://eureka-partner.googlesource.com/amlogic/kernel refs/changes/46/
 # https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/244846
 ```
 
-
-### 添加 USB API
-
-```sh
-commit 375b415cd919ffbf0e66442b2bce45a820b756e4 (eureka-partner/1.63c)
-Author: Yuegui He <yuegui.he@amlogic.corp-partner.google.com>
-Date:   Tue Jun 7 14:30:04 2022 +0800
-
-    [USB] Provide reinit usb phy sys interface
-    
-    Bug: b/234889055
-    Test: build ok, adb shell ok
-    
-    korlan,
-    echo 1 > /sys/kernel/debug/usb_mode/usb_phy_reset
-    
-    pc,
-    adb shel
-    
-# Bug ID 链接：https://partnerissuetracker.corp.google.com/issues/234889055
-# 代码提交链接：https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/238688
-```
-
-### 问题记录
-
-
-### 记录
-
-```
-kernel/drivers/amlogic/usb$ vi ../../../arch/arm64/configs/korlan-p2_defconfig 
-
-在第一个 Makefile 中找到，然后去上层 arch/arm64/configs/korlan-p2_defconfig 中看是否为 y，如果为 y 就表示已经编译进去了，没有 ko 文件
-  3 obj-$(CONFIG_AMLOGIC_USB2PHY)           += phy-aml-new-usb2-v2.o
-  4 obj-$(CONFIG_AMLOGIC_USB3PHY)           += phy-aml-new-usb3-v2.o
-```
 
 ## 2022年8月17日
 
@@ -992,112 +924,11 @@ CONFIG_AMLOGIC_USB3PHY=y
 
 然后就可以 编译了
 
-## 2022年8月17日
-
-### 模仿添加codec init时间戳
-
-回退到 422791e3be522c49d72d56142ef4a64df8cfbb73
-
-```
-[tas5805] add codec init timestamp
-
-read system timer((0x0041  << 2) + 0xfe005800), The unit is us.
-
-Bug:b/236912216
-Test:
-/ # cat /sys/kernel/debug/tas5805_debug/seq_timestamp
-tas5805 prepare init:4832768
-tas5805 pull /PDN high:4839277
-tas5805 enable i2s clock:4913956
-tas5805 Set hiz state:4989655
-tas5805 Initialize device in sleep mode:5000245
-tas5805 init done:501312
-```
-
-git reset --hard 422791e3be522c49d72d56142ef4a64df8cfbb73
-
-bug ID : 236912216 
-
-bug ID 链接：https://partnerissuetracker.corp.google.com/issues/236912216
-
-参考提交地址： https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/239745
-
-## 2022年8月19日
-
-任务：https://partnerissuetracker.corp.google.com/issues/243087651
-
-tas5805m.pdf  P43
-
-参考这个复制
-
-```c
-// sound/soc/amlogic/auge/tdm_bridge.c
-581:    aml_tdm_enable_bclk(gp_tdm->actrl, gp_tdm->clk_sel, 1);
-648:    aml_tdm_enable_bclk(gp_tdm->actrl, gp_tdm->clk_sel, 1);
-```
-
-aml_tdm_enable_bclk 函数在 /sound/soc/amlogic/auge/tdm_hw.c 中实现
-
-关注
-
-```
-# cat  /sys/kernel/debug/aml_clkmsr/clkmsr  | grep tdm*
- tdmout_b_sclk           3068750    +/-3125Hz
- tdmout_a_sclk                 0    +/-3125Hz
- tdmin_lb_sclk                 0    +/-3125Hz
- tdmin_b_sclk            3067188    +/-3125Hz
- tdmin_a_sclk                  0    +/-3125Hz
- tdmin_vad_clk                 0    +/-3125Hz
-```
-
-```
-/sys/kernel/debug/tas5805_debug # cat seq_timestamp 
-tas5805 prepare init:6549978
-tas5805 pull /PDN high:6555052
-tas5805 enable i2s clock:6629877
-tas5805 Set hiz state:6710051
-tas5805 Initialize device in sleep mode:6716802
-tas5805 init done:6729760
-```
-
-参考：drivers/amlogic/usb/phy/phy-aml-new-usb3-v2.c 
-
-```c
-   640 static ssize_t usb_mode_write(struct file *filp, const char __user *buf, size_t len, loff_t *off)
-   641 {                           
-   642   char val[20];             
-   643   int tmp_val = 0;          
-   644   struct amlogic_usb_v2 *phy = g_phy_v2;
-   645                             
-   646    if (len > 20)             
-   647     return -1;
-   648                
-   649   if(copy_from_user(val, buf, len))
-   650   {                         
-   651     return -EFAULT;         
-   652   } else {                  
-   653     sscanf(val, "%d", &tmp_val);
-   654     usb_mode_val = tmp_val; 
-   655   }                         
-   656                             
-   657   schedule_delayed_work(&phy->work, msecs_to_jiffies(10));
-   658   schedule_delayed_work(&phy->id_gpio_work, msecs_to_jiffies(10));
-   659                             
-   660   return len;               
-   661 }                           
-   662                             
-   663 struct file_operations usb_mode_file_ops = {
-   664   .open   = simple_open,    
-   665   .read = usb_mode_read,    
-   666   .write = usb_mode_write,  
-   667 };
-```
-
 
 
 ## 2022年08月22日
 
-### 测试 i2s clock
+### 任务：测试 i2s clock
 
 dmesg  -n 8
 
@@ -1126,27 +957,8 @@ i2cdump -f -y 0x01 0x2d
 
 adb shell
 
-
 ### 提交
 
-```
-git add sound/soc/amlogic/auge/tdm.c
-git add sound/soc/amlogic/auge/tdm.h
-git add sound/soc/codecs/tas5825m.c
-
-git commit  -s --no-verify
-```
-
-```sh
-[tas5805]  codec driver power on/off to enable/disable i2s clock
-
-Bug:b/236912216
-Test: build ok
-```
-
-```
-git push eureka-partner HEAD:refs/for/korlan-master
-```
 
 #### 最终提交1
 
@@ -1261,4 +1073,5 @@ git commit --amend
 git rebase --continue
 
 
-## 2022年08月23日
+## 2022年08月25日
+

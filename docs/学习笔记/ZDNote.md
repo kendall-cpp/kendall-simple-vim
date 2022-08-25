@@ -100,6 +100,8 @@
 			- [编译烧录](#编译烧录-1)
 		- [alsa-lib 和 alsa-utils 移植](#alsa-lib-和-alsa-utils-移植)
 			- [alsa-utils 移植](#alsa-utils-移植)
+	- [Linux USB驱动](#linux-usb驱动)
+	- [块设备驱动实验](#块设备驱动实验)
 
 ------
 
@@ -3875,7 +3877,7 @@ sudo cp sbin/* ~/kenspace/zd-linux/nfs/rootfs/sbin/ -rfa
 sudo cp share/* ~/kenspace/zd-linux/nfs/rootfs/usr/share/ -rfa
 ```
 
-打开开发板根文件系统中的/etc/profile 文件，在里面加入如下所示内容：
+打开开发板根文件系统中的 /etc/profile 文件，在里面加入如下所示内容：
 
 ```sh
 # /home/book/kenspace/zd-linux/nfs/rootfs
@@ -3884,6 +3886,20 @@ export ALSA_CONFIG_PATH=/usr/share/arm-alsa/alsa.conf
 ```
 
 
+## Linux USB驱动
+
+USB OTG：一个 USB 接口既可以做 HOST（主机(HOST)模式） 又可以做 DEVICE （从机(DEVICE)模式）
 
 
+## 块设备驱动实验
+
+块设备是针对存储设备的，比如 SD 卡、EMMC、NAND Flash、Nor Flash、SPI Flash、机械硬盘、固态硬盘等。因此块设备驱动其实就是这些存储设备驱动，块设备驱动相比字符设备驱动的主要区别如下：
+
+- 块设备只能以块为单位进行读写访问，块是 linux 虚拟文件系统(VFS)基本的数据传输单位。字符设备是以字节为单位进行数据传输的，不需要缓冲。
+
+- 块设备在结构上是可以进行随机访问的，对于这些设备的读写都是按块进行的，块设备使用缓冲区来暂时存放数据，等到条件成熟以后在一次性将缓冲区中的数据写入块设备中。
+
+linux 内核使用 block_device 表示设备， block_device 结构体定义在 include/linux/fs.h 文件中，
+
+block_device 中 `struct gendisk *bd_disk;` 如果是硬盘的话 bd_disk 就指向通用磁盘结构 gendisk 。
 
