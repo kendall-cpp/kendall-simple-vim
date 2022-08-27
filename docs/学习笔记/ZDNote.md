@@ -3812,6 +3812,12 @@ rmmod key.ko
 
 ## 内核定时器时间
 
+Linux 内核使用全局变量 jiffies 来记录系统从启动以来的系统节拍数，系统启动的时候会将 jiffies 初始化为 0，jiffies 定义在文件 include/linux/jiffies.h 中。
+
+ HZ 表示每秒的节拍数，jiffies 表示系统运行的 jiffies 节拍数，所以 jiffies/HZ 就是系统运行时间，单位为秒。
+
+ 
+
 -------------
 
 ## Linux音频驱动实验
