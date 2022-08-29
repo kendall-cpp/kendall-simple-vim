@@ -240,7 +240,7 @@ git reset --hard HEAD^^  回退2个版本，一个 ^ 表示回退一个
 git reset --hard HEAD~n  回退前n个版本
 
 
-git reset --hard  536ab2	回头某一次， 通过 sha1 值前几个字符就可以
+git reset --hard  536ab2	回到某一次， 通过 sha1 值前几个字符就可以
 
 git reflog       查看所有记录
 

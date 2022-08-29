@@ -22,7 +22,6 @@
 - [播放音频测试](#播放音频测试)
 - [2022年8月8日](#2022年8月8日)
   - [音频播放流程分析](#音频播放流程分析)
-  - [代码分析](#代码分析)
 - [2022年8月9日](#2022年8月9日)
   - [用alsa播放wav文件](#用alsa播放wav文件)
     - [aml_tdm_open](#aml_tdm_open)
@@ -39,13 +38,12 @@
   - [打印 iomem 地址](#打印-iomem-地址)
   - [配置 make menuconfig](#配置-make-menuconfig)
 - [2022年08月22日](#2022年08月22日)
-  - [任务：测试 i2s clock](#任务测试-i2s-clock)
+  - [TASK：测试 i2s clock](#task测试-i2s-clock)
     - [在 Ubuntu 下测试](#在-ubuntu-下测试)
   - [提交](#提交)
     - [最终提交1](#最终提交1)
     - [最终提交2](#最终提交2)
   - [更改以前 commit 的注释](#更改以前-commit-的注释)
-- [2022年08月25日](#2022年08月25日)
 
 ------
 
@@ -588,33 +586,6 @@ aml_tdm_driver
 
 ```
 
-### 代码分析
-
-二进制格式dtb设备树文件需要先转化成设备节点 device_node 结构，然后再将 device_node 转换成平台设备 platform_device。
-
-- device_node
- 
-```c
-platform_device  // 平台设备
-struct device_node {
-    const char *name; /*保存节点名称属性*/
-    const char *type; /*节点类型*/
-    phandle phandle; /*节点句柄，该成员可以用于节点引用*/
-    const char *full_name;  /*节点名称*/
-    struct fwnode_handle fwnode; /*暂时还不明白其作用*/
-  
-    struct	property *properties; /*节点属性*/
-    struct	property *deadprops;	/*暂时还不明白其作用*/
-    struct	device_node *parent; /*父节点*/
-    struct	device_node *child; /*第一个子节点*/
-    struct	device_node *sibling; /*第一个兄弟节点*/
-    struct	kobject kobj; /*节点kobj对象*/
-    unsigned long _flags; /*节点标识*/
-    void	*data; /*节点特殊数据*/
-};
-```
-
-通过结构体 snd_pcm_ops 来实现
 
 找到 audio 设备寄存器的地址 `audiobus: audiobus@0xFE050000`
 
@@ -623,49 +594,6 @@ struct device_node {
 
 ### 用alsa播放wav文件
 
-**执行顺序**
-
-- aml_tdm_platform_probe
-
-接着调用
-
-```c
-devm_snd_soc_register_component(dev, &aml_tdm_component,
-					 &aml_tdm_dai[p_tdm->id], 1);
-
-devm_snd_soc_register_component 注册一个 component 组件
-
-devm_snd_soc_register_component 把结构体 aml_tdm_component(cmpnt_drv) 传递到 snd_soc_register_component 函数，
-
-
-snd_soc_register_component 函数将 aml_tdm_component(component_driver) 传递给 snd_soc_add_component
-
-
-snd_soc_add_component 调用 snd_soc_component_initialize 函数进行 component 部件的初始化,会根据 snd_soc_codec_driver 中的 struct snd_soc_component_driver 结构设置 snd_soc_codec 中的 component 组件
-
-// 通过上面函数的追踪可知会对 aml_tdm_component 进行注册和初始化一个 component 组件       
-	aml_tdm_component.pcm_new = aml_tdm_new,
-	aml_tdm_component.ops = &aml_tdm_ops,      //打开和播放音频函数
-
-开始调用 aml_tdm_new 函数
-
-aml_tdm_ops 打开和播放音频函数
-```
-
-到 aml_tdm_ops 结构体
-
-```c
-static struct snd_pcm_ops aml_tdm_ops = {
-	.open = aml_tdm_open,           //打开音频文件
-	.close = aml_tdm_close,
-	.ioctl = snd_pcm_lib_ioctl,
-	.hw_params = aml_tdm_hw_params,
-	.hw_free = aml_tdm_hw_free,
-	.prepare = aml_tdm_prepare,
-	.pointer = aml_tdm_pointer,
-	.mmap = aml_tdm_mmap,
-};
-```
 
 #### aml_tdm_open
 
@@ -792,39 +720,8 @@ vim arch/arm64/boot/dts/amlogic/meson-a1.dtsi
         fip_size = <0x200000>;
         partition = <&partitions>;
         partitions: partitions{
-            bootloader{
-                offset=<0x0 0x0>;
-                size=<0x0 0x0>;
-            };     
-            tpl{   
-                offset=<0x0 0x0>;
-                size=<0x0 0x0>;
-            };     
-            fts{   
-                offset=<0x0 0x0>;
-                size=<0x0 0x100000>;
-            };     
-            factory{                                                                                                                                         
-                offset=<0x0 0x0>;
-                size=<0x0 0x400000>;
-            };     
-            recovery{
-                offset=<0x0 0x0>;
-                size=<0x0 0xC00000>;
-            };     
-            boot{  
-                offset=<0x0 0x0>;
-                size=<0x0 0xC00000>;
-            };     
-            system{
-                offset=<0x0 0x0>;
-                size=<0x0 0x1E00000>;
-            };     
-            cache{ 
-                offset=<0xffffffff 0xffffffff>;
-                size=<0x0 0x0>;
-            };     
-        };         
+          ...
+        }     
     };             
 }; 
 ```
@@ -928,7 +825,13 @@ CONFIG_AMLOGIC_USB3PHY=y
 
 ## 2022年08月22日
 
-### 任务：测试 i2s clock
+### TASK：测试 i2s clock
+
+> https://partnerissuetracker.corp.google.com/issues/243087651
+
+> https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/247301
+
+> https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/247425
 
 dmesg  -n 8
 
@@ -1072,6 +975,4 @@ git commit --amend
 
 git rebase --continue
 
-
-## 2022年08月25日
 

@@ -9,7 +9,9 @@
     - [3.2 签名kernel](#32-签名kernel)
       - [3.2.1 获取生成ramdisk](#321-获取生成ramdisk)
   - [4、烧录](#4烧录)
+  - [使用脚本编译和签名](#使用脚本编译和签名)
 - [测试模型](#测试模型)
+- [TASK: VSI 版本编译问题 bug](#task-vsi-版本编译问题-bug)
 
 ---
 
@@ -140,13 +142,13 @@ cp ramdisk.img ../../chrome/out/target/product/spencer/boot_unpack/
 
 ## 4、烧录
 
-烧录路径
+- 烧录路径
 
 > workspace/google_source/eureka/chrome/out/target/product/spencer/upgrade
 
-烧录命令
+- 烧录命令
 
-> upgrade 中没有的 misc.img 和 fct_boot.img  在刚刚下载加压出来的文件夹中。
+> upgrade 中没有的 misc.img 和 fct_boot.img  在刚刚下载解压出来的文件夹中。
 
 ```sh
 adnl.exe  Download u-boot.signed.bin 0x10000
@@ -188,13 +190,23 @@ adnl.exe oem "reset"
 
 关闭日志：dmesg -n 1
 
+## 使用脚本编译和签名
+
+```sh
+kendall-spencer-p2-complie_uboot_kernel.sh u-boot
+kendall-spencer-p2-complie_uboot_kernel.sh kernel
+kendall-spencer-p2-complie_uboot_kernel.sh verisilicon
+```
+
 
 # 测试模型
 
-最终生成的 ko 文件路径
+> 只测 be 结尾的
+
+最终生成的 ko 和 so 文件路径
 
 ```sh
-/mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/spencer/prebuilt/factory/kernel/modules/galcore.spencer-p2.ko
+build/sdk/drivers
 ```
 
 ```sh
@@ -203,10 +215,49 @@ git checkout -t  remotes/eureka-partner/6.4.9
 ```
 
 
-下载加压
+- 下载解压
 
-push 到开发板
+- push 到开发板
 
-adb.exe push alexnet_caffe_a1 /data
+```
+Z:\workspace\google_source\eureka\spencer-sdk\NN649\AML_OUTPUT\All_precompile_bin\All_pre-compiled_bin\spencer\model> adb.exe push alexnet_caffe_be /cache
+
+adb.exe push galcore.ko /cache
+```
+
+- 到开发板上加载 module
+
+
+- 设置环境变量： export LD_LIBRARY_PATH=/data/drivers:$LD_LIBRARY_PATH
+
+- 追踪线程： strace -f -F -o log.txt ./alexnetcaffe ./alexnet_caffe_a1.nb space_shuttle.jpg 输出到 log.txt
+
+
+- 加载之前需要先卸载掉其他的，否则空间不足
+
+```
+rmmod galcore
+rmmod dhd
+rmmod iv009_isp
+rmmod iv009_isp_sensor
+rmmod iv009_isp_lens
+rmmod iv009_isp_iq
+```
+
+- 挂载查看日志： dmesg -n 8; insmod /lib/galcore.ko showArgs=1; dmesg -n 1
+  
+```sh
+lsmod 
+./alexnet_caffe_be ./alexnet_caffe_be.nb ./space_shutt
+```
+
+
+# TASK: VSI 版本编译问题 bug
+
+> https://partnerissuetracker.corp.google.com/issues/242716462
+
+
+
+编译命令：./build_ml.sh arm64 spencer-p2 ../../chrome/
 
 

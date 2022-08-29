@@ -1805,7 +1805,7 @@ sudo cp chrdevbase.ko chrdevbaseAPP ~/kenspace/zd-linux/nfs/rootfs/lib/modules/4
 
 所以在家在 module 之前需要先手动创建 modules.dep  文件，**直接输入 depmod 命令即可自动生成 modules.dep**
 
-如果没有这个命令就只能重新配置busybox，使能此命令，然后重新编译 busybox（学习指南 P1047）
+如果没有这个命令就只能重新配置 busybox，使能此命令，然后重新编译 busybox（学习指南 P1047）
 
 输入“depmod”命令以后会自动生成 modules.alias、modules.symbols 和 modules.dep 这三个文件。然后重新使用 modprobe 加载 chrdevbase.ko 。
 
