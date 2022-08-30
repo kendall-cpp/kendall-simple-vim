@@ -11,6 +11,8 @@
   - [4、烧录](#4烧录)
   - [使用脚本编译和签名](#使用脚本编译和签名)
 - [测试模型](#测试模型)
+  - [模型转换](#模型转换)
+    - [编译出 ssd_small_multiout_be.nb](#编译出-ssd_small_multiout_benb)
 - [TASK: VSI 版本编译问题 bug](#task-vsi-版本编译问题-bug)
 
 ---
@@ -245,10 +247,46 @@ rmmod iv009_isp_iq
 ```
 
 - 挂载查看日志： dmesg -n 8; insmod /lib/galcore.ko showArgs=1; dmesg -n 1
-  
+
+
+
 ```sh
 lsmod 
-./alexnet_caffe_be ./alexnet_caffe_be.nb ./space_shutt
+/cache/alexnet_caffe_be # ./alexnet_caffe_be ./alexnet_caffe_be.nb ./space_shuttle.jpg 
+
+
+/cache/FPN_be # chmod  777 *
+./FPN_be ./FPN_be.nb ./640.jpg
+
+/cache/googlenet_caffe_be # chmod 777 *
+/cache/googlenet_caffe_be # ./googlenet_caffe_be ./googlenet_caffe_be.nb ./goldfish_224x224.jpeg 
+
+/cache/inceptionv1_be # chmod 777 *
+./inceptionv1_be ./inceptionv1_be.nb goldfish.jpeg 
+
+...
+```
+
+
+
+## 模型转换
+
+### 编译出 ssd_small_multiout_be.nb
+
+ubuntu 记录
+
+```sh
+ssd_small_multiout
+$ bash step1.sh ssd_small_multiout
+$ bash step2.sh ssd_small_multiout
+
+```
+
+
+```sh
+# /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/ssd_small_multiout_be
+
+
 ```
 
 
@@ -261,3 +299,25 @@ lsmod
 编译命令：./build_ml.sh arm64 spencer-p2 ../../chrome/
 
 
+cd chrome/
+
+source build/envsetup.sh 
+
+PARTNER_BUILD=true lunch
+
+cd vendor/
+
+find . -name "benma*"
+
+编译 chrome
+
+```sh
+cd chrome
+
+source build/envsetup.sh  
+
+# PARTNER_BUILD=true lunch elaine-eng
+PARTNER_BUILD=true lunch
+
+make BOARD_NAME=spencer-p2 PARTNER_BUILD=true  -j12 otapackage
+```
