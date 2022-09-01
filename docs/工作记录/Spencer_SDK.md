@@ -14,6 +14,8 @@
   - [模型转换](#模型转换)
     - [编译出 ssd_small_multiout_be.nb](#编译出-ssd_small_multiout_benb)
 - [TASK: VSI 版本编译问题 bug](#task-vsi-版本编译问题-bug)
+  - [测试bechmark_model](#测试bechmark_model)
+    - [update kernel & uboot & system](#update-kernel--uboot--system)
 
 ---
 
@@ -321,7 +323,7 @@ bash step4_inference.sh ssd_small_multiout
 - 编译模型
 
 ```sh
-cp  /mnt/fileroot/yuegui.he/c2/amlogic_sdk/alexnet_caffe_be/build_vx.sh .
+# cp  /mnt/fileroot/yuegui.he/c2/amlogic_sdk/alexnet_caffe_be/build_vx.sh .
 # 注意修改成自己的路径
 
 ./build_vx.sh 
@@ -345,16 +347,25 @@ insmod galcore.ko
 ./tflite ./alexnet_caffe_be.nb ./space_shuttle.jpg 
 ```
 
+- 转换输出文件为 txt
+
+修改 vnn_post_process.c
+
+```c
+vsi_nn_SaveTensorToTextByFp32(graph, tensor, filename, "\n");
+或者
+vsi_nn_SaveTensorToTextByFp32( graph, tensor, filename, NULL );
+```
+
 
 # TASK: VSI 版本编译问题 bug
 
 > https://partnerissuetracker.corp.google.com/issues/242716462
 
-
-
 编译命令：./build_ml.sh arm64 spencer-p2 ../../chrome/
 
 
+```sh
 cd chrome/
 
 source build/envsetup.sh 
@@ -364,6 +375,7 @@ PARTNER_BUILD=true lunch
 cd vendor/
 
 find . -name "benma*"
+```
 
 编译 chrome
 
@@ -376,4 +388,37 @@ source build/envsetup.sh
 PARTNER_BUILD=true lunch
 
 make BOARD_NAME=spencer-p2 PARTNER_BUILD=true  -j12 otapackage
+```
+
+## 测试bechmark_model
+
+
+```sh
+# /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome
+cp spencer_ota_tools/framework out/host/linux-x86/ -rf
+
+
+# export PATH="$PATH:/mnt/nfsroot/yuegui.he/bak_chrome/build/bin/"
+# 1. download https://confluence.amlogic.com/download/attachments/180725736/missing-binary.zip?version=2&modificationDate=1651397450635&api=v2
+# 2. unzip -o missing-binary.zip
+
+cp ./make_ext4fs ./mkbootfs ./veritysetup ../build/bin/ &&
+cp ./signapk.jar ./dumpkey.jar ../build/framework/ &&
+cp ./signapk.jar ./dumpkey.jar ../out/host/linux-x86/framework/ &&
+chmod 755 ./build/bin/make_ext4fs ../build/bin/mkbootfs ./build/bin/veritysetup
+```
+
+### update kernel & uboot & system
+
+```sh
+cd spencer_target/
+unzip internal_master_spencer-eng_315654_spencer-target_files-315654.zip
+
+# update spencer p2 kernel
+chrome/spencer_target$ cp ../../spencer-sdk/kernel/arch/arm64/boot/kernel.spencer.gz-dtb.spencer-p2 ./BOOT/kernel
+chrome$ cp ../spencer-sdk/kernel/arch/arm64/boot/kernel.spencer.gz-dtb.spencer-p2 ./spencer_target/BOOT/RAMDISK/lib/kernel/kernel-spencer-p2 
+
+# chrome/spencer_target$ zip -r internal_master_spencer-eng_315654_spencer-target_files-315654.zip -f BOOT/
+
+cp internal_master_spencer-eng_315654_spencer-target_files-315654.zip /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/
 ```
