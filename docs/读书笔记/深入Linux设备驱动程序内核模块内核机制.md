@@ -50,8 +50,20 @@ static struct module *load_module(void __user *umod, unsigned long len, const ch
 
 用户空间程序 insmod 首先通过文件系统接口读取内核模块 demodev.ko 的文件数据，并将其放在一块用户空间的存储区域中，然后通过系统调用 sys_init_module 进入到内核态，同时将 umod 指针作为参数传递过去。
 
-sys_init_module 调用 load_module , 通过 copy_from_user 函数将用户空间文件数据复制到内核空间中区。从俄日在内核空间构造出 demodev.ko 的一个 ELF 静态的内存试图（HDR试图）。
+sys_init_module 调用 load_module , 通过 copy_from_user 函数将用户空间文件数据复制到内核空间中区。从而在内核空间构造出 demodev.ko 的一个 ELF 静态的内存试图（HDR试图）。
 
-- 字符串标
+- 字符串表
 
-字符串标是 ELF 文件中的一个 section ，用来保存 ELF 文件中各个 section 的名称或符号名。
+字符串表是 ELF 文件中的一个 section ，用来保存 ELF 文件中各个 section 的名称或符号名。
+
+|  index   | string  |
+|  ----  | ----  |
+| 0  | null string |
+| 1  |  name       |
+| 7  |  Variable  |
+| 11 |  able      |
+| 16 |  able     |
+| 24 |  null string  |
+
+字符串表一 '\0' 作为一个字符串的结束标记，由 index 指向的字符串是从字符串表第 index 个字符开始，直到遇到一个 '\n' 标记，如果有且只有一个 '\n'  ，那么 index 指向的就是个空串（null string）。
+

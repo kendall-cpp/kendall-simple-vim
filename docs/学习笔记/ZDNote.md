@@ -96,6 +96,7 @@
 		- [Linux 竞争与并发实验](#linux-竞争与并发实验)
 	- [Linux 按键输入实验](#linux-按键输入实验)
 	- [内核定时器时间](#内核定时器时间)
+		- [定时器驱动编写](#定时器驱动编写)
 	- [Linux音频驱动实验](#linux音频驱动实验)
 		- [I2S 接口协议](#i2s-接口协议)
 		- [音频驱动使能](#音频驱动使能)
@@ -3814,9 +3815,234 @@ rmmod key.ko
 
 Linux 内核使用全局变量 jiffies 来记录系统从启动以来的系统节拍数，系统启动的时候会将 jiffies 初始化为 0，jiffies 定义在文件 include/linux/jiffies.h 中。
 
- HZ 表示每秒的节拍数，jiffies 表示系统运行的 jiffies 节拍数，所以 jiffies/HZ 就是系统运行时间，单位为秒。
+```c
+extern u64 __jiffy_data jiffies_64;
+extern unsigned long volatile __jiffy_data jiffies;
+```
 
- 
+
+HZ 表示每秒的节拍数，jiffies 表示系统运行的【节拍数】，所以 jiffies/HZ 就是系统运行时间，单位为秒。
+
+要使用内核定时器首先要先定义一个 timer_list 变量，表示定时器，tiemr_list 结构体的 expires 成员变量表示超时时间，单位为节拍数。比如我们现在需要定义一个周期为 2 秒的定时器，那么这个定时器的超时时间就是 `jiffies+(2*HZ)`，因此 `expires=jiffies+(2*HZ)`
+
+### 定时器驱动编写
+
+```c
+#include <linux/types.h>
+#include <linux/kernel.h>
+#include <linux/delay.h>
+#include <linux/ide.h>
+#include <linux/init.h>
+#include <linux/module.h>
+#include <linux/errno.h>
+#include <linux/gpio.h>
+#include <linux/cdev.h>
+#include <linux/device.h>
+#include <linux/of.h>
+#include <linux/of_address.h>
+#include <linux/of_gpio.h>
+#include <linux/semaphore.h>
+#include <linux/timer.h>
+#include <asm/mach/map.h>
+#include <asm/uaccess.h>
+#include <asm/io.h>
+
+#define TIMER_CNT		1		/* 设备号个数 	*/
+#define TIMER_NAME		"timer"	/* 名字 		*/
+#define CLOSE_CMD 		(_IO(0XEF, 0x1))	/* 关闭定时器 */
+#define OPEN_CMD		(_IO(0XEF, 0x2))	/* 打开定时器 */
+#define SETPERIOD_CMD	(_IO(0XEF, 0x3))	/* 设置定时器周期命令 */
+#define LEDON 			1		/* 开灯 */
+#define LEDOFF 			0		/* 关灯 */
+
+// timer设备结构体
+struct timer_dev {
+        dev_t devid;    //设备号
+        struct cdev cdev;
+        struct class *class;
+        struct device *device;
+        int major;
+        int minor;
+        struct device_node *nd; //设备节点
+        int led_gpio;   //设备使用的GPIO编号
+        int timeperiod; //定时周期
+        struct timer_list timer;        //定义一个定时器
+        spinlock_t lock;        //定义自旋锁
+};
+
+struct timer_dev timerdev;
+
+static int led_init(void)
+{
+        int ret = 0;
+        timerdev.nd = of_find_node_by_path("/gpioled");
+	if (timerdev.nd == NULL) {
+		return -EINVAL;
+	}
+
+        //初始化 LED 灯所使用的 IO
+        gpio_request(timerdev.led_gpio, "led");  //请求 IO
+        ret = gpio_direction_output(timerdev.led_gpio, 1);
+        if(ret < 0) {
+   		printk("can't set gpio!\r\n");
+        }
+        return 0;
+}
+
+//打开设备，传递给驱动的inode
+static int timer_open(struct inode *inode, struct file *filp)
+{
+        int ret = 0;
+        filp->private_data = &timerdev;      //设置私有数据
+        
+
+        timerdev.timeperiod = 1000;		/* 默认周期为1s */
+        ret = led_init();
+        if(ret < 0) {
+                return ret;
+        }
+        return 0;
+}
+
+/*
+ * @description		: ioctl函数，
+ * @param - filp 	: 要打开的设备文件(文件描述符)
+ * @param - cmd 	: 应用程序发送过来的命令
+ * @param - arg 	: 参数
+ * @return 			: 0 成功;其他 失败
+ */
+static long timer_unlocked_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
+{
+        struct timer_dev *dev = (struct timer_dev *)filp->private_data;
+        int timerperiod;
+        unsigned long flags;
+
+	switch (cmd) {
+		case CLOSE_CMD:		/* 关闭定时器 */
+			del_timer_sync(&dev->timer);
+			break;
+		case OPEN_CMD:		/* 打开定时器 */
+			spin_lock_irqsave(&dev->lock, flags);
+			timerperiod = dev->timeperiod;
+			spin_unlock_irqrestore(&dev->lock, flags);
+			mod_timer(&dev->timer, jiffies + msecs_to_jiffies(timerperiod));
+			break;
+		case SETPERIOD_CMD: /* 设置定时器周期 */
+			spin_lock_irqsave(&dev->lock, flags);
+			dev->timeperiod = arg;
+			spin_unlock_irqrestore(&dev->lock, flags);
+			mod_timer(&dev->timer, jiffies + msecs_to_jiffies(arg));
+			break;
+		default:
+			break;
+	}
+	return 0;
+}
+
+/* 设备操作函数 */
+static struct file_operations timer_fops = {
+	.owner = THIS_MODULE,
+	.open = timer_open,
+	.unlocked_ioctl = timer_unlocked_ioctl,
+};
+
+
+//定时器回调函数
+void timer_function(unsigned long arg)
+{
+        struct timer_dev *dev = (struct timer_dev *)arg;
+        static int sta = 1;
+        int timerperiod;
+        unsigned long flags;
+
+        sta = !sta;   //是的 LED 灯反转
+        gpio_set_value(dev->led_gpio, sta);
+
+        //重启定时器
+        spin_lock_irqsave(&dev->lock, flags);
+        timerperiod = dev->timeperiod;
+        spin_unlock_irqrestore(&dev->lock, flags);
+        //当一个定时器已经被插入到内核动态定时器链表中后，我们还能够改动该定时器的expires值
+        mod_timer(&dev->timer, jiffies + msecs_to_jiffies(dev->timeperiod));  // msecs_to_jiffies(2000) 超时两秒钟
+}
+
+static int __init timer_init(void)
+{
+        /* 初始化自旋锁 */
+	spin_lock_init(&timerdev.lock);
+
+        //初始化字符设备驱动
+        //创建设备号
+        if(timerdev.major) {
+                timerdev.devid = MKDEV(timerdev.major, 0) ;
+                register_chrdev_region(timerdev.devid, TIMER_CNT, TIMER_NAME);
+        } else {
+                alloc_chrdev_region(&timerdev.devid, 0 ,TIMER_CNT, TIMER_NAME); //申请设备号
+                timerdev.major = MAJOR(timerdev.devid);
+                timerdev.minor = MINOR(timerdev.devid);
+        }
+        //初始化cdev
+        timerdev.cdev.owner = THIS_MODULE;
+        cdev_init(&timerdev.cdev, &timer_fops);
+
+        //添加一个cdev
+        cdev_add(&timerdev.cdev, timerdev.devid, TIMER_CNT);
+
+        //创建类
+        timerdev.class = class_create(THIS_MODULE, TIMER_NAME);
+	if (IS_ERR(timerdev.class)) {
+		return PTR_ERR(timerdev.class);
+	}
+
+        //创建设备 
+	timerdev.device = device_create(timerdev.class, NULL, timerdev.devid, NULL, TIMER_NAME);
+	if (IS_ERR(timerdev.device)) {
+		return PTR_ERR(timerdev.device);
+	}
+
+        //初始化timer，设置定时器处理函数,还未设置周期，所有不会激活定时器
+        init_timer(&timerdev.timer);
+        timerdev.timer.function = timer_function;  //传入的是 timer_dev
+        timerdev.timer.data = (unsigned long)&timerdev;
+        return 0;
+}
+
+static void __exit timer_exit(void)
+{
+        gpio_set_value(timerdev.led_gpio, 1);   //卸载驱动的时候关闭 LED
+        del_timer_sync(&timerdev.timer);        //删除timer
+        // del_timer(&timerdev.tiemr);
+
+        //注销字符设备驱动
+        gpio_free(timerdev.led_gpio);
+        cdev_del(&timerdev.cdev);      //删除cdev
+        unregister_chrdev_region(timerdev.devid, TIMER_CNT);    //注销设备号
+        device_destroy(timerdev.class, timerdev.devid);
+        class_destroy(timerdev.class);
+}
+
+module_init(timer_init);
+module_exit(timer_exit);
+MODULE_LICENSE("GPL");
+MODULE_ALIAS("kendall");
+```
+
+编译 APP
+
+arm-linux-gnueabihf-gcc timerApp.c -o timerApp
+
+sudo cp timer.ko timerApp ~/kenspace/zd-linux/nfs/rootfs/lib/modules/4.1.15/
+
+```sh
+depmod
+modprobe timer.ko
+
+./timerApp /dev/timer
+# 按键 key0
+
+rmmod timer.ko
+```
+
 
 -------------
 
