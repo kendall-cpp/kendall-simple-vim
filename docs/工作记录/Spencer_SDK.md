@@ -246,6 +246,8 @@ rmmod iv009_isp_lens
 rmmod iv009_isp_iq
 ```
 
+Z:\workspace\google_source\eureka\spencer-sdk\verisilicon\build\sdk> adb.exe push .\drivers\. /lib/
+
 - 挂载查看日志： dmesg -n 8; insmod /lib/galcore.ko showArgs=1; dmesg -n 1
 
 
@@ -275,18 +277,72 @@ lsmod
 
 ubuntu 记录
 
+- 转换模型
+
+需要转换的模型： Z:\workspace\google_source\eureka\spencer-sdk\NN649\AML_OUTPUT\All_precompile_bin\All_pre-compiled_bin\spencer\model
+
 ```sh
-ssd_small_multiout
+# ~/NN/649/actool_6.3.1/acuity-toolkit-binary-6.3.1/google_test_mode
+vim alexnet_caffe/alexnet_caffe_03.sh 
+vim alexnet_caffe/alexnet_caffe_02.sh 
+vim alexnet_caffe/alexnet_caffe_01.sh 
+
+# 查看输出
+# vim yolov2/export_nbg_be.sh 
+
+cd ssd_small_multiout
+# ~/NN/649/actool_6.3.1/acuity-toolkit-binary-6.3.1/google_test_model/ssd_small_multiout
+
+# 编译 ssd_small_multiout
 $ bash step1.sh ssd_small_multiout
 $ bash step2.sh ssd_small_multiout
+# rm iter_0_*
+# rm ssd_small_multiout_be/ -rf
 
+# rm ssd_small_multiout.data 
+# rm ssd_small_multiout.quantize 
+# rm ssd_small_multiout.quantize 
+# rm tflite.export.data 
+# rm ssd_small_multiout.json 
+
+bash step1.sh ssd_small_multiout
+vim ssd_small_multiout.json
+vim ssd_small_multiout_inputmeta.yml
+
+bash step2.sh ssd_small_multiout
+vim ../ssd_big_multiout/ssd_big_multiout_04_be.sh
+
+bash step3.sh ssd_small_multiout
+ls ssd_small_multiout_be/ -al
+
+bash step4_inference.sh ssd_small_multiout
 ```
 
+- 编译模型
 
 ```sh
-# /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/ssd_small_multiout_be
+cp  /mnt/fileroot/yuegui.he/c2/amlogic_sdk/alexnet_caffe_be/build_vx.sh .
+# 注意修改成自己的路径
 
+./build_vx.sh 
 
+# 修改  makefile.linux 
+vim makefile.linux 
+# 114 TARGET_NAME = tflite 
+
+./build_vx.sh 
+```
+
+- 测试模型
+
+```sh
+Z:\workspace\google_source\eureka\spencer-sdk\verisilicon\build\sdk> adb.exe push .\drivers\. /lib/
+
+# \workspace\google_source\eureka\spencer-sdk\alexnet_caffe_be\bin_r>
+insmod galcore.ko
+
+./tflite ./alexnet_caffe_be.nb iter_0_input_0_out0_1_3
+./tflite ./alexnet_caffe_be.nb ./space_shuttle.jpg 
 ```
 
 
