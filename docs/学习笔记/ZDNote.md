@@ -3880,6 +3880,13 @@ static int led_init(void)
 		return -EINVAL;
 	}
 
+        timerdev.led_gpio = of_get_named_gpio(timerdev.nd, "led-gpio", 0);
+	if (timerdev.led_gpio < 0) {
+		printk("can't get led\r\n");
+		return -EINVAL;
+	}
+	
+
         //初始化 LED 灯所使用的 IO
         gpio_request(timerdev.led_gpio, "led");  //请求 IO
         ret = gpio_direction_output(timerdev.led_gpio, 1);
