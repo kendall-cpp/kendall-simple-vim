@@ -606,7 +606,7 @@ aml_tdm_driver
 ```c
 aml_frddr_set_buf(fr, start_addr, end_addr); 
 
-打印函数追踪
+打印函数追踪 追踪函数调用
 
 dump_stack();
 ```

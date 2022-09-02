@@ -380,6 +380,7 @@ git apply --check xx.patch
 ```
 合并新来的commit patch
 git am *.patch
+git apply  *.patch
 
 合并时，签上打patch人的名字
 git am --signoff *.patch

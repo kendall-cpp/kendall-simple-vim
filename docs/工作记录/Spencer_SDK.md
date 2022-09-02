@@ -16,6 +16,10 @@
 - [TASK: VSI 版本编译问题 bug](#task-vsi-版本编译问题-bug)
   - [测试bechmark_model](#测试bechmark_model)
     - [update kernel & uboot & system](#update-kernel--uboot--system)
+    - [Replace bootloader](#replace-bootloader)
+    - [Replace kernel module](#replace-kernel-module)
+    - [解压生成的 replace-uboot-kernel-verisilicon-ota.zip](#解压生成的-replace-uboot-kernel-verisilicon-otazip)
+    - [烧录](#烧录)
 
 ---
 
@@ -421,4 +425,50 @@ chrome$ cp ../spencer-sdk/kernel/arch/arm64/boot/kernel.spencer.gz-dtb.spencer-p
 # chrome/spencer_target$ zip -r internal_master_spencer-eng_315654_spencer-target_files-315654.zip -f BOOT/
 
 cp internal_master_spencer-eng_315654_spencer-target_files-315654.zip /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/
+
+# 前提是执行了 gclient sync
+./vendor/amlogic/spencer/build/tools/releasetools/ota_from_target_files -v --board spencer-p2 ./internal_master_spencer-eng_315654_spencer-target_files-315654.zip ./spencer-p2-315654.zip
 ```
+
+### Replace bootloader
+
+./vendor/amlogic/spencer/build/tools/releasetools/ota_from_target_files -v --board spencer-p2 ./spencer-target_files_315654/spencer-target_files-315654.zip ./replace-bootloader-ota.zip
+
+
+### Replace kernel module
+
+### 解压生成的 replace-uboot-kernel-verisilicon-ota.zip
+
+
+### 烧录
+
+更改模式
+
+```
+/ # cat /proc/fts 
+fdr_count=17
+reboot_mode=normal
+encryption_salt=6719F51F524E847350B7A7CCDD23B09AC97A7332A2BB61DC4E5F5B7E29C2B841
+bootloader.command=boot-factory
+/ # fts -s bootloader.command 
+/ # cat /proc/fts 
+fdr_count=17
+reboot_mode=normal
+encryption_salt=6719F51F524E847350B7A7CCDD23B09AC97A7332A2BB61DC4E5F5B7E29C2B841
+/ # 
+
+
+如何解析 bootloader.command ？
+
+通过 SYSCTRL_SEC_STATUS_REG2 和 AO_SEC_SD_CFG15 这两个寄存器来控制 
+```
+
+测试
+
+```
+eureka/spencer-sdk/NN649/issue$
+../../prebuilt/toolchain/aarch64/bin/aarch64-cros-linux-gnu-clang++ main.cpp -o main.o -L ../../verisilicon/build/sdk/drivers -static -Wl,--whole-archive -lovxlib
+```
+
+
+

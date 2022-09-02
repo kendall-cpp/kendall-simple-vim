@@ -11,8 +11,8 @@ $ vim .boto
 proxy = 10.78.20.250
 proxy_type = http
 proxy_port = 3128
-# proxy_user = shengken.lin
-# proxy_pass = New@345
+# proxy_user = 
+# proxy_pass = 
 proxy_rdns = True
 ```
 
@@ -288,13 +288,39 @@ google_source/chrome_code$ repo init -u https://eureka-partner.googlesource.com/
 
 # 结果：Your identity is: shengken lin <shengken.lin@amlogic.corp-partner.google.com>
 
-repo sync
+repo sync   # chrome_code 做到这一步了
 cd ./chromium
 # export PATH=/mnt/fileroot/shengken.lin/workspace/google_source/depot_tools/:$PATH
 gclient setdep --deps-file=src/DEPS --var=fuchsia_sdk_bucket=fuchsia
 gclient sync
+
+# 报错 Failed to fetch file gs://chromium-telemetry/1d6ca505c384ef8f5af14e7958f62d54ec126356 for /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/chromium/src/content/test/data/gpu/mediapipe_zip/mediapipe_chromium_tests.zip, skipping. [Err: Traceback (most recent call last):
+# 参考： https://partnerissuetracker.corp.google.com/issues/211244370 comment#14， 复制patch，然后使用下面精灵打patch
+# 打 patch
+# /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/chromium/src
+patch -p1 < sync_fail.patch 
+
+# 打不上就手动删除，（减号红色就删掉）
+chromium/src$ vim DEPS 
+
+
+cd ..
+
+继续执行 gclient sync
 ```
 
+### 编korlan 的ota包
+
+```sh
+source build/envsetup.sh && lunch
+
+PARTNER_BUILD=true BOARD_NAME=korlan-p1 make -j30 otapackage
+
+# 报错：
+# ls: cannot access 'vendor/amlogic/korlan/prebuilt/factory/kernel/modules': No such file or directory
+
+
+```
 
 
 
