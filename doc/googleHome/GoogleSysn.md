@@ -295,12 +295,12 @@ gclient setdep --deps-file=src/DEPS --var=fuchsia_sdk_bucket=fuchsia
 gclient sync
 
 # 报错 Failed to fetch file gs://chromium-telemetry/1d6ca505c384ef8f5af14e7958f62d54ec126356 for /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/chromium/src/content/test/data/gpu/mediapipe_zip/mediapipe_chromium_tests.zip, skipping. [Err: Traceback (most recent call last):
-# 参考： https://partnerissuetracker.corp.google.com/issues/211244370 comment#14， 复制patch，然后使用下面精灵打patch
+# 参考： https://partnerissuetracker.corp.google.com/issues/211244370 comment#14， 新建patch文件复制comment#14到patch，然后使用下面命令打patch
 # 打 patch
-# /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/chromium/src
+# cd /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/chromium/src
 patch -p1 < sync_fail.patch 
 
-# 打不上就手动删除，（减号红色就删掉）
+# 如果打不上就手动删除，（减号红色就删掉）
 chromium/src$ vim DEPS 
 
 
