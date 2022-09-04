@@ -4056,6 +4056,7 @@ rmmod timer.ko
 
 
 
+
 -------------
 
 ## Linux音频驱动实验
@@ -4200,4 +4201,5 @@ USB OTG：一个 USB 接口既可以做 HOST（主机(HOST)模式） 又可以�
 linux 内核使用 block_device 表示设备， block_device 结构体定义在 include/linux/fs.h 文件中，
 
 block_device 中 `struct gendisk *bd_disk;` 如果是硬盘的话 bd_disk 就指向通用磁盘结构 gendisk 。
+
 

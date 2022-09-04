@@ -40,6 +40,7 @@ git config --global user.name "Shengken Lin"
 git config --global user.email shengken.lin@amlogic.corp-partner.google.com
 ```
 
+
 ## Verify CPID
 
 - 打开网址：https://eureka-partner.googlesource.com/ ，Click “**Generate Password**”。
@@ -76,7 +77,7 @@ $ vim ~/.bash_profile
 export depot_path="/mnt/fileroot/shengken.lin/workspace/google_source/depot_tools"
 export BOTO_CONFIG=${depot_path}/.boto
 export NO_AUTH_BOTO_CONFIG=${depot_path}/.boto
-export PATH=${depot_tools}:$PATH
+export PATH=${depot_path}:$PATH
 export DEPOT_TOOLS_UPDATE=1
 
 $ source ~/.bash_profile
@@ -138,3 +139,12 @@ cd ..
 # 继续执行
 gclient sync
 ```
+
+### Korlan
+
+```sh
+cd eureka && mkdir amlogic_sdk
+repo init -u https://eureka-partner.googlesource.com/amlogic/manifest -b korlan-master -m combined_sdk.xml
+repo sync
+```
+

@@ -142,7 +142,7 @@ cd pdk
 ```sh
 # /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/pdk/unpack_boot
 unpack_boot.sh ./fct_boot.img ./boot_out unpack_boot    ## 注意修改脚本路径
-cp ramdisk.img ../../chrome/out/target/product/spencer/boot_unpack/
+cp ramdisk.img.xz ../../chrome/out/target/product/spencer/boot_unpack/ramdisk.img
 
 ## /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/pdk
 ./build-bootimg.sh -b spencer-p2
