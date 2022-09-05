@@ -40,13 +40,20 @@
 
 git add hello.txt  			添加文件到暂存区
 
-git rm --cached hello.txt   从暂存区退回到工作区
 
-git reset HEAD hello.txt    从暂存区退回到工作区 和上面一样
+git ls-files    查看暂存区文件
+
+git rm --cached hello.txt   从暂存区退回到工作区  # 从暂存区删除该文件
+
+	git reset HEAD hello.txt    从暂存区退回到工作区 和上面一样
+
+git reset --soft HEAD^		 撤销commit 保留add
+
+git commit -m update        将上面删除操作提交到git仓库
 
 git status        			查看目前工作区状态
 
-git commit -a -s --no-verify   忽略掉代码不规范错误 -s 加签名
+git commit -a -s --no-verify   忽略掉代码不规范错误 -s 加签名 -a 是上了 add 步骤
 
 ### 提交到对象区
 
@@ -90,6 +97,9 @@ git checkout -- hello.txt  还原回工作区
 #### 误删/改了某个文件还原
 
 git restore <file>
+
+
+
 
 ### checkout
 
