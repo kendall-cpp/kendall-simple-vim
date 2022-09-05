@@ -17,6 +17,7 @@
   - [结合使用](#结合使用)
 - [nerdtree_red 使用](#nerdtree_red-使用)
 - [vim 命令记录](#vim-命令记录)
+- [vscode 设置 markdown 字体](#vscode-设置-markdown-字体)
 
 
 ------
@@ -316,3 +317,16 @@ m    文件操作：复制、删除、移动等
   - d 删除
   - I 进入编辑，编辑完按 ESC 退出
 
+## vscode 设置 markdown 字体
+
+快捷键Ctrl+Shift+P输入：Customize CSS
+
+```css
+.markdown-preview.markdown-preview {
+  // modify your style here
+  // eg: background-color: blue;
+  
+  font-size: 16px;
+  font-family: '微软雅黑';
+}
+```

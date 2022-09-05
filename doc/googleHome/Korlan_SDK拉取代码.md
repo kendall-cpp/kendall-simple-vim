@@ -1,6 +1,6 @@
 > 在开始之前，你需要收到google的邀请邮件，如果没有，请联系：frank.chen@amlogic.com
 
-![google_inc](.Korlan_SDK_img/google_inc.png)
+![google_inc](.img/google_inc.png)
 
 ----
 
@@ -27,7 +27,7 @@ export https_proxy="10.78.20.250:3128"
 $ source ~/.bash_profile
 ```
 
-![image-20220902193012065](.Korlan_SDK_img/image-20220902193012065.png)
+![image-20220902193012065](.img/image-20220902193012065.png)
 
 - git全局代理设置
 
@@ -45,21 +45,21 @@ git config --global user.email shengken.lin@amlogic.corp-partner.google.com
 
 - 打开网址：https://eureka-partner.googlesource.com/ ，Click “**Generate Password**”。
 
-![image-20220902194558514](.Korlan_SDK_img/image-20220902194558514.png)
+![image-20220902194558514](.img/image-20220902194558514.png)
 
 - 选择自己的邮箱
 
-![image-20220902194723737](.Korlan_SDK_img/image-20220902194723737.png)
+![image-20220902194723737](.img/image-20220902194723737.png)
 
 - 点击 **允许**
 
-![image-20220902194812581](.Korlan_SDK_img/image-20220902194812581.png)
+![image-20220902194812581](.img/image-20220902194812581.png)
 
 - 之后得到如下命令
 
-![image-20220902195129811](.Korlan_SDK_img/image-20220902195129811.png)
+![image-20220902195129811](.img/image-20220902195129811.png)
 
-![image-20220902195305869](.Korlan_SDK_img/image-20220902195305869.png)
+![image-20220902195305869](.img/image-20220902195305869.png)
 
 ## chrome && korlan
 
@@ -83,7 +83,7 @@ export DEPOT_TOOLS_UPDATE=1
 $ source ~/.bash_profile
 ```
 
-![image-20220902200113056](.Korlan_SDK_img/image-20220902200113056.png)
+![image-20220902200113056](.img/image-20220902200113056.png)
 
 ```sh
 gsutil.py config
