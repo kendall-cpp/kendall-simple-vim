@@ -3,6 +3,7 @@
 - [git 三个分区](#git-三个分区)
 	- [提交到暂存区](#提交到暂存区)
 	- [提交到对象区](#提交到对象区)
+	- [总结提交步骤](#总结提交步骤)
 	- [后悔还原](#后悔还原)
 		- [误删/改了某个文件还原](#误删改了某个文件还原)
 	- [checkout](#checkout)
@@ -27,6 +28,7 @@
 	- [git apply 与 git am的区别](#git-apply-与-git-am的区别)
 	- [打patch发生冲突](#打patch发生冲突)
 	- [patch 例子](#patch-例子)
+- [cherry-pick](#cherry-pick)
 
 -----
 
@@ -57,7 +59,7 @@ git commit -a -s --no-verify   忽略掉代码不规范错误 -s 加签名 -a �
 
 ### 提交到对象区
 
-git commit  或者 git commit -a
+git commit  或者 git commit -a   #省略add步骤
 
 填写信息，shift+zz 可以保存退出
 
@@ -70,6 +72,23 @@ nothing to commit, working tree clean
 git rm hello.txt  从对象区中删除一个数据（会删除本地文件），会回到暂存区，可以用 git reset head 退回到 工作区，但是也可以再执行 git commit hello.txt 彻底删除
 
 > 所以彻底删除：git rm file_name ; git commit file_name
+
+### 总结提交步骤
+
+```sh
+git add
+
+git commit 
+# 填写指数
+
+# git commit --amend -s --no-verify     # 第二次 commit 加 changeID  --no-verify 忽略代码检查，-s 是添加签名,会出现Signed-off-by：
+
+# 如果没有 change-ID 需要拷贝 .git/hooks$ cp [other_path]]/.git/hooks/commit-msg  .
+# 然后再执行 git commit --amend 就有 Change-Id 了
+
+
+git push 链接别名 分支名
+```
 
 
 ### 后悔还原
@@ -150,7 +169,7 @@ git rebase -i HEAD~3  倒数第3个（以1开始）
 
 把 pick 改为 edit
 
-git commit --amend
+git commit --amend   #修改上一次注释
 
 git rebase --continue
 
@@ -189,6 +208,8 @@ git stash pop stash@{0}    指定恢复到某一次现场
 git stash drop stash@{0}   手动删除某个现场
 
 > 如果不小心删除了。也可以使用 git stash apply eb777448a32aa23b318fc5f119a4edc64638ec43(删除的时候会有) 来恢复
+
+
 ### 在分支下修改文件
 
 git rm abc.txt
@@ -449,7 +470,24 @@ git reset --hard 761ac81568
 
 git am --abort
 
-git am <commit_hash>
+git am *.patch
 ```
 
 > 学习参考：https://www.cnblogs.com/lueguo/p/3544114.html
+
+## cherry-pick
+
+> 参考：https://blog.csdn.net/GBS20200720/article/details/123840359
+
+
+作用 ： 指定的 commit，拉到一个新的分支上。
+
+```
+git cherry-pick <commitHash>
+
+git fetch https://eureka-partner.googlesource.com/verisilicon-sdk refs/changes/27/245927/1 && git cherry-pick FETCH_HEAD -x
+```
+
+
+
+

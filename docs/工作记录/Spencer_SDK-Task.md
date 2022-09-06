@@ -7,6 +7,9 @@
     - [编译 spencer ota 包](#编译-spencer-ota-包)
     - [Replace bootloader](#replace-bootloader)
     - [无法通过reboot update 进入烧录模式](#无法通过reboot-update-进入烧录模式)
+    - [测试问题](#测试问题)
+      - [解决 adb 无法 push 问题](#解决-adb-无法-push-问题)
+  - [更新 verisilicon 驱动](#更新-verisilicon-驱动)
 
 
 ---
@@ -281,7 +284,148 @@ vim cmd/amlogic/cmd_factory_boot.c
 vim cmd/amlogic/cmd_reboot.c  
 ```
 
+### 测试问题
 
+```sh
+spencer-sdk/NN649/issue$ ../../prebuilt/toolchain/aarch64/bin/aarch64-cros-linux-gnu-clang++ main.cpp -o main.o -L ../../verisilicon/build/sdk/drivers -static -W1,--whole-archive -lovxlib
+```
+
+#### 解决 adb 无法 push 问题
+
+修改kernel代码
+
+```c
+vim kernel/arch/arm64/boot/dts/amlogic/spencer-p2.dts 
+
+1266     /*controller-type = <3>;*/
+1267     controller-type = <2>;   
+```
+
+重新编译打包和烧录
+
+执行脚本
+
+```
+#! /sbin/busybox sh
+mount -t configfs configfs /sys/kernel/config
+mkdir /sys/kernel/config/usb_gadget/amlogic
+echo 0x18D1 > /sys/kernel/config/usb_gadget/amlogic/idVendor
+echo 0x4e26 > /sys/kernel/config/usb_gadget/amlogic/idProduct
+mkdir /sys/kernel/config/usb_gadget/amlogic/strings/0x409
+echo '0123456789ABCDEF' > /sys/kernel/config/usb_gadget/amlogic/strings/0x409/serialnumber
+echo amlogic > /sys/kernel/config/usb_gadget/amlogic/strings/0x409/manufacturer
+echo newman > /sys/kernel/config/usb_gadget/amlogic/strings/0x409/product
+mkdir /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1
+mkdir /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/strings/0x409
+echo adb > /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/strings/0x409/configuration
+mkdir /sys/kernel/config/usb_gadget/amlogic/functions/ffs.adb
+mkdir /dev/usb-ffs
+mkdir /dev/usb-ffs/adb
+mount -t functionfs adb /dev/usb-ffs/adb
+stop adbd
+ln -s /sys/kernel/config/usb_gadget/amlogic/functions/ffs.adb /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/ffs.adb
+start adbd
+/bin/sleep 2
+echo ff500000.dwc2_a > /sys/kernel/config/usb_gadget/amlogic/UDC
+```
+
+
+- push 静态库
+
+```sh
+adb.exe push .\drivers\. /data/
+
+# 还需要在这里把 Z:\windowFile\Spencer_SDK文件\NN649\issue\drive-download-20220905T020706Z-001 把 benchmark_model 和 libneural_network_models.so push 到 /data
+
+push 
+
+export LD_LIBRARY_PATH=/data:$LD_LIBRARY_PATH
+
+
+# 声明环境变量 打印更多信息
+export VIV_VX_DEBUG_LEVEL=1
+
+./mynn ./mynn.export.data ./iter_0_input_0_out0_1_3_227_227.tensor 
+
+
+# 测试module
+VIV_VX_DEBUG_LEVEL=1 benchmark_model -m VsiCustomFpn
+VIV_VX_DEBUG_LEVEL=1 benchmark_model
+```
+
+
+
+----
+
+
+## 更新 verisilicon 驱动
+
+- 解压并添加所有的 tgz 包，并 git commit
+
+```sh
+tar -zxf Vivante_GALVIP_Unified_Src_drv_6.4.9.tgz -C Vivante_GALVIP_Unified_Src_drv
+
+# 进入解压的目录并拷贝
+cp * ../../../../test-verisilicon/ -r
+
+# /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/test-verisilicon
+```
+
+- git commit 
+
+```sh
+Import from Vivante_GALVIP_Unified_Src_tst_OVX-addon_6.4.9.tgz
+
+Bug: None
+Test: None
+
+```
+
+- 找到这个提交开始，往后所有的 commit 都需要 cherry-pick 一遍
+
+```
+commit d678e2143cdfad171c3ef5c27c3900c053b135cb
+Author: yuegui.he <yuegui.he@amlogic.corp-partner.google.com>
+Date:   Thu Sep 16 14:45:06 2021 +0800
+
+    Copy over .gitignore from AML's initial drop
+    
+    Bug: b/204773314
+    Test: None
+    Change-Id: Iac0703a6423d1287c928bb684140178f507f137a
+    Signed-off-by: yuegui.he <yuegui.he@amlogic.corp-partner.google.com>
+    (cherry picked from commit 5461fb121c68e387b279dd97924dfb932aaa56ea)
+```
+
+
+git fetch https://eureka-partner.googlesource.com/verisilicon-sdk refs/changes/96/233896/2 && git cherry-pick FETCH_HEAD -x
+
+git add 
+
+git commit -s
+
+
+git fetch https://eureka-partner.googlesource.com/verisilicon-sdk refs/changes/97/233897/2 && git cherry-pick FETCH_HEAD -x
+
+git fetch https://eureka-partner.googlesource.com/verisilicon-sdk refs/changes/98/233898/2 && git cherry-pick FETCH_HEAD -x
+
+git fetch https://eureka-partner.googlesource.com/verisilicon-sdk refs/changes/99/233899/2 && git cherry-pick FETCH_HEAD -x
+
+git fetch https://eureka-partner.googlesource.com/verisilicon-sdk refs/changes/01/233901/2 && git cherry-pick FETCH_HEAD -x
+
+git fetch https://eureka-partner.googlesource.com/verisilicon-sdk refs/changes/02/233902/2 && git cherry-pick FETCH_HEAD -x
+
+git fetch https://eureka-partner.googlesource.com/verisilicon-sdk refs/changes/03/233903/2 && git cherry-pick FETCH_HEAD -x
+
+git fetch https://eureka-partner.googlesource.com/verisilicon-sdk refs/changes/25/243025/1 && git cherry-pick FETCH_HEAD -x
+
+git fetch https://eureka-partner.googlesource.com/verisilicon-sdk refs/changes/26/243026/1 && git cherry-pick FETCH_HEAD -x
+
+git fetch https://eureka-partner.googlesource.com/verisilicon-sdk refs/changes/45/245445/2 && git cherry-pick FETCH_HEAD -x
+
+git fetch https://eureka-partner.googlesource.com/verisilicon-sdk refs/changes/27/245927/1 && git cherry-pick FETCH_HEAD -x
+
+---
 
 
 

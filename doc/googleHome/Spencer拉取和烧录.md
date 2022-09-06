@@ -264,7 +264,7 @@ cd spencer-sdk
 # 编译bootloader
 cd bl2 && ./build_bl2.sh spencer-p2
 cd bl31 && ./build_bl31.sh spencer-p2 
-cd bl31 && ./build_bl31.sh spencer-p2 
+cd bl32 && ./build_bl32.sh spencer-p2
 cd u-boot && ./build_uboot.sh spencer-p2 ../chrome/
 # 编译出来的文件在： ll -t vendor/amlogic/spencer/prebuilt/bootloader/
 
@@ -278,7 +278,8 @@ cd verisilicon && ./build_ml.sh arm64 spencer-p2 ../../chrome/  # 可以不编�
 - 拷贝和打包zip
 
 ```sh
-# /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/spencer-315654/spencer-target_file
+# bootloader
+# /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/spencer-315654/spencer-target_files
 cp /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/spencer/prebuilt/bootloader/aml_ddr.fw BOOT/bootloader/
 cp /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/spencer/prebuilt/bootloader/bl2_new.bin.spencer-p2 BOOT/bootloader/
 cp /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/spencer/prebuilt/bootloader/bl31.img.spencer-p2  BOOT/bootloader/
@@ -287,7 +288,9 @@ cp /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlog
 
 zip -r ./spencer-target_files.zip -f ./BOOT/bootloader
 
+# kernel
 
+# /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/spencer-315654/spencer-target_files
 cp /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/spencer/prebuilt/kernel/modules/*spencer-p2.ko ./BOOT/RAMDISK/lib/kernel/modules/
 cp /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/spencer/prebuilt/kernel/kernel.spencer.gz-dtb.spencer-p2 ./BOOT/RAMDISK/lib/kernel/kernel-spencer-p2 
 
@@ -298,7 +301,10 @@ cd ../../
 
 mv out/host/linux-x86/bin out/host/linux-x86/bin1
 
+# cd spencer-315654 && rm  replace-bootloader-kernel-ota-payload.bin replace-bootloader-kernel-ota-payload-properties.txt  replace-bootloader-kernel-ota.zip -rf && cd -
 ./vendor/amlogic/build/tools/releasetools/ota_from_target_files -v --board spencer-p2 ./spencer-315654/spencer-target_files/spencer-target_files.zip ./spencer-315654/replace-bootloader-kernel-ota.zip
+
+mv out/host/linux-x86/bin1 out/host/linux-x86/bin
 ```
 
 - 拷贝解压烧录
@@ -307,6 +313,7 @@ mv out/host/linux-x86/bin out/host/linux-x86/bin1
 
 ```sh
 # /mnt/fileroot/shengken.lin/workspace/google_source/eureka/replace-ota/spencer-315654
+# cp /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/spencer-315654/replace-bootloader-kernel-ota.zip .
 unzip replace-bootloader-kernel-ota.zip 
 cat bl2.bin tpl.bin > u-boot.bin
 ```
