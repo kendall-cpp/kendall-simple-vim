@@ -31,6 +31,7 @@ sys_init_module 有两部分工作
 - 调用 load_module 完成模块加载最核心的任务
 
 ```c
+// kernel/module.c
 static struct module *load_module(void __user *umod, unsigned long len, const char __user *uargs)
 ```
 
@@ -67,11 +68,12 @@ sys_init_module 调用 load_module , 通过 copy_from_user 函数将用户空间
 
 字符串表以 '\0' 作为一个字符串的结束标记，由 index 指向的字符串是从字符串表第 index 个字符开始，直到遇到一个 '\n' 标记，如果有且只有一个 '\n'  ，那么 index 指向的就是个空串（null string）。
 
-在驱动模块所在的 ELF 文件中，一般会有两个字符串表 section ，一个用来保存各个 section 名称，另一个用来保存符号表中的每个符号名称的字符串。
+在驱动模块所在的 ELF 文件中，一般会有两个字符串表 section 
 
-> load_module 就是通过 ELF 视图方式获得 section 名称字符串的地址（字符串表的基地址 secstrings 和符号名称的基地址 startab
+- 一个用来保存各个 section 名称
+- 另一个用来保存符号表中的每个符号名称的字符串。
 
-找到 section 在 HDR 视图中的实际存储地址
+load_module 获得 section 名称字符串表的基地址 secstrings 和符号名称的基地址 startab 。
 
-- find_sec 函数
+
 
