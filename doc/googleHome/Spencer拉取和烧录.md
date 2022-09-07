@@ -122,7 +122,7 @@ cd pdk
 ./create-uboot.sh -b  spencer-p2
 ```
 
-![](../img/spencer-uboot编译.png)
+![](/spencer-uboot编译.png)
 
 ### 3.2 签名kernel
 

@@ -6,10 +6,12 @@
     - [update kernel & uboot & system](#update-kernel--uboot--system)
     - [编译 spencer ota 包](#编译-spencer-ota-包)
     - [Replace bootloader](#replace-bootloader)
-    - [无法通过reboot update 进入烧录模式](#无法通过reboot-update-进入烧录模式)
-    - [测试问题](#测试问题)
+      - [拷贝解压烧录](#拷贝解压烧录)
       - [解决 adb 无法 push 问题](#解决-adb-无法-push-问题)
-  - [更新 verisilicon 驱动](#更新-verisilicon-驱动)
+      - [push 静态库](#push-静态库)
+    - [无法通过reboot update 进入烧录模式](#无法通过reboot-update-进入烧录模式)
+      - [测试问题main.cpp](#测试问题maincpp)
+- [Task: 更新 verisilicon 驱动](#task-更新-verisilicon-驱动)
 
 
 ---
@@ -65,6 +67,10 @@ bash step4_inference.sh ssd_small_multiout
 
 - 编译模型
 
+> 模型测试需要退 verisilicon 回到 a3a7bfc470082aad8dd4fade29fabddb7deb850b 这个 commit
+
+
+
 ```sh
 # cp  /mnt/fileroot/yuegui.he/c2/amlogic_sdk/alexnet_caffe_be/build_vx.sh .
 # 注意修改成自己的路径
@@ -92,7 +98,7 @@ insmod galcore.ko
 
 - **转换输出文件为 txt**
 
-修改 vnn_post_process.c
+修改 vnn_post_process.c 46 行
 
 ```c
 vsi_nn_SaveTensorToTextByFp32(graph, tensor, filename, "\n");
@@ -232,7 +238,7 @@ mv out/host/linux-x86/bin out/host/linux-x86/bin1
 ./vendor/amlogic/build/tools/releasetools/ota_from_target_files -v --board spencer-p2 ./spencer-315654/spencer-target_files/spencer-target_files.zip ./spencer-315654/replace-bootloader-kernel-ota.zip
 ```
 
-- 拷贝解压烧录
+#### 拷贝解压烧录
 
 解压
 
@@ -256,46 +262,15 @@ adnl.exe Partition -P system_a  -F system.img
 adnl.exe oem "reset"
 ```
 
+启动完成后解决无法 adb push 问题
 
-
-### 无法通过reboot update 进入烧录模式
-
-
-更改模式
-
-```sh
-/ # cat /proc/fts 
-fdr_count=17
-reboot_mode=normal
-encryption_salt=6719F51F524E847350B7A7CCDD23B09AC97A7332A2BB61DC4E5F5B7E29C2B841
-bootloader.command=boot-factory
-/ # fts -s bootloader.command 
-/ # cat /proc/fts 
-fdr_count=17
-reboot_mode=normal
-encryption_salt=6719F51F524E847350B7A7CCDD23B09AC97A7332A2BB61DC4E5F5B7E29C2B841
-/ # 
-```
-
-关闭或者打开 factory boot    
-
-```
-vim cmd/amlogic/cmd_factory_boot.c     
-vim cmd/amlogic/cmd_reboot.c  
-```
-
-### 测试问题
-
-```sh
-spencer-sdk/NN649/issue$ ../../prebuilt/toolchain/aarch64/bin/aarch64-cros-linux-gnu-clang++ main.cpp -o main.o -L ../../verisilicon/build/sdk/drivers -static -W1,--whole-archive -lovxlib
-```
 
 #### 解决 adb 无法 push 问题
 
 修改kernel代码
 
 ```c
-vim kernel/arch/arm64/boot/dts/amlogic/spencer-p2.dts 
+// vim kernel/arch/arm64/boot/dts/amlogic/spencer-p2.dts 
 
 1266     /*controller-type = <3>;*/
 1267     controller-type = <2>;   
@@ -330,22 +305,47 @@ echo ff500000.dwc2_a > /sys/kernel/config/usb_gadget/amlogic/UDC
 ```
 
 
-- push 静态库
+#### push 静态库
 
 ```sh
 adb.exe push .\drivers\. /data/
 
 # 还需要在这里把 Z:\windowFile\Spencer_SDK文件\NN649\issue\drive-download-20220905T020706Z-001 把 benchmark_model 和 libneural_network_models.so push 到 /data
 
-push 
+# push 
 
+Z:\workspace\google_source\eureka\spencer-sdk\verisilicon\build\sdk> adb.exe push .\drivers\. /data/
+
+Z:\workspace\google_source\eureka\spencer-sdk\NN649\issue\age_asymu8> adb.exe push .\bin_r\mynn .\mynn.export.data .\iter_0_input_0_out0_1_3_227_227.tensor /data
+
+Z:\windowFile\Spencer_SDK文件\NN649\issue\drive-download-20220905T020706Z-001> adb.exe push benchmark_model /data
+benchmark_model: 1 file pushed. 1.2 MB/s (41976 bytes in 0.034s)
+Z:\windowFile\Spencer_SDK文件\NN649\issue\drive-download-20220905T020706Z-001> adb.exe push libneural_network_models.so /data
+
+
+# 到板子上设置环境变量
 export LD_LIBRARY_PATH=/data:$LD_LIBRARY_PATH
+
+rmmod dhd
+rmmod galcore
+rmmod iv009_isp
+rmmod iv009_isp_sensor
+rmmod iv009_isp_lens
+rmmod iv009_isp_iq
+rmmod overlay
+rmmod exportfs
+
+insmod /data/galcore.ko
+
+chmod 777 /data/*
+
 
 
 # 声明环境变量 打印更多信息
 export VIV_VX_DEBUG_LEVEL=1
 
-./mynn ./mynn.export.data ./iter_0_input_0_out0_1_3_227_227.tensor 
+# 开始测试
+cd /data && ./mynn ./mynn.export.data ./iter_0_input_0_out0_1_3_227_227.tensor 
 
 
 # 测试module
@@ -355,10 +355,44 @@ VIV_VX_DEBUG_LEVEL=1 benchmark_model
 
 
 
+
+### 无法通过reboot update 进入烧录模式
+
+
+更改模式
+
+```sh
+/ # cat /proc/fts 
+fdr_count=17
+reboot_mode=normal
+encryption_salt=6719F51F524E847350B7A7CCDD23B09AC97A7332A2BB61DC4E5F5B7E29C2B841
+bootloader.command=boot-factory
+/ # fts -s bootloader.command 
+/ # cat /proc/fts 
+fdr_count=17
+reboot_mode=normal
+encryption_salt=6719F51F524E847350B7A7CCDD23B09AC97A7332A2BB61DC4E5F5B7E29C2B841
+/ # 
+```
+
+关闭或者打开 factory boot    
+
+```
+vim cmd/amlogic/cmd_factory_boot.c     
+vim cmd/amlogic/cmd_reboot.c  
+```
+
+#### 测试问题main.cpp
+
+```sh
+spencer-sdk/NN649/issue$ ../../prebuilt/toolchain/aarch64/bin/aarch64-cros-linux-gnu-clang++ main.cpp -o main.o -L ../../verisilicon/build/sdk/drivers -static -W1,--whole-archive -lovxlib
+```
+
+
 ----
 
 
-## 更新 verisilicon 驱动
+# Task: 更新 verisilicon 驱动
 
 - 解压并添加所有的 tgz 包，并 git commit
 
@@ -404,6 +438,7 @@ git add
 
 git commit -s
 
+-x 表示记录从哪里 cherry-pick 来的
 
 git fetch https://eureka-partner.googlesource.com/verisilicon-sdk refs/changes/97/233897/2 && git cherry-pick FETCH_HEAD -x
 
@@ -425,7 +460,14 @@ git fetch https://eureka-partner.googlesource.com/verisilicon-sdk refs/changes/4
 
 git fetch https://eureka-partner.googlesource.com/verisilicon-sdk refs/changes/27/245927/1 && git cherry-pick FETCH_HEAD -x
 
----
+- 编译打包烧录，测试 model
+
+----
+
+
+
+
+
 
 
 
