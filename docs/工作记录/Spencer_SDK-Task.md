@@ -90,6 +90,13 @@ vim makefile.linux
 Z:\workspace\google_source\eureka\spencer-sdk\verisilicon\build\sdk> adb.exe push .\drivers\. /lib/
 
 # \workspace\google_source\eureka\spencer-sdk\alexnet_caffe_be\bin_r>
+rmmod iv009_isp
+rmmod iv009_isp_sensor
+rmmod iv009_isp_lens
+rmmod iv009_isp_iq 
+rmmod galcore 
+rmmod dhd
+
 insmod galcore.ko
 
 ./tflite ./alexnet_caffe_be.nb iter_0_input_0_out0_1_3
