@@ -6,6 +6,7 @@
 	- [总结提交步骤](#总结提交步骤)
 	- [后悔还原](#后悔还原)
 		- [误删/改了某个文件还原](#误删改了某个文件还原)
+	- [撤销已经push到远端的文件](#撤销已经push到远端的文件)
 	- [checkout](#checkout)
 	- [查看日志](#查看日志)
 	- [重命名](#重命名)
@@ -21,6 +22,7 @@
 - [邮箱设置](#邮箱设置)
 - [push pull](#push-pull)
 	- [和远程发生冲突](#和远程发生冲突)
+	- [pull出现commit失败](#pull出现commit失败)
 - [git patch](#git-patch)
 	- [git format-patch：生成commit的内容](#git-format-patch生成commit的内容)
 	- [检查 patch](#检查-patch)
@@ -50,6 +52,8 @@ git rm --cached hello.txt   从暂存区退回到工作区  # 从暂存区删除
 	git reset HEAD hello.txt    从暂存区退回到工作区 和上面一样
 
 git reset --soft HEAD^		 撤销commit 保留add
+
+git reset HEAD~数字		按照输入的数字撤销输入数字条commit记录
 
 git commit -m update        将上面删除操作提交到git仓库
 
@@ -117,7 +121,23 @@ git checkout -- hello.txt  还原回工作区
 
 git restore <file>
 
+### 撤销已经push到远端的文件
 
+```c
+// 切换到指定分支
+git checkout 分支名
+// 撤回到需要的版本
+git reset --soft 需要回退到的版本号
+//提交撤销动作到服务器，强制提交当前版本号
+git push origin 分支名 --force
+//撤销后强制提交到当前分支的版本号状态，这里使用要谨慎，
+```
+
+
+- soft 和 hard的区别
+
+  - soft：保留本地当前工作区，用于重新提交（回退到指定版本号，回退的版本号代码会保留到本地工作区，本地工作区代码还是保留最后提交的状态）
+  - hard：不保留本地当前工作区，回退到指定版本号之后，同时本地工作区代码也回退，一定要谨慎使用
 
 
 ### checkout
@@ -183,31 +203,35 @@ git checkout new_branch   切换分支
 
 > 当一个工作未 commit 完成不能切换分支
 
+git checkout quartz-master --force  强制切换
+
 git checkout -b new_branch   创建并切换分支
 
 git branch -d new_branch   删除分支，但是不能删除自己，得切换到其他分支，而且**当前分支如果有文件也不能删除**，建议想先合并
 
 ### 保存现场 stash
 
-如果还没有将某个功能开发完毕，就要切换防止，建议保存现场（临时保存，stash），再切换
+如果某个功能还没开发完毕，就要切换分支，建议保存现场（临时保存，stash），再切换
 
 > 备份当前的工作区的内容,将当前的工作区内容保存到Git栈中
 
 git stash    保存现场，还原到上一个时刻
 
-git stash save "mystash"  保存现场，并命名为 mystash，还原到上一个时刻
+git stash save "mystash"  保存现场，并命名为 mystash，同时还原到上一个时刻
 
 gir stash list   查看所有保存的现场
 
-git stash pop    还原到上一个现场，同时删除现场
+git stash pop    后面不跟stash id, 还原到上一个现场，同时删除上一个现场
 
-git stash apply  还原现场，但不删除现场内容
+git stash apply  stash@{0}  还原现场，但不删除现场内容
 
-git stash pop stash@{0}    指定恢复到某一次现场
+git stash pop stash@{0}    指定恢复到某一次现场，同时删除 stash@{0} 
 
 git stash drop stash@{0}   手动删除某个现场
 
-> 如果不小心删除了。也可以使用 git stash apply eb777448a32aa23b318fc5f119a4edc64638ec43(删除的时候会有) 来恢复
+> 如果不小心删除了 stash,删除的时候会有一个 ID
+> Dropped stash@{0} (e2b6a6a3d905861b5ae6e08f2dafdf2b7a259571)
+> 也可以使用 git stash apply e2b6a6a3d905861b5ae6e08f2dafdf2b7a259571(删除的时候会有) 来恢复删除的 stash
 
 
 ### 在分支下修改文件
@@ -361,6 +385,12 @@ git config --local --unset user.email  删除
 > pull = fecth + merge   (marge:  origin/master 和 master 合并)
 
 - git fetch   拉去到本地，origin/master 分支，还未合并
+
+### pull出现commit失败
+
+git reset --hard FETCH_HEAD
+
+git pull
 
 
 ---

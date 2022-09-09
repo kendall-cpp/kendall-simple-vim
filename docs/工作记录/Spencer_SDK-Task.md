@@ -9,9 +9,20 @@
       - [拷贝解压烧录](#拷贝解压烧录)
       - [解决 adb 无法 push 问题](#解决-adb-无法-push-问题)
       - [push 静态库](#push-静态库)
-    - [无法通过reboot update 进入烧录模式](#无法通过reboot-update-进入烧录模式)
+    - [无法通过 reboot update 进入烧录模式](#无法通过-reboot-update-进入烧录模式)
       - [测试问题main.cpp](#测试问题maincpp)
 - [Task: 更新 verisilicon 驱动](#task-更新-verisilicon-驱动)
+  - [切换至 NQ 项目](#切换至-nq-项目)
+    - [下载 ota 烧录包](#下载-ota-烧录包)
+      - [拉取最新代码](#拉取最新代码)
+    - [编译 gqnq-sdk](#编译-gqnq-sdk)
+      - [Bootloader (bl2 + bl31 + bl32 + u-boot)](#bootloader-bl2--bl31--bl32--u-boot)
+      - [arm RTOS](#arm-rtos)
+      - [Kernel](#kernel)
+      - [isp module](#isp-module)
+      - [NN module](#nn-module)
+    - [烧录](#烧录)
+    - [充电](#充电)
 
 
 ---
@@ -363,23 +374,18 @@ VIV_VX_DEBUG_LEVEL=1 benchmark_model
 
 
 
-### 无法通过reboot update 进入烧录模式
+### 无法通过 reboot update 进入烧录模式
 
+> 研究
 
 更改模式
 
 ```sh
-/ # cat /proc/fts 
-fdr_count=17
-reboot_mode=normal
-encryption_salt=6719F51F524E847350B7A7CCDD23B09AC97A7332A2BB61DC4E5F5B7E29C2B841
-bootloader.command=boot-factory
-/ # fts -s bootloader.command 
-/ # cat /proc/fts 
-fdr_count=17
-reboot_mode=normal
-encryption_salt=6719F51F524E847350B7A7CCDD23B09AC97A7332A2BB61DC4E5F5B7E29C2B841
-/ # 
+cat /proc/fts 
+fts -s bootloader.command  # 设置bootloader命令
+fts -i  #清除工厂模式
+
+start usb_update; reboot update;
 ```
 
 关闭或者打开 factory boot    
@@ -470,6 +476,184 @@ git fetch https://eureka-partner.googlesource.com/verisilicon-sdk refs/changes/2
 - 编译打包烧录，测试 model
 
 ----
+
+## 切换至 NQ 项目
+
+----
+
+repo init -u  https://eureka-partner.googlesource.com/amlogic/manifest -b quartz-master  -m combined_sdk.xml
+
+repo sync
+
+----
+
+拷贝 spencer-sdk 至 GQNQ-sdk 
+
+```sh
+cp spencer-sdk GQNQ-sdk -rfL  # -rfL 表示拷贝git信息
+```
+
+切换分支 ： `bl31 bl32 uboot kernel` 都是 quartz-master
+
+bl2 是 quartz-master-v2
+
+
+### 下载 ota 烧录包
+
+Catbuild 在线下载网址：https://console.cloud.google.com/storage/browser/cast-partner-amlogic-internal/internal/master;tab=objects?authuser=1&prefix=&forceOnObjectsSortingFiltering=false
+
+这里以NQ为例，为了方便开发，我们选择开发版本 nq-eng, 版本号选择  
+
+`cast-partner-amlogic-internal/internal/master/gq-eng/316798`
+
+#### 拉取最新代码
+
+git pull eureka-partner HEAD:refs/for/quartz-master-v2
+
+报错
+
+```sh
+Removing tools/acs_tool/acs_tool.pyc
+Auto-merging tools/acs_tool/acs_tool.py
+CONFLICT (content): Merge conflict in tools/acs_tool/acs_tool.py
+Auto-merging Makefile.gcc
+Recorded preimage for 'tools/acs_tool/acs_tool.py'
+Automatic merge failed; fix conflicts and then commit the result.
+```
+
+解决
+
+```sh
+git reset HEAD .  # 从暂存区删除到工作区
+
+ git clean -f
+
+git reset --hard FETCH_HEAD
+
+git pull eureka-partner quartz-master-v2 / quartz-master
+```
+
+### 编译 gqnq-sdk
+
+#### Bootloader (bl2 + bl31 + bl32 + u-boot)
+
+> 若不加release参数，编译默认打开bootloader日志
+
+```sh
+cd bl2
+./build_bl2.sh gq-b3 release
+cd -
+
+cd bl31
+./build_bl31.sh gq-b3 release
+cd -
+
+cd bl32
+./build_bl32.sh gq-b3 release
+cd -
+# 可能会报错： Fatal error: script ./build_bl32.sh aborting at line 149, command "scripts/pack_kpub.py --rsk=keys/root_rsa_pub_key.pem --rek=keys/root_aes_key.bin --in=out/arm-plat-meson/core/bl32.img --out=out/bl32.img" returned 1
+# 需要修改Python版本
+vi scripts/pack_kpub.py
+#!/usr/bin/env python2    第一行
+
+
+cd u-boot
+./build_uboot.sh gq-b3 ./../../chrome release
+cd -
+```
+
+####  arm RTOS
+
+```sh
+cd freertos
+./build_rtos.sh gq-b3 ./../../chrome release --skip-dsp-build
+cd -
+```
+
+#### Kernel
+
+···
+cd kernel
+./build_kernel.sh gq-b3 ./../../chrome 
+cd -
+···
+
+#### isp module
+
+```
+cd lloyd-isp
+./build_isp.sh nq-b3 ./../../chrome 
+cd -
+```
+
+#### NN module
+
+```sh
+cd verisilicon
+./build_ml.sh arm64 gq-b3 ./../../chrome 
+cd -
+```
+
+### 烧录
+
+- 强制烧录:（按住复位键 - 直到串口打印处rom code) ，按照step 0~6 进行
+
+```sh
+:: step 0
+
+u-boot.bin 是由 bl2.bin tpl.bin 拼起来，可以用cat 命令生成 : cat bl2.bin tpl.bin > u-boot.bin
+adnl.exe Download bl2.bin 0x10000
+adnl.exe run
+adnl.exe bl2_boot -F u-boot.bin
+# --> sleep 3
+```
+
+- 正常烧录：按照 step 1~6 进行
+
+```sh
+fts -c
+
+fts -i   # 关闭工程模式
+
+start usb_update; reboot update;   # 重启进入烧录模式
+```
+
+```sh
+:: step 1
+adnl.exe oem store init 1
+adnl.exe oem mmc dev 1
+
+:: step 2
+adnl.exe partition -M mem -P 0x2000000 -F bl2.bin
+adnl.exe cmd "store boot_write bootloader 0x2000000 0x1ffe00"
+adnl.exe Partition -P tpl_a -F tpl.bin
+adnl.exe Partition -P tpl_b -F tpl.bin
+
+:: step 3
+adnl.exe Partition -P misc -F misc.img
+
+:: step 4
+adnl.exe Partition -P boot_a -F boot.img
+adnl.exe Partition -P boot_b -F boot.img
+
+:: step 5
+adnl.exe partition -P rtos_a -F rtos.img
+adnl.exe partition -P rtos_b -F rtos.img
+
+:: step 6
+adnl.exe Partition -P system_a -F system.img
+```
+
+
+### 充电
+
+
+```sh
+# 使用 nlspi_client 命令
+# 参数 -fault_mode=<1 or 0>           Set/Clear battery fault mode
+nlspi_client -fault_mode=0  #清除电池错误状态
+logcat -s iot_power  # 查看充电状态
+```
 
 
 
