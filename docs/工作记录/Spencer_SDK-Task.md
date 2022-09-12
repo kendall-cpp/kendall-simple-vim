@@ -21,8 +21,10 @@
       - [Kernel](#kernel)
       - [isp module](#isp-module)
       - [NN module](#nn-module)
+    - [签名](#签名)
     - [烧录](#烧录)
     - [充电](#充电)
+    - [自己制作ota包](#自己制作ota包)
 
 
 ---
@@ -176,6 +178,8 @@ mkdir spencer-315654
 cd spencer-315654
 
 spencer-315654/spencer-otatools$ unzip  otatools.zip 
+
+# 获取mkbootimg  和 mkbootfs 
 ```
 
 - missing-binary
@@ -483,6 +487,8 @@ git fetch https://eureka-partner.googlesource.com/verisilicon-sdk refs/changes/2
 
 repo init -u  https://eureka-partner.googlesource.com/amlogic/manifest -b quartz-master  -m combined_sdk.xml
 
+repo init -u https://eureka-partner.googlesource.com/amlogic/freertos -b quartz-master  -m combined_sdk.xml
+
 repo sync
 
 ----
@@ -502,7 +508,7 @@ bl2 是 quartz-master-v2
 
 Catbuild 在线下载网址：https://console.cloud.google.com/storage/browser/cast-partner-amlogic-internal/internal/master;tab=objects?authuser=1&prefix=&forceOnObjectsSortingFiltering=false
 
-这里以NQ为例，为了方便开发，我们选择开发版本 nq-eng, 版本号选择  
+这里以NQ为例，为了方便开发，我们选择开发版本 gq-eng, 版本号选择  
 
 `cast-partner-amlogic-internal/internal/master/gq-eng/316798`
 
@@ -572,17 +578,17 @@ cd -
 
 #### Kernel
 
-···
+```sh
 cd kernel
 ./build_kernel.sh gq-b3 ./../../chrome 
 cd -
-···
+```
 
 #### isp module
 
 ```
 cd lloyd-isp
-./build_isp.sh nq-b3 ./../../chrome 
+./build_isp.sh gq-b3 ./../../chrome 
 cd -
 ```
 
@@ -592,6 +598,24 @@ cd -
 cd verisilicon
 ./build_ml.sh arm64 gq-b3 ./../../chrome 
 cd -
+```
+
+### 签名
+
+```sh
+# 签名uboot
+cd pdk
+./create-uboot.sh -b  gq-b3
+
+# 签名kernel
+unpack_boot.sh ./boot.img ./boot_out unpack_boot 
+# 制作好ramdisk
+# mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/out/target/product/gq
+mkdir boot_unpack
+# 拷贝ramdisk.img进去
+
+# /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/pdk
+./build-bootimg.sh -b  gq-b3
 ```
 
 ### 烧录
@@ -644,6 +668,35 @@ adnl.exe partition -P rtos_b -F rtos.img
 adnl.exe Partition -P system_a -F system.img
 ```
 
+- 通过 pdk 签名的烧录命令
+
+```sh
+# start usb_update; reboot update;
+adnl.exe Download bl2.signed.bin 0x10000
+adnl.exe run
+adnl.exe bl2_boot -F u-boot.signed.bin
+
+adnl.exe oem store init 1
+adnl.exe oem mmc dev 1
+
+adnl.exe partition -M mem -P 0x2000000 -F bl2.signed.bin
+adnl.exe cmd "store boot_write bootloader 0x2000000 0x1ffe00"
+adnl.exe Partition -P tpl_a -F tpl.signed.bin
+adnl.exe Partition -P tpl_b -F tpl.signed.bin
+
+adnl.exe Partition -P misc -F misc.img
+
+adnl.exe Partition -P boot_a -F boot.img
+adnl.exe Partition -P boot_b -F boot.img
+
+# adnl.exe partition -P rtos_a -F rtos.img
+# adnl.exe partition -P rtos_b -F rtos.img
+
+adnl.exe Partition -P system_a -F system.img
+
+adnl.exe oem "reset"
+```
+
 
 ### 充电
 
@@ -656,6 +709,61 @@ logcat -s iot_power  # 查看充电状态
 ```
 
 
+### 自己制作ota包
+
+下载 gq_target_file.zip
+
+拷贝到 ${your_sdk}/GQ-ota
+
+```sh
+unzip gq-target_files.zip 
+
+# 配置环境变量
+export PATH=/mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/build/bin/:$PATH
+
+
+GQNQ-sdk$ cd bl2; ./build_bl2.sh gq-b3 ; cd -;
+GQNQ-sdk$ cd bl31; ./build_bl31.sh gq-b3 ; cd -;
+GQNQ-sdk$ cd bl32; ./build_bl32.sh gq-b3 ; cd -;
+GQNQ-sdk$ cd u-boot; ./build_uboot.sh gq-b3 ../../chrome/ ; cd -;
+
+GQNQ-sdk$ cd kernel; ./build_kernel.sh gq-b3 ~/eureka/chrome/; cd -;
+GQNQ-sdk$ cd ../chrome
+
+# /mnt/fileroot/shengken.lin/workspace/google_source/eureka/GQNQ-sdk/GQ-ota/gq_target_file
+ cp /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/gq/prebuilt/bootloader/aml_ddr.fw ./BOOT/bootloader
+ cp /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/gq/prebuilt/bootloader/bl2_new.bin.gq-b3 ./BOOT/bootloader
+ cp /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/gq/prebuilt/bootloader/bl30_new.bin.gq-b3 ./BOOT/bootloader
+ cp /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/gq/prebuilt/bootloader/bl31.img.gq-b3 BOOT/bootloader
+ cp /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/gq/prebuilt/bootloader/bl32.img.gq-b3 BOOT/bootloader
+ cp /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/gq/prebuilt/bootloader/bl33.bin.gq-b3 BOOT/bootloader
+ cp /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/gq/prebuilt/bootloader/ddr4_1d.fw ./BOOT/bootloader
+ cp /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/gq/prebuilt/bootloader/ddr4_2d.fw ./BOOT/bootloader
+ cp /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/gq/prebuilt/bootloader/ddr3_1d.fw ./BOOT/bootloader
+ cp /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/gq/prebuilt/bootloader/piei.fw ./BOOT/bootloader
+ cp /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/gq/prebuilt/bootloader/lpddr4_1d.fw ./BOOT/bootloader
+ cp /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/gq/prebuilt/bootloader/lpddr4_2d.fw ./BOOT/bootloader
+ cp /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/gq/prebuilt/bootloader/diag_lpddr4.fw ./BOOT/bootloader
+
+zip -r ./gq-target_files.zip -f ./BOOT
+
+# kernel & moduel
+
+# /mnt/fileroot/shengken.lin/workspace/google_source/eureka/GQNQ-sdk/GQ-ota/gq_target_file
+#  cp /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/gq/prebuilt/root_modules/galcore.gq-b3.ko ./BOOT/RAMDISK/lib/modules/galcore.gq-b3.ko 
+ cp /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/gq/prebuilt/kernel/modules/*gq-b3.ko ./BOOT/RAMDISK/lib/kernel/modules/
+ cp /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/gq/prebuilt/kernel/kernel.gq.gz-dtb.gq-b3 ./BOOT/RAMDISK/lib/kernel/kernel-gq-b3 
+
+ zip -r ./gq-target_files.zip -f ./BOOT
+
+cd /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome
+mv out/host/linux-x86/bin out/host/linux-x86/bin1
+./vendor/amlogic/gq/build/tools/releasetools/ota_from_target_files -v --board gq-b3 ../GQNQ-sdk/GQ-ota/gq_target_file/gq-target_files.zip /mnt/fileroot/shengken.lin/workspace/google_source/eureka/replace-ota/gq-replace-ota/replace-gq-ota.zip
+# error: FileNotFoundError: [Errno 2] No such file or directory: 'pack_arbt_2.4.0.py'
+
+
+mv out/host/linux-x86/bin1 out/host/linux-x86/bin
+```
 
 
 
