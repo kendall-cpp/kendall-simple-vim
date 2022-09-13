@@ -1,5 +1,5 @@
 
-- [NN模型转换](#nn模型转换)
+- [NN模型测试和转换](#nn模型测试和转换)
   - [编译出 ssd_small_multiout_be.nb](#编译出-ssd_small_multiout_benb)
 - [TASK: VSI 版本编译问题 bug](#task-vsi-版本编译问题-bug)
   - [复现测试](#复现测试)
@@ -25,13 +25,14 @@
     - [烧录](#烧录)
     - [充电](#充电)
     - [自己制作ota包](#自己制作ota包)
+  - [Task: FPN 模型](#task-fpn-模型)
 
 
 ---
 
 
 
-# NN模型转换
+# NN模型测试和转换
 
 ## 编译出 ssd_small_multiout_be.nb
 
@@ -689,8 +690,8 @@ adnl.exe Partition -P misc -F misc.img
 adnl.exe Partition -P boot_a -F boot.img
 adnl.exe Partition -P boot_b -F boot.img
 
-# adnl.exe partition -P rtos_a -F rtos.img
-# adnl.exe partition -P rtos_b -F rtos.img
+adnl.exe partition -P rtos_a -F rtos.img
+adnl.exe partition -P rtos_b -F rtos.img
 
 adnl.exe Partition -P system_a -F system.img
 
@@ -765,6 +766,135 @@ mv out/host/linux-x86/bin out/host/linux-x86/bin1
 mv out/host/linux-x86/bin1 out/host/linux-x86/bin
 ```
 
+
+## Task: FPN 模型
+
+> 测试模型需要回退到 commit id: a3a7bfc470082aad8dd4fade29fabddb7deb850b
+
+```sh
+rmmod iv009_isp 
+rmmod iv009_isp_sensor 
+rmmod iv009_isp_lens 
+rmmod iv009_isp_iq 
+rmmod galcore  
+rmmod dhd  
+
+
+ Z:\workspace\google_source\eureka\spencer-sdk\verisilicon\build\sdk\drivers> adb.exe push .\. /lib
+
+
+insmod /lib/galcore.ko 
+
+ mkdir /cache/FPN_be
+
+ 
+Z:\workspace\google_source\eureka\spencer-sdk\FPN_be> adb.exe push .\bin_r\tflite .\FPN_be.nb /cache/FPN_be
+Z:\workspace\google_source\eureka\NN-spencer-file\NN649\AML_OUTPUT\All_precompile_bin\All_pre-compiled_bin\spencer\model\FPN_be> adb.exe push .\640.jpg  .\iter_0_input_0_out0_1_640_640_3.tensor /cache/FPN_be
+
+ chmod 777 *
+
+./tflite FPN_be.nb 640.jpg 
+# Create Neural Network: 81ms or 81277us
+# Verify...
+# Verify Graph: 15ms or 15634us
+# Start run graph [1] times...
+# Run the 1 time: 146.40ms or 146396.08us
+# vxProcessGraph execution time:
+# Total   146.49ms or 146490.78us
+# Average 146.49ms or 146490.78us
+#  --- Top5 ---
+# 153323: 4.838949
+# 153347: 4.782682
+# 152027: 4.613881
+# 152051: 4.613881
+# 153371: 4.613881
+./tflite FPN_be.nb iter_0_input_0_out0_1_640_640_3.tensor 
+# Create Neural Network: 222ms or 222784us
+# Verify...
+# Verify Graph: 3ms or 3037us
+# Start run graph [1] times...
+# Run the 1 time: 146.51ms or 146511.25us
+# vxProcessGraph execution time:
+# Total   146.60ms or 146602.12us
+# Average 146.60ms or 146602.12us
+#  --- Top5 ---
+# 153323: 5.007749
+# 153347: 5.007749
+# 153371: 5.007749
+# 153299: 4.782682
+# 153395: 4.670148
+
+```
+
+- cherry pick
+
+```sh
+cd freertos
+git fetch https://eureka-partner.googlesource.com/amlogic/freertos refs/changes/41/208141/2 && git cherry-pick FETCH_HEAD
+git fetch https://eureka-partner.googlesource.com/amlogic/freertos refs/changes/42/208142/3 && git cherry-pick FETCH_HEAD
+git fetch https://eureka-partner.googlesource.com/amlogic/freertos refs/changes/03/208503/4 && git cherry-pick FETCH_HEAD
+```
+
+- 编译 rtos
+
+```sh
+cd freertos
+./build_rtos.sh gq-b3 ./../../chrome release --skip-dsp-build
+```
+
+- 签名 rtos
+
+```sh
+# 编译出来的镜像文件在 /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/gq/prebuilt/rtos/rtos-uImage.gq-b3
+cd pdk
+./sign_rtos.sh -i /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/gq/prebuilt/rtos/rtos-uImage.gq-b3 -b  gq-b3
+```
+
+- 编译 gq kernel 
+
+  - 解压boot.img 得到 ramdisk.img
+
+```sh
+# /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/eureka/tools/scripts/unpack_boot_img.py ./boot.img boot_out -k /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/gq/releasetools/keys/kernel_aesk.bin -d biggie
+# Traceback (most recent call last):
+#   File "/mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/eureka/tools/scripts/unpack_boot_img.py", line 252, in <module>
+#     main()
+#   File "/mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/eureka/tools/scripts/unpack_boot_img.py", line 233, in main
+#     kernel_addr) = boot_img_parser.parse(args.boot_img)
+#   File "/mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/eureka/tools/scripts/unpack_boot_img.py", line 61, in parse
+#     return self._parse_prepared_image(
+#   File "/mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/eureka/tools/scripts/unpack_boot_img.py", line 91, in _parse_prepared_image
+#     raise Exception('Did not find magic value "%s"' % str(ANDROID_MAGIC))
+
+
+# /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/pdk/unpack_boot
+# ../unpack_boot_img.py ./boot.img ../../out/target/product/gq/boot_unpack/ -k /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/gq/releasetools/keys/kernel_aesk.bin -d biggie
+# 不能这么解包
+# 1 GQ/NQ unpack boot.img
+  ./unpackbootimg -i ./boot.img -o ../../out/target/product/gq/boot_unpack   # 加压之前需要创建好 boot_unpack 目录
+
+# 2 spencer/korlan
+# bash unpack_boot.sh ./boot.img ./boot_out unpack_boot
+
+```
+
+- 编译kernel
+
+```sh
+
+```
+
+- 烧录 rtos
+
+```sh
+start usb_update; reboot update;
+
+
+adnl.exe partition -P rtos_a -F rtos.img
+adnl.exe partition -P rtos_b -F rtos.img
+
+adnl.exe oem "reset"
+```
 
 
 

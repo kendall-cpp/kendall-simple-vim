@@ -4,6 +4,7 @@
   - [最终提交1](#最终提交1)
   - [最终提交2](#最终提交2)
 - [Task: AC status `connected_status` not truly reflect the state when T6 docked](#task-ac-status-connected_status-not-truly-reflect-the-state-when-t6-docked)
+- [复现](#复现)
 
 
 -------------
@@ -161,3 +162,46 @@ https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/247425
 
 > https://partnerissuetracker.corp.google.com/issues/244842099
 
+## 复现
+
+https://partnerissuetracker.corp.google.com/issues/245839768
+
+编译 ota 命令
+
+```sh
+cd chrome/
+
+source build/envsetup.sh 
+
+# PARTNER_BUILD=true lunch korlan-eng
+PARTNER_BUILD=true lunch
+
+PARTNER_BUILD=true BOARD_NAME=korlan-b1 make -j30 otapackage
+PARTNER_BUILD=true BOARD_NAME=korlan-p1 make -j30 otapackage
+# 输出obj路径： /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/out/target/product/korlan
+```
+
+
+编译
+
+```sh
+./build_bl2.sh korlan-b1 ../u-boot release
+
+./build_bl31.sh korlan-b1 ../u-boot release
+
+# 修改pthon脚本 scripts/pack_kpub.py
+./build_bl32.sh korlan-b1 ../u-boot release  #+#!/usr/bin/env python
+
+./build_uboot.sh korlan-b1 ../../chrome release
+
+./build_kernel.sh korlan-b1  ../../chrome
+```
+
+签名
+
+```sh
+cd pdk
+./create-uboot.sh -b korlan-b1
+
+./build-bootimg.sh -b  korlan-b1
+```
