@@ -751,7 +751,7 @@ zip -r ./gq-target_files.zip -f ./BOOT
 # kernel & moduel
 
 # /mnt/fileroot/shengken.lin/workspace/google_source/eureka/GQNQ-sdk/GQ-ota/gq_target_file
-#  cp /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/gq/prebuilt/root_modules/galcore.gq-b3.ko ./BOOT/RAMDISK/lib/modules/galcore.gq-b3.ko 
+ cp /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/gq/prebuilt/root_modules/galcore.gq-b3.ko ./BOOT/RAMDISK/lib/modules/galcore.gq-b3.ko 
  cp /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/gq/prebuilt/kernel/modules/*gq-b3.ko ./BOOT/RAMDISK/lib/kernel/modules/
  cp /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/gq/prebuilt/kernel/kernel.gq.gz-dtb.gq-b3 ./BOOT/RAMDISK/lib/kernel/kernel-gq-b3 
 
@@ -761,6 +761,13 @@ cd /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome
 mv out/host/linux-x86/bin out/host/linux-x86/bin1
 ./vendor/amlogic/gq/build/tools/releasetools/ota_from_target_files -v --board gq-b3 ../GQNQ-sdk/GQ-ota/gq_target_file/gq-target_files.zip /mnt/fileroot/shengken.lin/workspace/google_source/eureka/replace-ota/gq-replace-ota/replace-gq-ota.zip
 # error: FileNotFoundError: [Errno 2] No such file or directory: 'pack_arbt_2.4.0.py'
+# 需要拷贝otatool到相应目录，参考spencer
+# /mnt/fileroot/shengken.lin/workspace/google_source/eureka/GQNQ-sdk/GQ-ota/otatools
+cp ./framework/signapk.jar ../../../chrome/build/framework
+cp ./framework/dumpkey.jar ../../../chrome/build/framework
+cp ./framework/dumpkey.jar ../../../chrome/out/host/linux-x86/framework
+cp ./framework/signapk.jar ../../../chrome/out//host/linux-x86/framework
+# make_ext4fs 要用和spencer一样的
 
 
 mv out/host/linux-x86/bin1 out/host/linux-x86/bin
