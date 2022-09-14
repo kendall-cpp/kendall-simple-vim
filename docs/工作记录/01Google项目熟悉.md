@@ -391,8 +391,8 @@ cp ./aml_ddr.fw ../u-boot/fip/a1/
 - build_bl31.sh
 
 ```sh
-# 生成 bl131.img 并拷贝到 u-boot/fip/c2/
-cp -v build/c2/release/bl31.img ../u-boot/fip/c2/
+# 生成 bl131.img 并拷贝到 u-boot/fip/a1/
+cp -v build/c2/release/bl31.img ../u-boot/fip/a1/
 ```
 
 - build_bl32.sh

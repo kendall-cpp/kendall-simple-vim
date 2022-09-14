@@ -499,20 +499,24 @@ elaine是SM1
 cd bl2
 ./build_bl2.sh korlan-b1 ../u-boot release
 cd -
+#输出 cp ./aml_ddr.fw ../u-boot/fip/a1/
 
 cd bl31
 ./build_bl31.sh korlan-b1 ../u-boot release
 cd -
-
+# 输出：cp -v build/c2/release/bl31.img ../u-boot/fip/a1/
 
 # 修改pthon脚本 scripts/pack_kpub.py  #+#!/usr/bin/env python
 cd bl32
 ./build_bl32.sh korlan-b1 ../u-boot release 
 cd -
+# 输出： cp -v out/bl32.img ../u-boot/fip/a1/
 
 cd u-boot
 ./build_uboot.sh korlan-b1 ../../chrome release
 cd -
+# 编译： # ./mk a1_korlan_b1 --board_name korlan-b1 --bl2 fip/a1/bl2.bin --bl30 fip/a1/bl30.bin --bl31 fip/a1/bl31.img --bl32 fip/a1/bl32.img release
+# 输出： /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/korlan/prebuilt/bootloader
 
 cd kernel
 ./build_kernel.sh korlan-b1  ../../chrome
@@ -523,21 +527,21 @@ cd -
 ## 签名korlan
 
 ```sh
-cd /mnt/fileroot/shengken.lin/workspace/google_source/eureka/amlogic_sdk/build-sign-pdk
-# 签名 u-boot
-./ssign-uboot_korlan.sh /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/  korlan/korlan-b1  b1
+# /mnt/fileroot/shengken.lin/workspace/google_source/eureka/amlogic_sdk/build-sign-pdk
+mkdir -p ./korlan/korlan-b1
 
-# 完成签名kernel之前需要将 ramdisk 拷贝到下面路径
-/mnt/fileroot/shengken.lin/workspace/google_source/eureka/amlogic_sdk/build-sign-pdk/korlan/ramdisk.img
+# 签名 uboot
+./sign-uboot.sh ../../chrome ./korlan/korlan-b1 b1
 
-# 签名 kernel
-./build-bootimg-sign_korlan.sh /mnt/fileroot/shengken.lin/workspace/google_source/eureka/amlogic_sdk/  korlan/korlan-b1  b1 /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/
+# 签名kernel
+# ramdisk 需要拷贝到 ./korlan/ramdisk.img
+./sign-kernel.sh ../../amlogic_sdk korlan/korlan-b1 b1 ../../chrome
 ```
 
 ## 烧录korlan
 
 ```sh
-adnl.exe  Download u-boot.bin 0x10000  # 上电强制进入烧录模式  强制烧录会进入USB模式，需要重USB下载
+adnl.exe  Download u-boot.bin 0x10000  
 adnl.exe run
 adnl.exe bl2_boot -F  u-boot.bin
 
@@ -558,18 +562,16 @@ adnl.exe oem "reset"
 ## 编译korlan-ota
 
 ```sh
-cd cd chrome
+cd chrome
 source build/envsetup.sh 
 
 # 全部编译 korlan-eng
 lunch  # 选korlan-eng
 PARTNER_BUILD=true BOARD_NAME=korlan-p2 make -j30 otapackage  
 # 输出obj路径： /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/out/target/product/korlan
+
+# 如果出现 java version 问题，就是 out/host/linux-x86 替换过了，需要替换回repo sync 时候才行
 ```
-
-
-
-
 
 
 
@@ -611,46 +613,30 @@ cp spencer-sdk GQNQ-sdk -rfL
 
 ### 编译Bootloader (bl2 + bl31 + bl32 + u-boot)
 
-
-
 > 若不加release参数，编译默认打开bootloader日志
 
 ```sh
 cd bl2
-
 ./build_bl2.sh gq-b3 release
-
 cd -
 
 
 cd bl31
-
 ./build_bl31.sh gq-b3 release
-
 cd -
 
-
-
 cd bl32
-
 ./build_bl32.sh gq-b3 release
-
 cd -
 
 # 可能会报错： Fatal error: script ./build_bl32.sh aborting at line 149, command "scripts/pack_kpub.py --rsk=keys/root_rsa_pub_key.pem --rek=keys/root_aes_key.bin --in=out/arm-plat-meson/core/bl32.img --out=out/bl32.img" returned 1
 
 # 需要修改Python版本
-
 vi scripts/pack_kpub.py
-
 #!/usr/bin/env python2   第一行
 
-
-
 cd u-boot
-
 ./build_uboot.sh gq-b3 ./../../chrome release
-
 cd -
 ```
 
@@ -662,9 +648,7 @@ cd -
 
 ```sh
 cd freertos
-
 ./build_rtos.sh gq-b3 ./../../chrome release --skip-dsp-build
-
 cd -
 ```
 
@@ -674,9 +658,7 @@ cd -
 
 ```sh
 cd kernel
-
 ./build_kernel.sh gq-b3 ./../../chrome 
-
 cd -
 ```
 
@@ -696,9 +678,7 @@ cd -
 
 ```sh
 cd lloyd-isp
-
 ./build_isp.sh gq-b3 ./../../chrome 
-
 cd -
 ```
 
@@ -708,9 +688,7 @@ cd -
 
 ```sh
 cd verisilicon
-
 ./build_ml.sh arm64 gq-b3 ./../../chrome 
-
 cd -
 ```
 
@@ -747,10 +725,8 @@ cd /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/pdk
 ```sh
 # 编译出来的镜像文件在 /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/gq/prebuilt/rtos/rtos-uImage.gq-b3
 cd pdk
-./sign_rtos.sh -i /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/gq/prebuilt/rtos/rtos-uImage.gq-b3 -b  gq-b3
+./sign_rtos.sh -i /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/gq/prebuilt/rtos/rtos-uImage.gq-b3 -b gq-b3
 ```
-
-
 
 ## GQ烧录
 
