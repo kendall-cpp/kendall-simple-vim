@@ -432,46 +432,6 @@ printk(" reg: 0x%x \n", readl(ioremap(reg, 1)));
 
 
 
-## spencer烧录命令
-
-```sh
-adnl.exe  Download u-boot.signed.bin 0x10000
-adnl.exe run
-adnl.exe bl2_boot -F  u-boot.signed.bin
-
-
-# echo off
-# ping 0.0.0.0 -n 5 > null
-# echo on
-
-adnl.exe oem "store init 1"
-adnl.exe oem "mmc dev 1"
-
-# 如果不单独编译dts这个可以不用执行，因为 dtb 已经打包到 u-boot.signed.bin
-# adnl.exe Partition -M mem -P 0x1000000 -F spencer-p2.dtb
-# adnl.exe oem "emmc part_write 0x1000000"
-
-# echo off
-# ping 0.0.0.0 -n 5 > null
-# echo on
-
-# 如果是正常启动 reboot update
-adnl.exe  Partition -M mem -P 0x2000000 -F u-boot.signed.bin
-adnl.exe oem "store boot_write bootloader 0x2000000 0x1ffe00"
-
-# echo off
-# ping 0.0.0.0 -n 3 > null
-
-adnl.exe Partition -P tpl_a  -F tpl.signed.bin
-adnl.exe Partition -P tpl_b  -F tpl.signed.bin
-adnl.exe Partition -P boot_a  -F boot.img
-adnl.exe Partition -P boot_b  -F boot.img
-adnl.exe Partition -P misc  -F misc.img
-adnl.exe Partition -P system_b  -F fct_boot.img
-adnl.exe oem "enable_factory_boot"   # adnl.exe oem "disable_factory_boot" 
-adnl.exe oem "reset"
-```
-
 
 ## 芯片代称对应
 
@@ -490,6 +450,16 @@ elaine是SM1
 -----
 
 # Korlan
+
+## korlan Sync
+
+参考：[Sync chrome and korlan](https://confluence.amlogic.com/display/SW/Sync+chrome+and+korlan)
+
+```sh
+cd eureka && mkdir amlogic_sdk
+repo init -u https://eureka-partner.googlesource.com/amlogic/manifest -b korlan-master -m combined_sdk.xml
+repo sync
+```
 
 > Baud rate 为 115200
 
@@ -522,6 +492,29 @@ cd kernel
 ./build_kernel.sh korlan-b1  ../../chrome
 cd -
 
+```
+
+- 整体编译
+
+```sh
+cd amlogic_sdk
+./sdk/build_scripts/build_all.sh ../chrome korlan-p2
+```
+
+
+## 制作 ramdisk
+
+
+【下载地址】: https://console.cloud.google.com/storage/browser/cast-partner-amlogic-internal/internal/master/korlan-eng;tab=objects?pageState=(%22StorageObjectListTable%22:(%22f%22:%22%255B%255D%22))&prefix=&forceOnObjectsSortingFiltering=false
+
+将下载解压出来的 boot.img 拷贝到 unpack_boot_ramdisk_script 目录下
+
+```sh
+# /mnt/fileroot/shengken.lin/workspace/google_source/eureka/amlogic_sdk/unpack_boot_ramdisk_script
+bash unpack_boot.sh ./boot.img ./boot_out unpack_boot 
+
+# 解压出ramdisk.img.xz 之后，拷贝
+cp ramdisk.img.xz /mnt/fileroot/shengken.lin/workspace/google_source/eureka/amlogic_sdk/build-sign-pdk/korlan/ramdisk.img
 ```
 
 ## 签名korlan
@@ -574,16 +567,46 @@ PARTNER_BUILD=true BOARD_NAME=korlan-p2 make -j30 otapackage
 ```
 
 
-
 ---
 
 
 
 # Spencer
 
+## spencer烧录
+
+```sh
+# 强制进入烧录模式
+adnl.exe  Download u-boot.signed.bin 0x10000
+adnl.exe run
+adnl.exe bl2_boot -F  u-boot.signed.bin
+
+# 如果是正常启动 reboot update
+adnl.exe oem "store init 1"
+adnl.exe oem "mmc dev 1"
+
+# 如果不单独编译dts这个可以不用执行，因为 dtb 已经打包到 u-boot.signed.bin
+# adnl.exe Partition -M mem -P 0x1000000 -F spencer-p2.dtb
+# adnl.exe oem "emmc part_write 0x1000000"
+
+adnl.exe  Partition -M mem -P 0x2000000 -F u-boot.signed.bin
+adnl.exe oem "store boot_write bootloader 0x2000000 0x1ffe00"
 
 
----
+adnl.exe Partition -P tpl_a  -F tpl.signed.bin
+adnl.exe Partition -P tpl_b  -F tpl.signed.bin
+adnl.exe Partition -P boot_a  -F boot.img
+adnl.exe Partition -P boot_b  -F boot.img
+adnl.exe Partition -P misc  -F misc.img
+adnl.exe Partition -P system_b  -F fct_boot.img
+adnl.exe oem "enable_factory_boot"   # adnl.exe oem "disable_factory_boot" 
+adnl.exe oem "reset"
+```
+
+
+## 
+
+----
 
 
 
@@ -608,7 +631,6 @@ cp spencer-sdk GQNQ-sdk -rfL
 
 
 ## GQ编译和签名
-
 
 
 ### 编译Bootloader (bl2 + bl31 + bl32 + u-boot)
@@ -640,19 +662,13 @@ cd u-boot
 cd -
 ```
 
-
-
 ###  编译arm RTOS
-
-
 
 ```sh
 cd freertos
 ./build_rtos.sh gq-b3 ./../../chrome release --skip-dsp-build
 cd -
 ```
-
-
 
 ### 编译Kernel
 
@@ -664,7 +680,7 @@ cd -
 
 > 注意：如果是从spencer-sdk拷贝过来的可能会报下面的错误：
 >
-> Fatal error: script ./build_kernel.sh aborting at line 54, command "make CLANG_TRIPLE=$1 CC=$cc_clang CROSS_COMPILE=$1 ARCH=$3 -j$2 $4 CONFIG_DEBUG_SECTION_MISMATCH=y" returned 2
+> `Fatal error: script ./build_kernel.sh aborting at line 54, command "make CLANG_TRIPLE=$1 CC=$cc_clang CROSS_COMPILE=$1 ARCH=$3 -j$2 $4 CONFIG_DEBUG_SECTION_MISMATCH=y" returned 2`
 >
 > 解决方法：
 >
@@ -733,7 +749,7 @@ cd pdk
 ```sh
 # z/workspace/google_source/eureka/chrome/out/target/product/gq/upgrade
 
-# 强制进入烧录模式
+# 强制进入烧录模式， 只需要长按复位键即可
 adnl.exe Download bl2.signed.bin 0x10000
 adnl.exe run
 adnl.exe bl2_boot -F u-boot.signed.bin
