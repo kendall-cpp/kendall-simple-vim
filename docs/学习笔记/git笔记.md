@@ -209,6 +209,12 @@ git checkout -b new_branch   创建并切换分支
 
 git branch -d new_branch   删除分支，但是不能删除自己，得切换到其他分支，而且**当前分支如果有文件也不能删除**，建议想先合并
 
+```sh
+git checkout -b <branch> origin/<branch>   # 先在本地建立一个分支，并切换到该分支，然后从远程分支上同步代码到该分支上，并建立关联
+git checkout -t origin/<branch>		# 这个的作用和上面的一样
+```
+
+
 ### 保存现场 stash
 
 如果某个功能还没开发完毕，就要切换分支，建议保存现场（临时保存，stash），再切换

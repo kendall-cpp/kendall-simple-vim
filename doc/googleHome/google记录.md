@@ -485,3 +485,388 @@ newman是G12B
 
 elaine是SM1
 
+
+
+-----
+
+# Korlan
+
+> Baud rate 为 115200
+
+## 编译korlan
+
+```sh
+cd bl2
+./build_bl2.sh korlan-b1 ../u-boot release
+cd -
+
+cd bl31
+./build_bl31.sh korlan-b1 ../u-boot release
+cd -
+
+
+# 修改pthon脚本 scripts/pack_kpub.py  #+#!/usr/bin/env python
+cd bl32
+./build_bl32.sh korlan-b1 ../u-boot release 
+cd -
+
+cd u-boot
+./build_uboot.sh korlan-b1 ../../chrome release
+cd -
+
+cd kernel
+./build_kernel.sh korlan-b1  ../../chrome
+cd -
+
+```
+
+## 签名korlan
+
+```sh
+cd /mnt/fileroot/shengken.lin/workspace/google_source/eureka/amlogic_sdk/build-sign-pdk
+# 签名 u-boot
+./ssign-uboot_korlan.sh /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/  korlan/korlan-b1  b1
+
+# 完成签名kernel之前需要将 ramdisk 拷贝到下面路径
+/mnt/fileroot/shengken.lin/workspace/google_source/eureka/amlogic_sdk/build-sign-pdk/korlan/ramdisk.img
+
+# 签名 kernel
+./build-bootimg-sign_korlan.sh /mnt/fileroot/shengken.lin/workspace/google_source/eureka/amlogic_sdk/  korlan/korlan-b1  b1 /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/
+```
+
+## 烧录korlan
+
+```sh
+adnl.exe  Download u-boot.bin 0x10000  # 上电强制进入烧录模式  强制烧录会进入USB模式，需要重USB下载
+adnl.exe run
+adnl.exe bl2_boot -F  u-boot.bin
+
+# 上面不会下载到 flash
+# 通过 reboot update 进入烧录模式
+adnl.exe oem "store init 1"
+adnl.exe oem "store boot_erase bootloader"
+adnl.exe oem "store erase boot 0 0"
+adnl.exe oem "store erase system 0 0"
+adnl.exe Partition -P bootloader  -F  u-boot.bin
+adnl.exe Partition -P boot  -F boot-sign.img
+adnl.exe Partition -P system  -F system.img
+adnl.exe oem "reset"
+```
+
+
+
+## 编译korlan-ota
+
+```sh
+cd cd chrome
+source build/envsetup.sh 
+
+# 全部编译 korlan-eng
+lunch  # 选korlan-eng
+PARTNER_BUILD=true BOARD_NAME=korlan-p2 make -j30 otapackage  
+# 输出obj路径： /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/out/target/product/korlan
+```
+
+
+
+
+
+
+
+---
+
+
+
+# Spencer
+
+
+
+---
+
+
+
+# GQ
+
+## GQ Sync
+
+> repo init -u  https://eureka-partner.googlesource.com/amlogic/manifest -b quartz-master  -m combined_sdk.xml
+>
+> repo init -u https://eureka-partner.googlesource.com/amlogic/freertos -b quartz-master  -m combined_sdk.xml
+>
+> repo sync
+
+或者从 Spencer-sdk 拷贝过来并切换分支
+
+```sh
+cp spencer-sdk GQNQ-sdk -rfL 
+```
+
+**切换分支** ： `bl31 bl32 uboot kernel` 都是 quartz-master，bl2 是 quartz-master-v2
+
+
+
+## GQ编译和签名
+
+
+
+### 编译Bootloader (bl2 + bl31 + bl32 + u-boot)
+
+
+
+> 若不加release参数，编译默认打开bootloader日志
+
+```sh
+cd bl2
+
+./build_bl2.sh gq-b3 release
+
+cd -
+
+
+cd bl31
+
+./build_bl31.sh gq-b3 release
+
+cd -
+
+
+
+cd bl32
+
+./build_bl32.sh gq-b3 release
+
+cd -
+
+# 可能会报错： Fatal error: script ./build_bl32.sh aborting at line 149, command "scripts/pack_kpub.py --rsk=keys/root_rsa_pub_key.pem --rek=keys/root_aes_key.bin --in=out/arm-plat-meson/core/bl32.img --out=out/bl32.img" returned 1
+
+# 需要修改Python版本
+
+vi scripts/pack_kpub.py
+
+#!/usr/bin/env python2   第一行
+
+
+
+cd u-boot
+
+./build_uboot.sh gq-b3 ./../../chrome release
+
+cd -
+```
+
+
+
+###  编译arm RTOS
+
+
+
+```sh
+cd freertos
+
+./build_rtos.sh gq-b3 ./../../chrome release --skip-dsp-build
+
+cd -
+```
+
+
+
+### 编译Kernel
+
+```sh
+cd kernel
+
+./build_kernel.sh gq-b3 ./../../chrome 
+
+cd -
+```
+
+> 注意：如果是从spencer-sdk拷贝过来的可能会报下面的错误：
+>
+> Fatal error: script ./build_kernel.sh aborting at line 54, command "make CLANG_TRIPLE=$1 CC=$cc_clang CROSS_COMPILE=$1 ARCH=$3 -j$2 $4 CONFIG_DEBUG_SECTION_MISMATCH=y" returned 2
+>
+> 解决方法：
+>
+> cd dhd-driver
+>
+> 切换到 dhd_1.579.77.41.x 这个分支
+>
+> git checkout -t  remotes/origin/dhd_1.579.77.41.x
+
+### 编译isp module
+
+```sh
+cd lloyd-isp
+
+./build_isp.sh gq-b3 ./../../chrome 
+
+cd -
+```
+
+
+
+### 编译NN module
+
+```sh
+cd verisilicon
+
+./build_ml.sh arm64 gq-b3 ./../../chrome 
+
+cd -
+```
+
+### 全部编译 build_all
+
+```shell
+cd /GQNQ-sdk
+bash ./sdk/build_scripts/build_all.sh ../chrome/  gq-b3
+# bash ./sdk/build_scripts/build_all.sh ../chrome/  gq    # 我的服务器已经脚本改成只有gq
+```
+
+### 签名
+
+#### 签名uboot
+
+```sh
+cd pdk
+./create-uboot.sh -b  gq-b3
+```
+
+#### 签名kernel
+
+```#### dsh
+# 制作好ramdisk
+# cd mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/out/target/product/gq
+mkdir boot_unpack
+# 拷贝ramdisk.img进去
+cd /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/pdk
+./build-bootimg.sh -b  gq-b3
+```
+
+#### 签名rots
+
+```sh
+# 编译出来的镜像文件在 /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/gq/prebuilt/rtos/rtos-uImage.gq-b3
+cd pdk
+./sign_rtos.sh -i /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/gq/prebuilt/rtos/rtos-uImage.gq-b3 -b  gq-b3
+```
+
+
+
+## GQ烧录
+
+```sh
+# z/workspace/google_source/eureka/chrome/out/target/product/gq/upgrade
+
+# 强制进入烧录模式
+adnl.exe Download bl2.signed.bin 0x10000
+adnl.exe run
+adnl.exe bl2_boot -F u-boot.signed.bin
+
+# 正常启动进入烧录模式
+start usb_update; reboot update;
+
+adnl.exe oem store init 1
+adnl.exe oem mmc dev 1
+
+adnl.exe partition -M mem -P 0x2000000 -F bl2.signed.bin
+adnl.exe cmd "store boot_write bootloader 0x2000000 0x1ffe00"
+adnl.exe Partition -P tpl_a -F tpl.signed.bin
+adnl.exe Partition -P tpl_b -F tpl.signed.bin
+
+adnl.exe Partition -P misc -F misc.img
+
+adnl.exe Partition -P boot_a -F boot.img
+adnl.exe Partition -P boot_b -F boot.img
+
+adnl.exe partition -P rtos_a -F rtos.img
+adnl.exe partition -P rtos_b -F rtos.img
+
+adnl.exe Partition -P system_a -F system.img
+
+adnl.exe oem "reset"
+```
+
+## 制作ramdisk
+
+在这里找到最新的 gq-eng下载 :  https://console.cloud.google.com/storage/browser/cast-partner-amlogic-internal/internal/master/gq-eng
+
+- **使用 boot.img 解压**
+
+```sh
+# 拷贝下载好的  boot.img 到
+# /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/pdk/unpack_boot
+mv boot.img gq-boot.img
+./unpackbootimg -i ./gq-boot.img -o ./gq-out_unpack
+cp ./gq-out_unpack/gq-boot.img-ramdisk.gz ../../out/target/product/gq/boot_unpack/ramdisk.img
+```
+
+- 使用fct_boot.img解压
+
+如果 boot.img解压出 ramdisk 有问题，可能需要使用 factory 来解包出 ramdisk.img
+
+[下载地址](https://console.cloud.google.com/storage/browser/_details/cast-partner-amlogic-internal/internal/master/gq-eng/317444/factory/gq-fct-gq-b3-317444.zip;tab=live_object)
+
+```sh
+# 拷贝下载好的 fct_boot.img到
+# /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/pdk/unpack_boot
+mv fct_boot.img gq-fct_boot.img
+mkdir gq-boot_unpack
+./unpackbootimg -i ./gq-fct_boot.img -o ./gq-boot_unpack
+cp ./gq-boot_unpack/gq-fct_boot.img-ramdisk.gz ../../out/target/product/gq/boot_unpack/ramdisk.img
+```
+
+> 接下来可以签名kernel并烧录
+
+## NN模型转换和测试
+
+
+
+
+
+----
+
+
+
+# ramdisk.img 解包
+
+```sh
+# 解压 korlan的ramdisk
+file ramdisk.img
+mv ramdisk.img ramdisk.img.xz
+unxz ramdisk.img.xz
+cpio -i -F ramdisk.img   #解压cpio
+
+# 打包
+find . |cpio -ov -H newc | xz -9  --check=crc32  > ../ramdisk.img
+```
+
+```sh
+# 解压 gq / spencer 的 ramdisk
+file gq-fct_boot.img-ramdisk.gz
+cp gq-fct_boot.img-ramdisk.gz  ramdisk_out/ && cd ramdisk_out
+mv gq-fct_boot.img-ramdisk.gz gq-fct_boot.img-ramdisk.lzo
+lzop -d gq-fct_boot.img-ramdisk.lzo   #解压
+mkdir out_target 
+cp gq-fct_boot.img-ramdisk out_target/ && cd out_target/
+file gq-fct_boot.img-ramdisk
+cpio -i -F gq-fct_boot.img-ramdisk 
+
+# 打包
+cd out_target
+find . |cpio -ov -H newc | lzop -9 > ../ramdisk.img
+# 拷贝到签名名录并签名烧录
+cp ramdisk.img /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/out/target/product/gq/boot_unpack/
+```
+
+
+
+
+
+## 
+
+
+
+
+
+
+

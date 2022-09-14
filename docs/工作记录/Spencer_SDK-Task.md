@@ -857,39 +857,8 @@ cd pdk
 ./sign_rtos.sh -i /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/gq/prebuilt/rtos/rtos-uImage.gq-b3 -b  gq-b3
 ```
 
-- 编译 gq kernel 
+- 编译 gq kernel 签名 kernel
 
-  - 解压boot.img 得到 ramdisk.img
-
-```sh
-# /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/eureka/tools/scripts/unpack_boot_img.py ./boot.img boot_out -k /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/gq/releasetools/keys/kernel_aesk.bin -d biggie
-# Traceback (most recent call last):
-#   File "/mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/eureka/tools/scripts/unpack_boot_img.py", line 252, in <module>
-#     main()
-#   File "/mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/eureka/tools/scripts/unpack_boot_img.py", line 233, in main
-#     kernel_addr) = boot_img_parser.parse(args.boot_img)
-#   File "/mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/eureka/tools/scripts/unpack_boot_img.py", line 61, in parse
-#     return self._parse_prepared_image(
-#   File "/mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/eureka/tools/scripts/unpack_boot_img.py", line 91, in _parse_prepared_image
-#     raise Exception('Did not find magic value "%s"' % str(ANDROID_MAGIC))
-
-
-# /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/pdk/unpack_boot
-# ../unpack_boot_img.py ./boot.img ../../out/target/product/gq/boot_unpack/ -k /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/gq/releasetools/keys/kernel_aesk.bin -d biggie
-# 不能这么解包
-# 1 GQ/NQ unpack boot.img
-  ./unpackbootimg -i ./boot.img -o ../../out/target/product/gq/boot_unpack   # 加压之前需要创建好 boot_unpack 目录
-
-# 2 spencer/korlan
-# bash unpack_boot.sh ./boot.img ./boot_out unpack_boot
-
-```
-
-- 编译kernel
-
-```sh
-
-```
 
 - 烧录 rtos
 
@@ -901,6 +870,12 @@ adnl.exe partition -P rtos_a -F rtos.img
 adnl.exe partition -P rtos_b -F rtos.img
 
 adnl.exe oem "reset"
+```
+
+- 或者编译全部
+
+```sh
+ bash ./sdk/build_scripts/build_all.sh ../chrome/  gq
 ```
 
 
