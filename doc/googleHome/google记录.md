@@ -563,7 +563,7 @@ lunch  # 选korlan-eng
 PARTNER_BUILD=true BOARD_NAME=korlan-p2 make -j30 otapackage  
 # 输出obj路径： /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/out/target/product/korlan
 
-# 如果出现 java version 问题，就是 out/host/linux-x86 替换过了，需要替换回repo sync 时候才行
+# 如果出现 java version 问题，就是 out/host/linux-x86 的 dumpkey.jar  signapk.jar 替换过了，需要替换回repo sync 时候的 linux-x86 就可以了
 ```
 
 
@@ -788,6 +788,7 @@ adnl.exe oem "reset"
 # 拷贝下载好的  boot.img 到
 # /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/pdk/unpack_boot
 mv boot.img gq-boot.img
+mkdir ./gq-out_unpack
 ./unpackbootimg -i ./gq-boot.img -o ./gq-out_unpack
 cp ./gq-out_unpack/gq-boot.img-ramdisk.gz ../../out/target/product/gq/boot_unpack/ramdisk.img
 ```

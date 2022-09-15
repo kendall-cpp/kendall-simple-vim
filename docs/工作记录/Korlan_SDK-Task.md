@@ -166,54 +166,10 @@ https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/247425
 
 https://partnerissuetracker.corp.google.com/issues/245839768
 
-编译 ota 命令
+- 编译 korlan ota 包
 
-```sh
-cd chrome/
+- 在 ubuntu 上测试
 
-source build/envsetup.sh 
+- 调试和文档
 
-# PARTNER_BUILD=true lunch korlan-eng
-PARTNER_BUILD=true lunch
-
-PARTNER_BUILD=true BOARD_NAME=korlan-b1 make -j30 otapackage
-PARTNER_BUILD=true BOARD_NAME=korlan-p1 make -j30 otapackage   # 不要用上面的 PARTNER_BUILD=true lunch
-# 输出obj路径： /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/out/target/product/korlan
-```
-
-
-编译
-
-```sh
-cd bl2
-./build_bl2.sh korlan-b1 ../u-boot release
-cd -
-
-cd bl31
-./build_bl31.sh korlan-b1 ../u-boot release
-cd -
-
-
-# 修改pthon脚本 scripts/pack_kpub.py  #+#!/usr/bin/env python
-cd bl32
-./build_bl32.sh korlan-b1 ../u-boot release 
-cd -
-
-cd u-boot
-./build_uboot.sh korlan-b1 ../../chrome release
-cd -
-
-cd kernel
-./build_kernel.sh korlan-b1  ../../chrome
-cd -
-
-```
-
-签名
-
-```sh
-cd pdk
-./create-uboot.sh -b korlan-b1
-
-./build-bootimg.sh -b  korlan-b1
-```
+https://partnerissuetracker.corp.google.com/issues/230885799
