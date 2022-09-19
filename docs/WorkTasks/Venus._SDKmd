@@ -1,0 +1,215 @@
+
+
+
+-----
+
+> 波特率：921600
+
+## 功耗测试
+
+- 查看功耗
+
+```sh
+cat ./sys/class/aml_ddr/bandwidth
+```
+
+- 测试工具
+
+```sh
+stressapptest -M 512 -s 1000000  -F &
+memtester 64M 10000 &
+/data/stream_aarch64 &
+```
+
+- 测试工具源码
+
+https://github.com/heyg/STREAM
+
+https://github.com/heyg/stressapptest
+
+- 计算理论带宽和测试带宽
+
+./stressapptest -s 20 -M 256 -m 8 -W 
+
+
+
+```sh
+stressapptest -M 256 -s 10  -F
+stressapptest -s 30 -M 256 -m 2  -v 10 -l /data/testfile -F
+```
+
+```sh
+# 看这个
+1970/01/01-00:05:21(UTC) Stats: Memory Copy: 52894.00M at 5289.16MB/s
+```
+
+- 测试 korlan
+
+```sh
+stressapptest -s 30 -M 256 -m 2  -v 10 -l /data/testfile -F
+
+./stream_aarch64  &
+```
+
+
+### 理论带宽
+
+- **venus**
+
+```
+1320 * 32 * 2 Mb/s
+DDR freq: 1320 Mhz
+ddr 数据线个数： 32
+===> 1320 * 32 * 2 MB/s == 10560 MB/s
+```
+
+AML 使用 dmc, 可以使用 `cat /sys/class/aml_ddr/bandwidth`  查看实际带宽，并推算出理论带宽， 2760002（cat 查看的值） / 0.2676/1024 == 10072.1765811846 MB/s  (与 10560 MB/s 相近)
+
+- **Korlan**
+
+768MHZ DDR4 为例
+
+- 理论带宽： 768Mhz * 16 * 2 = 24576Mb/s == 3072MB/s
+- AML 使用 dmc，可以使用 `cat /sys/class/aml_ddr/bandwidth` 检测实际带宽，并推算出理论带宽
+
+eg
+
+```
+Total bandwidth: 1139599 KB/s, usage: 37.98%
+==> 1139599 / 0.379 / 1024 = 2936.39429966
+
+2936 和 3027 接近
+
+实际带宽测试一般上限是 80%。基本很难达到
+```
+
+### linux下内存压力测试——stressapptest
+
+该软件更多的时候测试的是内存控制器和总线接口，而不是存储单元的功能。测试是会最大化总线和内存的交换量，从而使交换失败的概率会增加。
+
+该软件采用多线程对内存进行拷贝和磁盘接口读写，占用85%的内存块，而且每个线程都是随机进行读写操作，一般每个处理开启2个线程，磁盘也是。
+
+ 参数说明：        
+
+-s: number of second to run the application  测试时间
+
+-m: number of memory copy threads to run  复制线程数  (Memory Copy)
+
+-W : Use more CPU-stressful memory copy (false)
+
+-i: number of memory invert threads to run  反转线程数 (Invert Copy)
+
+-c: CRC check  CRC校验                                (Data Check)
+
+-C: number of memory CPU stress threads to run    CPU压力线程数
+
+-M: Megabytes of ram to run  尽可能测试最大的可用存储空间，（设置超过了memfree，就会被kill）
+
+-f filename : add a disk thread with tempfile 'filename' (none) 使用tempfile 'filename'添加一个磁盘线程
+
+-F : don't result check each transaction, use libc memcpy instead. (false) 不对每个事务进行结果检查，而是使用libc memcpy
+
+-l logfile : log output to file 'logfile' (none)  输出到log文件
+
+-v level : verbosity (0-20) (default: 8) 冗长
+
+**使用**
+
+```
+stressapptest -s 600 -M 64 -m 8 -C 8 -W &
+
+
+stressapptest -s 30 -M 256 -m 2  -v 10 -l /data/testfile -F
+
+```
+
+
+- 修改代码
+
+STREAM-master/stream.c 
+
+```c
+
+#define TEST_LOOP_COUNT 10000000
+long long loop_count = 0;
+
+
+// 317
+  #pragma omp parallel for
+          for (j=0; j<STREAM_ARRAY_SIZE; j++)
+              c[j] = a[j];
+  #endif
+  #if 0 /*disable not use test*/
+          times[0][k] = mysecond() - times[0][k];
+          
+          times[1][k] = mysecond();
+  #ifdef TUNED
+          tuned_STREAM_Scale(scalar);
+  #else
+  #pragma omp parallel for
+          for (j=0; j<STREAM_ARRAY_SIZE; j++)
+              b[j] = scalar*c[j];
+  #endif
+          times[1][k] = mysecond() - times[1][k];
+          
+          times[2][k] = mysecond();
+  #ifdef TUNED
+          tuned_STREAM_Add();
+  #else
+  #pragma omp parallel for
+          for (j=0; j<STREAM_ARRAY_SIZE; j++)
+              c[j] = a[j]+b[j];
+  #endif
+          times[2][k] = mysecond() - times[2][k];
+          
+          times[3][k] = mysecond();
+  #ifdef TUNED
+          tuned_STREAM_Triad(scalar);
+  #else
+  #pragma omp parallel for
+          for (j=0; j<STREAM_ARRAY_SIZE; j++)
+              a[j] = b[j]+scalar*c[j];
+  #endif
+          times[3][k] = mysecond() - times[3][k];
+  #endif
+          }   
+  }
+```
+
+- 测试
+
+```
+adb push .\stream_aarch64 /data/
+
+./stream_aarch64  &
+cat /sys/class/aml_ddr/bandwidth 
+```
+
+
+---
+
+## FPN 测试
+
+```sh
+./acuity-ovxlib-dev/build_vx.sh
+
+Linux version 4.19.180-gf0c7983dcc17 (zhiqi.lai@walle01-sz) (Chromium OS 12.0_pre422132_p20210405-r4 clang version 13.0.0
+
+verisilicon/build_ml.sh
+304   BUILD_OPTION_gcdSTATIC_LINK=0  
+
+
+vim ./acuity-ovxlib-dev/build_vx.sh
+ 81   BUILD_OPTION_gcdSTATIC_LINK=0
+ 82   BUILD_OPTION_STATIC_LINK=0
+
+cd kernel
+pencer-master 分支
+git reset --hard 227d320dcdc40efd6ece0b58e0a8ddecb85b32b3
+
+# build kernel
+./build_kernel.sh spencer-p2 ./../../chrome
+
+cd prebuilt/toolchain
+git checkout -t eureka-partner/1.56_sdk_venus_fct_p2
+```

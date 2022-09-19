@@ -1,27 +1,4 @@
 
-- [BuildRoot_A1 代码提交](#buildroot_a1-代码提交)
-  - [提交kernel gerrit](#提交kernel-gerrit)
-  - [提交uboot gerrit](#提交uboot-gerrit)
-- [andl korlan烧录命令记录](#andl-korlan烧录命令记录)
-- [Korlan项目](#korlan项目)
-  - [代理](#代理)
-  - [整体编译](#整体编译)
-  - [单独编译u-boot和kernel](#单独编译u-boot和kernel)
-    - [uboot](#uboot)
-    - [kernel](#kernel)
-    - [Google项目push pull](#google项目push-pull)
-    - [整理成脚本编译](#整理成脚本编译)
-- [Google项目板子和芯片相关型号](#google项目板子和芯片相关型号)
-  - [ramdisk.img 解包](#ramdiskimg-解包)
-  - [gpio xz 相关命令](#gpio-xz-相关命令)
-- [arecord、aplay、amixer 使用](#arecordaplayamixer-使用)
-  - [arecord与aplay](#arecord与aplay)
-  - [amixer](#amixer)
-    - [在 Ubuntu 下测试](#在-ubuntu-下测试)
-- [打印 iomem 寄存器地址](#打印-iomem-寄存器地址)
-- [spencer烧录命令](#spencer烧录命令)
-- [芯片代称对应](#芯片代称对应)
-
 # BuildRoot_A1 
 
 ## 提交kernel gerrit
@@ -169,7 +146,7 @@ cd -
 
 ```sh
 cd amlogic_sdk
-./sdk/build_scripts/build_all.sh ../chrome korlan-p2
+./sdk/build_scripts/build_all.sh ../chrome korlan
 ```
 
 
@@ -722,6 +699,54 @@ cp ./gq-boot_unpack/gq-fct_boot.img-ramdisk.gz ../../out/target/product/gq/boot_
 ## NN模型转换和测试
 
 参考我的总结：https://docs.google.com/document/d/1JcOd5uLQAqdS8EtGSqvew1or_HZnDBiNP2-DE3C9zQ0/edit?usp=sharing
+
+
+
+-----
+
+# Elaine
+
+## Sync elaine
+
+```sh
+mkdir elaine-sdk
+repo init -u https://eureka-partner.googlesource.com/amlogic/manifest -b elaine -m combined_sdk.xml
+repo sync
+```
+
+## 编译 elaine
+
+- 整体编译
+
+```sh
+./sdk/build_scripts/build_all.sh ../chrome elaine
+```
+
+## 烧录 elaine
+
+
+
+下载 update.exe 
+
+https://wiki-china.amlogic.com/index.php?title=Amlogic_Tools/Update%E5%91%BD%E4%BB%A4
+
+>  在板子的linux控制台下 reboot update, 或者在uboot控制下run update
+>
+>  启动windows控制台，使用update 命令
+
+```sh
+update.exe partition bootloader bl2.bin
+update.exe partition tpl_a tpl.bin
+update.exe partition tpl_b tpl.bin
+
+update.exe partition boot_a boot.img
+update.exe partition boot_b boot.img
+update.exe partition system_a system.img
+
+update bulkcmd "reset"
+```
+
+
 
 
 
