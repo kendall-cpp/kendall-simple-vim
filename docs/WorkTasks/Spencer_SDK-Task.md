@@ -26,6 +26,7 @@
     - [充电](#充电)
     - [自己制作ota包](#自己制作ota包)
   - [Task: FPN 模型](#task-fpn-模型)
+  - [freertos 学习](#freertos-学习)
 
 
 ---
@@ -111,7 +112,7 @@ rmmod iv009_isp_iq
 rmmod galcore 
 rmmod dhd
 
-insmod galcore.ko
+insmod galcore.ko showArgs=1
 
 ./tflite ./alexnet_caffe_be.nb iter_0_input_0_out0_1_3
 ./tflite ./alexnet_caffe_be.nb ./space_shuttle.jpg 
@@ -878,12 +879,32 @@ adnl.exe oem "reset"
  bash ./sdk/build_scripts/build_all.sh ../chrome/  gq
 ```
 
+-----
 
+## freertos 学习
 
+```sh
+# 修改代码
+# /freertos/demos/amlogic/xtensa_hifi4/c2_venus_flatbuftest_hifi4a/boot/startdsp.c
 
+# ./build_ml.sh arm64 gq-b3 ./../../chrome 
+bash build_hifi_tests.sh debug 
+# 输出：freertos\hifi_tests\c2_venus_flatbuftest_hifi4a.bin
+# Z:\workspace\google_source\eureka\spencer-sdk\freertos\hifi_tests> 
+adb push .\c2_spencer_flatbuftest_hifi4a.bin /data/
 
+cp /data/c2_spencer_flatbuftest_hifi4a.bin /system/lib/firmware/dspboot.bin 
 
+cp /data/c2_spencer_flatbuftest_hifi4a.bin /lib/firmware/dspboot.bin 
 
+sync
 
+dsp_util --dsp=hifi4a -s
+dsp_util --dsp=hifi4a -r
+dsp_util --dsp=hifi4a --firmware=dspboot.bin -l
+dsp_util --dsp=hifi4a -S
+
+# 查看结果： cat /sys/kernel/debug/hifi4frtos/hifi4
+```
 
 

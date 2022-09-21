@@ -1,4 +1,3 @@
-
 # BuildRoot_A1 
 
 ## 提交kernel gerrit
@@ -292,6 +291,11 @@ cd kernel
 cd verisilicon
 ./build_ml.sh arm64 spencer-p2 ./../../chrome
 cd -
+
+# 如果遇到问题
+make: *** [makefile.linux:305: /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/compiler/libGLSLC] Error 2
+# 需要清理 
+git clean -d -fx ./
 ```
 
 ## 签名Spencer
@@ -364,12 +368,16 @@ adnl.exe oem "store boot_write bootloader 0x2000000 0x1ffe00"
 
 adnl.exe Partition -P tpl_a  -F tpl.signed.bin
 adnl.exe Partition -P tpl_b  -F tpl.signed.bin
+adnl reboot
+
 adnl.exe Partition -P boot_a  -F boot.img
 adnl.exe Partition -P boot_b  -F boot.img
 adnl.exe Partition -P misc  -F misc.img
 adnl.exe Partition -P system_b  -F fct_boot.img  # 应该是 system.img ？
 adnl.exe oem "enable_factory_boot"   # adnl.exe oem "disable_factory_boot" 
-adnl.exe oem "reset"
+adnl.exe oem "reset" 
+# &
+# adnl reboot
 ```
 
 
@@ -494,7 +502,128 @@ cat bl2.bin tpl.bin > u-boot.bin
 
 ----
 
+# Venus
 
+## 编译 venus
+
+```sh
+# build without "release"，Default compilation option will enable logs. 
+
+cd ~/eureka/spencer-sdk/
+ 
+cd bl2
+./build_bl2.sh venus-p2 release
+cd -
+ 
+cd bl31
+./build_bl31.sh venus-p2 release
+cd -
+ 
+cd bl32
+./build_bl32.sh venus-p2 release
+cd -
+ 
+cd u-boot
+./build_uboot.sh venus-p2 ./../../chrome release
+cd -
+
+ce kernel
+./build_kernel.sh venus-p2 ./../../chrome
+
+# git clean -d -fx ./
+cd verisilicon
+./build_ml.sh arm64 venus-p2 ./../../chrome
+
+cd freertos
+./build_rtos.sh venus-p2 ./../../chrome release --skip-dsp-build
+# bash build_hifi_tests.sh debug 
+cd -
+# 输出目录：out_dsp/dspboot.bin
+
+# 运行dsp
+adb push dspboot.bin 到/system/lib/firmware/
+```
+
+
+
+## 烧录venus
+
+```sh
+Normal upgrade:
+reboot update
+
+cmd: adnl devices #确认已经进入烧录模式
+
+# 强制进入烧录模式
+adnl.exe  Download u-boot.signed.bin 0x10000
+adnl.exe run
+adnl.exe bl2_boot -F  u-boot.signed.bin
+
+# 如果是正常启动 reboot update
+
+:: step 1
+adnl.exe oem "store init 1"
+adnl.exe oem "mmc dev 1"
+
+:: step 2
+adnl.exe Partition -M mem -P 0x2000000 -F u-boot.signed.bin
+adnl.exe oem "store boot_write bootloader 0x2000000 0x1ffe00"
+adnl.exe Partition -P tpl_a  -F tpl.signed.bin
+adnl.exe Partition -P tpl_b  -F tpl.signed.bin
+# adnl reboot
+
+adnl.exe Partition -P boot_a -F boot.img
+adnl.exe Partition -P boot_b -F boot.img
+
+adnl.exe Partition -P system_b -F boot.venus-p2.img
+# adnl.exe Partition -P boot_a  -F boot.venus-p2.img
+# adnl.exe Partition -P boot_b  -F boot.venus-p2.img
+
+adnl.exe oem "enable_factory_boot"   # adnl.exe oem "disable_factory_boot" 
+# adnl.exe oem "store erase fts  0 0"
+
+
+
+
+
+----
+
+# adnl.exe partition -M mem -P 0x2000000 -F bl2.signed.bin
+# adnl.exe oem "store boot_write bootloader 0x2000000 0x1ffe00"
+adnl.exe Partition -P tpl_a -F tpl.signed.bin
+adnl.exe Partition -P tpl_b -F tpl.signed.bin
+
+:: step 3
+adnl.exe Partition -P misc -F misc.img
+
+:: step 4
+adnl.exe Partition -P boot_a -F boot.img
+adnl.exe Partition -P boot_b -F boot.img
+
+:: step 5
+adnl.exe Partition -P system_a -F system.img
+
+adnl.exe oem "enable_factory_boot"
+
+adnl.exe reboot
+```
+
+## 无法进入烧录模式
+
+```sh
+fts -s bootloader.command  # 设置bootloader命令
+fts -i  #清除工厂模式
+
+start usb_update; reboot update; # 进入烧录模式
+
+# 或者
+reboot bootloader;   # 进入uboot
+adnl   # 进入烧录模式
+```
+
+
+
+---
 
 # GQ
 
@@ -722,9 +851,61 @@ repo sync
 ./sdk/build_scripts/build_all.sh ../chrome elaine
 ```
 
+- 分别编译
+
+```sh
+cd bl2
+./build_bl2.sh elaine-b3 release
+cd -
+
+cd bl31
+./build_bl31.sh elaine-b3 release
+cd -
+
+cd bl32
+./build_bl32.sh elaine-b3 release
+cd -
+
+cd u-boot
+./build_uboot.sh elaine-b3 ./../../chrome release
+cd -
+
+cd kernel
+./build_kernel.sh elaine-b3 ./../../chrome 
+cd -
+
+```
+
+## 制作Elaine-ramdisk
+
+```sh
+# 拷贝下载好的  boot.img 到
+# /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/pdk/unpack_boot
+mv boot.img elaine-boot.img
+./unpack_boot.sh ./elaine-boot.img ./elaine-out_unpack unpack_boot    ## 注意修改脚本路径
+
+mkdir -p ../../out/target/product/elaine/boot_unpack
+cp ./elaine-out_unpack/ramdisk.img.xz ../../out/target/product/elaine/boot_unpack/ramdisk.img
+
+# 签名
+## /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/pdk
+./build-bootimg.sh -b elaine-b3
+# 输出：/mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/out/target/product/spencer/upgrade
+```
+
+## 签名elaine
+
+```sh
+
+# kernel
+## /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/pdk
+./build-bootimg.sh -b elaine-b1
+# 输出：/mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/out/target/product/spencer/upgrade
+```
+
+
+
 ## 烧录 elaine
-
-
 
 下载 update.exe 
 
@@ -746,7 +927,11 @@ update.exe partition system_a system.img
 update bulkcmd "reset"
 ```
 
+## adb无法使用?
 
+```sh
+
+```
 
 
 
@@ -804,6 +989,12 @@ cp ramdisk.img /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/
 - newman -- G12B
 
 - elaine -- SM1
+
+## 查看kernel编译的版本
+
+```sh
+getprop | grep elaine
+```
 
 
 

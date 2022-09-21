@@ -22,3 +22,34 @@ repo sync
 
 https://partnerissuetracker.corp.google.com/issues/246404063
 
+### 无法进入 adb shell
+
+```sh
+vim kernel/arch/arm64/boot/dts/amlogic/elaine-b3.dts 
+1405     /* 1: host only, 2: device only, 3: OTG */
+1406     #controller-type = <1>;
+1407     controller-type = <3>;   
+
+# 进入kernel执行
+#! /sbin/busybox sh
+mount -t configfs configfs /sys/kernel/config
+mkdir /sys/kernel/config/usb_gadget/amlogic
+echo 0x18D1 > /sys/kernel/config/usb_gadget/amlogic/idVendor
+echo 0x4e26 > /sys/kernel/config/usb_gadget/amlogic/idProduct
+mkdir /sys/kernel/config/usb_gadget/amlogic/strings/0x409
+echo '0123456789ABCDEF' > /sys/kernel/config/usb_gadget/amlogic/strings/0x409/serialnumber
+echo amlogic > /sys/kernel/config/usb_gadget/amlogic/strings/0x409/manufacturer
+echo newman > /sys/kernel/config/usb_gadget/amlogic/strings/0x409/product
+mkdir /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1
+mkdir /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/strings/0x409
+echo adb > /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/strings/0x409/configuration
+mkdir /sys/kernel/config/usb_gadget/amlogic/functions/ffs.adb
+mkdir /dev/usb-ffs
+mkdir /dev/usb-ffs/adb
+mount -t functionfs adb /dev/usb-ffs/adb
+stop adbd
+ln -s /sys/kernel/config/usb_gadget/amlogic/functions/ffs.adb /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/ffs.adb
+start adbd
+/bin/sleep 2
+echo ff400000.dwc2_a > /sys/kernel/config/usb_gadget/amlogic/UDC
+```
