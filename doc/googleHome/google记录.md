@@ -90,8 +90,6 @@ amixer cset numid=2,iface=MIXER,name='tas5805 Digital Volume' 150
 aplay -Dhw:0,0 /data/the-stars-48k-60s.wav 
 ```
 
-- 
-
 
 
 -----
@@ -293,9 +291,43 @@ cd verisilicon
 cd -
 
 # 如果遇到问题
-make: *** [makefile.linux:305: /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/compiler/libGLSLC] Error 2
+# make: *** [makefile.linux:305: /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/compiler/libGLSLC] Error 2
 # 需要清理 
 git clean -d -fx ./
+```
+
+### 在DSP上编译freerots
+
+```sh
+# 修改代码： demos/amlogic/xtensa_hifi4/c2_venus_flatbuftest_hifi4a/boot/startdsp.c
+# 修改编译脚本只需要编译的
+vim freertos/build_hifi_tests.sh  
+# tests=$(find demos/amlogic/xtensa_hifi4/ -mindepth 1 -maxdepth 1 -type d -name "c2_spencer_flatbuftest_hifi4a")
+# 这个目录下查看只编译一个： workspace\google_source\eureka\spencer-sdk\freertos\demos\amlogic\xtensa_hifi4
+
+bash build_hifi_tests.sh debug 
+# ./build_ml.sh arm64 gq-b3 ./../../chrome 
+
+Z:\workspace\google_source\eureka\spencer-sdk\freertos\hifi_tests> adb push .\c2_spencer_flatbuftest_hifi4a.bin /data/
+
+# 到板子上
+cp /data/c2_spencer_flatbuftest_hifi4a.bin /system/lib/firmware/dspboot.bin 
+cp /data/c2_spencer_flatbuftest_hifi4a.bin /lib/firmware/dspboot.bin 
+sync
+
+# Run the test
+# 1. -s                 : stop dsp
+# 2. -r                 : reset dsp
+# 3. -l --firmware=XXXX : reload dsp
+# 4. -S                 : start dsp
+dsp_util --dsp=hifi4a -s
+dsp_util --dsp=hifi4a -r
+dsp_util --dsp=hifi4a --firmware=dspboot.bin -l
+dsp_util --dsp=hifi4a -S
+
+# 查看结果
+cat /sys/kernel/debug/hifi4frtos/hifi4
+
 ```
 
 ## 签名Spencer
@@ -885,7 +917,7 @@ mv boot.img elaine-boot.img
 ./unpack_boot.sh ./elaine-boot.img ./elaine-out_unpack unpack_boot    ## 注意修改脚本路径
 
 mkdir -p ../../out/target/product/elaine/boot_unpack
-cp ./elaine-out_unpack/ramdisk.img.xz ../../out/target/product/elaine/boot_unpack/ramdisk.img
+cp ./elaine-out_unpack/ramdisk.img.xz /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/out/target/product/elaine/boot_unpack/ramdisk.img
 
 # 签名
 ## /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/pdk
@@ -896,10 +928,12 @@ cp ./elaine-out_unpack/ramdisk.img.xz ../../out/target/product/elaine/boot_unpac
 ## 签名elaine
 
 ```sh
+# 签名 u-boot
+./create-uboot.sh -b  elaine-b3
 
 # kernel
 ## /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/pdk
-./build-bootimg.sh -b elaine-b1
+./build-bootimg.sh -b elaine-b3
 # 输出：/mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/out/target/product/spencer/upgrade
 ```
 
@@ -916,9 +950,29 @@ https://wiki-china.amlogic.com/index.php?title=Amlogic_Tools/Update%E5%91%BD%E4%
 >  启动windows控制台，使用update 命令
 
 ```sh
-update.exe partition bootloader bl2.bin
-update.exe partition tpl_a tpl.bin
-update.exe partition tpl_b tpl.bin
+update.exe write bl2.signed.bin 0xfffa0000
+update.exe run  0xfffa0000
+echo off
+ping 0.0.0.0 -n 5 > null
+echo on
+
+
+update.exe bl2_boot u-boot.signed.bin
+echo off
+ping 0.0.0.0 -n 5 > null
+echo on
+
+
+update.exe  bulkcmd "store init"
+update.exe  bulkcmd "mmc dev 1"
+timeout 2
+echo "store initialize done"
+
+# 正常进入烧录
+
+update.exe partition bootloader bl2.signed.bin
+update.exe partition tpl_a tpl.signed.bin
+update.exe partition tpl_b tpl.signed.bin
 
 update.exe partition boot_a boot.img
 update.exe partition boot_b boot.img
@@ -930,7 +984,33 @@ update bulkcmd "reset"
 ## adb无法使用?
 
 ```sh
+vim kernel/arch/arm64/boot/dts/amlogic/elaine-b3.dts 
+1405     /* 1: host only, 2: device only, 3: OTG */
+1406     /*controller-type = <1>;*/
+1407     controller-type = <3>;   
 
+# 进入kernel执行
+#! /sbin/busybox sh
+mount -t configfs configfs /sys/kernel/config
+mkdir /sys/kernel/config/usb_gadget/amlogic
+echo 0x18D1 > /sys/kernel/config/usb_gadget/amlogic/idVendor
+echo 0x4e26 > /sys/kernel/config/usb_gadget/amlogic/idProduct
+mkdir /sys/kernel/config/usb_gadget/amlogic/strings/0x409
+echo '0123456789ABCDEF' > /sys/kernel/config/usb_gadget/amlogic/strings/0x409/serialnumber
+echo amlogic > /sys/kernel/config/usb_gadget/amlogic/strings/0x409/manufacturer
+echo newman > /sys/kernel/config/usb_gadget/amlogic/strings/0x409/product
+mkdir /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1
+mkdir /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/strings/0x409
+echo adb > /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/strings/0x409/configuration
+mkdir /sys/kernel/config/usb_gadget/amlogic/functions/ffs.adb
+mkdir /dev/usb-ffs
+mkdir /dev/usb-ffs/adb
+mount -t functionfs adb /dev/usb-ffs/adb
+stop adbd
+ln -s /sys/kernel/config/usb_gadget/amlogic/functions/ffs.adb /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/ffs.adb
+start adbd
+/bin/sleep 2
+echo ff400000.dwc2_a > /sys/kernel/config/usb_gadget/amlogic/UDC
 ```
 
 

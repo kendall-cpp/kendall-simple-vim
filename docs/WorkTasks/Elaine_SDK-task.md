@@ -17,6 +17,18 @@ repo sync
 ./sdk/build_scripts/build_all.sh ../chrome elaine-b4
 ```
 
+- 编译找到 error log
+
+```sh
+ vim arch/arm64/boot/dts/amlogic/elaine-sm1-panel.dtsi 
+
+vim u-boot/drivers/amlogic/media/vout/lcd/lcd_common.c
+
+
+```
+
+
+
 
 ## Failure to Configure Ethernet Interface
 
@@ -24,10 +36,10 @@ https://partnerissuetracker.corp.google.com/issues/246404063
 
 ### 无法进入 adb shell
 
-```sh
-vim kernel/arch/arm64/boot/dts/amlogic/elaine-b3.dts 
+```c
+vim arch/arm64/boot/dts/amlogic/elaine-b3.dts 
 1405     /* 1: host only, 2: device only, 3: OTG */
-1406     #controller-type = <1>;
+1406     /*controller-type = <1>;*/
 1407     controller-type = <3>;   
 
 # 进入kernel执行
@@ -53,3 +65,5 @@ start adbd
 /bin/sleep 2
 echo ff400000.dwc2_a > /sys/kernel/config/usb_gadget/amlogic/UDC
 ```
+
+

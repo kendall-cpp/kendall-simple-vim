@@ -5,7 +5,7 @@
 - [325FG 功耗测试](#325fg-功耗测试)
   - [测试 FPN](#测试-fpn)
   - [dsp 功耗测试](#dsp-功耗测试)
-- [SRAM测试](#sram测试)
+  - [SRAM测试](#sram测试)
 
 -----
 
@@ -342,7 +342,7 @@ adnl.exe oem "enable_factory_boot"
 
 ----
 
-## SRAM测试
+### SRAM测试
 
 > 下载芯片文档地址： https://employees.myamlogic.com/Engineering/default.aspx
 
