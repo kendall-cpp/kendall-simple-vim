@@ -952,27 +952,39 @@ https://wiki-china.amlogic.com/index.php?title=Amlogic_Tools/Update%E5%91%BD%E4%
 ```sh
 update.exe write bl2.signed.bin 0xfffa0000
 update.exe run  0xfffa0000
-echo off
-ping 0.0.0.0 -n 5 > null
-echo on
 
 
 update.exe bl2_boot u-boot.signed.bin
-echo off
-ping 0.0.0.0 -n 5 > null
-echo on
-
 
 update.exe  bulkcmd "store init"
 update.exe  bulkcmd "mmc dev 1"
-timeout 2
-echo "store initialize done"
 
 # 正常进入烧录
 
 update.exe partition bootloader bl2.signed.bin
 update.exe partition tpl_a tpl.signed.bin
 update.exe partition tpl_b tpl.signed.bin
+
+update.exe partition boot_a boot.img
+update.exe partition boot_b boot.img
+update.exe partition system_a system.img
+
+update bulkcmd "reset"
+
+# google下载的ota
+update.exe write bl2.bin 0xfffa0000
+update.exe run  0xfffa0000
+
+cat bl2.bin tpl.bin > u-boot.bin
+update.exe bl2_boot u-boot.bin
+
+update.exe  bulkcmd "store init"
+update.exe  bulkcmd "mmc dev 1"
+
+# 正常进入烧录
+update.exe partition bootloader bl2.bin
+update.exe partition tpl_a tpl.bin
+update.exe partition tpl_b tpl.bin
 
 update.exe partition boot_a boot.img
 update.exe partition boot_b boot.img
