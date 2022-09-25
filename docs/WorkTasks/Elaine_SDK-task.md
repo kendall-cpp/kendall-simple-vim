@@ -20,14 +20,10 @@ repo sync
 - 编译找到 error log
 
 ```sh
- vim arch/arm64/boot/dts/amlogic/elaine-sm1-panel.dtsi 
+vim arch/arm64/boot/dts/amlogic/elaine-sm1-panel.dtsi 
 
 vim u-boot/drivers/amlogic/media/vout/lcd/lcd_common.c
-
-
 ```
-
-
 
 
 ## Failure to Configure Ethernet Interface

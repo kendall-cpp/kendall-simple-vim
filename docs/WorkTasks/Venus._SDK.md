@@ -210,7 +210,7 @@ vim ./acuity-ovxlib-dev/build_vx.sh
 
 # 回退kernel
 cd kernel
-pencer-master 分支
+spencer-master 分支
 git reset --hard 227d320dcdc40efd6ece0b58e0a8ddecb85b32b3
 ```
 

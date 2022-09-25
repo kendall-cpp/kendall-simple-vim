@@ -299,14 +299,14 @@ git clean -d -fx ./
 ### 在DSP上编译freerots
 
 ```sh
-# 修改代码： demos/amlogic/xtensa_hifi4/c2_venus_flatbuftest_hifi4a/boot/startdsp.c
+# 修改代码： demos/amlogic/xtensa_hifi4/c2_spencer_flatbuftest_hifi4a/boot/startdsp.c
 # 修改编译脚本只需要编译的
 vim freertos/build_hifi_tests.sh  
 # tests=$(find demos/amlogic/xtensa_hifi4/ -mindepth 1 -maxdepth 1 -type d -name "c2_spencer_flatbuftest_hifi4a")
 # 这个目录下查看只编译一个： workspace\google_source\eureka\spencer-sdk\freertos\demos\amlogic\xtensa_hifi4
 
 bash build_hifi_tests.sh debug 
-# ./build_ml.sh arm64 gq-b3 ./../../chrome 
+# ./build_rtos.sh spencer-p2 ./../../chrome release --skip-dsp-build
 
 Z:\workspace\google_source\eureka\spencer-sdk\freertos\hifi_tests> adb push .\c2_spencer_flatbuftest_hifi4a.bin /data/
 
@@ -541,7 +541,7 @@ cat bl2.bin tpl.bin > u-boot.bin
 ```sh
 # build without "release"，Default compilation option will enable logs. 
 
-cd ~/eureka/spencer-sdk/
+cd ~/eureka/venus-sdk/
  
 cd bl2
 ./build_bl2.sh venus-p2 release
@@ -567,7 +567,9 @@ cd verisilicon
 ./build_ml.sh arm64 venus-p2 ./../../chrome
 
 cd freertos
-./build_rtos.sh venus-p2 ./../../chrome release --skip-dsp-build
+# vim freertos/build_hifi_tests.sh 
+# 这个目录下查看只编译一个： workspace\google_source\eureka\venus-sdk\freertos\demos\amlogic\xtensa_hifi4
+# ./build_rtos.sh venus-p2 ./../../chrome release --skip-dsp-build
 # bash build_hifi_tests.sh debug 
 cd -
 # 输出目录：out_dsp/dspboot.bin
@@ -1050,7 +1052,7 @@ find . |cpio -ov -H newc | lzop -9 > ../ramdisk.img
 cp ramdisk.img /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/out/target/product/gq/boot_unpack/
 ```
 
-# Other
+# 其他事项
 
 ## 在 Ubuntu 下进入开发板
 
@@ -1060,7 +1062,7 @@ cp ramdisk.img /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/
 
 ## 芯片代称对应
 
-- spencer -- C2
+- spencer/venus -- C2
 
 - gq/nq -- C1
 

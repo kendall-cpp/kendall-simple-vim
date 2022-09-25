@@ -27,6 +27,7 @@
     - [自己制作ota包](#自己制作ota包)
   - [Task: FPN 模型](#task-fpn-模型)
   - [freertos 学习](#freertos-学习)
+    - [freertos 编译脚本分析](#freertos-编译脚本分析)
 
 
 ---
@@ -881,7 +882,7 @@ adnl.exe oem "reset"
 
 -----
 
-## freertos 学习
+## freertos 
 
 ```sh
 # 修改代码
@@ -907,4 +908,13 @@ dsp_util --dsp=hifi4a -S
 # 查看结果： cat /sys/kernel/debug/hifi4frtos/hifi4
 ```
 
+### freertos 编译脚本分析
 
+```sh
+./build_rtos.sh spencer-p2 ./../../chrome release --skip-dsp-build
+
+build_hifirtos()
+  scripts/amlogic/mk.sh  c2_spencer_hifi4a
+
+cp ./out_dsp/dspboot.bin.gz chrome/vendor/amlogic/spencer/prebuilt/bootloader/dspa.bin.spencer-p2
+```
