@@ -14,7 +14,9 @@ repo sync
 - 编译
 
 ```sh
-./sdk/build_scripts/build_all.sh ../chrome elaine-b4
+# ./sdk/build_scripts/build_all.sh ../chrome elaine-b4
+
+./build_uboot.sh elaine-b3 ./../../chrome release
 ```
 
 - 编译找到 error log
@@ -62,4 +64,8 @@ start adbd
 echo ff400000.dwc2_a > /sys/kernel/config/usb_gadget/amlogic/UDC
 ```
 
+
+- 通过 ssh 发送命令
+
+ssh nick@xxx.xxx.xxx.xxx "df -h"
 
