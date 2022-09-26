@@ -1090,6 +1090,14 @@ cp ramdisk.img /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/
 getprop | grep elaine
 ```
 
+## 打印函数调用栈
+
+打印函数追踪 追踪函数调用
+
+```sh
+dump_stack();
+```
+
 
 
 

@@ -28,6 +28,7 @@ vim u-boot/drivers/amlogic/media/vout/lcd/lcd_common.c
 ```
 
 
+
 ## Failure to Configure Ethernet Interface
 
 https://partnerissuetracker.corp.google.com/issues/246404063
@@ -68,4 +69,46 @@ echo ff400000.dwc2_a > /sys/kernel/config/usb_gadget/amlogic/UDC
 - 通过 ssh 发送命令
 
 ssh nick@xxx.xxx.xxx.xxx "df -h"
+
+- 分析代码
+
+
+- 分析
+
+```
+couldn't allocate usb_device
+--> 出现在 drivers/usb/core/hub.c
+是因为 udev = usb_alloc_dev(hdev, hdev->bus, port1); 返回null
+        --> drivers/usb/core/usb.c  ---- 
+        if (usb_hcd->driver->alloc_dev && parent && !usb_hcd->driver->alloc_dev(usb_hcd, dev))  的 alloc_dev 返回 0
+        alloc_dev 是指针函数 --- xhci_alloc_dev
+                --> drivers/usb/host/xhci.c
+                ret = xhci_queue_slot_control(xhci, command, TRB_ENABLE_SLOT, 0);   
+                        --> queue_command --> if ((xhci->xhc_state & XHCI_STATE_DYING) || (xhci->xhc_state & HCI_STATE_HALTED))   //drivers/usb/host/xhci-ring.c 
+                        所以问题是 xhci
+/*
+xhci 是从 drivers/usb/host/xhci.c 传进来， 由  hcd_to_xhci(hcd) 返回
+        hcd 就是 xhci_alloc_dev(alloc_dev 函数指针传进来的)
+        在 drivers/usb/core/usb.c 中的 struct usb_hcd *usb_hcd = bus_to_hcd(bus);
+        
+static inline struct usb_hcd *bus_to_hcd(struct usb_bus *bus)                                        
+{
+    return container_of(bus, struct usb_hcd, self);
+        //通过结构体内某个成员变量的地址和该变量名，以及结构体类型，找到该结构体变量的地址
+        //找到bus的地址          
+}
+*/
+```
+
+- 问题是 xhci->xhc_state 状态出现问题
+
+```c
+drivers/usb/host/xhci-ring.c:355:                       xhci->xhc_state |= XHCI_STATE_DYING;
+drivers/usb/host/xhci-ring.c:940:       xhci->xhc_state |= XHCI_STATE_DYING;
+drivers/usb/host/xhci.c:115:            xhci->xhc_state |= XHCI_STATE_HALTED;
+drivers/usb/host/xhci.c:691:            xhci->xhc_state |= XHCI_STATE_HALTED;
+drivers/usb/host/xhci-plat.c:296:       xhci->xhc_state |= XHCI_STATE_REMOVING;
+drivers/usb/host/xhci-pci.c:346:        xhci->xhc_state |= XHCI_STATE_REMOVING;
+```
+
 
