@@ -109,9 +109,48 @@ uboot 编译
 
 configs/sm1_elaine_bx_defconfig
 
+- CONFIG_DM=y，全局DM模型打开
+- CONFIG_DM_XXX=y，某个驱动的DM模型的打开
+- 可以通过Kconifg、Makefile来查看对应宏的编译情况
 
+```c
+include/asm-generic/global_data.h
+26:typedef struct global_data {
+```
 
+其中 dm_root_f，uclass_root用来管理整个 DM 模型。
 
+- dm_root：DM模型的根设备
+- dm_root_f：重定向前的根设备
+- uclass_root：uclass链表的头
+
+这几个变量，最终要的作用就是：管理整个模型中的 udevice 设备信息和 uclass 驱动类。
+
+> include/dm/uclass.h
+
+- uclass，来管理该类型下的所有设备，并且有对应的 uclass_driver 驱动。
+  - 所有生成的uclass都会被挂载gd->uclass_root链表上。
+
+- uclass_driver： uclass类所包含uclass_driver结构体，它就是uclass的**驱动程序**。其主要作用是：为 uclass 提供统一管理的接口
+  - uclass_driver主要通过 UCLASS_DRIVER (`include/dm/uclass.h`) 来定义，比如：`UCLASS_DRIVER(pinctrl) {}`
+
+- 将udevice连接到对应的uclass中，uclass主要用来管理着同一类的驱动
+  - 除此之外，有父子关系的 udevice，还会连接到 `udevice->child_head` 链表下
+
+相关的API，主要作用就是根据 uclass_id，查找对应的uclass，然后根据索引值或者名称，来查找到对应的udevice
+
+![](https://img-blog.csdnimg.cn/img_convert/becda76e7db7284e42b5146517821dcc.png)
+
+driver对象，主要通过U_BOOT_DRIVER来定义
+
+U_BOOT_DRIVER(xxx_pinctrl) = {}
+
+![](https://img-blog.csdnimg.cn/img_convert/1674ba2addfcc0c4baf0402e8a4099be.png)
+
+- 根据udevice获取driver
+- 然后判断是否父设备被probe
+- 对父设备进行probe
+- 调用driver的probe函数
 
 # 内核源码阅读
 
@@ -134,3 +173,4 @@ stext -->  __primary_switch --> __primary_switched  --> start_kernel --> init/ma
 - 第二阶段：跳转到 start_kernel
 
 
+# USB 协议栈
