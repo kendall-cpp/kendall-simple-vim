@@ -1098,6 +1098,13 @@ getprop | grep elaine
 dump_stack();
 ```
 
+## 关于寄存器一些操作
+
+```c
+printk("reg:0x%02x", addr);   // u16 addr 
+
+```
+
 
 
 

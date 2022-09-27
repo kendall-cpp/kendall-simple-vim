@@ -111,4 +111,27 @@ drivers/usb/host/xhci-plat.c:296:       xhci->xhc_state |= XHCI_STATE_REMOVING;
 drivers/usb/host/xhci-pci.c:346:        xhci->xhc_state |= XHCI_STATE_REMOVING;
 ```
 
+- 回复 common
+
+Hi Cody,
+1. I used an automated script to test and found that rebooting 10 to 50 times can reproduce the above problems.
+2. But when I disable touchscreen drivers "goodix,gt9886", reboot test more than 180 times without reproducing the problem.
+
+I will measure usb power with hardware colleagues, "goodix,gt9886".
+
+And you can also test with my patch.
+
+```c
+--- a/arch/arm64/boot/dts/amlogic/elaine-b3.dts
++++ b/arch/arm64/boot/dts/amlogic/elaine-b3.dts
+@@ -1021,7 +1021,7 @@
+        clock-frequency = <400000>;
+        gtx8@5d {
+                compatible = "goodix,gt9886";
+-               status = "okay";
++               status = "disable";
+                reg = <0x5d>;
+                goodix,irq-gpio = <&gpio GPIOZ_4 0x00>;
+                goodix,reset-gpio = <&gpio GPIOZ_9 0x00>;
+```
 
