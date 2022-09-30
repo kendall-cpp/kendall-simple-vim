@@ -194,3 +194,5 @@ module_param(name, type, perm);: kernel 向模块传递参数
 > 可在运行时添加到内核中的代码被称为模块。一般来说一个设备驱动总是被写成一个模块
 
 # workqueue
+
+If no port-status-change flags were set, we don't need any  debouncing.  If flags were set we can try to debounce the  ports all at once right now, instead of letting hub_wq do them  one at a time later on.   If any port-status changes do occur during this delay, hub_wq  will see them later and handle them normally.

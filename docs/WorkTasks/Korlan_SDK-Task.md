@@ -5,6 +5,7 @@
   - [最终提交2](#最终提交2)
 - [Task: AC status `connected_status` not truly reflect the state when T6 docked](#task-ac-status-connected_status-not-truly-reflect-the-state-when-t6-docked)
 - [复现 dock-test-tool 测试问题](#复现-dock-test-tool-测试问题)
+- [添加 dhcp](#添加-dhcp)
 
 
 -------------
@@ -240,3 +241,98 @@ https://partnerissuetracker.corp.google.com/issues/230885799
 
 https://docs.google.com/document/d/16La7BkKlu0sbsQgruMoemk4QlBBqF8B7xHdMM74hXLk/edit?usp=sharing
 
+
+## 添加 dhcp
+
+> https://partnerissuetracker.corp.google.com/issues/247080714
+
+```sh
+service dhcpcd /bin/sh /sbin/dhcpcd_service.sh
+    class service        
+    user root 
+```
+
+
+
+```
+[korlan] Enable dhcp
+
+
+Bug: 247080714
+Test:
+/ # ifconfig -a
+eth0      Link encap:Ethernet  HWaddr 00:e0:4c:68:02:9b
+          inet addr:10.28.39.167  Bcast:10.28.39.255  Mask:255.255.255.0 
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:124 errors:0 dropped:0 overruns:0 frame:0 
+          TX packets:2 errors:0 dropped:0 overruns:0 carrier:0 
+          collisions:0 txqueuelen:1000 
+          RX bytes:13941 TX bytes:684 
+
+lo        Link encap:Local Loopback  
+          inet addr:127.0.0.1  Mask:255.0.0.0 
+          UP LOOPBACK RUNNING  MTU:65536  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0 
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0 
+          collisions:0 txqueuelen:1000 
+          RX bytes:0 TX bytes:0
+```
+
+git push eureka HEAD:refs/for/master
+
+https://eureka-partner-review.googlesource.com/c/vendor/amlogic/+/255325
+
+- kernel
+
+arch/arm64/configs/korlan-p2_defconfig
+
+CONFIG_USB_RTL8152=y
+
+- enable 
+
+-rw-r--r-- 1 shengken.lin szsoftware 5935722 Sep 29 15:38 ./arch/arm64/boot/kernel.korlan.gz-dtb.korlan-b1
+
+- disable
+
+-rw-r--r-- 1 shengken.lin szsoftware 5899776 Sep 29 15:43 ./arch/arm64/boot/kernel.korlan.gz-dtb.korlan-b1
+
+```
+[USB] Enable RTL8152
+
+Bug: b/247080714
+Test:
+/ # ifconfig -a
+eth0      Link encap:Ethernet  HWaddr 00:e0:4c:68:02:9b
+          inet addr:10.28.39.167  Bcast:10.28.39.255  Mask:255.255.255.0 
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:124 errors:0 dropped:0 overruns:0 frame:0 
+          TX packets:2 errors:0 dropped:0 overruns:0 carrier:0 
+          collisions:0 txqueuelen:1000 
+          RX bytes:13941 TX bytes:684 
+
+lo        Link encap:Local Loopback  
+          inet addr:127.0.0.1  Mask:255.0.0.0 
+          UP LOOPBACK RUNNING  MTU:65536  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0 
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0 
+          collisions:0 txqueuelen:1000 
+          RX bytes:0 TX bytes:0
+```
+
+git push eureka-partner HEAD:refs/for/korlan-master
+
+https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/255326
+
+
+- common
+
+Hi Jason,
+
+Pls use this cl,
+```
+https://eureka-partner-review.googlesource.com/q/topic:%22Enable+dhcp%22
+```
+
+Reply comment#6, Jason use AX88772C, this config already enable, so will not increase kernel size; And I also enable RTL8152.
+- Enable RTL8152, kernel size is 5935722
+- Disabled RTL8152, kernel size is 5899776

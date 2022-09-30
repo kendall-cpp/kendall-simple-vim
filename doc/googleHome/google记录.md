@@ -173,6 +173,7 @@ mkdir -p ./korlan/korlan-b1
 
 # 签名kernel
 # ramdisk 需要拷贝到 ./korlan/ramdisk.img
+# /mnt/fileroot/shengken.lin/workspace/google_source/eureka/amlogic_sdk/build-sign-pdk
 ./sign-kernel.sh ../../amlogic_sdk korlan/korlan-b1 b1 ../../chrome
 ```
 
@@ -215,7 +216,7 @@ PARTNER_BUILD=true BOARD_NAME=korlan-p2 make -j30 otapackage
 
 > - u-boot/arch/arm/dts/meson-a1-a113l-korlan.dts
 > - u-boot/arch/arm/mach-meson/board-common.c
-> - arch/arm/mach-meson/a
+> - arch/arm/mach-meson/
 
 
 
@@ -294,6 +295,21 @@ cd -
 # make: *** [makefile.linux:305: /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/compiler/libGLSLC] Error 2
 # 需要清理 
 git clean -d -fx ./
+
+# 如果有问题可以尝试下面方法
+# 修改编译成静态库
+verisilicon/build_ml.sh
+304   BUILD_OPTION_gcdSTATIC_LINK=0  
+
+
+vim ./acuity-ovxlib-dev/build_vx.sh
+ 81   BUILD_OPTION_gcdSTATIC_LINK=0
+ 82   BUILD_OPTION_STATIC_LINK=0
+
+# 回退kernel
+cd kernel
+spencer-master 分支
+git reset --hard 227d320dcdc40efd6ece0b58e0a8ddecb85b32b3
 ```
 
 ### 在DSP上编译freerots
@@ -1102,10 +1118,13 @@ dump_stack();
 
 ```c
 printk("reg:0x%02x", addr);   // u16 addr 
-
 ```
 
+### __iomem
 
+__iomem是linux2.6.9内核中加入的特性。是用来个表示指针是指向一个I/O的内存空间。主要是为了驱动程序的通用性考虑。由于不同的CPU体系结构对I/O空间的表示可能不同。
+
+当使用__iomem时，编译器会忽略对变量的检查（因为用的是void __iomem）。若要对它进行检查，当__iomem的指针和正常的指针混用时，就会发出一些警告。
 
 
 
