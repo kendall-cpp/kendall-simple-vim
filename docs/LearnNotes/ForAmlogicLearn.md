@@ -175,4 +175,22 @@ stext -->  __primary_switch --> __primary_switched  --> start_kernel --> init/ma
 
 # USB 协议栈
 
+drivers/usb/core/
+
+Makefile
+
+kernel/drivers/usb/core/usb.c
+
+```c
+subsys_initcall(usb_init);
+static void __exit usb_exit(void)
+  usb_disabled()  //在编译kernel img的时候是否打开 USB
+
+
+```
+
+module_param(name, type, perm);: kernel 向模块传递参数
+
+> 可在运行时添加到内核中的代码被称为模块。一般来说一个设备驱动总是被写成一个模块
+
 # workqueue
