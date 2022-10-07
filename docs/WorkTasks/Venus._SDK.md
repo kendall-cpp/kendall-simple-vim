@@ -413,6 +413,7 @@ adnl.exe oem "store boot_write bootloader 0x2000000 0x1ffe00"
 adnl.exe Partition -P tpl_a  -F tpl.signed.bin
 adnl.exe Partition -P tpl_b  -F tpl.signed.bin
 
+# 关闭工厂模式
 adnl.exe oem "store erase fts  0 0"
 
 adnl reboot 

@@ -83,7 +83,7 @@ git rm hello.txt  从对象区中删除一个数据（会删除本地文件）�
 git add
 
 git commit 
-# 填写指数
+# 填写注释
 
 # git commit --amend -s --no-verify     # 第二次 commit 加 changeID  --no-verify 忽略代码检查，-s 是添加签名,会出现Signed-off-by：
 

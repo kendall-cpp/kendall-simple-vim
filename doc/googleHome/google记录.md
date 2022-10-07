@@ -383,10 +383,13 @@ cd pdk
 解压后将 fct_boot.img 拷贝到 chrome/pdk/unpack_boot 目录下
 
 > 现在一般不下载 factory-boot , 下载 boot.img
+>
+> 直接下载 spencer-eng-ota 可能会出现 分区空间不足问题，需要下载对应版本的ota包，比如spencer-ota-spencer-p2-319922
 
 ```sh
 # /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/pdk/unpack_boot
-unpack_boot.sh ./fct_boot.img ./boot_out unpack_boot    ## 注意修改脚本路径
+mv boot.img spencer-boot.img
+./unpack_boot.sh ./spencer-boot.img ./spencer-out_unpack unpack_boot    ## 注意修改脚本路径
 cp ramdisk.img.xz ../../out/target/product/spencer/boot_unpack/ramdisk.img
 
 ## /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/pdk
@@ -397,6 +400,8 @@ cp ramdisk.img.xz ../../out/target/product/spencer/boot_unpack/ramdisk.img
 ## spencer烧录
 
 ```sh
+cmd: adnl devices #确认已经进入烧录模式
+
 # 强制进入烧录模式
 adnl.exe  Download u-boot.signed.bin 0x10000
 adnl.exe run
@@ -421,11 +426,31 @@ adnl reboot
 adnl.exe Partition -P boot_a  -F boot.img
 adnl.exe Partition -P boot_b  -F boot.img
 adnl.exe Partition -P misc  -F misc.img
-adnl.exe Partition -P system_b  -F fct_boot.img  # 应该是 system.img ？
-adnl.exe oem "enable_factory_boot"   # adnl.exe oem "disable_factory_boot" 
+adnl.exe Partition -P system_a -F system.img
+#adnl.exe Partition -P system_b  -F fct_boot.img  # system_b分区
+# adnl.exe oem "enable_factory_boot"   # adnl.exe oem "disable_factory_boot" 
+# 关闭工厂模式
+# adnl.exe oem "store erase fts  0 0"
 adnl.exe oem "reset" 
-# &
-# adnl reboot
+
+# 下载的ota
+cat bl2.bin tpl.bin > u-boot.bin
+adnl.exe Download bl2.bin 0x10000
+adnl.exe run
+adnl.exe bl2_boot -F u-boot.bin
+
+# reboot update
+adnl.exe oem "store init 1"
+adnl.exe oem "mmc dev 1"
+adnl.exe partition -M mem -P 0x2000000 -F bl2.bin
+adnl.exe cmd "store boot_write bootloader 0x2000000 0x1ffe00"
+adnl.exe Partition -P tpl_a -F tpl.bin
+adnl.exe Partition -P tpl_b -F tpl.bin
+adnl.exe Partition -P misc -F misc.img
+adnl.exe Partition -P boot_a -F boot.img
+adnl.exe Partition -P boot_b -F boot.img
+adnl.exe Partition -P system_a -F system.img
+adnl reboot
 ```
 
 
@@ -1051,6 +1076,8 @@ echo ff400000.dwc2_a > /sys/kernel/config/usb_gadget/amlogic/UDC
 
 # ramdisk.img 解包
 
+## korlan的ramdisk
+
 ```sh
 # 解压 korlan的ramdisk
 file ramdisk.img
@@ -1061,6 +1088,8 @@ cpio -i -F ramdisk.img   #解压cpio
 # 打包
 find . |cpio -ov -H newc | xz -9  --check=crc32  > ../ramdisk.img
 ```
+
+## spencer gq 的ramdisk
 
 ```sh
 # 解压 gq / spencer 的 ramdisk
@@ -1126,7 +1155,15 @@ __iomem是linux2.6.9内核中加入的特性。是用来个表示指针是指向
 
 当使用__iomem时，编译器会忽略对变量的检查（因为用的是void __iomem）。若要对它进行检查，当__iomem的指针和正常的指针混用时，就会发出一些警告。
 
+## 修改 u-boot BOOTDELAY 时间
 
+```sh
+vim spencer-sdk/u-boot/board/amlogic/defconfigs/c2_venus_p2_defconfig
+
+CONFIG_SCHUMACHER_SSR=y
+CONFIG_BOOTDELAY=5  
+CONFIG_ENABLE_UBOOT_CLI=y
+```
 
 
 
