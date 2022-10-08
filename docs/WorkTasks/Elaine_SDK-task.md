@@ -155,89 +155,7 @@ And you can also test with my patch.
 ```
 
 
-- 确定硬件在哪里修改了 xhci->xhc_state
 
-
-- usb_device_supports_lpm 的调用栈
-
-```
-[    5.780472@2] xhci-hcd xhci-hcd.0.auto: new USB bus registered, assigned bus number 2
-[    5.788327@2] CPU: 2 PID: 1 Comm: swapper/0 Not tainted 4.9.244 #47
-[    5.794496@2] Hardware name: Amlogic (DT)
-[    5.798482@2] Call trace:
-[    5.801087@2] [ffffff8020003700+  96][<ffffff800908b3d0>] dump_backtrace+0x0/0x278
-[    5.808625@2] [ffffff8020003760+  32][<ffffff800908b3c4>] show_stack+0x20/0x2c
-[    5.815819@2] [ffffff8020003780+  48][<ffffff80093dca80>] dump_stack+0xd4/0x110
-[    5.823099@2] [ffffff80200037b0+  32][<ffffff8009543854>] usb_device_supports_lpm+0xb4/0xc4
-[    5.831418@2] [ffffff80200037d0+  80][<ffffff800954df48>] usb_add_hcd+0x4bc/0x72c
-[    5.838872@2] [ffffff8020003820+  80][<ffffff800958ab3c>] xhci_plat_probe+0x444/0x530
-[    5.846673@2] [ffffff8020003870+  48][<ffffff80094c3d30>] platform_drv_probe+0x68/0xbc
-[    5.854557@2] [ffffff80200038a0+  64][<ffffff80094c1574>] driver_probe_device+0x3d0/0x408
-[    5.862704@2] [ffffff80200038e0+  64][<ffffff80094c1c6c>] __device_attach_driver+0xf4/0x10c
-[    5.871024@2] [ffffff8020003920+  64][<ffffff80094bf4dc>] bus_for_each_drv+0x7c/0xac
-[    5.878737@2] [ffffff8020003960+  48][<ffffff80094c16c8>] __device_attach+0x98/0x114
-[    5.886451@2] [ffffff8020003990+  32][<ffffff80094c1764>] device_initial_probe+0x20/0x2c
-[    5.894510@2] [ffffff80200039b0+  48][<ffffff80094bf6f0>] bus_probe_device+0x34/0x94
-[    5.902225@2] [ffffff80200039e0+  64][<ffffff80094bc2e0>] device_add+0x330/0x4f8
-[    5.909591@2] [ffffff8020003a20+ 160][<ffffff80094c38a8>] platform_device_add+0x80/0x21c
-[    5.917652@2] [ffffff8020003ac0+  48][<ffffff80095660c4>] dwc3_host_init+0x214/0x2a0
-[    5.925364@2] [ffffff8020003af0+  64][<ffffff8009564a00>] dwc3_core_init_mode+0x3c/0xa4
-[    5.933337@2] [ffffff8020003b30+  80][<ffffff80095631f4>] dwc3_probe+0x960/0xa98
-[    5.940704@2] [ffffff8020003b80+  48][<ffffff80094c3d30>] platform_drv_probe+0x68/0xbc
-[    5.948591@2] [ffffff8020003bb0+  64][<ffffff80094c1574>] driver_probe_device+0x3d0/0x408
-[    5.956737@2] [ffffff8020003bf0+  64][<ffffff80094c1864>] __driver_attach+0xbc/0xe8
-[    5.964364@2] [ffffff8020003c30+  48][<ffffff80094bf1dc>] bus_for_each_dev+0x80/0xb0
-[    5.972077@2] [ffffff8020003c60+  32][<ffffff80094c179c>] driver_attach+0x2c/0x38
-[    5.979530@2] [ffffff8020003c80+  48][<ffffff80094bf9a0>] bus_add_driver+0x120/0x1e8
-[    5.987244@2] [ffffff8020003cb0+  32][<ffffff80094c25d8>] driver_register+0xa8/0xf4
-[    5.994871@2] [ffffff8020003cd0+  48][<ffffff80094c3ecc>] __platform_driver_probe+0x9c/0x104
-[    6.003279@2] [ffffff8020003d00+ 256][<ffffff8009ebcd0c>] amlogic_dwc3_init+0x20/0x28
-[    6.011079@2] [ffffff8020003e00+  64][<ffffff8009083d10>] do_one_initcall+0xd8/0x194
-[    6.018792@2] [ffffff8020003e40+  96][<ffffff8009e80ef4>] kernel_init_freeable+0x1b0/0x240
-[    6.027025@2] [ffffff8020003ea0+   0][<ffffff8009b4f4c8>] kernel_init+0x14/0x1f8
-[    6.034390@2] [0000000000000000+   0][<ffffff8009083b40>] ret_from_fork+0x10/0x50
-[    6.041912@2] usb usb2: We don't know the algorithms for LPM for this host, disabling LPM.
-```
-
-- usb_add_hcd 的调用栈
-
-```
-[    5.533216@2] CPU: 2 PID: 1 Comm: swapper/0 Not tainted 4.9.244 #47
-[    5.539437@2] Hardware name: Amlogic (DT)
-[    5.543424@2] Call trace:
-[    5.546032@2] [ffffff8020003720+  96][<ffffff800908b3d0>] dump_backtrace+0x0/0x278
-[    5.553567@2] [ffffff8020003780+  32][<ffffff800908b3c4>] show_stack+0x20/0x2c
-[    5.560761@2] [ffffff80200037a0+  48][<ffffff80093dca80>] dump_stack+0xd4/0x110
-[    5.568040@2] [ffffff80200037d0+  80][<ffffff800954db7c>] usb_add_hcd+0xf0/0x72c
-[    5.575406@2] [ffffff8020003820+  80][<ffffff800958ab3c>] xhci_plat_probe+0x444/0x530
-[    5.583207@2] [ffffff8020003870+  48][<ffffff80094c3d30>] platform_drv_probe+0x68/0xbc
-[    5.591091@2] [ffffff80200038a0+  64][<ffffff80094c1574>] driver_probe_device+0x3d0/0x408
-[    5.599238@2] [ffffff80200038e0+  64][<ffffff80094c1c6c>] __device_attach_driver+0xf4/0x10c
-[    5.607559@2] [ffffff8020003920+  64][<ffffff80094bf4dc>] bus_for_each_drv+0x7c/0xac
-[    5.615271@2] [ffffff8020003960+  48][<ffffff80094c16c8>] __device_attach+0x98/0x114
-[    5.622984@2] [ffffff8020003990+  32][<ffffff80094c1764>] device_initial_probe+0x20/0x2c
-[    5.631044@2] [ffffff80200039b0+  48][<ffffff80094bf6f0>] bus_probe_device+0x34/0x94
-[    5.638761@2] [ffffff80200039e0+  64][<ffffff80094bc2e0>] device_add+0x330/0x4f8
-[    5.646125@2] [ffffff8020003a20+ 160][<ffffff80094c38a8>] platform_device_add+0x80/0x21c
-[    5.654186@2] [ffffff8020003ac0+  48][<ffffff80095660c4>] dwc3_host_init+0x214/0x2a0
-[    5.661899@2] [ffffff8020003af0+  64][<ffffff8009564a00>] dwc3_core_init_mode+0x3c/0xa4
-[    5.669871@2] [ffffff8020003b30+  80][<ffffff80095631f4>] dwc3_probe+0x960/0xa98
-[    5.677238@2] [ffffff8020003b80+  48][<ffffff80094c3d30>] platform_drv_probe+0x68/0xbc
-[    5.685124@2] [ffffff8020003bb0+  64][<ffffff80094c1574>] driver_probe_device+0x3d0/0x408
-[    5.693270@2] [ffffff8020003bf0+  64][<ffffff80094c1864>] __driver_attach+0xbc/0xe8
-[    5.700897@2] [ffffff8020003c30+  48][<ffffff80094bf1dc>] bus_for_each_dev+0x80/0xb0
-[    5.708610@2] [ffffff8020003c60+  32][<ffffff80094c179c>] driver_attach+0x2c/0x38
-[    5.716064@2] [ffffff8020003c80+  48][<ffffff80094bf9a0>] bus_add_driver+0x120/0x1e8
-[    5.723777@2] [ffffff8020003cb0+  32][<ffffff80094c25d8>] driver_register+0xa8/0xf4
-[    5.731404@2] [ffffff8020003cd0+  48][<ffffff80094c3ecc>] __platform_driver_probe+0x9c/0x104
-[    5.739813@2] [ffffff8020003d00+ 256][<ffffff8009ebcd0c>] amlogic_dwc3_init+0x20/0x28
-[    5.747611@2] [ffffff8020003e00+  64][<ffffff8009083d10>] do_one_initcall+0xd8/0x194
-[    5.755327@2] [ffffff8020003e40+  96][<ffffff8009e80ef4>] kernel_init_freeable+0x1b0/0x240
-[    5.763560@2] [ffffff8020003ea0+   0][<ffffff8009b4f4c8>] kernel_init+0x14/0x1f8
-[    5.770924@2] [0000000000000000+   0][<ffffff8009083b40>] ret_from_fork+0x10/0x50
-[    5.778480@2] -----
-[    5.780472@2] xhci-hcd xhci-hcd.0.auto: new USB bus registered, assigned bus number 2
-```
 
 ---
 
@@ -279,3 +197,25 @@ This is a potential workaround, I will keep digging into the root cause, but sin
 Hope the workaround can unblock your release.
 
 https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/255070
+
+---
+
+- 找到 hub_event
+
+- hub的probe函数，主要是一些工作的初始化和hub的配置
+- hub_configure配置hub
+- hub_activate ，主要是启动hub，我们这里传入的参数是HUB_INIT
+  -  kick_hub_wq(hub); //主要是queue_work(hub_wq, &hub->events)，也就是把hub_event加入工作队列，开始运行
+- hub_event，前面int2的时候有设置 hub->change_bits，这里会进行处理
+- port_event 做了什么
+- hub_port_connect_change： 处理端口改变的情况
+  - 什么情况下, hub_port_connect_change 才会被设为1.
+        - 1:端口在 hub->change_bits 中被置位.搜索整个代码树,发生在设置 hub->change_bits 的地方,只有在hub_port_logical_disconnect()中手动将端口禁用,会将对应位置1.
+        - 2:hub上设备树上没有这个端口上的设备.但显示端口已经连上了设备
+        - 3:hub这个端口上的连接发生了改变,从端口有设备连接变为无设备连接,或者从无设备连接变为有设备连接.
+        - 4:hub的端口变为了disable,此时这个端口上连接了设备,但被显示该端口已经变禁用,需要将connect_change设为1.
+        - 5:端口状态从SUSPEND变成了RESUME,远程唤醒端口上的设备失败,就需要将connect_change设为1.
+- ub_port_connect_change 再调用 hub_port_connect 报错
+- usb_alloc_dev 报错
+
+当usb设备插入usb接口后，hub_irq执行，启动工作队列执行hub_event工作，它检测到port状态的变化,调用hub_port_connect_change(),如果是新设备那么usb_allco_dev，然后调用usb_new_device来进行配置使usb设备可以正常工作。
