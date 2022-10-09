@@ -336,3 +336,57 @@ https://eureka-partner-review.googlesource.com/q/topic:%22Enable+dhcp%22
 Reply comment#6, Jason use AX88772C, this config already enable, so will not increase kernel size; And I also enable RTL8152.
 - Enable RTL8152, kernel size is 5935722
 - Disabled RTL8152, kernel size is 5899776
+
+- fctory 设置 IP
+  
+- comment
+
+Hi Kim,
+
+You need to push the dhcpcd_service.sh in the attachment into the corresponding path of korlan fct (my path: /sbin/dhcpcd_service.sh),
+
+- Modify the korlan FCT init.rc file through the following patch
+
+```
+--- a/korlan/factory/init.rc
++++ b/korlan/factory/init.rc
+@@ -355,3 +355,7 @@ service logcat_kmsg_save /bin/busybox sh /bin/fct/utility/runnable_script/logcat
+ service fault_logging /bin/fault_logging
+     logcat
+     class service
++
++service dhcpcd /bin/sh /sbin/dhcpcd_service.sh                                       
++    class service
++    user root
+```
+
+- Enable eth0 and get ip by the following methods
+
+```
+/ # echo 1 > /sys/kernel/debug/usb_mode/mode
+/ # fts -s enable_ethernet dhcp
+/ # fts -g "enable_ethernet"
+dhcp
+
+/ # start dynamic_ip_eth0
+/ # ifconfig -a
+eth0      Link encap:Ethernet  HWaddr 00:E0:4C:68:02:9B  
+          inet addr:10.28.39.205  Bcast:10.28.39.255  Mask:255.255.255.0
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:30 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:2 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000 
+          RX bytes:3102 (3.0 KiB)  TX bytes:684 (684.0 B)
+
+lo        Link encap:Local Loopback  
+          inet addr:127.0.0.1  Mask:255.0.0.0
+          UP LOOPBACK RUNNING  MTU:65536  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+
+```
+
+https://partnerissuetracker.corp.google.com/issues/247080714
+

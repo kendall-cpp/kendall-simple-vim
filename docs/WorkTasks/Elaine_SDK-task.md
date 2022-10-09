@@ -204,18 +204,21 @@ https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/255070
 
 - hub的probe函数，主要是一些工作的初始化和hub的配置
 - hub_configure配置hub
-- hub_activate ，主要是启动hub，我们这里传入的参数是HUB_INIT
-  -  kick_hub_wq(hub); //主要是queue_work(hub_wq, &hub->events)，也就是把hub_event加入工作队列，开始运行
-- hub_event，前面int2的时候有设置 hub->change_bits，这里会进行处理
+- hub_activate ，主要是启动 hub，我们这里传入的参数是HUB_INIT
+  -  kick_hub_wq(hub); //主要是queue_work(hub_wq, &hub->events)，也就是把 hub_event 加入工作队列，开始运行
+
+> hub_activate -- kick_hub_wq -- queue_work -- hub_event  (if (queue_work(hub_wq, &hub->events)) )
+
+- hub_event，前面int2的时候有设置 hub->test_bits，这里会进行处理
 - port_event 做了什么
 - hub_port_connect_change： 处理端口改变的情况
   - 什么情况下, hub_port_connect_change 才会被设为1.
-        - 1:端口在 hub->change_bits 中被置位.搜索整个代码树,发生在设置 hub->change_bits 的地方,只有在hub_port_logical_disconnect()中手动将端口禁用,会将对应位置1.
+        - 1:端口在 hub->test_bits 中被置位.搜索整个代码,在设置 hub->test_bits 的地方,只有在hub_port_logical_disconnect()中手动将端口禁用,会将对应位置1.
         - 2:hub上设备树上没有这个端口上的设备.但显示端口已经连上了设备
         - 3:hub这个端口上的连接发生了改变,从端口有设备连接变为无设备连接,或者从无设备连接变为有设备连接.
         - 4:hub的端口变为了disable,此时这个端口上连接了设备,但被显示该端口已经变禁用,需要将connect_change设为1.
         - 5:端口状态从SUSPEND变成了RESUME,远程唤醒端口上的设备失败,就需要将connect_change设为1.
-- ub_port_connect_change 再调用 hub_port_connect 报错
+- usb_port_connect_change 再调用 hub_port_connect 报错
 - usb_alloc_dev 报错
 
 当usb设备插入usb接口后，hub_irq执行，启动工作队列执行hub_event工作，它检测到port状态的变化,调用hub_port_connect_change(),如果是新设备那么usb_allco_dev，然后调用usb_new_device来进行配置使usb设备可以正常工作。

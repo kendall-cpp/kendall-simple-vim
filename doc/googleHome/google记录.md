@@ -194,6 +194,28 @@ adnl.exe Partition -P bootloader  -F  u-boot.bin
 adnl.exe Partition -P boot  -F boot-sign.img
 adnl.exe Partition -P system  -F system.img
 adnl.exe oem "reset"
+
+# 烧录工厂模式
+adnl.exe  Download u-boot.bin 0x10000  
+adnl.exe run
+adnl.exe bl2_boot -F  u-boot.bin
+
+adnl.exe oem "store init 1"
+adnl.exe oem "store boot_erase bootloader"
+adnl.exe oem "store erase boot 0 0"
+adnl.exe oem "store erase system 0 0"
+cat u-boot.bin.usb.bl2 u-boot.bin.usb.tpl > u-boot.bin
+adnl.exe Partition -P bootloader  -F  u-boot.bin
+# adnl.exe Partition -P system  -F fct_boot.img
+adnl.exe Partition -P system  -F boot-sign.img    # 自己编的kernel
+adnl.exe oem "enable_factory_boot"
+
+# 如果reboot update无法进入烧录模式
+fts -s bootloader.command  # 设置bootloader命令
+fts -i  #清除工厂模式
+# 或者
+reboot bootloader;   # 进入uboot
+adnl   # 进入烧录模式
 ```
 
 ## 编译korlan-ota
@@ -217,6 +239,37 @@ PARTNER_BUILD=true BOARD_NAME=korlan-p2 make -j30 otapackage
 > - u-boot/arch/arm/dts/meson-a1-a113l-korlan.dts
 > - u-boot/arch/arm/mach-meson/board-common.c
 > - arch/arm/mach-meson/
+
+##  korlan 设置USB模式
+
+```sh
+#进入板子
+fts -s usb_controller_type  host
+reboot
+# 或者
+echo 1 > /sys/kernel/debug/usb_mode/mode
+
+# 查看模式
+device mode
+	# cat /sys/kernel/debug/usb_mode/mode
+	usb_mode: devic
+host mode
+    # cat /sys/kernel/debug/usb_mode/mode
+    usb_mode: host
+```
+
+## 查看和设置 fts 的值
+
+fts 实际上是 key-value 形式
+
+设置
+
+fts -s enable_ethernet dhcp
+
+查看
+
+fts -g "enable_ethernet"
+
 
 
 
@@ -427,7 +480,7 @@ adnl.exe Partition -P boot_a  -F boot.img
 adnl.exe Partition -P boot_b  -F boot.img
 adnl.exe Partition -P misc  -F misc.img
 adnl.exe Partition -P system_a -F system.img
-#adnl.exe Partition -P system_b  -F fct_boot.img  # system_b分区
+#adnl.exe Partition -P system_b  -F fct_boot.img  # 工厂boot烧录到system_b分区，这时不用烧录 system.img
 # adnl.exe oem "enable_factory_boot"   # adnl.exe oem "disable_factory_boot" 
 # 关闭工厂模式
 # adnl.exe oem "store erase fts  0 0"
