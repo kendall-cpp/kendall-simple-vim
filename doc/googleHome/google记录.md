@@ -244,10 +244,17 @@ PARTNER_BUILD=true BOARD_NAME=korlan-p2 make -j30 otapackage
 
 ```sh
 #进入板子
+# 设置
 fts -s usb_controller_type  host
-reboot
+# 查看
+fts -g usb_controller_type
+# reboot 设置需要重启
+# 查看
+cat /proc/fts 
+# 清空
+fts -i
 # 或者
-echo 1 > /sys/kernel/debug/usb_mode/mode
+echo 1 > /sys/kernel/debug/usb_mode/mode  #需要拔插一下
 
 # 查看模式
 device mode
@@ -260,17 +267,14 @@ host mode
 
 ## 查看和设置 fts 的值
 
-fts 实际上是 key-value 形式
+```sh
+# fts 实际上是 key-value 形式
 
-设置
-
+# 设置
 fts -s enable_ethernet dhcp
-
-查看
-
+# 查看
 fts -g "enable_ethernet"
-
-
+```
 
 
 

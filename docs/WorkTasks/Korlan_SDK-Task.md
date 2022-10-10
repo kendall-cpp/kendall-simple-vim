@@ -390,3 +390,7 @@ lo        Link encap:Local Loopback
 
 https://partnerissuetracker.corp.google.com/issues/247080714
 
+Hi Kim,
+
+I used the init.rc file you provided, eth0 works fine, can you provide me with your img to reproduce your problem?
+

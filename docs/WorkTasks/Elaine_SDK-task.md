@@ -222,3 +222,7 @@ https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/255070
 - usb_alloc_dev 报错
 
 当usb设备插入usb接口后，hub_irq执行，启动工作队列执行hub_event工作，它检测到port状态的变化,调用hub_port_connect_change(),如果是新设备那么usb_allco_dev，然后调用usb_new_device来进行配置使usb设备可以正常工作。
+
+
+
+vim goodix_cfg_bin.c +171
