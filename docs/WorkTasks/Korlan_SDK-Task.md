@@ -168,7 +168,7 @@ https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/247425
 https://partnerissuetracker.corp.google.com/issues/245839768
 
 
-- 下载最新 alaine-ota 烧录
+- 下载最新 korlan-ota 烧录
 
 
 - 在 ubuntu 上进行测试
@@ -350,10 +350,6 @@ You need to push the dhcpcd_service.sh in the attachment into the corresponding 
 ```
 --- a/korlan/factory/init.rc
 +++ b/korlan/factory/init.rc
-@@ -355,3 +355,7 @@ service logcat_kmsg_save /bin/busybox sh /bin/fct/utility/runnable_script/logcat
- service fault_logging /bin/fault_logging
-     logcat
-     class service
 +
 +service dhcpcd /bin/sh /sbin/dhcpcd_service.sh                                       
 +    class service
@@ -393,4 +389,16 @@ https://partnerissuetracker.corp.google.com/issues/247080714
 Hi Kim,
 
 I used the init.rc file you provided, eth0 works fine, can you provide me with your img to reproduce your problem?
+
+
+Hi Kim,
+
+I used the ramdisk.img in the image you provided and reset the kernel to f952135364a6, I did reproduce the problem of comment#15, but I set CONFIG_USB_RTL8152=y  in arch/arm64/configs/korlan-p2_defconfig and found that I can get it ip.
+
+Please check if CONFIG_USB_RTL8152=y is set in your korlan-p2_defconfig and make sure to compile into korlan.
+
+
+Here is my test log and image
+
+---
 

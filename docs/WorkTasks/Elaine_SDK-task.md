@@ -226,3 +226,6 @@ https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/255070
 
 
 vim goodix_cfg_bin.c +171
+
+        goodix_cfg_bin_proc
+

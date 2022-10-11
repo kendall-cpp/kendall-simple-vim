@@ -211,7 +211,7 @@ adnl.exe Partition -P system  -F boot-sign.img    # 自己编的kernel
 adnl.exe oem "enable_factory_boot"
 
 # 如果reboot update无法进入烧录模式
-fts -s bootloader.command  # 设置bootloader命令
+fts -s bootloader.command  # 设置bootloader.command 为空，工厂模式可能重启进不了kernel
 fts -i  #清除工厂模式
 # 或者
 reboot bootloader;   # 进入uboot
@@ -252,9 +252,9 @@ fts -g usb_controller_type
 # 查看
 cat /proc/fts 
 # 清空
-fts -i
+#fts -i
 # 或者
-echo 1 > /sys/kernel/debug/usb_mode/mode  #需要拔插一下
+echo 1 > /sys/kernel/debug/usb_mode/mode  
 
 # 查看模式
 device mode
@@ -263,6 +263,14 @@ device mode
 host mode
     # cat /sys/kernel/debug/usb_mode/mode
     usb_mode: host
+    
+cat /proc/fts
+bootloader.command=boot-factory
+enable_ethernet=dhcp
+fts -g bootloader.command    # 查看
+fts -s bootloader.command    # 设置 bootloader.command 为空
+fts -s bootloader.command boot-factory # 设置 bootloader.command 为 boot-factory
+
 ```
 
 ## 查看和设置 fts 的值
