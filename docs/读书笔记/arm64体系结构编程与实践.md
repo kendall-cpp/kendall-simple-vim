@@ -447,4 +447,104 @@ adds x0, x1, #2
 mrs x2, nxcv
 ```
 
-x1 的值（0xffffffffffffffff）加上立即数 2 一定会触发无符号溢出，最终 X0 寄存器的值为 1，同时还设置 PSTATE 寄存器的 C 标志位为 1，我们可以通过读取 NZCV 寄存器来判断，最终 X2 寄存器的值为 0x20000000 ，说明第 29 位的 C 字段置 1，
+x1 的值（0xffffffffffffffff）加上立即数 2 一定会触发无符号溢出，最终 X0 寄存器的值为 1，同时还设置 PSTATE 寄存器的 C 标志位为 1，我们可以通过读取 NZCV 寄存器来判断，最终 X2 寄存器的值为 0x20000000 ，说明第 29 位的 C （进位标志）字段置 1，
+
+ADC xd，xn, xm	//Xd寄存器的值等于 Xn 寄存器的值加上 Xm 寄存器的值加上 C ，C表示 PSTATE 寄存器的 C 标志位。
+
+```c
+mov x1, oxffffffffffffffff
+mov x2, #2
+
+adc x0, x1, x2
+mrs x3, nzcv
+```
+
+ADC 指令计算过程： 0xFFFFFFFFFFFFFFFF + 2 + C ，因为 0xFFFFFFFFFFFFFFFF + 2 的过程中已经出发了无符号溢出，C=1 ，所以最终计算 X0 寄存器的值为 2，如果读取 NZCV 寄存器，发现 C 标志位也被置为 1 了。
+
+### SUB 指令
+
+```c
+sub x0, x1, #1	//把 x1 寄存器的值减去立即数 1，结果写入 x0 寄存器
+//把立即数1算数左移12位，然后把x1寄存器中的值减去（1<<12），把结果写入 x0 寄存器中
+sub x0, x1, #1, LSL 12	
+```
+
+```c
+1 mov x1, #1
+2 mov x2, #0x108a
+3 sub x0, x1, x2, UXTB
+4 sub x0, x1, x2, SXTB
+```
+
+UXTB 对 x2 寄存器的低 8 位数据进行无符号扩展，结果为 0x8a ， 然后再计算 1-0x8a 的值，最终结果为 0xffffffffffffff77
+
+SXTB 对 x2 寄存器的低 8 位数据进行有符号扩展，结果为 0xffffffffffffff8a，然后再计算 1-0xffffffffffffff8a ，最终结果为 0x77 。
+
+```c
+sub x0, x1, x2, LSL, 3  //x0 = x1 0 (x2 << 3)
+```
+
+### SUBS 指令
+
+该指令的计算过程： operand1 + NOT(operand2) + 1  // NOT 表示按位取反
+
+```c
+mov x1, 0x3
+mov x2, 0x1
+subs x0, x1, x2
+mrs x3, nzcv	//读取 nzcv 寄存器的值——0x200000000
+```
+
+x2 的值为 0x1，按位取反后的值为 0xfffffffffffffffe , 3 + 0xfffffffffffffffe + 1 , 这个过程会发生无符号溢出，因此 4 个标志位中的 C=1，最终计算结果为 2 。
+
+### SBC 指令
+
+该指令的计算过程；Xd = Xn + NOT(Xm) + C
+
+```c
+mov x1, #3
+mov x2, #1
+sbc x0, x1, x2
+mrs x3, nzcv
+```
+
+3 + not(1) + C , 1 按位取反为 0xfffffffffffffffe ， 3 + 0xfffffffffffffffe 过程会发生溢出，所以 C=1，再嘉善标志位 C，结果为 2.
+
+
+## 比较大小指令 CMP
+
+CMP 指令用来比较两个数的大小，在 A64 中，CMP 指令内部调用 SUBS 指令来实现
+
+```c
+cmp x1, x2		// x1 + not(x2) + 1
+// 跳转到 label 处
+b.cs label		//CS 表示发生了无符号溢出，即 C 标志位置位，CC 表示 C 标志位没有置位
+```
+
+```c
+my_test:
+	mov x1, #3
+	mov x2, #2
+1:
+	cmp x1, x2
+	b.cs lb
+
+	ret
+```
+
+b 指令的操作由后缀 cs 决定，cs 表示判断是否发生无符号溢出，3 + not(2) + 1 , not(2) = 0xfffffffffffffffd , 3 + 0xfffffffffffffffd + 1 = 1， ，这个过程发生了溢出，C 标志位置为 1， 所以 b.cs 的判断条件成立，跳转到标签 1 处，继续执行。
+
+- 比较 x1 和 x2 的寄存器的值大小
+
+```c
+my_test:
+	mov x1, #3
+	mov x2, #2
+1:
+	cmp x1, x2
+	b.ls, 1b
+
+	ret
+```
+
+在比较 x1 和 x2 寄存器的值大小时，判断调教为 LS，表示无符号小于或者等于，那么，在这个比较过程中，我们就不需要判断 C 标志位了，直接判断 x1 寄存器的值是否 小于或等于 x2 寄存器的值即可。因此这里不会跳转到标签 1 处。
