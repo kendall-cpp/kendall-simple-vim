@@ -463,6 +463,8 @@ ADC 指令计算过程： 0xFFFFFFFFFFFFFFFF + 2 + C ，因为 0xFFFFFFFFFFFFFFF
 
 ### SUB 指令
 
+减法指令
+
 ```c
 sub x0, x1, #1	//把 x1 寄存器的值减去立即数 1，结果写入 x0 寄存器
 //把立即数1算数左移12位，然后把x1寄存器中的值减去（1<<12），把结果写入 x0 寄存器中
@@ -486,6 +488,8 @@ sub x0, x1, x2, LSL, 3  //x0 = x1 0 (x2 << 3)
 
 ### SUBS 指令
 
+减法指令，但是会影响 PSTATE 寄存器的 N、Z、C、V 标志
+
 该指令的计算过程： operand1 + NOT(operand2) + 1  // NOT 表示按位取反
 
 ```c
@@ -498,6 +502,8 @@ mrs x3, nzcv	//读取 nzcv 寄存器的值——0x200000000
 x2 的值为 0x1，按位取反后的值为 0xfffffffffffffffe , 3 + 0xfffffffffffffffe + 1 , 这个过程会发生无符号溢出，因此 4 个标志位中的 C=1，最终计算结果为 2 。
 
 ### SBC 指令
+
+进位减法指令，也就是最终计算结果需要考虑 PSTATE 寄存器的 C 标志位
 
 该指令的计算过程；Xd = Xn + NOT(Xm) + C
 
@@ -548,3 +554,37 @@ my_test:
 ```
 
 在比较 x1 和 x2 寄存器的值大小时，判断调教为 LS，表示无符号小于或者等于，那么，在这个比较过程中，我们就不需要判断 C 标志位了，直接判断 x1 寄存器的值是否 小于或等于 x2 寄存器的值即可。因此这里不会跳转到标签 1 处。
+
+### 以为标志示例 array_index_mask_nospec
+
+内核中 array_index_mask_nospec 函数用来实现一个掩码
+
+- when $index \geq size$, return 0
+- when $index < size$, return 掩码 0xFFFFFFFFFFFFFFFF
+
+```c
+  static inline unsigned long array_index_mask_nospec(unsigned long idx, unsigned long sz) 
+  {
+      unsigned long mask;
+   
+      asm volatile(
+      "   cmp %1, %2\n"
+      "   sbc %0, xzr, xzr\n"
+      : "=r" (mask)
+      : "r" (idx), "Ir" (sz)
+      : "cc");
+   
+      csdb();
+      return mask;
+  }
+```
+
+上述内嵌汇编转成纯汇编代码
+
+```c
+cmp x0, x1
+sbc x0, xzr, xzr
+```
+
+x0 寄存器的值 idx，x1 寄存器的值 sz，当 $ldx < sz$ 时，cmp 指令没有产生无符号数溢出，C 标志位为 0，当 $idx \geq sz$ cmp 指令产生了无符号溢出（其实内置是使用了 subs 指令来实现），C 标志位会置 1。
+
