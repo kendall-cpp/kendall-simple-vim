@@ -172,6 +172,8 @@ mkdir -p ./korlan/korlan-b1
 ./sign-uboot.sh ../../chrome ./korlan/korlan-b1 b1
 
 # 签名kernel
+# 打包 ramdisk
+# find . |cpio -ov -H newc | xz -9  --check=crc32  > ../ramdisk.img
 # ramdisk 需要拷贝到 ./korlan/ramdisk.img
 # /mnt/fileroot/shengken.lin/workspace/google_source/eureka/amlogic_sdk/build-sign-pdk
 ./sign-kernel.sh ../../amlogic_sdk korlan/korlan-b1 b1 ../../chrome

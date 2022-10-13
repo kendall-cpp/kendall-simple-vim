@@ -29,6 +29,13 @@ start dhcpcd
 ifconfig -a
 ```
 
+- 解决 adb connect 被解决问题
+
+        - 需要研究 abd
+        - 需要研究 android 的 init.rc
+
+- adb 默认使用 IPv6
+
 -----
 
 ## Elaine

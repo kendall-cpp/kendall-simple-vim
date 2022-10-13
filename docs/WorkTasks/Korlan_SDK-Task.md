@@ -402,3 +402,129 @@ Here is my test log and image
 
 ---
 
+
+
+- 设置开机自动获取 ip
+
+```
+on post-fd
+        exec /bin/sh -c "echo 1 > /sys/kernel/debug/usb_mode/mode"
+
+# start dhcpcd                           
+start dhcpcd
+```
+
+- connect rejected
+
+```c
+system/core/adb/transport_local.c::server_socket_thread():server: cannot bind socket yet
+```
+
+
+```c
+  352 //#  define ADB_TRACING  ((adb_trace_mask & (1 << TRACE_TAG)) != 0)
+  353 #  define ADB_TRACING  1
+  354                                                                                                                                                                                                                        
+  355   /* you must define TRACE_TAG before using this macro */
+  356 #  define  D(...)                                      \
+  357         do {                                           \
+  358             if (ADB_TRACING) {                         \
+  359                 int save_errno = errno;                \
+  360                 adb_mutex_lock(&D_lock);               \
+  361                 fprintf(stdout, "%s::%s():",           \
+  362                         __FILE__, __FUNCTION__);       \
+  363                 errno = save_errno;                    \
+  364                 fprintf(stdout, __VA_ARGS__ );         \
+  365                 fflush(stdout);                        \
+  366                 adb_mutex_unlock(&D_lock);             \
+  367                 errno = save_errno;                    \
+  368            }                                           \
+```
+
+
+```sh
+/mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/system/core/adb
+
+mma PARTNER_BUILD=true
+
+
+echo 0 > /sys/kernel/debug/usb_mode/mode
+```
+
+----
+
+```
+[Korlan] Enable IPV6 and USB_RTL8152
+
+fct-korlan "adb connect ip:5555" requires ipv6 and usb-host
+
+Bug: 247080714
+Test: 
+/ # start adbd-secure
+/ # netstat
+Proto Recv-Q Send-Q Local Address          Foreign Address        State
+ tcp       0      0 127.0.0.1:5037         0.0.0.0:*              LISTEN
+ udp       0      0 0.0.0.0:68             0.0.0.0:*              CLOSE
+tcp6       0      0 :::5555                :::*                   LISTEN
+tcp6       0      0 ::ffff:10.28.39.205:5555 ::ffff:10.28.18.128:56031 ESTABLISHED
+```
+
+
+git add arch/arm64/configs/korlan-p2_defconfig
+git add include/linux/ipv6.h
+
+
+patch -p1 < /mnt/fileroot/shengken.lin/workspace/google_source/eureka/Korlan-file/issue/247080714/enable_ipv6_fix_build_issue.patch 
+
+https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/258568
+
+commit id: 201aba35948fbe8d1ca1307d46c8afec478b1803
+
+
+
+
+Hi Kim,
+
+Using `adb connect <ip>:5555` needs to enable ipv6 and USB_RTL8152.
+
+Please check this cl
+```
+https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/258568
+```
+
+The following gives the size of the kernel when disable and enable.
+
+- Enable IPV6
+  - fct_kernel.korlan.gz-dtb.korlan-b1  6164750
+  - kernel.korlan.gz-dtb.korlan-b1      6164738
+- Disable IPV6
+  - fct_kernel.korlan.gz-dtb.korlan-b1  5900664
+  - kernel.korlan.gz-dtb.korlan-b1      5900652
+
+- If using adbd-secure in the image you provided for "adb connect", cannot enter the "adb shell". But I replaced adbd-secure and found that both "adb connect" and "adb shell" work fine, the attachment below is adbd-secure I use.
+
+- In addition, I found that booting from a usb disk, USB is in host mode by default. So If you need to start eth0 on boot, just add "`start dhcpcd`" and "`start adbd-secure`" to init.rc file.
+
+
+```
+
+```
+
+And here is my test method.
+
+```
+// In fct-korlan
+/ # start adbd-secure
+/ # netstat
+Proto Recv-Q Send-Q Local Address          Foreign Address        State
+tcp       0      0 127.0.0.1:5037         0.0.0.0:*              LISTEN
+udp       0      0 0.0.0.0:68             0.0.0.0:*              CLOSE
+tcp6       0      0 :::5555                :::*                   LISTEN
+tcp6       0      0 ::ffff:10.28.39.205:5555 ::ffff:10.28.18.128:56031 ESTABLISHED
+
+// In pc
+> adb.exe connect 10.28.39.205:5555
+connected to 10.28.39.205:5555
+> adb.exe shell
+[korlan-b1]/ #
+```
