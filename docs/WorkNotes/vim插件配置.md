@@ -68,7 +68,8 @@ cd vim
 # –with-python-config-dir=/usr/lib/python2.7/config-x86_64-linux-gnu/ 指定python config路径
 # –with-python-config-dir=/usr/lib/python3.5/config-3.5m-x86_64-linux-gnu/ 指定python3 config路径(根据自己系统实际情况配置)
 # –prefix=/usr：指定将要安装到的路径(可自行创建)
-# –enable-gui：GUI支持，可用auto、gtk2或者gnome                  
+# –enable-gui：GUI支持，可用auto、gtk2或者gnome  
+
 ```
 
 ### 安装插件
@@ -190,9 +191,9 @@ sudo apt-get install ctags
 
 ### 函数变量查找
 
-- 命令模式下  CTRL+]
+- 命令模式下  CTRL+] 跳转到函数或者变量
 
-- 查找完毕返回到当前：CTRL+O
+- 查找完毕返回到当前：CTRL+o
 
 ## Ack 插件安装
 

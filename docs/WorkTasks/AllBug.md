@@ -1,7 +1,7 @@
 
 ## Korlan
 
-### fct korlan 无法找到 ip
+### fct korlan 无法找到 ip 需要总结记录
 
 > https://partnerissuetracker.corp.google.com/issues/247080714
 
@@ -36,11 +36,13 @@ ifconfig -a
 
 - adb 默认使用 IPv6
 
+https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/258568
+
 -----
 
 ## Elaine
 
-### 以太网压力测试问题
+### 以太网压力测试问题 还没解决
 
 > https://partnerissuetracker.corp.google.com/issues/246404063  进行中
 
@@ -57,7 +59,7 @@ late_initcall(goodix_i2c_init);
 - 研究触摸屏怎么影响 usb
 - 研究 usb_event 的原理
 
-### 显示屏功率 GPIO bug
+### 显示屏功率 GPIO bug -- 未开始
 
 > https://jira.amlogic.com/browse/GH-3038 Wrong lcd panel power setting
 

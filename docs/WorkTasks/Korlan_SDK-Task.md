@@ -441,6 +441,10 @@ system/core/adb/transport_local.c::server_socket_thread():server: cannot bind so
 
 ### 开启ipv6
 
+- chrome 单独编译一个模块
+
+mma PARTNER_BUILD=true
+
 ```sh
 /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/system/core/adb
 

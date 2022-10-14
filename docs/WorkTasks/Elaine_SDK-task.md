@@ -229,3 +229,7 @@ vim goodix_cfg_bin.c +171
 
         goodix_cfg_bin_proc
 
+
+HI Chris,
+
+I've detected that the problem might be in the goodix_get_reg_and_cfg function, However, through testing, it should not be a logical problem. It may take some additional experiments to locate the root cause.
