@@ -1,11 +1,11 @@
 - [TASK：测试 i2s clock](#task测试-i2s-clock)
   - [在 Ubuntu 下测试](#在-ubuntu-下测试)
-- [提交](#提交)
   - [最终提交1](#最终提交1)
   - [最终提交2](#最终提交2)
 - [Task: AC status `connected_status` not truly reflect the state when T6 docked](#task-ac-status-connected_status-not-truly-reflect-the-state-when-t6-docked)
-- [复现 dock-test-tool 测试问题](#复现-dock-test-tool-测试问题)
-- [添加 dhcp](#添加-dhcp)
+  - [复现 dock-test-tool 测试问题](#复现-dock-test-tool-测试问题)
+  - [添加 dhcp](#添加-dhcp)
+  - [开启ipv6](#开启ipv6)
 
 
 -------------
@@ -52,8 +52,6 @@ i2cdump -f -y 0x01 0x2d
 进入 codecs
 
 adb shell
-
-## 提交
 
 
 ### 最终提交1
@@ -163,7 +161,7 @@ https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/247425
 
 > https://partnerissuetracker.corp.google.com/issues/244842099
 
-## 复现 dock-test-tool 测试问题
+### 复现 dock-test-tool 测试问题
 
 https://partnerissuetracker.corp.google.com/issues/245839768
 
@@ -242,7 +240,7 @@ https://partnerissuetracker.corp.google.com/issues/230885799
 https://docs.google.com/document/d/16La7BkKlu0sbsQgruMoemk4QlBBqF8B7xHdMM74hXLk/edit?usp=sharing
 
 
-## 添加 dhcp
+### 添加 dhcp
 
 > https://partnerissuetracker.corp.google.com/issues/247080714
 
@@ -441,6 +439,7 @@ system/core/adb/transport_local.c::server_socket_thread():server: cannot bind so
   368            }                                           \
 ```
 
+### 开启ipv6
 
 ```sh
 /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/system/core/adb
@@ -506,9 +505,6 @@ The following gives the size of the kernel when disable and enable.
 - In addition, I found that booting from a usb disk, USB is in host mode by default. So If you need to start eth0 on boot, just add "`start dhcpcd`" and "`start adbd-secure`" to init.rc file.
 
 
-```
-
-```
 
 And here is my test method.
 

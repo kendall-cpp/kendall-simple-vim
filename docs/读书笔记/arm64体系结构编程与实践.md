@@ -612,4 +612,75 @@ lsr w3, w1, 1
 - ASR 是算术右移指令，把 0x8000008A 右移一位并且对最高位进行有符号扩展，最后结果为 0xC0000045 
 - LSR 是逻辑右移指令，把 0x8000008A 右移一位并且在最高位补 0，最后结果为 0x40000045 。
 
+## 位操作指令
+### 与操作指令
+
+AND：按位 与 操作
+
+ANDS：带条件标志位的 与 操作，影响 Z 标志位。
+
+```c
+mov x1, #0x3
+mov x2, #0
+
+ands x3, x1, x2   // 0x3 和 0 做 “与” 操作
+mrs x0, nzcv		//与 的结果为 0，读取 NZCV 寄存器，可以看到 Z 标志位了
+```
+
+### 或操作指令
+
+```c
+ORR Xd|SP, Xn, #imm
+ORR Xd, Xn, shift #amount
+```
+
+- 立即数方式：对 Xn 寄存器的值与立即数 imm 进行 或 操作
+- 寄存器方式：先对 Xm 寄存器的值做 移位 操作，然后再与 Xn 寄存器的值进行 或 操作
+
+```
+EOR Xd|SP, Xn, #imm
+EOR Xd, Xn, Xm, shift #amount 
+```
+
+- 立即数方式：对 Xn 寄存器的值与立即数 imm 进行 异或 操作
+- 寄存器方式：先对 Xm 寄存器的值做 移位 操作，然后再与 Xn 寄存器的值进行 异或 操作
+
+## 位段指令
+
+### 位段插入 BFI
+
+```c
+BFI Xd, Xn, #lsb, #width
+```
+
+BFI 指令的作用是用寄存器 Xn 寄存器中的 Bit[0, width-1] 替换 Xd 寄存器中的 Bit[lsb, lsb+width-1] 替换 Xd 寄存器中的 Bit[lsb, lsb + width-1] , Xd 寄存器中的其他位不变。
+
+```c
+val &=~ (oxf << 4)	//val 表示寄存器 A 的值
+val |= ( (u64)0x5 << 4)
+
+mov x0, #0		//寄存器 A 的值初始化为 0
+mov x1， #0x5	
+
+bfi x0, x1, #4, #4	//往寄存器A的Bit[7,4}字段设置 0x5
+```
+
+BFI 指令把 X1 寄存器中的 Bit[3,0] 设置为 X0 寄存器中的 Bit[7,4], X0 寄存器中的 Bit[7,4] ,X0 寄存器的值是 0x50。
+
+![](https://gitee.com/linKge-web/PerPic/raw/master/bookImg/ARM64biancheng/BFI指令.png)
+
+### 位段提取操作指令 UBFIX
+
+```c
+UFBX  Xd, Xn, #lsb, #width
+```
+
+UBFX 作用是提取 Xn 寄存器的 Bit[lsb, lsb+width-1], 然后存储到 Xd 寄存器中。另外 SBFX 和 UBFX 的区别只是SBFX 会进行符号扩展，例如 Bit[lsb, lsb+width-1] 为 1，那么写到 Xd 寄存器之后，所有的高位都必须为 1，。
+
+```c
+mov x2, #0x8a
+ubfx x0, x2, #4, #4
+sbfx x1, x2, #4, #4
+```
+
 
