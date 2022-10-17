@@ -225,9 +225,7 @@ https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/255070
 
 
 
-vim goodix_cfg_bin.c +171
 
-        goodix_cfg_bin_proc
 
 
 HI Chris,
@@ -235,4 +233,14 @@ HI Chris,
 I've detected that the problem might be in the goodix_get_reg_and_cfg function, However, through testing, it should not be a logical problem. It may take some additional experiments to locate the root cause.
 
 -----
+
+### 检查 goodix 驱动
+
+```c
+//vim goodix_cfg_bin.c +171
+goodix_cfg_bin_proc
+```
+
+
+修改： /mnt/nfsroot/shengken.lin/workspace/google_source/eureka/amlogic_sdk/kernel$ vim drivers/amlogic/usb/dwc_otg/310/dwc_otg_pcd_intr.c
 
