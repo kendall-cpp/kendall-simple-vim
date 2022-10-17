@@ -199,16 +199,5 @@ dm_init 只是负责初始化并绑定了 udevice 和 driver，probe 探测函�
 - 调用driver的probe函数
 
 
-# 内核源码阅读
-
-
-
-
-# workqueue 机制
-
-
-
-# USB 协议栈
-
 
 

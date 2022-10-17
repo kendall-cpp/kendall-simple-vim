@@ -306,6 +306,8 @@ secondary_startup:
 ENDPROC(secondary_startup)
 ```
 
+# 第三章
+
 ## 加载与存储指令的变种
 
 ### 不同位宽的LDR和STR指令
@@ -406,6 +408,8 @@ main:
 mov <Xd|SP>, <Xn|SP>  //寄存器之间的搬移
 mov <Xd>, $imm		  //立即数之间的搬移
 ```
+
+# 第四章
 
 ## 算数和移位指令
 ### 加法指令
@@ -683,4 +687,49 @@ ubfx x0, x2, #4, #4
 sbfx x1, x2, #4, #4
 ```
 
+![](https://gitee.com/linKge-web/PerPic/raw/master/bookImg/ARM64biancheng/UBFX指令.png)
+
+SBFX 指令在提取字段之后需要做符号扩展，当提取后的字段中最高位为 1 时，Xd 寄存器的最高位都要填充 1。当提取后的字段中最高位为 0 时，Xd 寄存器里最高位都要填充 0，最终，X1 寄存器的值为 0xFFFFFFFFFFFFFF8 。
+
+![](https://gitee.com/linKge-web/PerPic/raw/master/bookImg/ARM64biancheng/SBFX指令.png)
+
+# 第五章
+
+## 比较指令
+
+### CMN 指令
+
+CMN 指令，是 CMP 指令的一个变种，CMN 指令用来将一个数与另一个数的相反数进行比较。
+
+```
+.global cmn_test
+cmn_test:
+	mov x1, 2
+	mov x2, -2
+
+1:
+	cmn x1, x2
+	b.eq lb
+
+	ret
+```
+
+x1 寄存器的值为 2，x2 寄存器的值为 -2，那么 x2 寄存器的值的相反数为 2，cmn 指令会让 x1 寄存器和 x2 寄存器中的值的相反数进行比较，eq 会判断成功就会跳转到 1 处。
+
+### CSEL 指令
+
+```c
+CSEL Xd, Xn, Xm, cond
+```
+
+判断 cond 是否为真，如果为真，就返回 Xn，否则，返回 Xm，把结果写入 Xd 寄存器中，
+
+
+### CSET 指令
+
+```c
+CSET Xd, cond
+```
+
+当 cond 条件为真时，设置 Xd 寄存器为 1，否则置为 0.
 

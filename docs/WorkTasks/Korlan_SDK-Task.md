@@ -528,3 +528,7 @@ connected to 10.28.39.205:5555
 > adb.exe shell
 [korlan-b1]/ #
 ```
+
+-----
+
+
