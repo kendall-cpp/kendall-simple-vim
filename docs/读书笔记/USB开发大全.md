@@ -34,4 +34,15 @@ USB 系统中的第一个 USB 设备是 root Hub，它是和主机控制器绑�
 
 ## USB 源码目录
 
+----
 
+# usb_probe
+
+Set default autosuspend delay as 0 to speedup bus suspend,  based on the below considerations:
+
+Unlike other drivers, the hub driver does not rely on the autosuspend delay to provide enough time to handle a wakeup event, and the submitted status URB is just to check future change on hub downstream ports, so it is safe to do it.    The patch might cause one or more auto supend/resume for below very rare devices when they are plugged into hub first time: devices having trouble initializing, and disconnect themselves from the bus and then reconnect a second or so lat devices just for downloading firmware, and disconnects    themselves after completing it For these quite rare devices, their drivers may change the autosuspend delay of their parent hub in the probe() to one appropriate value to avoid the subtle problem if someone does care i The patch may cause one or more auto suspend/resume on hub during running 'lsusb', but it is probably too infrequent to worry abou Change autosuspend delay of hub can avoid unnecessary auto suspend timer for hub, also may decrease power consumption of USB bu If user has indicated to prevent autosuspend by passing usbcore.autosuspend = -1 then keep autosuspend disabled. 
+
+
+基于以下考虑，将默认自动挂起延迟设置为 0 以挂起加速总线：
+
+与其他驱动不同，集线器驱动不依赖自动挂起延迟来提供足够的时间来处理唤醒事件，并且提交的状态 URB 只是为了检查集线器下游端口的未来变化，因此这样做是安全的。当以下非常罕见的设备第一次插入集线器时，该补丁可能会导致一个或多个自动挂起/恢复：设备初始化时遇到问题，将自己与总线断开连接，然后重新连接第二个左右的设备以下载固件，并在完成后自行断开连接 对于这些非常罕见的设备，它们的驱动程序可能会将其父集线器在 probe() 中的自动挂起延迟更改为一个适当的值，以避免在有人关心的情况下出现微妙的问题 i 补丁可能会导致一个或多个自动在运行 'lsusb' 期间暂停/恢复集线器，但可能很少担心传递 usbcore.autosuspend = -1 然后保持 autosuspend 禁用。
