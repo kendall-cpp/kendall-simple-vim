@@ -3,7 +3,7 @@
 
 ### fix fct-korlan 无法找到 ip 
 
-> https://partnerissuetracker.corp.google.com/issues/247080714
+> issue: https://partnerissuetracker.corp.google.com/issues/247080714
 
 - 解决方法
 
@@ -30,6 +30,25 @@ reboot
 ```
 
 korlan 中是用 `ifconfig -a` 命令查看
+
+### chrome 单独编译一个模块
+
+```sh
+/mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/system/core/adb
+
+mma PARTNER_BUILD=true
+
+# test
+echo 0 > /sys/kernel/debug/usb_mode/mode
+```
+
+### 提交
+
+```
+git push eureka-partner HEAD:refs/for/korlan-master
+
+https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/260551
+```
 
 ### fix adb connect 被拒绝问题
 

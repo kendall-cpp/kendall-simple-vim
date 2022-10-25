@@ -462,7 +462,7 @@ git am --resolved
 ### git apply 与 git am的区别
 
 - git apply 只更新改动内容，打完之后需要自己 git add 和  git commit
-- git am 是更新的 commit，会将 commit 的所有信息打上去，author 也是 patch 的 author 而不打 patch的人。
+- git am 是更新的 commit，会将 commit 的所有信息打上去，author 也是 patch 的 author 而不是打 patch的人。
 
 ### 打patch发生冲突
 

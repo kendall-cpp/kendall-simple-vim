@@ -207,8 +207,8 @@ https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/255070
 - hub_activate ，主要是启动 hub，我们这里传入的参数是HUB_INIT
   -  kick_hub_wq(hub); //主要是queue_work(hub_wq, &hub->events)，也就是把 hub_event 加入工作队列，开始运行
 
-> hub_activate -- kick_hub_wq -- queue_work -- hub_event  (if (queue_work(hub_wq, &hub->events)) )
-
+> hub_activate（init 3) -- kick_hub_wq -- queue_work -- hub_event  (if (queue_work(hub_wq, &hub->events)) )
+*
 - hub_event，前面int2的时候有设置 hub->test_bits，这里会进行处理
 - port_event 做了什么
 - hub_port_connect_change： 处理端口改变的情况
@@ -243,4 +243,41 @@ goodix_cfg_bin_proc
 
 
 修改： /mnt/nfsroot/shengken.lin/workspace/google_source/eureka/amlogic_sdk/kernel$ vim drivers/amlogic/usb/dwc_otg/310/dwc_otg_pcd_intr.c
+
+----
+
+### 检查 func2 和 func3
+
+The superspeed hub except for root hub has to use Hub Depth value as an offset into the route string to locate the bits it uses to determine the downstream port number. So hub driver should send a set hub depth request to superspeed hub after the superspeed hub is set configuration in initialization or reset procedure.    
+
+After a resume, port power should still be on. For any other type of activation, turn it on. 
+
+- comment
+
+commit
+```
+[Elaine] Delay hub_init_func3 and wait for hub_init_func2 to make USB ethernet work fine.
+
+Bug: 246404063
+Test: None
+```
+
+Hi Chris,
+
+I did some experimental verification and found that the work queue of hub_init_func3 is ahead of schedule, which can be solved by the following cl, and you can also test it through the following cl.
+
+But this is still not the root cause, I will continue to work hard to study this issue, or you have better methods can also be provided to me.
+
+```
+https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/259656
+commitId: 6b7f44b5eed0a00ef73bb94dbf5c64551fdb40a9
+```
+
+
+
+#### 参考网址
+
+https://www.cnblogs.com/tid-think/p/9207652.html
+
+http://blog.chinaunix.net/uid-27661165-id-3534662.html
 

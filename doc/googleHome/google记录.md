@@ -7,9 +7,9 @@
 > - git clone ssh://shengken.lin@scgit.amlogic.com:29418/kernel/common
 
 ```sh
-git config --global user.email "shengken.lin@amlogic.com"
+git config --local user.email "shengken.lin@amlogic.com"
 
-git config --global user.name "shengken.lin"
+git config --local user.name "shengken.lin"
 
 
 # 第二个会提示：fatal: remote review already exists.
@@ -193,9 +193,13 @@ adnl.exe oem "store boot_erase bootloader"
 adnl.exe oem "store erase boot 0 0"
 adnl.exe oem "store erase system 0 0"
 adnl.exe Partition -P bootloader  -F  u-boot.bin
-adnl.exe Partition -P boot  -F boot-sign.img
+adnl.exe Partition -P boot  -F boot-sign.img  / boot.img
 adnl.exe Partition -P system  -F system.img
+# 从工厂模式切换到eng模式需要擦除工厂模式
+adnl.exe oem "store erase fts  0 0"
 adnl.exe oem "reset"
+
+
 
 # 烧录工厂模式
 adnl.exe  Download u-boot.bin 0x10000  
@@ -261,7 +265,7 @@ echo 1 > /sys/kernel/debug/usb_mode/mode
 # 查看模式
 device mode
 	# cat /sys/kernel/debug/usb_mode/mode
-	usb_mode: devic
+	usb_mode: device
 host mode
     # cat /sys/kernel/debug/usb_mode/mode
     usb_mode: host
@@ -284,6 +288,32 @@ fts -s bootloader.command boot-factory # 设置 bootloader.command 为 boot-fact
 fts -s enable_ethernet dhcp
 # 查看
 fts -g "enable_ethernet"
+```
+
+### 打开uboot log 和时间
+
+```sh
+board/amlogic/defconfigs/a1_korlan_b1_defconfig
+@@ -10,7 +10,7 @@ CONFIG_DEBUG_UART_BASE=0xfe001c00
+ CONFIG_DEBUG_UART_CLOCK=24000000
+ CONFIG_DEBUG_UART=y
+ CONFIG_OF_BOARD_SETUP=y
+-CONFIG_BOOTDELAY=-2
++CONFIG_BOOTDELAY=2
+ CONFIG_BOOTCOMMAND="run storeboot"
+ CONFIG_BOARD_LATE_INIT=y
+ # CONFIG_DISPLAY_CPUINFO is not set
+@@ -103,7 +103,7 @@ CONFIG_LZ4=y
+ CONFIG_NAND_FTS=y
+ CONFIG_CMD_REBOOT=y
+ CONFIG_CMD_FACTORY_BOOT=y
+-CONFIG_LOGLEVEL=4
+-CONFIG_SPL_LOGLEVEL=4
+-CONFIG_TPL_LOGLEVEL=4
++CONFIG_LOGLEVEL=7
++CONFIG_SPL_LOGLEVEL=7
++CONFIG_TPL_LOGLEVEL=7
+ CONFIG_CMD_USB_MODE=y
 ```
 
 

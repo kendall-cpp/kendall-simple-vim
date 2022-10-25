@@ -2,10 +2,15 @@
   - [在 Ubuntu 下测试](#在-ubuntu-下测试)
   - [最终提交1](#最终提交1)
   - [最终提交2](#最终提交2)
-- [Task: AC status `connected_status` not truly reflect the state when T6 docked](#task-ac-status-connected_status-not-truly-reflect-the-state-when-t6-docked)
   - [复现 dock-test-tool 测试问题](#复现-dock-test-tool-测试问题)
-  - [添加 dhcp](#添加-dhcp)
-  - [开启ipv6](#开启ipv6)
+- [添加 dhcp fct-korlan](#添加-dhcp-fct-korlan)
+  - [kernel 打开个 CONFIG_USB_RTL8152](#kernel-打开个-config_usb_rtl8152)
+  - [fctory 设置 IP](#fctory-设置-ip)
+  - [设置开机自动获取 ip](#设置开机自动获取-ip)
+  - [adb调试ipv6](#adb调试ipv6)
+  - [开启 ipv6和RTL8152](#开启-ipv6和rtl8152)
+  - [重新编译成 ko 文件，并加载到init.rc](#重新编译成-ko-文件并加载到initrc)
+    - [提交](#提交)
 
 
 -------------
@@ -157,9 +162,7 @@ https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/247425
 
 -------------------
 
-## Task: AC status `connected_status` not truly reflect the state when T6 docked 
 
-> https://partnerissuetracker.corp.google.com/issues/244842099
 
 ### 复现 dock-test-tool 测试问题
 
@@ -175,63 +178,8 @@ https://partnerissuetracker.corp.google.com/issues/245839768
 $ dd if=/dev/urandom bs=1048576 count=35 of=fake-ota.zip
 $ dock-test-tool nest-ota-push --block-size=524288 ./fake-ota.zip   # 异常
 
-$ dock-test-tool nest-ota-push  ./fake-ota.zip   # 征程
+$ dock-test-tool nest-ota-push  ./fake-ota.zip   # 正常
 ```
-
-开始log 定位
-
-```sh
-12-31 19:00:50.365  1377  1377 I dockd   : I0101 00:00:50.362693  1377 functionfs_driver.cc:542] FUNCTIONFS_ENABLE.
-
-
-# 报错点：
-# 正常
-12-31 19:00:39.095  1377  1377 I dockd   : I0101 00:00:39.094580  1377 functionfs_driver.cc:419] Resumed IO by submitting requests.  # 异常没有
-
-2-31 19:00:39.103  1464  1464 I iot_usb_dock.sh: [1464:1464:INFO:usb_connection_monitor.cc(140)] State chord is INVALID. AudioState:2 DockingState:0 ProtocolState:1
-12-31 19:00:39.104  1464  1464 I iot_usb_dock.sh: [1464:1682:INFO:dock_storage_manager.cc(175)] Stop metrics uploading.
-12-31 19:00:39.272  1464  1464 I iot_usb_dock.sh: [1464:1464:INFO:usb_dock_ota.cc(314)] Downloaded ota chunk. size=65536
-
-# 异常
-12-31 19:00:50.372  1464  1464 I iot_usb_dock.sh: [1464:1464:INFO:usb_connection_monitor.cc(140)] State chord is INVALID. AudioState:2 DockingState:0 ProtocolState:1
-12-31 19:00:50.374  1464  1464 I iot_usb_dock.sh: [1464:1671:INFO:dock_storage_manager.cc(175)] Stop metrics uploading.
-12-31 19:00:52.368  1464  1464 I iot_usb_dock.sh: [1464:1464:ERROR:usb_connection_monitor.cc(151)] USB connection state NOT agreed. AudioState:2 DockingState:0 ProtocolState:1
-12-31 19:00:52.997  1464  1464 I iot_usb_dock.sh: [1464:1464:INFO:message_router.cc(433)] Set stream to halt. buffered=294784, min_size=524481
-```
-
-
-
-```sh
-vim ./cast/internal/iot_services/usb_dock/usb_connection_monitor.cc +140
-vim ./cast/internal/iot_services/metrics/storage/dock_storage_manager.cc +175
-
-# 分离地方
-# /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/cast/internal/iot_services/usb_dock/usb_dock_ota.cc 
-  313       if (CompareSHA1Hashes(sha1_actual, sha1_expected)) {
-  314         LOG(INFO) << "OTA SHA1 hash matches. sha1=" << ToHex(sha1_actual);
-  315       } else {
-  316         DockResponse resp = CreateResponse(req, ResponseType::REQUEST_FAILED);                                                                                                                                         
-  317         resp.set_status_message("SHA1 mismatch");
-  318         return resp;
-  319       }  
-```
-
-```sh
-# 正常
-/mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/cast/internal/iot_services/usb_dock/usb_dock_ota.cc --》  Downloaded ota chunk. size=65536 
-HandleOtaPush -- OnNestOtaPush -- UsbDockOta::UsbDockOta (BindRepeating)（构造函数）
-iot_services/usb_dock/usb_dock_ota.h --> base::WeakPtrFactory<UsbDockOta> weak_factory_{this};
-
-# 异常
-/mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/cast/internal/iot_services/usb_dock/usb_connection_monitor.cc  --》USB connection state NOT agreed
-OnUsbConnectionDisagreeTimeout -- UsbConnectionMonitor - UsbConnectionMonitor::UsbConnectionMonitor(构造函数)
-iot_services/usb_dock/usb_connection_monitor.h -> base::WeakPtrFactory<UsbConnectionMonitor> weak_factory_;
-
-
-# 公共的
-StopUploadingMetrics -- TEST_F （gtest）
-```
-
 
 - 调试和文档
 
@@ -240,102 +188,21 @@ https://partnerissuetracker.corp.google.com/issues/230885799
 https://docs.google.com/document/d/16La7BkKlu0sbsQgruMoemk4QlBBqF8B7xHdMM74hXLk/edit?usp=sharing
 
 
-### 添加 dhcp
+## 添加 dhcp fct-korlan
 
 > https://partnerissuetracker.corp.google.com/issues/247080714
 
-```sh
-service dhcpcd /bin/sh /sbin/dhcpcd_service.sh
-    class service        
-    user root 
-```
 
 
 
-```
-[korlan] Enable dhcp
-
-
-Bug: 247080714
-Test:
-/ # ifconfig -a
-eth0      Link encap:Ethernet  HWaddr 00:e0:4c:68:02:9b
-          inet addr:10.28.39.167  Bcast:10.28.39.255  Mask:255.255.255.0 
-          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
-          RX packets:124 errors:0 dropped:0 overruns:0 frame:0 
-          TX packets:2 errors:0 dropped:0 overruns:0 carrier:0 
-          collisions:0 txqueuelen:1000 
-          RX bytes:13941 TX bytes:684 
-
-lo        Link encap:Local Loopback  
-          inet addr:127.0.0.1  Mask:255.0.0.0 
-          UP LOOPBACK RUNNING  MTU:65536  Metric:1
-          RX packets:0 errors:0 dropped:0 overruns:0 frame:0 
-          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0 
-          collisions:0 txqueuelen:1000 
-          RX bytes:0 TX bytes:0
-```
-
-git push eureka HEAD:refs/for/master
-
-https://eureka-partner-review.googlesource.com/c/vendor/amlogic/+/255325
-
-- kernel
+###  kernel 打开个 CONFIG_USB_RTL8152
 
 arch/arm64/configs/korlan-p2_defconfig
 
 CONFIG_USB_RTL8152=y
 
-- enable 
 
--rw-r--r-- 1 shengken.lin szsoftware 5935722 Sep 29 15:38 ./arch/arm64/boot/kernel.korlan.gz-dtb.korlan-b1
-
-- disable
-
--rw-r--r-- 1 shengken.lin szsoftware 5899776 Sep 29 15:43 ./arch/arm64/boot/kernel.korlan.gz-dtb.korlan-b1
-
-```
-[USB] Enable RTL8152
-
-Bug: b/247080714
-Test:
-/ # ifconfig -a
-eth0      Link encap:Ethernet  HWaddr 00:e0:4c:68:02:9b
-          inet addr:10.28.39.167  Bcast:10.28.39.255  Mask:255.255.255.0 
-          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
-          RX packets:124 errors:0 dropped:0 overruns:0 frame:0 
-          TX packets:2 errors:0 dropped:0 overruns:0 carrier:0 
-          collisions:0 txqueuelen:1000 
-          RX bytes:13941 TX bytes:684 
-
-lo        Link encap:Local Loopback  
-          inet addr:127.0.0.1  Mask:255.0.0.0 
-          UP LOOPBACK RUNNING  MTU:65536  Metric:1
-          RX packets:0 errors:0 dropped:0 overruns:0 frame:0 
-          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0 
-          collisions:0 txqueuelen:1000 
-          RX bytes:0 TX bytes:0
-```
-
-git push eureka-partner HEAD:refs/for/korlan-master
-
-https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/255326
-
-
-- common
-
-Hi Jason,
-
-Pls use this cl,
-```
-https://eureka-partner-review.googlesource.com/q/topic:%22Enable+dhcp%22
-```
-
-Reply comment#6, Jason use AX88772C, this config already enable, so will not increase kernel size; And I also enable RTL8152.
-- Enable RTL8152, kernel size is 5935722
-- Disabled RTL8152, kernel size is 5899776
-
-- fctory 设置 IP
+### fctory 设置 IP
   
 - comment
 
@@ -384,25 +251,12 @@ lo        Link encap:Local Loopback
 
 https://partnerissuetracker.corp.google.com/issues/247080714
 
-Hi Kim,
 
-I used the init.rc file you provided, eth0 works fine, can you provide me with your img to reproduce your problem?
-
-
-Hi Kim,
-
-I used the ramdisk.img in the image you provided and reset the kernel to f952135364a6, I did reproduce the problem of comment#15, but I set CONFIG_USB_RTL8152=y  in arch/arm64/configs/korlan-p2_defconfig and found that I can get it ip.
-
-Please check if CONFIG_USB_RTL8152=y is set in your korlan-p2_defconfig and make sure to compile into korlan.
-
-
-Here is my test log and image
-
----
+----
 
 
 
-- 设置开机自动获取 ip
+### 设置开机自动获取 ip
 
 ```
 on post-fd
@@ -439,7 +293,7 @@ system/core/adb/transport_local.c::server_socket_thread():server: cannot bind so
   368            }                                           \
 ```
 
-### 开启ipv6
+### adb调试ipv6
 
 - chrome 单独编译一个模块
 
@@ -450,85 +304,60 @@ mma PARTNER_BUILD=true
 
 mma PARTNER_BUILD=true
 
-
+# test
 echo 0 > /sys/kernel/debug/usb_mode/mode
 ```
 
-----
+- 修改成 ipv4 调试 ipv6
+
+```sh
+# libcutils/socket_inaddr_any_server_unix.cpp
+```
+
+### 开启 ipv6和RTL8152
+
+
+### 重新编译成 ko 文件，并加载到init.rc
+
+拷贝到 ramdisk sbin 目录下
 
 ```
-[Korlan] Enable IPV6 and USB_RTL8152
+cp kernel/net/ipv6/ipv6.ko  /mnt/fileroot/shengken.lin/workspace/google_source/eureka/amlogic_sdk/build-sign-pdk/korlan/fct_ramdisk/sbin
 
-fct-korlan "adb connect ip:5555" requires ipv6 and usb-host
+- 顺序，只需要
+
+insmod /sbin/ipv6.ko
+
+```
+
+#### 提交
+
+```
+[Korlan] Build IPV6 to ko and enable RTL8152
+
+fct-korlan "adb connect <ip>:5555" requires ipv6 and usb ethernet
 
 Bug: 247080714
-Test: 
-/ # start adbd-secure
-/ # netstat
+Test:
+/ # insmod ipv6.ko
+/ # start dhcpcd
+/ # start adbd
+/ # netstat 
 Proto Recv-Q Send-Q Local Address          Foreign Address        State
  tcp       0      0 127.0.0.1:5037         0.0.0.0:*              LISTEN
  udp       0      0 0.0.0.0:68             0.0.0.0:*              CLOSE
 tcp6       0      0 :::5555                :::*                   LISTEN
-tcp6       0      0 ::ffff:10.28.39.205:5555 ::ffff:10.28.18.128:56031 ESTABLISHED
-```
-
-
-git add arch/arm64/configs/korlan-p2_defconfig
-git add include/linux/ipv6.h
-
-
-patch -p1 < /mnt/fileroot/shengken.lin/workspace/google_source/eureka/Korlan-file/issue/247080714/enable_ipv6_fix_build_issue.patch 
-
-https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/258568
-
-commit id: 201aba35948fbe8d1ca1307d46c8afec478b1803
-
-
-
-
-Hi Kim,
-
-Using `adb connect <ip>:5555` needs to enable ipv6 and USB_RTL8152.
-
-Please check this cl
-```
-https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/258568
-```
-
-The following gives the size of the kernel when disable and enable.
-
-- Enable IPV6
-  - fct_kernel.korlan.gz-dtb.korlan-b1  6164750
-  - kernel.korlan.gz-dtb.korlan-b1      6164738
-- Disable IPV6
-  - fct_kernel.korlan.gz-dtb.korlan-b1  5900664
-  - kernel.korlan.gz-dtb.korlan-b1      5900652
-
-- If using adbd-secure in the image you provided for "adb connect", cannot enter the "adb shell". But I replaced adbd-secure and found that both "adb connect" and "adb shell" work fine, the attachment below is adbd-secure I use.
-
-- In addition, I found that booting from a usb disk, USB is in host mode by default. So If you need to start eth0 on boot, just add "`start dhcpcd`" and "`start adbd-secure`" to init.rc file.
-
-
-
-And here is my test method.
 
 ```
-// In fct-korlan
-/ # start adbd-secure
-/ # netstat
-Proto Recv-Q Send-Q Local Address          Foreign Address        State
-tcp       0      0 127.0.0.1:5037         0.0.0.0:*              LISTEN
-udp       0      0 0.0.0.0:68             0.0.0.0:*              CLOSE
-tcp6       0      0 :::5555                :::*                   LISTEN
-tcp6       0      0 ::ffff:10.28.39.205:5555 ::ffff:10.28.18.128:56031 ESTABLISHED
 
-// In pc
-> adb.exe connect 10.28.39.205:5555
-connected to 10.28.39.205:5555
-> adb.exe shell
-[korlan-b1]/ #
+- comment
+
+https://partnerissuetracker.corp.google.com/issues/247080714
+
+Hi Jason,
+I've updated ipv6 to minimal ko, please check this cl.
+
 ```
-
------
-
+https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/260551
+```
 
