@@ -1,5 +1,9 @@
 # BuildRoot_A1 
 
+## 编译
+
+
+
 ## 提交kernel gerrit
 
 
@@ -10,6 +14,12 @@
 git config --local user.email "shengken.lin@amlogic.com"
 
 git config --local user.name "shengken.lin"
+
+# 或者到这个目录下添加 BuildRoot_A1-v2/.repo/repo/.git/config
+[user]
+    name = shengken.lin
+    email = shengken.lin@amlogic.com
+
 
 
 # 第二个会提示：fatal: remote review already exists.
@@ -28,6 +38,9 @@ git add   # add 修改的文件
 git commit --amend -s   # -s 代表添加当前用户
 git push review HEAD:refs/for/amlogic-4.19-dev  # kernel的提交分支
 ```
+
+- uboot分支名 amlogic-4.19-dev
+- kernel 分支名 amlogic-4.19-dev
 
 - 提交查看：https://scgit.amlogic.com/#/dashboard/self
 
@@ -559,7 +572,7 @@ adnl reboot
 
 下载 otatools 和 spencer-target_files 两个 zip 文件
 
-[下载地址](https://console.cloud.google.com/storage/browser/cast-partner-amlogic-internal/internal/master/spencer-eng/315654?pageState=(%22StorageObjectListTable%22:(%22f%22:%22%255B%255D%22))&prefix=&forceOnObjectsSortingFiltering=false)
+`[下载地址](https://console.cloud.google.com/storage/browser/cast-partner-amlogic-internal/internal/master/spencer-eng/315654?pageState=(%22StorageObjectListTable%22:(%22f%22:%22%255B%255D%22))&prefix=&forceOnObjectsSortingFiltering=false)`
 
 - otatools
 
@@ -649,13 +662,13 @@ cp /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlog
 zip -r ./spencer-target_files.zip -f ./BOOT/RAMDISK/lib/
 
 
-cd ../../
+cd chrome
 
 mv out/host/linux-x86/bin out/host/linux-x86/bin1
 
 # ./vendor/amlogic/build/tools/releasetools/ota_from_target_files -v --board spencer-p2 ./spencer-315654/spencer-target_files/spencer-target_files.zip ./spencer-315654/replace-bootloader-kernel-ota.zip
 # 这里直接使用 otatools 下的 ota_from_target_files 打包
-otatools/binota_from_target_files -v --board spencer-p2 ./spencer-315654/spencer-target_files/spencer-target_files.zip ${your_path}/eureka/replace-ota/spencer-replace-ota/replace-bootloader-kernel-ota.zip
+otatools/bin/ota_from_target_files -v --board spencer-p2 ./spencer-315654/spencer-target_files/spencer-target_files.zip ${your_path}/eureka/replace-ota/spencer-replace-ota/replace-bootloader-kernel-ota.zip
 
 mv out/host/linux-x86/bin1 out/host/linux-x86/bin
 ```
@@ -1091,8 +1104,6 @@ https://wiki-china.amlogic.com/index.php?title=Amlogic_Tools/Update%E5%91%BD%E4%
 
 ```sh
 update.exe write bl2.signed.bin 0xfffa0000
-update.exe run  0xfffa0000
-
 
 update.exe bl2_boot u-boot.signed.bin
 

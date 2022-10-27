@@ -119,6 +119,11 @@ late_initcall(goodix_i2c_init);
 
 - 研究触摸屏怎么影响 usb
 - 研究 usb_event 的原理
+- usb-hub-controller
+
+修改patch: https://git.kernel.org/pub/scm/linux/kernel/git/gregkh/usb.git/commit/?h=usb-testing&id=a44623d9279086c89f631201d993aa332f7c9e66
+
+参考：https://bugzilla.kernel.org/show_bug.cgi?id=214021
 
 ### 显示屏功率 GPIO bug -- 未开始
 

@@ -31,6 +31,7 @@
 	- [打patch发生冲突](#打patch发生冲突)
 	- [patch 例子](#patch-例子)
 - [cherry-pick](#cherry-pick)
+- [问题解决](#问题解决)
 
 -----
 
@@ -523,6 +524,15 @@ git cherry-pick <commitHash>
 
 git fetch https://eureka-partner.googlesource.com/verisilicon-sdk refs/changes/27/245927/1 && git cherry-pick FETCH_HEAD -x
 ```
+
+## 问题解决
+
+参考 patch: https://git.kernel.org/pub/scm/linux/kernel/git/gregkh/usb.git/commit/?h=usb-testing&id=a44623d9279086c89f631201d993aa332f7c9e66
+
+https://bugzilla.kernel.org/show_bug.cgi?id=214021
+
+
+
 
 
 

@@ -223,8 +223,7 @@ https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/255070
 
 当usb设备插入usb接口后，hub_irq执行，启动工作队列执行hub_event工作，它检测到port状态的变化,调用hub_port_connect_change(),如果是新设备那么usb_allco_dev，然后调用usb_new_device来进行配置使usb设备可以正常工作。
 
-
-
+The get_noresume and barrier ensure that if  the port was in the process of resuming, we flush that work and keep the port active for the duration of the port_event().  However, if the port is runtime pm suspended (powered-off), we leave it in that state, run an abbreviated port_event(), and move on ~
 
 
 
@@ -281,3 +280,8 @@ https://www.cnblogs.com/tid-think/p/9207652.html
 
 http://blog.chinaunix.net/uid-27661165-id-3534662.html
 
+As soon as the primary roothub is registered, port status change is handled even before xHC is running leading to cold plug USB devices not detected. For such cases, registering both the root hubs along with the second HCD is required. Add support for deferring roothub registration in usb_add_hcd(), so that both primary and secondary roothubs are registered along with the second HCD. F
+
+Fix the issue by refer to the kernel patch: https://git.kernel.org/pub/scm/linux/kernel/git/gregkh/usb.git/commit/?h=usb-testing&id=a44623d9279086c89f631201d993aa332f7c9e66
+
+File "src/build/fuchsia/update_sdk.py", line 90, in <module>
