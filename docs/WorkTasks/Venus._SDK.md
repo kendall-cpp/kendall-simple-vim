@@ -135,7 +135,6 @@ stressapptest -s 30 -M 256 -m 2  -v 10 -l /data/testfile -F
 STREAM-master/stream.c 
 
 ```c
-
 #define TEST_LOOP_COUNT 10000000
 long long loop_count = 0;
 
@@ -191,6 +190,8 @@ adb push .\stream_aarch64 /data/
 cat /sys/class/aml_ddr/bandwidth 
 ```
 
+> confluence 总结： https://confluence.amlogic.com/pages/viewpage.action?pageId=209283542
+
 
 ---
 
@@ -238,6 +239,9 @@ insmod /lib/galcore.ko showArgs=1
 
 
 /data/FPN # ./tflite FPN_be.nb ./input_0_out0_1_640_640_3.tensor 
+
+# 如果想一直跑需要声明环境变量
+export VNN_LOOP_TIME=10000
 ```
 
 
@@ -353,12 +357,12 @@ adnl.exe oem "enable_factory_boot"
 修改 help.c
 
 ```c
+// vim u-boot/cmd/help.c 
 #define START_ADDR	0xFFFC0000
 #define END_ADDR	0xFFFFE000
 
 static int do_sram_mem(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
-{                                                      
-	// unsigned char * write_array[N] = {"A","B","C","D","E"};
+{
         volatile unsigned char *write = "AA";
 	volatile unsigned char *p = START_ADDR;
 
@@ -395,7 +399,7 @@ U_BOOT_CMD(
 ```
 vim spencer-sdk/u-boot/board/amlogic/defconfigs/c2_venus_p2_defconfig
 
-CONFIG_BOOTDELAY=5   
+CONFIG_BOOTDELAY=5 
 ```
 
 
@@ -426,5 +430,6 @@ adnl reboot
 c2_venus_p2# sram_mem
 ```
 
+https://confluence.amlogic.com/pages/viewpage.action?pageId=209283480
 
 

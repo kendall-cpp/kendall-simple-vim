@@ -164,5 +164,17 @@ hub_activate   // 主要是启动hub，我们这里传入的参数是HUB_INIT
 
 > https://www.51cto.com/article/712072.html
 
+----
+
+# USB主控制器 HCD 分析
+
+## 概述
+
+USB 的主控制器（HCD）有多种不同的类型，分别有 OHCI， UHCI，EHCI，和 XHCI
+
+![](https://raw.githubusercontent.com/kendall-cpp/blogPic/main/blog-01/20221028155013.png)
+
+USB 采用树形拓扑结构，主机侧和设备侧的 USB 控制器分别称为主机控制器(Host Controller)和 USB 设备控制器(UDC)，每条总线上只有一个主机控制器，负责协调主机和设备间的通信，设备不能主动向主机发送任何消息。
 
 
+参考： https://www.cnblogs.com/wen123456/p/14281912.html

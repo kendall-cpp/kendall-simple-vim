@@ -134,11 +134,13 @@ cd bl31
 cd -
 # 输出：cp -v build/c2/release/bl31.img ../u-boot/fip/a1/
 
-# 修改pthon脚本 scripts/pack_kpub.py  #+#!/usr/bin/env python
+
 cd bl32
 ./build_bl32.sh korlan-b1 ../u-boot release 
 cd -
 # 输出： cp -v out/bl32.img ../u-boot/fip/a1/
+# 如果error: scripts/render_font.py 
+# 修改pthon脚本 scripts/pack_kpub.py  #+#!/usr/bin/env python
 
 cd u-boot
 ./build_uboot.sh korlan-b1 ../../chrome release
@@ -195,6 +197,7 @@ mkdir -p ./korlan/korlan-b1
 ## 烧录korlan
 
 ```sh
+# 强制进入烧录模式
 adnl.exe  Download u-boot.bin 0x10000  
 adnl.exe run
 adnl.exe bl2_boot -F  u-boot.bin
@@ -208,8 +211,7 @@ adnl.exe oem "store erase system 0 0"
 adnl.exe Partition -P bootloader  -F  u-boot.bin
 adnl.exe Partition -P boot  -F boot-sign.img  / boot.img
 adnl.exe Partition -P system  -F system.img
-# 从工厂模式切换到eng模式需要擦除工厂模式
-adnl.exe oem "store erase fts  0 0"
+
 adnl.exe oem "reset"
 
 

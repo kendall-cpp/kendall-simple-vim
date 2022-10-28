@@ -274,14 +274,25 @@ commitId: 6b7f44b5eed0a00ef73bb94dbf5c64551fdb40a9
 
 
 
-#### 参考网址
+#### kernel-patch 参考网址
 
-https://www.cnblogs.com/tid-think/p/9207652.html
 
+- 函数调用
 http://blog.chinaunix.net/uid-27661165-id-3534662.html
 
-As soon as the primary roothub is registered, port status change is handled even before xHC is running leading to cold plug USB devices not detected. For such cases, registering both the root hubs along with the second HCD is required. Add support for deferring roothub registration in usb_add_hcd(), so that both primary and secondary roothubs are registered along with the second HCD. F
 
 Fix the issue by refer to the kernel patch: https://git.kernel.org/pub/scm/linux/kernel/git/gregkh/usb.git/commit/?h=usb-testing&id=a44623d9279086c89f631201d993aa332f7c9e66
 
 File "src/build/fuchsia/update_sdk.py", line 90, in <module>
+
+### 分析hcd初始化
+
+```c
+usb_add_hcd()   // 完成 hcd 初始化剩余部分，比如分配内存缓冲区，注册总线等。
+  usb_hcd_is_primary_hcd(hcd)   // 
+
+```
+
+- 参考网址： https://www.cnblogs.com/wen123456/p/14281912.html
+
+
