@@ -26,9 +26,9 @@ pci		提供 pci_register_driver()
 
 - registe_device(xx)
 
-各总线除了管理 driver 外，还管理 device，通常会提供一支API来添加设备，如：
+各总线除了管理 driver 外，还管理 device，通常会提供一支 API 来添加设备，如：
 
-input_register_device, serio_add_port.实现上都是通过一个链表对设备进行管理，通常是在初始化或者 probe 的时候，添加设备。
+input_register_device, serio_add_port， 实现上都是通过一个链表对设备进行管理，通常是在初始化或者 probe 的时候，添加设备。
 
 设备(device)指的是具体实现总线协议的物理设备，如对 serio 总线而言，i8042 就是它的一个设备，而该总线连接的设备(鼠标，键盘)则是一个 serio driver。
 
@@ -60,7 +60,7 @@ klist_add_tail(&dev->p->knode_bus, &bus->p->klist_devices);
 
 以 `hid_bus_type` 为例，执行 `bus_register(&hid_bus_type)` 后， `hid_bus_type->p->klist_devices` 和 `hid_bus_type->p->klist_klist_drivers` 这两个 list 会被初始化，为后面的 driver 和 device 注册做准备.
 
-## device和driver绑定
+## device 和 driver绑定
 
 当增加新 device 的时候，bus 会轮循它的驱动列表来找到一个匹配的驱动，它们是通过 device id 和 driver 的 id_table 来进行 ”匹配” 的，主要是在 `driver_match_device() [drivers/base/base.h]` 通过 `bus->match()` 这个 callback 来让驱动判断是否支持该设备，一旦匹配成功，device 的 driver 字段会被设置成相应的 driver 指针 
 
@@ -99,7 +99,6 @@ static inline int driver_match_device(struct device_driver *drv,
 
 # USB-Hub
 
-hub_probe --> 
 
 在 usb_hub_init 函数中完成了注册 hub 驱动，并且利用函数 alloc_workqueue 创建一个工作队列。
 
@@ -144,10 +143,10 @@ get_hub_descriptor(hdev, hub->descriptor);  获取整个 hub 描述符。
 
 usb_get_status(hdev, USB_RECIP_DEVICE, 0, &hubstatus);   返回设备、接口或端点状态。通常只关注设备是否自供电，或是否启用了远程唤醒功能。或者一个批量或中断端点是否被停止(“stall”)。
 
-UHCI必须要知道HUB的端口的一些连接状态,因此,需要HUB周期性的上报它的端口连接状态.
-这个 URB 就是用来做这个用途的.UHCI 周期性的发送 IN 方向中断传输传输给 HUB .
-HUB 就会通过这个 URB 将端口信息发送给 UHCI.那这个轮询周期是多长呢?
+UHCI 必须要知道 HUB 的端口的一些连接状态，因此，需要HUB周期性的上报它的端口连接状态. 这个 URB 就是用来做这个用途的。 UHCI 周期性的发送 IN 方向中断传输传输给 HUB . HUB 就会通过这个 URB 将端口信息发送给 UHCI.那这个轮询周期是多长呢?
+
 它的调度周期是由 endpoint 的 bInterval 字段所决定的.
+
 usb_fill_int_urb(hub->urb, hdev, pipe, *hub->buffer, maxp, hub_irq,
           hub, endpoint->bInterval);    //填充urb,完成之后调用 hub_irq 函数，
                         //再通过 kick_hub_wq --> queue_work(hub_wq, &hub->events)) 执行 hub_event
@@ -162,8 +161,22 @@ hub_configure 注册了中断，一旦接入新的usb设备就会调用 hub_irq 
 
 ## hub_activate
 
+首先 HUB_INIT, 使能 hub；其次 HUB_INIT2, 获取 hub port 状态，然后设置状态；最后 HUB_INIT3 提交 hub->urb ；然后提交 hub->events 工作至 hub_wq 队列中. 其中 hub_wq 是在 usb_hub_init() 函数中初始化的
 
 
+> https://www.51cto.com/article/712072.html
+
+----
+
+# USB主控制器 HCD 分析
+
+## 概述
+
+USB 的主控制器（HCD）有多种不同的类型，分别有 OHCI， UHCI，EHCI，和 XHCI
+
+![](https://raw.githubusercontent.com/kendall-cpp/blogPic/main/blog-01/20221028155013.png)
+
+USB 采用树形拓扑结构，主机侧和设备侧的 USB 控制器分别称为主机控制器(Host Controller)和 USB 设备控制器(UDC)，每条总线上只有一个主机控制器，负责协调主机和设备间的通信，设备不能主动向主机发送任何消息。
 
 
-
+参考： https://www.cnblogs.com/wen123456/p/14281912.html

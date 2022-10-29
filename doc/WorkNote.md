@@ -65,6 +65,11 @@ Email		shengken.lin@amlogic.corp-partner.google.com
 Password		pHFP-eotQ-TtmZ
   
   
+## github amlogic 图床
+
+kendall-cpp/blog-01
+
+token: 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
 
 
 ## 任务记录

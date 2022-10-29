@@ -31,6 +31,7 @@
 	- [打patch发生冲突](#打patch发生冲突)
 	- [patch 例子](#patch-例子)
 - [cherry-pick](#cherry-pick)
+- [问题解决](#问题解决)
 
 -----
 
@@ -462,7 +463,7 @@ git am --resolved
 ### git apply 与 git am的区别
 
 - git apply 只更新改动内容，打完之后需要自己 git add 和  git commit
-- git am 是更新的 commit，会将 commit 的所有信息打上去，author 也是 patch 的 author 而不打 patch的人。
+- git am 是更新的 commit，会将 commit 的所有信息打上去，author 也是 patch 的 author 而不是打 patch的人。
 
 ### 打patch发生冲突
 
@@ -523,6 +524,15 @@ git cherry-pick <commitHash>
 
 git fetch https://eureka-partner.googlesource.com/verisilicon-sdk refs/changes/27/245927/1 && git cherry-pick FETCH_HEAD -x
 ```
+
+## 问题解决
+
+参考 patch: https://git.kernel.org/pub/scm/linux/kernel/git/gregkh/usb.git/commit/?h=usb-testing&id=a44623d9279086c89f631201d993aa332f7c9e66
+
+https://bugzilla.kernel.org/show_bug.cgi?id=214021
+
+
+
 
 
 

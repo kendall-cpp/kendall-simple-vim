@@ -1,5 +1,9 @@
 # BuildRoot_A1 
 
+## 编译
+
+
+
 ## 提交kernel gerrit
 
 
@@ -7,9 +11,15 @@
 > - git clone ssh://shengken.lin@scgit.amlogic.com:29418/kernel/common
 
 ```sh
-git config --global user.email "shengken.lin@amlogic.com"
+git config --local user.email "shengken.lin@amlogic.com"
 
-git config --global user.name "shengken.lin"
+git config --local user.name "shengken.lin"
+
+# 或者到这个目录下添加 BuildRoot_A1-v2/.repo/repo/.git/config
+[user]
+    name = shengken.lin
+    email = shengken.lin@amlogic.com
+
 
 
 # 第二个会提示：fatal: remote review already exists.
@@ -28,6 +38,9 @@ git add   # add 修改的文件
 git commit --amend -s   # -s 代表添加当前用户
 git push review HEAD:refs/for/amlogic-4.19-dev  # kernel的提交分支
 ```
+
+- uboot分支名 amlogic-4.19-dev
+- kernel 分支名 amlogic-4.19-dev
 
 - 提交查看：https://scgit.amlogic.com/#/dashboard/self
 
@@ -121,11 +134,13 @@ cd bl31
 cd -
 # 输出：cp -v build/c2/release/bl31.img ../u-boot/fip/a1/
 
-# 修改pthon脚本 scripts/pack_kpub.py  #+#!/usr/bin/env python
+
 cd bl32
 ./build_bl32.sh korlan-b1 ../u-boot release 
 cd -
 # 输出： cp -v out/bl32.img ../u-boot/fip/a1/
+# 如果error: scripts/render_font.py 
+# 修改pthon脚本 scripts/pack_kpub.py  #+#!/usr/bin/env python
 
 cd u-boot
 ./build_uboot.sh korlan-b1 ../../chrome release
@@ -182,6 +197,7 @@ mkdir -p ./korlan/korlan-b1
 ## 烧录korlan
 
 ```sh
+# 强制进入烧录模式
 adnl.exe  Download u-boot.bin 0x10000  
 adnl.exe run
 adnl.exe bl2_boot -F  u-boot.bin
@@ -193,9 +209,12 @@ adnl.exe oem "store boot_erase bootloader"
 adnl.exe oem "store erase boot 0 0"
 adnl.exe oem "store erase system 0 0"
 adnl.exe Partition -P bootloader  -F  u-boot.bin
-adnl.exe Partition -P boot  -F boot-sign.img
+adnl.exe Partition -P boot  -F boot-sign.img  / boot.img
 adnl.exe Partition -P system  -F system.img
+
 adnl.exe oem "reset"
+
+
 
 # 烧录工厂模式
 adnl.exe  Download u-boot.bin 0x10000  
@@ -261,7 +280,7 @@ echo 1 > /sys/kernel/debug/usb_mode/mode
 # 查看模式
 device mode
 	# cat /sys/kernel/debug/usb_mode/mode
-	usb_mode: devic
+	usb_mode: device
 host mode
     # cat /sys/kernel/debug/usb_mode/mode
     usb_mode: host
@@ -284,6 +303,32 @@ fts -s bootloader.command boot-factory # 设置 bootloader.command 为 boot-fact
 fts -s enable_ethernet dhcp
 # 查看
 fts -g "enable_ethernet"
+```
+
+### 打开uboot log 和时间
+
+```sh
+board/amlogic/defconfigs/a1_korlan_b1_defconfig
+@@ -10,7 +10,7 @@ CONFIG_DEBUG_UART_BASE=0xfe001c00
+ CONFIG_DEBUG_UART_CLOCK=24000000
+ CONFIG_DEBUG_UART=y
+ CONFIG_OF_BOARD_SETUP=y
+-CONFIG_BOOTDELAY=-2
++CONFIG_BOOTDELAY=2
+ CONFIG_BOOTCOMMAND="run storeboot"
+ CONFIG_BOARD_LATE_INIT=y
+ # CONFIG_DISPLAY_CPUINFO is not set
+@@ -103,7 +103,7 @@ CONFIG_LZ4=y
+ CONFIG_NAND_FTS=y
+ CONFIG_CMD_REBOOT=y
+ CONFIG_CMD_FACTORY_BOOT=y
+-CONFIG_LOGLEVEL=4
+-CONFIG_SPL_LOGLEVEL=4
+-CONFIG_TPL_LOGLEVEL=4
++CONFIG_LOGLEVEL=7
++CONFIG_SPL_LOGLEVEL=7
++CONFIG_TPL_LOGLEVEL=7
+ CONFIG_CMD_USB_MODE=y
 ```
 
 
@@ -529,7 +574,7 @@ adnl reboot
 
 下载 otatools 和 spencer-target_files 两个 zip 文件
 
-[下载地址](https://console.cloud.google.com/storage/browser/cast-partner-amlogic-internal/internal/master/spencer-eng/315654?pageState=(%22StorageObjectListTable%22:(%22f%22:%22%255B%255D%22))&prefix=&forceOnObjectsSortingFiltering=false)
+`[下载地址](https://console.cloud.google.com/storage/browser/cast-partner-amlogic-internal/internal/master/spencer-eng/315654?pageState=(%22StorageObjectListTable%22:(%22f%22:%22%255B%255D%22))&prefix=&forceOnObjectsSortingFiltering=false)`
 
 - otatools
 
@@ -619,13 +664,13 @@ cp /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlog
 zip -r ./spencer-target_files.zip -f ./BOOT/RAMDISK/lib/
 
 
-cd ../../
+cd chrome
 
 mv out/host/linux-x86/bin out/host/linux-x86/bin1
 
 # ./vendor/amlogic/build/tools/releasetools/ota_from_target_files -v --board spencer-p2 ./spencer-315654/spencer-target_files/spencer-target_files.zip ./spencer-315654/replace-bootloader-kernel-ota.zip
 # 这里直接使用 otatools 下的 ota_from_target_files 打包
-otatools/binota_from_target_files -v --board spencer-p2 ./spencer-315654/spencer-target_files/spencer-target_files.zip ${your_path}/eureka/replace-ota/spencer-replace-ota/replace-bootloader-kernel-ota.zip
+otatools/bin/ota_from_target_files -v --board spencer-p2 ./spencer-315654/spencer-target_files/spencer-target_files.zip ${your_path}/eureka/replace-ota/spencer-replace-ota/replace-bootloader-kernel-ota.zip
 
 mv out/host/linux-x86/bin1 out/host/linux-x86/bin
 ```
@@ -1061,8 +1106,6 @@ https://wiki-china.amlogic.com/index.php?title=Amlogic_Tools/Update%E5%91%BD%E4%
 
 ```sh
 update.exe write bl2.signed.bin 0xfffa0000
-update.exe run  0xfffa0000
-
 
 update.exe bl2_boot u-boot.signed.bin
 
