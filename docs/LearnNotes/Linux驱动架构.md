@@ -158,6 +158,8 @@ ret = usb_hub_create_port_device(hub, i + 1);
 hub_activate   // 主要是启动hub，我们这里传入的参数是HUB_INIT
 ```
 
+hub_configure 注册了中断，一旦接入新的usb设备就会调用 hub_irq ,
+
 ## hub_activate
 
 
