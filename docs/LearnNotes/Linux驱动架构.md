@@ -26,7 +26,7 @@ pci		提供 pci_register_driver()
 
 - registe_device(xx)
 
-各总线除了管理 driver 外，还管理 device，通常会提供一支 API 来添加设备，如：
+各总线除了管理 driver 外，还管理 device，通常会提供一些 API 来添加设备，如：
 
 input_register_device, serio_add_port， 实现上都是通过一个链表对设备进行管理，通常是在初始化或者 probe 的时候，添加设备。
 
@@ -62,7 +62,7 @@ klist_add_tail(&dev->p->knode_bus, &bus->p->klist_devices);
 
 ## device 和 driver绑定
 
-当增加新 device 的时候，bus 会轮循它的驱动列表来找到一个匹配的驱动，它们是通过 device id 和 driver 的 id_table 来进行 ”匹配” 的，主要是在 `driver_match_device() [drivers/base/base.h]` 通过 `bus->match()` 这个 callback 来让驱动判断是否支持该设备，一旦匹配成功，device 的 driver 字段会被设置成相应的 driver 指针 
+当增加新 device 的时候，bus 会轮循它的驱动列表来找到一个匹配的驱动，它们是通过 device id 和 driver 的 id_table 来进行 ”匹配” 的，主要是在 `driver_match_device() [drivers/base/base.h]` 通过 `bus->match()` 这个 callback 来让驱动判断是否支持该设备，一旦匹配成功，device 的 driver 字段会被设置成相应 device 的 driver 指针 
 
 ```c
 static inline int driver_match_device(struct device_driver *drv,
@@ -84,10 +84,7 @@ static inline int driver_match_device(struct device_driver *drv,
 
 匹配成功后，系统继续调用 `driver_probe_device()` 来 callback `drv->probe(dev)` 或者 `bus->probe(dev) -->drv->connect()`，再 probe 或者 connect 函数里面，驱动开始实际的初始化操作。因此，`probe()` 或者 `connect()` 是真正的驱动'入口'。
 
-所以，对于驱动开发者而言，我们需要关心最基本的两个步骤
 
-- 定义 device id table
-- probe() 或者 connect() 开始具体的初始化工作
 
 ![](https://gitee.com/linKge-web/PerPic/raw/master/bookImg/linux-kernel/device-driver.png)
 
@@ -177,6 +174,23 @@ USB 的主控制器（HCD）有多种不同的类型，分别有 OHCI， UHCI，
 ![](https://raw.githubusercontent.com/kendall-cpp/blogPic/main/blog-01/20221028155013.png)
 
 USB 采用树形拓扑结构，主机侧和设备侧的 USB 控制器分别称为主机控制器(Host Controller)和 USB 设备控制器(UDC)，每条总线上只有一个主机控制器，负责协调主机和设备间的通信，设备不能主动向主机发送任何消息。
+
+## USB 主控制器驱动
+
+### usb主机控制器硬件情况
+
+USB Host 带有 Root Hub，第一个 USB 设备是一个根集线器（Root Hub)，它控制连接在 USB 总线上的其他设备。
+
+![](https://raw.githubusercontent.com/kendall-cpp/blogPic/main/blog-01/202210291406103.png)
+
+首先把根集线器（root hub) 作为一个设备添加到 usb 总线的设备队列里，同时，从总线的驱动队列中查找是否有可以支持这个设备（root hub设备）的驱动程序，如果查找到，就可以通过相应的指针把它们都关联起来，如果找不到这个驱动程序，那么 root hub 就无法正常工作了，只能在总线的设备队列中等待有驱动安装时，再匹配是否 OK，如果一直没有对应的驱动，那么这条总线也就没有办法挂载其他的设备。
+
+一旦 Root hub 匹配成功驱动后，就会循环运行一个守护进程，用来检测和发现 hub 的端口是否有设备插入或者拔出。
+
+**大致流程如下**
+
+
+https://www.likecs.com/show-305724229.html#sc=342.8571472167969
 
 
 参考： https://www.cnblogs.com/wen123456/p/14281912.html
