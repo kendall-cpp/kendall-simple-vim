@@ -305,7 +305,7 @@ fts -s enable_ethernet dhcp
 fts -g "enable_ethernet"
 ```
 
-### 打开uboot log 和时间
+## 打开uboot log 和设置bootdelay时间
 
 ```sh
 board/amlogic/defconfigs/a1_korlan_b1_defconfig

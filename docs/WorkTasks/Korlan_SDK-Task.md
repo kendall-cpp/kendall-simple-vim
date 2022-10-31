@@ -361,3 +361,12 @@ I've updated ipv6 to minimal ko, please check this cl.
 https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/260551
 ```
 
+- git push
+
+```sh
+git push eureka-partner HEAD:refs/for/korlan-master
+
+# 需要关注
+ https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/260551
+ commit id: 7ef11940e2f980a3e10243fce1cdb87cd80cf1d6
+```

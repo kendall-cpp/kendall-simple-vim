@@ -189,8 +189,115 @@ USB Host 带有 Root Hub，第一个 USB 设备是一个根集线器（Root Hub)
 
 **大致流程如下**
 
+> https://www.cnblogs.com/image-eye/archive/2012/01/31/2333236.html
 
-https://www.likecs.com/show-305724229.html#sc=342.8571472167969
+xhci_plat_probe 里，两个重量级的函数是 usb_create_hcd 和 usb_add_hcd ,用了创建 usb_hcd 和将 usb_hcd 添加到系统中。
 
+```c
+usb_add_hcd  // 通用HCD结构初始化和注册
+  usb_register_bus // 通过usb core 注册USB主机控制器， bus: 指向要注册的总线的指针
+    usb_notify_add_bus  //发送添加总线通知
+    usb_alloc_dev  // 给 root hub 分配空间
+    device_set_wakeup_capable(&rhdev->dev, 1);  //唤醒标志init默认为“一切正常,如果需要，驱动程序可以在reset()中覆盖它，同时记录整个控制器的系统唤醒能力。
+    set_bit(HCD_FLAG_RH_RUNNING, &hcd->flags);  // 在注册根集线器之前，HCD_FLAG_RH_RUNNING并不重要。但是由于控制器随时可能死亡，让我们在接触硬件之前初始化标志。
+
+    //xHCI规范说我们可以得到一个中断，如果HC在某种情况出现了错误，我们可能会从事件环中获取坏数据。这个中断不是用来探测插入了设备的
+    if (usb_hcd_is_primary_hcd(hcd) && irqnum)  {
+        retval = usb_hcd_request_irqs(hcd, irqnum, irqflags);  // 申请中断，中断处理函数usb_hcd_irq，实际调用 xhci_irq
+    if (retval)
+        goto err_request_irq;
+    }
+
+    retval = hcd->driver->start(hcd); // 实际是调用 xhci_run ， 启动 xhci host controller
+
+
+    retval = register_root_hub(hcd); //注册一个root hub
+
+// ---------------
+    //如果驱动请求roothub中断传输,会用一个定时器轮询;否则由驱动在事件发生时调用 usb_hcd_poll_rh_status()。
+    if (hcd->uses_new_polling && HCD_POLL_RH(hcd))
+        usb_hcd_poll_rh_status(hcd);
+    //USB 2.0规范说256毫秒。这已经足够接近了，如果HZ是100，也不会超过这个限制。其中的数学运算比预期的要复杂，
+    //这是为了确保用于USB设备的所有定时器同时启动，以便在两者之间给CPU一个休息时间
+```
+
+- usb_hcd_poll_rh_status  
+
+usb_hcd_poll_rh_status 关系到一个usb设备插入的时候，如何通知 hub。这个函数 usb_hcd_poll_rh_status 会一直使用定时器调用自己，如果读取到 hub 有变化，而且有提交的 urb，就返回。
+
+ 
+```c
+void usb_hcd_poll_rh_status(struct usb_hcd *hcd)
+{
+    length = hcd->driver->hub_status_data(hcd, buffer); //这里会调用xhci_hub_status_data读取roothub的寄存器，返回数据buffer和length
+    if (length > 0) {
+        /* try to complete the status urb */
+        spin_lock_irqsave(&hcd_root_hub_lock, flags);
+        urb = hcd->status_urb;
+        if (urb) { //如果已经提交了获取状态的urb, 将状态值拷贝进入urb,并把urb giveback
+            clear_bit(HCD_FLAG_POLL_PENDING, &hcd->flags);
+            hcd->status_urb = NULL;
+            urb->actual_length = length;
+            memcpy(urb->transfer_buffer, buffer, length); 
+            usb_hcd_unlink_urb_from_ep(hcd, urb); //从它的端点队列中移除一个URB
+            usb_hcd_giveback_urb(hcd, urb, 0); 
+        } else { //若此时没有已经提交的urb,则设置poll_pending标志
+            length = 0;
+            set_bit(HCD_FLAG_POLL_PENDING, &hcd->flags);
+        }
+        spin_unlock_irqrestore(&hcd_root_hub_lock, flags);
+    }
+
+    // 确保用于USB设备的所有定时器同时启动，以便在两者之间给CPU一个休息时间, USB 2.0 规范说256毫秒
+    if (hcd->uses_new_polling ? HCD_POLL_RH(hcd) : //这里hcd->uses_new_polling=1  HCD_POLL_RH(hcd)如果不等于0，会一直调用mod_timer
+        (length == 0 && hcd->status_urb != NULL)) 
+        //此时开启rh_timer.rh_timer的处理函数rh_timer_func,实际就是usb_hcd_poll_rh_status。
+        mod_timer (&hcd->rh_timer, (jiffies/(HZ/4) + 1) * (HZ/4));
+}
+```
+
+### xHCI驱动
+
+usb/host/xhci-plat.c
+
+- xhci_plat_probe
+
+```c
+usb_create_hcd(driver, &pdev->dev, dev_name(&pdev->dev));  //创建一个usb_hcd结构体，并进行一些赋值操作， usb2.0(main_hcd)
+
+xhci->shared_hcd = usb_create_shared_hcd(driver, &pdev->dev,dev_name(&pdev->dev), hcd); // 创建usb 3.0 的 hcd, 对应usb3.0及以上(shared_hcd)。
+
+ret = usb_add_hcd(hcd, irq, IRQF_SHARED);  //完成通用HCD结构初始化和注册，这里是usb2.0
+ret = usb_add_hcd(xhci->shared_hcd, irq, IRQF_SHARED); //完成通用HCD结构初始化和注册，这里是usb3.0
+```
+
+----
+
+> http://blog.chinaunix.net/uid-2605131-id-5768759.html
+
+xhci为了向下兼容，集成了两个 roothub，一个对应 usb2.0(main_hcd)，一个对应usb3.0及以上(shared_hcd)。有两个usb_hcd，一个是main_hcd(或者primary_hcd)，一个是shared_hcd
+
+> 参考： https://blog.csdn.net/zoosenpin/article/details/37766561
+
+一个xHCI会注册2个 host，一个是usb1（LS/FS/HS），另一个是usb2（SS-- SuperSpeed 相当于 usb3.0）。
+
+USB2.0接口标准中 ，USB1.1是12Mbps，新的USB2.0标准将USB接口速度划分为三类，分别是传输速率在25Mbps-400 Mbps （最大480 Mbps）的High-speed接口（简称HS） ；传输速率在500Kbps-10Mbps（最大12Mbps）的Full-speed接口（简称FS）；传输速率在10kbps-400 100kbps （最大1.5Mbps）的Low-speed接口（简称LS）。
+
+```
+全局禁止运行时 autosuspend
+echo -1 > /sys/module/usbcore/parameters/autosuspend
+# 禁止usb1电源管理：
+echo on > /sys/bus/usb/devices/usb1/power/control
+# 禁止usb2电源管理：
+echo on > /sys/bus/usb/devices/usb2/power/control
+```
+
+
+
+
+
+
+
+----
 
 参考： https://www.cnblogs.com/wen123456/p/14281912.html

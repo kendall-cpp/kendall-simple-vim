@@ -274,24 +274,33 @@ commitId: 6b7f44b5eed0a00ef73bb94dbf5c64551fdb40a9
 
 
 
-#### kernel-patch 参考网址
-
-
-- 函数调用
-http://blog.chinaunix.net/uid-27661165-id-3534662.html
+### kernel-patch 参考网址
 
 
 Fix the issue by refer to the kernel patch: https://git.kernel.org/pub/scm/linux/kernel/git/gregkh/usb.git/commit/?h=usb-testing&id=a44623d9279086c89f631201d993aa332f7c9e66
 
-File "src/build/fuchsia/update_sdk.py", line 90, in <module>
 
-### 分析hcd初始化
 
-```c
-usb_add_hcd()   // 完成 hcd 初始化剩余部分，比如分配内存缓冲区，注册总线等。
-  usb_hcd_is_primary_hcd(hcd)   // 
+#### 分析hcd初始化
 
-```
+
+
+xhci 驱动首先添加第一个 high-speed hcd/roothub，然后添加 super-speed hcd/roothub，
+
+只有当第二个 roothub 被添加之后，xHCI 控制器才会启动，xhci->xhc_state 才会被清空，然后 super-speed 才会被添加。
+
+所以如果不幸，第一个 hcd 创建 high-speed hcd/roothub 驱动，然后 hub  driver 绑定了它，hub 进行初始化 和 hub 线程开始 枚举 设备在 xHCi 运行之前，
+
+xHC端口寄存器可以在xHC通电时读取，然后再运行，因此 hub 线程能够 过早 看到连接的设备。
+
+
+所以将备用根集线器的注册延迟到主hcd启动之后，即在注册 rootHub 之前。
+
+所以需要在 usb_hcd_add() 运行到 hcd_driver_start() 之前延迟主 roothub 的注册
+
+
+
+
 
 - 参考网址： https://www.cnblogs.com/wen123456/p/14281912.html
 
