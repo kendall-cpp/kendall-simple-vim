@@ -203,9 +203,11 @@ xhci_plat_init
         return (struct xhci_hcd *) (primary_hcd->hcd_priv);  //取hcd的primary_hcd，并转成xhci_hcd，主机控制器的私有数据被存储在hcd_priv[0]这个结构体的末尾
       usb_create_shared_hcd()   //创建一个 usb_hcd 结构体，usb 3.0
       //上面创建的两个 hcd 是一个环形链表，usb2.0 的 hcd 是 primary_hcd，他们都是用同一 address0_mutex
-      usb_add_hcd(hcd, irq, IRQF_SHARED);  //完成通用HCD结构初始化和注册，这里是usb2.0
-      usb_add_hcd(xhci->shared_hcd, irq, IRQF_SHARED)  //完成通用HCD结构初始化和注册，这里是usb3.0
+      usb_add_hcd(hcd, irq, IRQF_SHARED);  
+      usb_add_hcd(xhci->shared_hcd, irq, IRQF_SHARED)  
 ```
+
+usb_create_hcd 和 usb_add_hcd 分别用于创建和将 usb_hcd 添加到系统中。在这里，有两个 usb_hcd，一个是 main_hcd (或者 primary_hcd )，一个是 shared_hcd
 
 - usb_add_hcd
 
