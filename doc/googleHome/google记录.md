@@ -689,6 +689,8 @@ cat bl2.bin tpl.bin > u-boot.bin
 
 # Venus
 
+> venus 和 spencer 是公用的，都是 spencer-master 分支
+
 ## 编译 venus
 
 ```sh

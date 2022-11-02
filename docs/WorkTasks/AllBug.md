@@ -117,7 +117,14 @@ late_initcall(goodix_i2c_init);
 
 - 讨论：https://bugzilla.kernel.org/show_bug.cgi?id=214021
 
+- https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1968210
+
 ## 显示屏功率 GPIO bug 【None】
 
 > https://jira.amlogic.com/browse/GH-3038 Wrong lcd panel power setting
 
+git add drivers/usb/core/hcd.c
+git add drivers/usb/core/hub.c
+git add drivers/usb/host/xhci-plat.c
+git add drivers/usb/host/xhci.c
+git add include/linux/usb/hcd.h

@@ -210,7 +210,10 @@ xhci_plat_init
 - usb_add_hcd
 
 ```c
-// 首先是 add usb2.0
+usb_hcd_request_irqs  // 申请一个hcd中断定时器
+  request_irq --> usb_hcd_irq(中断回调函数)
+    // 当外部产生终端，比如 usb 口插入设备，就会触发 usb_hcd_irq
+
 hcd->driver->start(hcd)  //.start = xhci_plat_start; xhci_run;  实际是调用 xhci_run ， 启动 xhci host controller
   xhci_run
     //这个函数完成usb2.0 xhci 的启动
@@ -226,11 +229,6 @@ usb_hcd_poll_rh_status()  //通知 hub。这个函数 会一直使用定时器�
 //这将确保两者 主 roothub 和辅助 roothub 将与 第二个HCD。这是检测冷插拔 USB 设备所必需的 
 //在某些 PCIe USB 卡中（例如连接到 AM64 EVM 的 Inateck USB 卡 或 J7200 EVM）。
 
-我们的网口用的是 USB3，把 USB3 只是掉之后立马就复现了
-          //if(!usb_hcd_is_primary_hcd(hcd)) {
-          //      goto err_register_root_hub;
-          //} 
-明天直接跑一下测试
 ```
 
 ---

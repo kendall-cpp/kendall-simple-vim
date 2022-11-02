@@ -302,6 +302,26 @@ xHC端口寄存器可以在xHC通电时读取，然后再运行，因此 hub 线
 
 
 
-- 参考网址： https://www.cnblogs.com/wen123456/p/14281912.html
+- USB主机控制器HCD分析：  https://www.cnblogs.com/wen123456/p/14281912.html
 
 
+https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1968210    
+https://bugzilla.kernel.org/show_bug.cgi?id=214021      
+https://www.spinics.net/lists/linux-usb/msg226204.html  
+https://git.kernel.org/pub/scm/linux/kernel/git/gregkh/usb.git/commit/?h=usb-testing&id=a44623d9279086c89f631201d993aa332f7c9e66
+
+kernel commit id: 6ae6dc22d2d1ce6aa77a6da8a761e61aca216f8b (测试无效)
+
+
+我的提交：25df54c14276675ec7d2368c91bacae053ecbb25
+
+
+```
+[    3.487428@3] kendall line = 2910 -- hcd->flags = 134218145
+[    3.487431@3] kendall -- xhci_run -- 611
+[    3.487442@3] kendall line = 2915 -- hcd->flags = 134218145
+
+[    3.487469@3] kendall line = 2910 -- hcd->flags = 417
+[    3.487472@3] kendall -- xhci_run_finished -- 569
+[    3.487475@3] kendall line = 2915 -- hcd->flags = 417
+```
