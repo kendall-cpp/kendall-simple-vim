@@ -94,7 +94,55 @@ USB Host 带有 Root Hub，第一个 USB 设备是一个根集线器（Root Hub)
 
 **大致流程如下**
 
+<<<<<<< HEAD:docs/LearnNotes/linux-usb分析记录.md
 > https://www.cnblogs.com/image-eye/archive/2012/01/31/2333236.html
+=======
+> 可以参考： https://www.cnblogs.com/image-eye/arcive/2012/01/31/2333236.html
+
+- xhci_plat_probe
+  
+```c
+xhci_plat_init
+  usb_xhci_driver
+    xhci_plat_probe  //主要是创建和注册 hcd
+      usb_create_hcd(driver, &pdev->dev, dev_name(&pdev->dev))  //创建一个usb_hcd结构体，并进行一些赋值操作， usb2.0
+        usb_create_shared_hcd()
+      hcd_to_xhci(hcd)
+        return (struct xhci_hcd *) (primary_hcd->hcd_priv);  //取hcd的primary_hcd，并转成xhci_hcd，主机控制器的私有数据被存储在hcd_priv[0]这个结构体的末尾
+      usb_create_shared_hcd()   //创建一个 usb_hcd 结构体，usb 3.0
+      //上面创建的两个 hcd 是一个环形链表，usb2.0 的 hcd 是 primary_hcd，他们都是用同一 address0_mutex
+      usb_add_hcd(hcd, irq, IRQF_SHARED);  
+      usb_add_hcd(xhci->shared_hcd, irq, IRQF_SHARED)  
+```
+
+usb_create_hcd 和 usb_add_hcd 分别用于创建和将 usb_hcd 添加到系统中。在这里，有两个 usb_hcd，一个是 main_hcd (或者 primary_hcd )，一个是 shared_hcd
+
+- usb_add_hcd
+
+```c
+usb_hcd_request_irqs  // 申请一个hcd中断定时器
+  request_irq --> usb_hcd_irq(中断回调函数)
+    // 当外部产生终端，比如 usb 口插入设备，就会触发 usb_hcd_irq
+
+hcd->driver->start(hcd)  //.start = xhci_plat_start; xhci_run;  实际是调用 xhci_run ， 启动 xhci host controller
+  xhci_run
+    //这个函数完成usb2.0 xhci 的启动
+    xhci_run_finished
+      //这个函数完成 usb3.0 xhci 的启动
+register_root_hub()
+usb_hcd_poll_rh_status()  //通知 hub。这个函数 会一直使用定时器调用自己，如果读取到 hub 有变化，而且有提交的 urb，就返回。
+
+
+//hcd->shared_hcd 总是创建并注册到 usb-core 。 如果由于某些原因禁用了 USB3 下行端口，则没有 roothub 端口
+//https://lkml.iu.edu/hypermail/linux/kernel/2108.3/03119.html
+//“HCD_FLAG_DEFER_RH_REGISTER”设置为 hcd->flags 以延迟 在 usb_add_hcd() 中注册主 roothub。
+//这将确保两者 主 roothub 和辅助 roothub 将与 第二个HCD。这是检测冷插拔 USB 设备所必需的 
+//在某些 PCIe USB 卡中（例如连接到 AM64 EVM 的 Inateck USB 卡 或 J7200 EVM）。
+
+```
+
+---
+>>>>>>> f464f51ccd768bd5b12b2ccead68a56b54823ab2:docs/LearnNotes/Linux驱动架构 copy.md
 
 xhci_plat_probe 里，两个重量级的函数是 usb_create_hcd 和 usb_add_hcd ,用了创建 usb_hcd 和将 usb_hcd 添加到系统中。
 
