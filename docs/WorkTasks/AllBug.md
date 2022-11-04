@@ -103,13 +103,23 @@ mma PARTNER_BUILD=true
 
 触摸屏驱动影响了 USB 以太网，在不停重启压力测试时，会出现找不到 eth0 问题。
 
-### 临时解决方法
+### 解决方法--推迟goodix
+
+> https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/255070
 
 ```c
 // vim drivers/input/touchscreen/goodix_touch_gtx8/goodix_ts_i2c.c
-//module_init(goodix_i2c_init);
-late_initcall(goodix_i2c_init);
+- module_init(goodix_i2c_init);
++ late_initcall(goodix_i2c_init);
 ```
+
+### 推迟 func3
+
+```
+https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/259656
+commitId: 6b7f44b5eed0a00ef73bb94dbf5c64551fdb40a9
+```
+
 
 ### 根据kernel patch 修复
 

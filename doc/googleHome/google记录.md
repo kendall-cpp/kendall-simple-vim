@@ -121,7 +121,7 @@ repo sync
 
 > Baud rate 为 115200
 
-## 编译korlan
+## 编译korlan-4.19
 
 ```sh
 cd bl2
@@ -151,7 +151,6 @@ cd -
 cd kernel
 ./build_kernel.sh korlan-b1  ../../chrome
 cd -
-
 ```
 
 - 整体编译
@@ -160,6 +159,36 @@ cd -
 cd amlogic_sdk
 ./sdk/build_scripts/build_all.sh ../chrome korlan
 ```
+
+## 编译korlan-5.15
+
+```sh
+# 整体编译
+./sdk/build_scripts/build_all.sh ../chrome/ korlan --kernel=5.15
+ 
+# chrome ota 包
+PARTNER_BUILD=true BOARD_NAME=korlan-p2 make -j30 otapackage KERNEL_VERSION=5.15
+
+# 编译
+# bl2
+./build_bl2.sh korlan-p2 ../u-boot release
+
+cd bl31
+./build_bl31.sh korlan-p2 ../u-boot release
+cd -
+
+cd bl32
+./build_bl32.sh korlan-p2 ../u-boot release 
+
+cd u-boot
+./build_uboot.sh korlan-p2 ../../chrome release
+cd -
+
+# kernel
+cd kernel-5.15
+./build_kernel.sh korlan-p2 ../../chrome
+```
+
 
 
 ## 制作 ramdisk
@@ -209,9 +238,10 @@ adnl.exe oem "store boot_erase bootloader"
 adnl.exe oem "store erase boot 0 0"
 adnl.exe oem "store erase system 0 0"
 adnl.exe Partition -P bootloader  -F  u-boot.bin
-adnl.exe Partition -P boot  -F boot-sign.img  / boot.img
+adnl.exe Partition -P boot  -F boot.img    # boot-sign.img 
 adnl.exe Partition -P system  -F system.img
-
+# 关闭工厂模式 如果之前设置了工厂模式
+# adnl.exe oem "store erase fts  0 0"
 adnl.exe oem "reset"
 
 
@@ -239,19 +269,62 @@ reboot bootloader;   # 进入uboot
 adnl   # 进入烧录模式
 ```
 
-## 编译korlan-ota
+## 编译korlan-chrome-ota
 
 ```sh
+# 先设置JAVA_HOME
+export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/
+export JRE_HOME=${JAVA_HOME}/jre
+export CLASSPATH=.:${JAVA_HOME}/lib:${JRE_HOME}/lib
+export PATH=${JAVA_HOME}/bin:$PATH
+
 cd chrome
 source build/envsetup.sh 
 
 # 全部编译 korlan-eng
 lunch  # 选korlan-eng
-PARTNER_BUILD=true BOARD_NAME=korlan-p2 make -j30 otapackage  
+PARTNER_BUILD=true BOARD_NAME=korlan-b1 make -j30 otapackage  
 # 输出obj路径： /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/out/target/product/korlan
-
 # 如果出现 java version 问题，就是 out/host/linux-x86 的 dumpkey.jar  signapk.jar 替换过了，需要替换回repo sync 时候的 linux-x86 就可以了
 ```
+
+### 5.15 korlan-ota
+
+```sh
+
+# kernel 5.15 chrome ota
+# kernel-5.15分支切换成 korlan-master-5.15
+# kernel-5.15/common_drivers分支切换成 korlan-master-5.15-drivers
+# 整体编译 ./sdk/build_scripts/build_all.sh ../chrome/ korlan --kernel=5.15
+# 再执行 PARTNER_BUILD=true BOARD_NAME=korlan-p2 make -j30 otapackage KERNEL_VERSION=5.15  这一步
+cd chrome
+source build/envsetup.sh 
+rm out/target/product/korlan/recovery/root -rf
+rm out/target/product/korlan/root -rf
+rm out/target/product/korlan/obj/PACKAGING -rf
+PARTNER_BUILD=true BOARD_NAME=korlan-b1 make -j30 otapackage KERNEL_VERSION=5.15
+# error1 chromium/chromecast_gn.mk:68: *** Unknown PRODUCT_SETUP_NAME: "" Must be one of {chromecast, tv, audio}.  Stop.
+# 解决 --全部编译 korlan-eng
+source build/envsetup.sh 
+lunch   # 选korlan-eng
+
+# error 2 
+# clang++-14: error: invalid linker name in argument '-fuse-ld=lld'
+# [build/core/shared_library.mk:101: out/target/product/korlan/obj/SHARED_LIBRARIES/libz_intermediates/LINKED/libz.so] Error 1
+# 解决：添加 /prebuilt/toolchain/aarch64/bin 到环境变量中
+
+# error 3
+#*** No rule to make target 'vendor/amlogic/korlan/prebuilt/kernel_5.15/kernel.korlan.gz-dtb.korlan-proto', needed by 'out/target/product/korlan/root/lib/kernel/kernel-korlan-proto'.  Stop.
+# 编译的时候不是编译 p2 b3 b4 
+cd kernel-5.15
+./build_kernel.sh korlan-p2 ../../chrome
+./build_kernel.sh korlan-b3 ../../chrome
+./build_kernel.sh korlan-b4 ../../chrome
+# 再打 ota 包
+# 编译出来的ota包在：out/target/product/korlan/korlan-ota-eng.shengken.lin.zip
+```
+
+
 
 ## Koraln板子和芯片型号
 
@@ -1030,6 +1103,12 @@ cp ./gq-boot_unpack/gq-fct_boot.img-ramdisk.gz ../../out/target/product/gq/boot_
 mkdir elaine-sdk
 repo init -u https://eureka-partner.googlesource.com/amlogic/manifest -b elaine -m combined_sdk.xml
 repo sync
+
+# 提交代码
+git add
+git commit -s    # 第一次
+git commit --amend --no-verify  # 第二次
+git push eureka-partner HEAD:refs/for/elaine
 ```
 
 ## 编译 elaine

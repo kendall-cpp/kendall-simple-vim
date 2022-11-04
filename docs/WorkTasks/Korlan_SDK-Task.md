@@ -11,6 +11,10 @@
   - [开启 ipv6和RTL8152](#开启-ipv6和rtl8152)
   - [重新编译成 ko 文件，并加载到init.rc](#重新编译成-ko-文件并加载到initrc)
     - [提交](#提交)
+- [熟悉和测试 korlan5.15](#熟悉和测试-korlan515)
+  - [GPIO测试](#gpio测试)
+    - [Set internal default pull up/down/disabled](#set-internal-default-pull-updowndisabled)
+    - [GPIO event](#gpio-event)
 
 
 -------------
@@ -370,3 +374,70 @@ git push eureka-partner HEAD:refs/for/korlan-master
  https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/260551
  commit id: 7ef11940e2f980a3e10243fce1cdb87cd80cf1d6
 ```
+
+## 熟悉和测试 korlan5.15
+
+5.15 gerrit： https://eureka-partner-review.googlesource.com/q/project:amlogic%252Fkernel+branch:korlan-master-5.15
+
+4.19 --> 5.15 patch 汇总
+
+https://docs.google.com/spreadsheets/d/13U6Hkhk2m3KIBXcxSEuuZGy0tE6gJjGxyCAuNv9j4BE/edit#gid=0
+
+
+编译 kernel5.15 ota
+
+```sh
+    rm out/target/product/korlan/recovery/root -rf
+    rm out/target/product/korlan/root -rf
+    rm out/target/product/korlan/obj/PACKAGING -rf
+    PARTNER_BUILD=true BOARD_NAME=korlan-b1 make -j30 otapackage KERNEL_VERSION=5.15
+```
+
+```
+cherry-pick kernel5.15 all cl  直接 git  checkout
+		korlan-master-5.15,
+			https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/261786
+		korlan-master-5.15-drivers,
+			https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/261466	
+		vendor/amlogic,
+			https://eureka-partner-review.googlesource.com/c/vendor/amlogic/+/257546
+	1) build amlogic_sdk, 
+		./sdk/build_scripts/build_all.sh /path/chrome/ sprinkles --kernel=5.15
+```
+
+### GPIO测试
+
+和 4.19 进行对比
+
+```sh
+# step1 check pin mux function,
+cat /sys/kernel/debug/pinctrl/fe000000.bus:pinctrl@0400-pinctrl-meson/pinmux-pins
+
+
+# step2:
+cat /sys/kernel/debug/pinctrl/fe000000.bus:pinctrl@0400-pinctrl-meson/pinconf-pins
+
+# kernel-5.15/common_drivers/arch/arm64/boot/dts/amlogic/meson-a1.dtsi
+检查kernel的： drive-strength-microamp   ===》 step2 log 中的 drive strength (3 mA)
+和 kernel/arch/arm64/boot/dts/amlogic/meson-a1.dtsi 对比
+```
+
+
+
+
+#### Set internal default pull up/down/disabled
+
+
+#### GPIO event
+
+参考测试cl: https://partnerissuetracker.corp.google.com/issues/195367613
+
+
+----
+
+
+
+
+
+
+

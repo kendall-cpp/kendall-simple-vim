@@ -52,6 +52,8 @@ git rm --cached hello.txt   从暂存区退回到工作区  # 从暂存区删除
 
 	git reset HEAD hello.txt    从暂存区退回到工作区 和上面一样
 
+	git restore --staged fileName
+
 git reset --soft HEAD^		 撤销commit 保留add
 
 git reset HEAD~数字		按照输入的数字撤销输入数字条commit记录

@@ -55,6 +55,8 @@ of_property_read_string_index
 函数首先调用 of_find_property() 函数获得 propname 对应的属性，然后对获得的属性 和属性值进行有效性检查，检查不过直接返回错误；如果检查通过，接着计算属性的结束 地址后，使用 for 循环遍历属性的值，并且跳过 skip 对应的地址，然后将字符串都存 储在 out_strs 参数里。
 
 
+----
+
 ## Failure to Configure Ethernet Interface
 
 https://partnerissuetracker.corp.google.com/issues/246404063
@@ -92,42 +94,9 @@ echo ff400000.dwc2_a > /sys/kernel/config/usb_gadget/amlogic/UDC
 ```
 
 
-- 通过 ssh 发送命令
+- 通过 ssh 发送 reboot 命令
 
 ssh nick@xxx.xxx.xxx.xxx "df -h"
-
-- 分析代码
-
-
-- 分析
-
-```
-couldn't allocate usb_device
---> 出现在 drivers/usb/core/hub.c
-是因为 udev = usb_alloc_dev(hdev, hdev->bus, port1); 返回null
-        --> drivers/usb/core/usb.c  ---- 
-        if (usb_hcd->driver->alloc_dev && parent && !usb_hcd->driver->alloc_dev(usb_hcd, dev))  的 alloc_dev 返回 0
-        alloc_dev 是指针函数 --- xhci_alloc_dev
-                --> drivers/usb/host/xhci.c
-                ret = xhci_queue_slot_control(xhci, command, TRB_ENABLE_SLOT, 0);   
-                        --> queue_command --> if ((xhci->xhc_state & XHCI_STATE_DYING) || (xhci->xhc_state & HCI_STATE_HALTED))   //drivers/usb/host/xhci-ring.c 
-                        所以问题是 xhci
-/*
-xhci 是从 drivers/usb/host/xhci.c 传进来， 由  hcd_to_xhci(hcd) 返回
-        hcd 就是 xhci_alloc_dev(alloc_dev 函数指针传进来的)
-        在 drivers/usb/core/usb.c 中的 struct usb_hcd *usb_hcd = bus_to_hcd(bus);
-        
-static inline struct usb_hcd *bus_to_hcd(struct usb_bus *bus)                                        
-{
-    return container_of(bus, struct usb_hcd, self);
-        //通过结构体内某个成员变量的地址和该变量名，以及结构体类型，找到该结构体变量的地址
-        //找到bus的地址          
-}
-*/
-```
-
-- 问题是 xhci->xhc_state 状态出现问题
-
 
 
 - 回复 common
@@ -223,7 +192,6 @@ https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/255070
 
 当usb设备插入usb接口后，hub_irq执行，启动工作队列执行hub_event工作，它检测到port状态的变化,调用hub_port_connect_change(),如果是新设备那么usb_allco_dev，然后调用usb_new_device来进行配置使usb设备可以正常工作。
 
-The get_noresume and barrier ensure that if  the port was in the process of resuming, we flush that work and keep the port active for the duration of the port_event().  However, if the port is runtime pm suspended (powered-off), we leave it in that state, run an abbreviated port_event(), and move on ~
 
 
 
@@ -255,10 +223,16 @@ After a resume, port power should still be on. For any other type of activation,
 
 commit
 ```
-[Elaine] Delay hub_init_func3 and wait for hub_init_func2 to make USB ethernet work fine.
 
-Bug: 246404063
-Test: None
+    [Elaine] Fixed probabilistic fail of usb Ethernet in rebooting
+    
+    Adding flag ensures that hub_init_func3 is executed after hub_init_func2 has finished.
+    
+    Bug: b/246404063
+    Test: None
+    
+    Signed-off-by: shengken lin <shengken.lin@amlogic.corp-partner.google.com>
+    Change-Id: I57f24ce1517d4581a7e404cffc3e6e4c62f4e841
 ```
 
 Hi Chris,
@@ -273,55 +247,72 @@ commitId: 6b7f44b5eed0a00ef73bb94dbf5c64551fdb40a9
 ```
 
 
-
 ### kernel-patch 参考网址
 
 
 Fix the issue by refer to the kernel patch: https://git.kernel.org/pub/scm/linux/kernel/git/gregkh/usb.git/commit/?h=usb-testing&id=a44623d9279086c89f631201d993aa332f7c9e66
 
 
-
-#### 分析hcd初始化
-
-
-
-xhci 驱动首先添加第一个 high-speed hcd/roothub，然后添加 super-speed hcd/roothub，
-
-只有当第二个 roothub 被添加之后，xHCI 控制器才会启动，xhci->xhc_state 才会被清空，然后 super-speed 才会被添加。
-
-所以如果不幸，第一个 hcd 创建 high-speed hcd/roothub 驱动，然后 hub  driver 绑定了它，hub 进行初始化 和 hub 线程开始 枚举 设备在 xHCi 运行之前，
-
-xHC端口寄存器可以在xHC通电时读取，然后再运行，因此 hub 线程能够 过早 看到连接的设备。
+- 参考连接
+        - https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1968210    
+        - https://bugzilla.kernel.org/show_bug.cgi?id=214021      
+        - https://www.spinics.net/lists/linux-usb/msg226204.html  
+        - https://git.kernel.org/pub/scm/linux/kernel/git/gregkh/usb.git/commit/?h=usb-testing&id=a44623d9279086c89f631201d993aa332f7c9e66
 
 
-所以将备用根集线器的注册延迟到主hcd启动之后，即在注册 rootHub 之前。
+我的测试提交： 25df54c14276675ec7d2368c91bacae053ecbb25
 
-所以需要在 usb_hcd_add() 运行到 hcd_driver_start() 之前延迟主 roothub 的注册
+---- 
 
+Hi Cody,
 
+After a few days of hard research, I just found the root cause and solved it today.
 
+This is a common problem because the kernel needs to register two hcds (primary_hcd and shared_hcd) for usb2 and usb3 compatibility, but once the primary roothub is registered, port state changes are handled even before xHCi is running, resulting in a USB device detected.
 
-
-- USB主机控制器HCD分析：  https://www.cnblogs.com/wen123456/p/14281912.html
-
-
-https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1968210    
-https://bugzilla.kernel.org/show_bug.cgi?id=214021      
-https://www.spinics.net/lists/linux-usb/msg226204.html  
-https://git.kernel.org/pub/scm/linux/kernel/git/gregkh/usb.git/commit/?h=usb-testing&id=a44623d9279086c89f631201d993aa332f7c9e66
-
-kernel commit id: 6ae6dc22d2d1ce6aa77a6da8a761e61aca216f8b (测试无效)
+At present, I have found the corresponding patch from the upstream to fix the problem. However, the 8th bit used in this patch is occupied by `HCD_FLAG_DEV_AUTHORIZED` in the Elaine-Kernel version, so the 12th bit is selected as "Defer roothub registration", After my repeated testing and verification, the patch can fix the bug of USB Ethernet failure at booting.
 
 
-我的提交：25df54c14276675ec7d2368c91bacae053ecbb25
-
+- Here is the patch link
 
 ```
-[    3.487428@3] kendall line = 2910 -- hcd->flags = 134218145
-[    3.487431@3] kendall -- xhci_run -- 611
-[    3.487442@3] kendall line = 2915 -- hcd->flags = 134218145
+https://git.kernel.org/pub/scm/linux/kernel/git/gregkh/usb.git/commit/?h=usb-testing&id=a44623d9279086c89f631201d993aa332f7c9e66
 
-[    3.487469@3] kendall line = 2910 -- hcd->flags = 417
-[    3.487472@3] kendall -- xhci_run_finished -- 569
-[    3.487475@3] kendall line = 2915 -- hcd->flags = 417
+https://git.kernel.org/pub/scm/linux/kernel/git/gregkh/usb.git/commit/?h=usb-testing&id=b7a4f9b5d0e4b6dd937678c546c0b322dd1a4054
+```
+
+- Here is cl
+
+```
+https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/262595
+```
+
+
+git add drivers/usb/core/hcd.c
+git add drivers/usb/host/xhci.c
+git add include/linux/usb/hcd.h
+
+git commit -s --no-verify
+
+```sh
+[Elaine] Fixed probabilistic fail of USB Ethernet at rebooting
+
+Set "HCD_FLAG_DEFER_RH_REGISTER" to hcd->flags in xhci_run() to defer registering primary roothub in usb_add_hcd() if xhci has two roothubs.
+
+Upstream origin patch:
+<1>patch1: https://git.kernel.org/pub/scm/linux/kernel/git/gregkh/usb.git/commit/?h=usb-testing&id=a44623d9279086c89f631201d993aa332f7c9e66
+<2>patch2: https://git.kernel.org/pub/scm/linux/kernel/git/gregkh/usb.git/commit/?h=usb-testing&id=b7a4f9b5d0e4b6dd937678c546c0b322dd1a4054
+
+
+Bug: b/246404063
+Test: 
+Repeatedly rebooting Elaine by sending the reboot command over SSH.
+```
+
+git push eureka-partner HEAD:refs/for/elaine
+
+```
+https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/262595
+commit id : 934882f98b37c0485de4850f7f1f7001d6c3c269
+issue: https://partnerissuetracker.corp.google.com/issues/246404063#comment2
 ```
