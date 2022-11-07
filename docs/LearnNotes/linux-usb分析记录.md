@@ -94,9 +94,6 @@ USB Host 带有 Root Hub，第一个 USB 设备是一个根集线器（Root Hub)
 
 **大致流程如下**
 
-<<<<<<< HEAD:docs/LearnNotes/linux-usb分析记录.md
-> https://www.cnblogs.com/image-eye/archive/2012/01/31/2333236.html
-=======
 > 可以参考： https://www.cnblogs.com/image-eye/arcive/2012/01/31/2333236.html
 
 - xhci_plat_probe
@@ -142,7 +139,6 @@ usb_hcd_poll_rh_status()  //通知 hub。这个函数 会一直使用定时器�
 ```
 
 ---
->>>>>>> f464f51ccd768bd5b12b2ccead68a56b54823ab2:docs/LearnNotes/Linux驱动架构 copy.md
 
 xhci_plat_probe 里，两个重量级的函数是 usb_create_hcd 和 usb_add_hcd ,用了创建 usb_hcd 和将 usb_hcd 添加到系统中。
 

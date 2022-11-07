@@ -85,11 +85,124 @@ static inline int driver_match_device(struct device_driver *drv,
 匹配成功后，系统继续调用 `driver_probe_device()` 来 callback `drv->probe(dev)` 或者 `bus->probe(dev) -->drv->connect()`，再 probe 或者 connect 函数里面，驱动开始实际的初始化操作。因此，`probe()` 或者 `connect()` 是真正的驱动'入口'。
 
 
-
-![](https://gitee.com/linKge-web/PerPic/raw/master/bookImg/linux-kernel/device-driver.png)
+![](https://raw.githubusercontent.com/kendall-cpp/blogPic/main/blog-01/driver-device.png)
 
 
 > https://zhuanlan.zhihu.com/p/477794027
+
+----
+
+
+# USB主控制器 HCD 分析
+
+## 概述
+
+USB 的主控制器（HCD）有多种不同的类型，分别有 OHCI， UHCI，EHCI，和 XHCI
+
+![](https://raw.githubusercontent.com/kendall-cpp/blogPic/main/blog-01/20221028155013.png)
+
+USB 采用树形拓扑结构，主机侧和设备侧的 USB 控制器分别称为主机控制器(Host Controller)和 USB 设备控制器(UDC)，每条总线上只有一个主机控制器，负责协调主机和设备间的通信，设备不能主动向主机发送任何消息。
+
+## USB 主控制器驱动
+
+### usb主机控制器硬件情况
+
+USB Host 带有 Root Hub，第一个 USB 设备是一个根集线器（Root Hub)，它控制连接着 USB 总线上的其他设备。
+
+![](https://raw.githubusercontent.com/kendall-cpp/blogPic/main/blog-01/202210291406103.png)
+
+**大致概述**：首先把根集线器（root hub) 作为一个设备添加到 usb 总线的设备队列里，同时，从总线的驱动队列中查找是否有可以支持这个设备（root hub设备）的驱动程序，如果查找到，就可以通过相应的指针把它们都关联起来，如果找不到这个驱动程序，那么 root hub 就无法正常工作了，只能在总线的设备队列中等待有驱动安装时，再匹配是否 OK，如果一直没有对应的驱动，那么这条总线也就没有办法挂载其他的设备。
+
+一旦 Root hub 匹配成功驱动后，就会循环运行一个守护进程，用来检测和发现 hub 的端口是否有设备插入或者拔出。
+
+### dwc
+
+> 先简单概述一下 dwd
+
+dwc 作为一个 platform device ,这杯信息由设备树解析，与驱动匹配后执行 dwc3_probe（`drivers/usb/dwc3/core.c`）。
+
+```c
+dwc3_probe
+  ==> dwc3_core_init_mode(dwc)
+    ==> dwc3_host_init(dwc)
+      ==> xhci = platform_device_alloc("xhci-hcd", PLATFORM_DEVID_AUTO);
+      ==> platform_device_add(xhci); 
+```
+
+### xhci
+
+xhci 作为一个platform device 注册之后，与驱动匹配后执行 xhci_plat_probe (`drivers/usb/host/xhci-plat.c`).
+
+
+这里主要以一个 bug 开始去分析这部分代码
+
+```sh
+# 在不断 reboot 测试时，发现 USB 以太网会出现概率性无法工作为题，出现问题时报错如下：
+[    4.991963@3] usb usb1-port2: couldn't allocate usb_device
+```
+
+这个问题的最根本原因是：内核为了兼容 usb2 和 usb3 需要注册两个 hcd (primary_hcd and shared_hcd) ，但是一旦注册了主 roothub，可能在 xhci 运行之前就处理了端口状态的变化，导致未检测到 USB 设备。（看完下面分析再来看这个问题）
+
+- xhci_plat_probe 
+
+[点击查看代码](https://elixir.bootlin.com/linux/v4.9.331/source/drivers/usb/host/xhci-plat.c#L138)
+
+当然你也可以直接 git clone kernel 代码代理本地查看更方便
+
+```sh
+git clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+或者： git clone git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
+```
+
+
+首先从 xhci_plat_probe 函数开始，该函数主要是创建和注册 hcd。
+
+在 xhci_plat_probe 里，两个重量级的函数是usb_create_hcd 和 usb_add_hcd , 下面我们主要分析这两个函数。
+
+
+
+
+
+----
+
+  
+```c
+xhci_plat_init
+  usb_xhci_driver
+    xhci_plat_probe  //主要是创建和注册 hcd
+      usb_create_hcd(driver, &pdev->dev, dev_name(&pdev->dev))  //创建一个usb_hcd结构体，并进行一些赋值操作， usb2.0
+        usb_create_shared_hcd()
+      hcd_to_xhci(hcd)
+        return (struct xhci_hcd *) (primary_hcd->hcd_priv);  //取hcd的primary_hcd，并转成xhci_hcd，主机控制器的私有数据被存储在hcd_priv[0]这个结构体的末尾
+      usb_create_shared_hcd()   //创建一个 usb_hcd 结构体，usb 3.0
+      //上面创建的两个 hcd 是一个环形链表，usb2.0 的 hcd 是 primary_hcd，他们都是用同一 address0_mutex
+      usb_add_hcd(hcd, irq, IRQF_SHARED);  //完成通用HCD结构初始化和注册，这里是usb2.0
+      usb_add_hcd(xhci->shared_hcd, irq, IRQF_SHARED)  //完成通用HCD结构初始化和注册，这里是usb3.0
+```
+
+- usb_add_hcd
+
+```c
+usb_hcd_request_irqs  // 申请一个hcd中断定时器
+  request_irq --> usb_hcd_irq(中断回调函数)
+    // 当外部产生终端，比如 usb 口插入设备，就会触发 usb_hcd_irq
+
+hcd->driver->start(hcd)  //.start = xhci_plat_start; xhci_run;  实际是调用 xhci_run ， 启动 xhci host controller
+  xhci_run
+    //这个函数完成usb2.0 xhci 的启动
+    xhci_run_finished
+      //这个函数完成 usb3.0 xhci 的启动
+register_root_hub()
+usb_hcd_poll_rh_status()  //通知 hub。这个函数 会一直使用定时器调用自己，如果读取到 hub 有变化，而且有提交的 urb，就返回。
+
+
+//hcd->shared_hcd 总是创建并注册到 usb-core 。 如果由于某些原因禁用了 USB3 下行端口，则没有 roothub 端口
+//https://lkml.iu.edu/hypermail/linux/kernel/2108.3/03119.html
+//“HCD_FLAG_DEFER_RH_REGISTER”设置为 hcd->flags 以延迟 在 usb_add_hcd() 中注册主 roothub。
+//这将确保两者 主 roothub 和辅助 roothub 将与 第二个HCD。这是检测冷插拔 USB 设备所必需的 
+//在某些 PCIe USB 卡中（例如连接到 AM64 EVM 的 Inateck USB 卡 或 J7200 EVM）。
+
+```
 
 
 ----
@@ -164,71 +277,3 @@ hub_configure 注册了中断，一旦接入新的usb设备就会调用 hub_irq 
 > https://www.51cto.com/article/712072.html
 
 ----
-
-# USB主控制器 HCD 分析
-
-## 概述
-
-USB 的主控制器（HCD）有多种不同的类型，分别有 OHCI， UHCI，EHCI，和 XHCI
-
-![](https://raw.githubusercontent.com/kendall-cpp/blogPic/main/blog-01/20221028155013.png)
-
-USB 采用树形拓扑结构，主机侧和设备侧的 USB 控制器分别称为主机控制器(Host Controller)和 USB 设备控制器(UDC)，每条总线上只有一个主机控制器，负责协调主机和设备间的通信，设备不能主动向主机发送任何消息。
-
-## USB 主控制器驱动
-
-### usb主机控制器硬件情况
-
-USB Host 带有 Root Hub，第一个 USB 设备是一个根集线器（Root Hub)，它控制连接着 USB 总线上的其他设备。
-
-![](https://raw.githubusercontent.com/kendall-cpp/blogPic/main/blog-01/202210291406103.png)
-
-**大致概述**：首先把根集线器（root hub) 作为一个设备添加到 usb 总线的设备队列里，同时，从总线的驱动队列中查找是否有可以支持这个设备（root hub设备）的驱动程序，如果查找到，就可以通过相应的指针把它们都关联起来，如果找不到这个驱动程序，那么 root hub 就无法正常工作了，只能在总线的设备队列中等待有驱动安装时，再匹配是否 OK，如果一直没有对应的驱动，那么这条总线也就没有办法挂载其他的设备。
-
-一旦 Root hub 匹配成功驱动后，就会循环运行一个守护进程，用来检测和发现 hub 的端口是否有设备插入或者拔出。
-
-**大致流程如下**
-
-> 可以参考： https://www.cnblogs.com/image-eye/arcive/2012/01/31/2333236.html
-
-- xhci_plat_probe
-  
-```c
-xhci_plat_init
-  usb_xhci_driver
-    xhci_plat_probe  //主要是创建和注册 hcd
-      usb_create_hcd(driver, &pdev->dev, dev_name(&pdev->dev))  //创建一个usb_hcd结构体，并进行一些赋值操作， usb2.0
-        usb_create_shared_hcd()
-      hcd_to_xhci(hcd)
-        return (struct xhci_hcd *) (primary_hcd->hcd_priv);  //取hcd的primary_hcd，并转成xhci_hcd，主机控制器的私有数据被存储在hcd_priv[0]这个结构体的末尾
-      usb_create_shared_hcd()   //创建一个 usb_hcd 结构体，usb 3.0
-      //上面创建的两个 hcd 是一个环形链表，usb2.0 的 hcd 是 primary_hcd，他们都是用同一 address0_mutex
-      usb_add_hcd(hcd, irq, IRQF_SHARED);  //完成通用HCD结构初始化和注册，这里是usb2.0
-      usb_add_hcd(xhci->shared_hcd, irq, IRQF_SHARED)  //完成通用HCD结构初始化和注册，这里是usb3.0
-```
-
-- usb_add_hcd
-
-```c
-usb_hcd_request_irqs  // 申请一个hcd中断定时器
-  request_irq --> usb_hcd_irq(中断回调函数)
-    // 当外部产生终端，比如 usb 口插入设备，就会触发 usb_hcd_irq
-
-hcd->driver->start(hcd)  //.start = xhci_plat_start; xhci_run;  实际是调用 xhci_run ， 启动 xhci host controller
-  xhci_run
-    //这个函数完成usb2.0 xhci 的启动
-    xhci_run_finished
-      //这个函数完成 usb3.0 xhci 的启动
-register_root_hub()
-usb_hcd_poll_rh_status()  //通知 hub。这个函数 会一直使用定时器调用自己，如果读取到 hub 有变化，而且有提交的 urb，就返回。
-
-
-//hcd->shared_hcd 总是创建并注册到 usb-core 。 如果由于某些原因禁用了 USB3 下行端口，则没有 roothub 端口
-//https://lkml.iu.edu/hypermail/linux/kernel/2108.3/03119.html
-//“HCD_FLAG_DEFER_RH_REGISTER”设置为 hcd->flags 以延迟 在 usb_add_hcd() 中注册主 roothub。
-//这将确保两者 主 roothub 和辅助 roothub 将与 第二个HCD。这是检测冷插拔 USB 设备所必需的 
-//在某些 PCIe USB 卡中（例如连接到 AM64 EVM 的 Inateck USB 卡 或 J7200 EVM）。
-
-```
-
----
