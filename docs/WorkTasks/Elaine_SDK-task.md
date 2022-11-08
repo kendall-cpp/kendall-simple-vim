@@ -1,61 +1,4 @@
 
-## GPIO bug
-
-https://jira.amlogic.com/browse/GH-3038
-
-- sync elaine
-
-```sh
-mkdir elaine-sdk
-repo init -u https://eureka-partner.googlesource.com/amlogic/manifest -b elaine -m combined_sdk.xml
-repo sync
-```
-
-- 编译
-
-```sh
-# ./sdk/build_scripts/build_all.sh ../chrome elaine-b4
-
-./build_uboot.sh elaine-b3 ./../../chrome release
-```
-
-- 编译找到 error log
-
-```sh
-vim arch/arm64/boot/dts/amlogic/elaine-sm1-panel.dtsi 
-
-vim u-boot/drivers/amlogic/media/vout/lcd/lcd_common.c
-```
-
-- 分析代码
-
-```
-of_property_read_string_index
-|
-|---of_property_read_string_helper
-    |
-    |---of_find_property
-        |
-        |---of_find_property
-            |
-            |---__of_find_property
-                |
-                |---of_prop_cmp
-```
-
-- of_property_read_string_index
-
-参数 np 指向设备节点；propname 指向属性名字；output 参数用于存储指定的字符串；index 用于指定字符串在 string-list 中的索引。
-函数直接调用 of_property_read_string_helper() 函数获得多个字符串。
-
-- of_property_read_string_helper
-
-参数 np 指向设备节点；propname 指向属性名字；out_strs 参数用于存储指定的字符 串；sz 参数指定了读取字符串的数量；skip 参数指定了从第几个字符串开始读取。
-
-函数首先调用 of_find_property() 函数获得 propname 对应的属性，然后对获得的属性 和属性值进行有效性检查，检查不过直接返回错误；如果检查通过，接着计算属性的结束 地址后，使用 for 循环遍历属性的值，并且跳过 skip 对应的地址，然后将字符串都存 储在 out_strs 参数里。
-
-
-----
 
 ## Failure to Configure Ethernet Interface
 
@@ -124,8 +67,6 @@ And you can also test with my patch.
 ```
 
 
-
-
 ---
 
 ### delay load touch driver
@@ -169,7 +110,7 @@ https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/255070
 
 ---
 
-- 找到 hub_event
+### 分析 hub_event
 
 - hub的probe函数，主要是一些工作的初始化和hub的配置
 - hub_configure配置hub
@@ -177,7 +118,7 @@ https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/255070
   -  kick_hub_wq(hub); //主要是queue_work(hub_wq, &hub->events)，也就是把 hub_event 加入工作队列，开始运行
 
 > hub_activate（init 3) -- kick_hub_wq -- queue_work -- hub_event  (if (queue_work(hub_wq, &hub->events)) )
-*
+
 - hub_event，前面int2的时候有设置 hub->test_bits，这里会进行处理
 - port_event 做了什么
 - hub_port_connect_change： 处理端口改变的情况
@@ -199,17 +140,7 @@ HI Chris,
 
 I've detected that the problem might be in the goodix_get_reg_and_cfg function, However, through testing, it should not be a logical problem. It may take some additional experiments to locate the root cause.
 
------
 
-### 检查 goodix 驱动
-
-```c
-//vim goodix_cfg_bin.c +171
-goodix_cfg_bin_proc
-```
-
-
-修改： /mnt/nfsroot/shengken.lin/workspace/google_source/eureka/amlogic_sdk/kernel$ vim drivers/amlogic/usb/dwc_otg/310/dwc_otg_pcd_intr.c
 
 ----
 
@@ -222,6 +153,7 @@ After a resume, port power should still be on. For any other type of activation,
 - comment
 
 commit
+
 ```
 
     [Elaine] Fixed probabilistic fail of usb Ethernet in rebooting
@@ -247,7 +179,7 @@ commitId: 6b7f44b5eed0a00ef73bb94dbf5c64551fdb40a9
 ```
 
 
-### kernel-patch 参考网址
+### kernel-patch 参考
 
 
 Fix the issue by refer to the kernel patch: https://git.kernel.org/pub/scm/linux/kernel/git/gregkh/usb.git/commit/?h=usb-testing&id=a44623d9279086c89f631201d993aa332f7c9e66
@@ -268,7 +200,7 @@ Hi Cody,
 
 After a few days of hard research, I just found the root cause and solved it today.
 
-This is a common problem because the kernel needs to register two hcds (primary_hcd and shared_hcd) for usb2 and usb3 compatibility, but once the primary roothub is registered, port state changes are handled even before xHCi is running, resulting in a USB device detected.
+This is a common problem because the kernel needs to register two hcds (primary_hcd and shared_hcd) for usb2 and usb3 compatibility, but once the primary roothub is registered, port state changes are handled even before xHCi is running, resulting in a USB device not detected.
 
 At present, I have found the corresponding patch from the upstream to fix the problem. However, the 8th bit used in this patch is occupied by `HCD_FLAG_DEV_AUTHORIZED` in the Elaine-Kernel version, so the 12th bit is selected as "Defer roothub registration", After my repeated testing and verification, the patch can fix the bug of USB Ethernet failure at booting.
 
@@ -315,4 +247,35 @@ git push eureka-partner HEAD:refs/for/elaine
 https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/262595
 commit id : 934882f98b37c0485de4850f7f1f7001d6c3c269
 issue: https://partnerissuetracker.corp.google.com/issues/246404063#comment2
+```
+
+
+----
+
+## GPIO bug
+
+https://jira.amlogic.com/browse/GH-3038
+
+- sync elaine
+
+```sh
+mkdir elaine-sdk
+repo init -u https://eureka-partner.googlesource.com/amlogic/manifest -b elaine -m combined_sdk.xml
+repo sync
+```
+
+- 编译
+
+```sh
+# ./sdk/build_scripts/build_all.sh ../chrome elaine-b4
+
+./build_uboot.sh elaine-b3 ./../../chrome release
+```
+
+- 编译找到 error log
+
+```sh
+vim arch/arm64/boot/dts/amlogic/elaine-sm1-panel.dtsi 
+
+vim u-boot/drivers/amlogic/media/vout/lcd/lcd_common.c
 ```

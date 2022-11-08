@@ -97,9 +97,9 @@ mma PARTNER_BUILD=true
 
 # Elaine
 
-## 以太网压力测试问题 【Doing】
+## 以太网压力测试问题 【Done】
 
-> https://partnerissuetracker.corp.google.com/issues/246404063  进行中
+> https://partnerissuetracker.corp.google.com/issues/246404063  
 
 触摸屏驱动影响了 USB 以太网，在不停重启压力测试时，会出现找不到 eth0 问题。
 
@@ -123,18 +123,47 @@ commitId: 6b7f44b5eed0a00ef73bb94dbf5c64551fdb40a9
 
 ### 根据kernel patch 修复
 
-- 修改patch: https://git.kernel.org/pub/scm/linux/kernel/git/gregkh/usb.git/commit/?h=usb-testing&id=a44623d9279086c89f631201d993aa332f7c9e66
+- 讨论 (patch 链接在最后)：https://bugzilla.kernel.org/show_bug.cgi?id=214021
 
-- 讨论：https://bugzilla.kernel.org/show_bug.cgi?id=214021
+#### bug 解决总结
 
-- https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1968210
+在 xhci_plat_probe 里，两个重量级的函数是 usb_create_hcd 和 usb_add_hcd , 下面我们主要分析这两个函数。
+
+```c
+hcd = usb_create_hcd(driver, &pdev->dev, dev_name(&pdev->dev));  //创建一个usb_hcd结构体，并进行一些赋值操作， usb2.0
+usb_create_shared_hcd()   //创建一个 usb_hcd 结构体，usb 3.0
+
+
+// 在 USB 3.0 之后，两次执行 usb_add_hcd ，第一次只是 xhci_run （set_bit(HCD_FLAG_DEFER_RH_REGISTER, &hcd->flags);）, 
+// 并没有去注册 hcd，也就是没有执行 register_root_hub
+// 第二次 xhci_run --> xhci_run_finished 
+// 接着 register_root_hub 两个 hcd（primary_hcd 和 share_hcd）
+usb_add_hcd(hcd, irq, IRQF_SHARED);  
+usb_add_hcd(xhci->shared_hcd, irq, IRQF_SHARED) 
+
+//最后通过这个函数去通知 hub。这个函数 会一直使用定时器调用自己，如果读取到 hub 有变化，而且有提交的 urb，就返回。
+usb_hcd_poll_rh_status(hcd) 
+//会面就会去对 hub_event 进行处理
+```
+
+同时需要注意 `#define HCD_FLAG_DEFER_RH_REGISTER     12` , kernel patch 中设置的是第 8 位 bit，但是在 elaine-kernel 的版本中第 8 位已经被占用，因此改成第 12 位，否则 usb2 的 hcd 永远无法 register 。
+
+
+#### 最终提交
+
+```
+https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/262595
+commit id : 934882f98b37c0485de4850f7f1f7001d6c3c269
+issue: https://partnerissuetracker.corp.google.com/issues/246404063#comment2
+```
+
+---
 
 ## 显示屏功率 GPIO bug 【None】
 
 > https://jira.amlogic.com/browse/GH-3038 Wrong lcd panel power setting
 
-git add drivers/usb/core/hcd.c
-git add drivers/usb/core/hub.c
-git add drivers/usb/host/xhci-plat.c
-git add drivers/usb/host/xhci.c
-git add include/linux/usb/hcd.h
+---
+
+# C3 Camera 【Doing】
+
