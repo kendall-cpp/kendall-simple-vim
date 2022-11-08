@@ -69,7 +69,7 @@ Password		pHFP-eotQ-TtmZ
 
 kendall-cpp/blog-01
 
-token: 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
+token: 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
 
 
 ## 任务记录
