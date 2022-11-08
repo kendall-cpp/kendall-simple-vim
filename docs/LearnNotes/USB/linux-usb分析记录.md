@@ -234,9 +234,6 @@ USB2.0接口标准中 ，USB1.1是12Mbps，新的USB2.0标准将USB接口速度�
 
 
 
-
-
-
 ----
 
 参考： https://www.cnblogs.com/wen123456/p/14281912.html
