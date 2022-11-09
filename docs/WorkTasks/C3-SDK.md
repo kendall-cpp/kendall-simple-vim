@@ -11,7 +11,7 @@ repo init -u git://git.myamlogic.com/linux/manifest.git -b master -m br-ipc-c3-r
 [user]   
         name = shengken.lin
         email = shengken.lin@amlogic.com 
-repo sync 
+repo sync -c   # -c 是指拉取 指定的 xml
 ```
 
 # 编译
@@ -20,6 +20,8 @@ repo sync
 source setenv.sh 
 # 选择AW401
 make
+
+
 ```
 
 
@@ -35,12 +37,46 @@ uboot-repo$ ./mk c3_aw409_av400
 buildRoot_C3$ make linux-dirclean
 buildRoot_C3$ make linux-rebuild  
 # 编译uboot
-buildRoot_C3$ make uboot-dirclean
+# buildRoot_C3$ make uboot-dirclean
 buildRoot_C3$ make uboot-rebuild  
 ```
 
+### buildroot-output
 
-### 打包成 boot.img
+- build 包含所有的源文件，包括 Buildroot 所需主机工具和选择的包，这个目录包含所有 模块源码。
+- host 主机端编译需要的工具包括交叉编译工具
+- images 含压缩好的根文件系统镜像文件
+- staging 这个目录类似根文件系统的目录结构，包含编译生成的所有头文件和库，以及其他开发文件，不过他们没有裁剪，比较庞大，不适用于目标文件系统。
+- target 包含完整的根文件系统，对比 `staging/`，它没有开发文件，不包含头文件，二进制文件也经过 strip 处理。
+
+进行编译时，Buildroot 根据配置，会自动从网络获取相关的软件包，包括一些第三方库，插件，实用工具等，放在`dl/`目录。
+
+软件包会解压在 `output/build/` 目录下，然后进行编译
+
+如果要修改软件包的源码，可以通过打补丁的方式进行修改，补丁集中放在 `package/` 目录，Buildroot 会在解压软件包时为其打上相应的补丁
+
+#### buildroot 单独重新编译某个模块
+
+1. 直接删除源码包，例如我们要重新编译 openssh，那么可以直接删除 `output/build/openssh-vesion` 文件夹，那么当你 make 的时候，他就会自动从 dl 文件夹下，解压缩源码包，并重新安装
+
+2. 也是以 openssh 为例子，如果我们不想重新编译，只想重新配置，也就是 `./configure` ，
+
+- 我们可以直接删除 output/build/openssh-version 目录下的 `.stamp_configured`
+- 如果你只是想重新安装可以删除 `.stamp_target_install`
+- 重新 make 可以删除 `.stamp_built`
+
+```
+.stamp_configured,          此文件表示已经配置过
+.stamp_downloaded,          此文件表示源码已经下载过，没有此文件会重新下载
+.stamp_patched,             此文件表示已经打过补丁
+.stamp_extracted            此文件表示已经解压过
+.stamp_builted              此文件表示源码已经编译
+.stamp_target_installed     此文件表示软件已经安装过
+```
+
+注意：修改代码后（不是修改 output 目录下的），不用运行 linux-dirclean，只用 linux-rebuild 即可。Buildroot 会 rsync 将你外部的源码同步到 output/build 并且编译，并且不会删掉上次编译的缓存文件，自动只编译你修改的部分。
+
+#### 打包成 boot.img
 
 ```sh
 # 在这个脚本
@@ -249,8 +285,37 @@ IPC_NETWORK_Init
 IPC_WEBSERVER_Init
 ```
 
+## ipc_alarm_pld编译错误
 
-# W1连接wifi
+```
+c3_aw409_refapp_a32_release/build/ipc-reference-1.0/modules/alarm/src/ipc_alarm_pld.c:171:86: error: request for member ‘rect’ in something not a structure or union
+```
+
+```sh
+# /mnt/fileroot/shengken.lin/workspace/c3_buildroot_refapp/vendor/amlogic/ipc/refapp/src
+# 最新的是 commit id : af5a893738d9ba8372bee88fd141f4a7213e2763
+git checkout 875e347a447e9bae8329392e7eee8e006d8b3c44
+
+# /mnt/fileroot/shengken.lin/workspace/c3_buildroot_refapp/vendor/amlogic/ipc/mbp/prebuilt
+# 最新的是 commit id : 87552832d73c94d9bf8d7739f4bff5d73c422f69
+git checkout 29a9ddfcba947984e19e079c73e9a7f2f572a9cf
+```
+
+- 重新编译
+
+```sh
+make show-targets
+make mbi-rebuild
+
+rm /mnt/fileroot/shengken.lin/workspace/c3_buildroot_refapp/output/c3_aw409_refapp_a32_release/build/ipc-reference-1.0 -rf 
+# 只需要删除 .stamp_builted  这个文件就可以，不需要删除整个文件夹
+make ipc-reference-rebuild
+make
+```
+
+
+
+## wpa_cli连接wifi
 
 wpa_cli -iwlan0 remove_network 0
 wpa_cli -iwlan0 add_network 0
