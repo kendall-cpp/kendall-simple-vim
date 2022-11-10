@@ -92,6 +92,32 @@ echo 9 > /proc/sys/kernel/printk
 echo 0 > /proc/sys/kernel/printk
 ```
 
+### adb 无法使用问题
+
+```
+cd /mnt/fileroot/shengken.lin/workspace/c3_buildroot_refapp/output/c3_aw409_refapp_a32_release/build/linux-amlogic-5.15-dev/common_drivers
+ln -s /mnt/fileroot/shengken.lin/workspace/c3_buildroot_refapp/.repo/projects/kernel/aml-5.15/common_drivers.git .git
+
+
+cd /mnt/fileroot/shengken.lin/workspace/c3_buildroot_refapp/kernel/aml-5.15/common_drivers
+git fetch ssh://shengken.lin@scgit.amlogic.com:29418/kernel/common_drivers refs/changes/69/270669/6 && git cherry-pick FETCH_HEAD
+
+make linux-rebuild
+make mbd-adla-rebuild 
+make mbd-audio-rebuild 
+make mbd-base-rebuild 
+make mbd-camera-rebuild 
+make mbd-cve-rebuild 
+make mbd-dewarp-rebuild 
+make mbd-ge2d-rebuild 
+make mbd-ppu-rebuild 
+make mbd-region-rebuild 
+make mbd-venc-rebuild 
+make mbd-vpu-rebuild  
+make pmz-rebuild
+
+make
+```
 
 # MBP 熟悉
 
@@ -220,6 +246,8 @@ Audio 模块包括音频输入（Audio In）、音频输出（Audio Out）、音
 | MBI_AI_EnableVqe  | 启用AI通道的声音质量增强功能 |    | 
 | MBI_AI_DisableVqe  | 禁用AI通道的声音质量增强功能 |    | 
 
+
+
 #### 音頻輸出
 
 主要实现配置及启用音频输出设备、发送音频帧数据、音频编码、以及声学算法处理等功能。
@@ -319,9 +347,9 @@ make
 
 wpa_cli -iwlan0 remove_network 0
 wpa_cli -iwlan0 add_network 0
-wpa_cli -iwlan0 set_network 0 ssid '"Amlogic-vpn04_5G"' # change your ssid here
+wpa_cli -iwlan0 set_network 0 ssid '"Amlogic-vpn04_5G"'
 wpa_cli -iwlan0 set_network 0 key_mgmt WPA-PSK
-wpa_cli -iwlan0 set_network 0 psk '"Aml1234566"' # change your password here
+wpa_cli -iwlan0 set_network 0 psk '"Aml1234566"' 
 wpa_cli -iwlan0 set_network 0 pairwise CCMP
 wpa_cli -iwlan0 set_network 0 group CCMP
 wpa_cli -iwlan0 set_network 0 proto RSN
@@ -329,32 +357,35 @@ wpa_cli -iwlan0 enable_network 0
 wpa_cli -iwlan0 status
 wpa_cli -iwlan0 save
 dhcpcd wlan0
-
-
-
-
-
 
 wpa_cli -iwlan0 remove_network 0
 wpa_cli -iwlan0 add_network 0
-wpa_cli set_network 0 ssid "kendall" 
+wpa_cli -iwlan0 set_network 0 ssid '"kendall"'
 wpa_cli -iwlan0 set_network 0 key_mgmt WPA-PSK
-wpa_cli set_network 0 psk "12345678"
+wpa_cli -iwlan0 set_network 0 psk '"12345678"' 
 wpa_cli -iwlan0 set_network 0 pairwise CCMP
 wpa_cli -iwlan0 set_network 0 group CCMP
 wpa_cli -iwlan0 set_network 0 proto RSN
 wpa_cli -iwlan0 enable_network 0
 wpa_cli -iwlan0 status
 wpa_cli -iwlan0 save
-dhcpcd wlan0
 
 
-wpa_cli scan
-wpa_cli scan_results
-wpa_cli add_network
-wpa_cli set_network 0 ssid "\"FuchsiaHome\""
-wpa_cli set_network 0 psk "\"EnjoyYourLife@amlogic.com\""
-wpa_cli enable_network 0
-wpa_cli save_config
+## 停止 refapp
 
-dhcpcd wlan0
+```sh
+/etc/init.d/S81ipc-refapp  stop
+```
+
+### 测试 sample
+
+```sh
+# 找到编译的 sample
+make sample-rebuild
+find ./output/ -name "sample_audio" | xargs md5sum
+
+scp Z:\workspace\c3_buildroot_refapp\output\c3_aw409_refapp_a32_release\target\usr\bin\sample_audio root@192.168.137.127:/data/
+scp Z:\windowFile\Korlan-SDK文件\audioFile\44100.wav root@192.168.137.127:/data/
+```
+
+

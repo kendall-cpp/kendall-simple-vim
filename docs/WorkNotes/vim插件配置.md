@@ -1,25 +1,42 @@
 
+- [amlogic vim 安装插件](#amlogic-vim-安装插件)
 - [重新安装 vim](#重新安装-vim)
-  - [安装插件](#安装插件)
   - [升级 cmake](#升级-cmake)
-- [vim插件安装和配置](#vim插件安装和配置)
+- [vim 安装 Vundle](#vim-安装-vundle)
 - [主题colorsheme](#主题colorsheme)
-- [YouCompleteMe 的安装和使用](#youcompleteme-的安装和使用)
-  - [安装](#安装)
-  - [使用](#使用)
+- [YouCompleteMe 使用](#youcompleteme-使用)
+  - [安装（网络）](#安装网络)
+- [NERDTree使用](#nerdtree使用)
 - [ctags 使用](#ctags-使用)
   - [安装 ctags](#安装-ctags)
   - [使用 ctags](#使用-ctags)
   - [函数变量查找](#函数变量查找)
-- [Ack 插件安装](#ack-插件安装)
-  - [ACK使用](#ack使用)
   - [ubuntu 安装 ag](#ubuntu-安装-ag)
-  - [结合使用](#结合使用)
-- [nerdtree_red 使用](#nerdtree_red-使用)
 - [vim 命令记录](#vim-命令记录)
   - [vim 查找替换](#vim-查找替换)
 - [vscode 设置 markdown 字体](#vscode-设置-markdown-字体)
 
+
+------
+
+
+## amlogic vim 安装插件
+
+拷贝 vim.zip
+
+直接到 .vim 下执行 `./run-pathogen.sh`
+
+最后去 .vimrc 最上面添加
+
+`source /home/book/.vim/run-pathogen.vim `
+
+- 编译安装
+  
+make
+
+sudo make install
+
+一些插件安装参考：https://www.jianshu.com/p/0e85e7c9e543?_t_t_t=0.27036328033726176
 
 ------
 
@@ -72,21 +89,7 @@ cd vim
 
 ```
 
-### 安装插件
 
-拷贝 vim.zip
-
-直接到 .vim 下执行 `./run-pathogen.sh`
-
-最后去 .vimrc 最上面添加
-
-`source /home/book/.vim/run-pathogen.vim `
-
-- 编译安装
-  
-make
-
-sudo make install
 
 ### 升级 cmake
 
@@ -118,7 +121,7 @@ sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 800 --slave /
 /usr/bin/python3 /home/book/.vim/bundle/youcompleteme/third_party/ycmd/build.py --clang-completer --racer-completer --verbose
 ```
 
-## vim插件安装和配置
+## vim 安装 Vundle
 
 在 Linux 系统上安装 Vundle 需要 Git 支持
 
@@ -133,9 +136,9 @@ git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
 
 去这里的 colors 下下载自己想要的主题 https://github.com/flazz/vim-colorschemes
 
-## YouCompleteMe 的安装和使用
+## YouCompleteMe 使用
 
-### 安装
+### 安装（网络）
 
 安装 cmake，否则会报：CMAKE IS REQUIRED TO BUILD YCMD 这个错。
 
@@ -167,86 +170,8 @@ python3 inst/usr/bin/python3 /home/book/.vim/bundle/youcompleteme/third_party/yc
 ```
 
 
-### 使用
+## NERDTree使用
 
-默认当键入两个字母之后, 则启动补全. 可以通过该变量调整: g:ycm_min_num_of_chars_for_completion
-- 也可以使用原有的<c-x><c-o>来补全, ycm 将其功能增强了.
-- 按照本文配置, 可用<c-j>跳转到定义处.
-- 默认配置<TAB>会选择补全内容, 本文的配置将其屏蔽了, 为了不会与snipmate等需要tab的冲突, 选择补全改为了.
-
-
-## ctags 使用
-
-### 安装 ctags
-
-sudo apt-get install ctags
-
-### 使用 ctags
-
-在源码目录下执行： `ctags -R` ，然后会生成一个 tags 文件，其实这个 tags 文件就是你的编码的所有文件的索引（比如变量索引，函数索引）。
-
-最后在 .vimrc 下写入： `set tags=[your_path]./tags`, 或者在 vim 下直接执行 `：set tags=./tags ` 临时设置
-
-> 不过还有一个小瑕疵, 你修改程序后, 比如增加了函数定义, 删除了变量定义, tags文件不能自动rebuild, 你必须手动再运行一下命令: `ctags -R`
-
-### 函数变量查找
-
-- 命令模式下  CTRL+] 跳转到函数或者变量
-
-- 查找完毕返回到当前：CTRL+o
-
-## Ack 插件安装
-
-> Ack 插件，和 ag 命令结合使用
-
-插件地址：https://github.com/mileszs/ack.vim
-
-安装：在 .vimrc 中添加 `Plugin 'mileszs/ack.vim'` ,然后再 vim 下执行 `:PluginInstall` 安装。
-
-### ACK使用
-
-vim 中输入 :Ack "字符串"
-
-```sh
-?           帮助，显示所有快捷键
-Enter/o     打开文件
-O           打开文件并关闭Quickfix
-go          预览文件，焦点仍然在Quickfix
-t           新标签页打开文件
-q           关闭Quickfix
-```
-
-### ubuntu 安装 ag
-
-sudo apt-get install silversearcher-ag
-
-```
-ag -i xxxxx					搜索忽略大小写
-ag -A xxxxx     			搜索显示行号
-ag -B 2 "root" /etc/passwd  并显示匹配内容之前的n行文本
-ag -C 2 PATTERN			搜索含PATTERN文本，并同时显示匹配内容以及它前后各n行文本的内容。
-ag -w PATTERN			 全匹配搜索，只搜索与所搜内容完全匹配的文本。
-ag --ignore-dir /etc/ "kendall"  	忽略某些文件目录进行搜索。
-```
-
-命令使用参考 ：https://blog.csdn.net/weixin_39789796/article/details/117462856
-
-### 结合使用
-
-```
-:Ack [options] {pattern} [{directories}]
-
-?           帮助，显示所有快捷键
-Enter/o     打开文件
-O           打开文件并关闭Quickfix
-go          预览文件，焦点仍然在Quickfix
-t           新标签页打开文件
-q           关闭Quickfix
-```
-
-结合 go >> q 退出。
-
-## nerdtree_red 使用
 
 Ctrl-n   打开和关闭目录
 
@@ -272,6 +197,47 @@ gs      vsplit 一个新 窗口打开选中文件，但不跳到该窗口
 O       递归打开选中 结点下的所有目录
 m    文件操作：复制、删除、移动等
 ```
+
+
+
+## ctags 使用
+
+### 安装 ctags
+
+sudo apt-get install ctags
+
+### 使用 ctags
+
+在源码目录下执行： `ctags -R` ，然后会生成一个 tags 文件，其实这个 tags 文件就是你的编码的所有文件的索引（比如变量索引，函数索引）。
+
+最后在 .vimrc 下写入： `set tags=[your_path]./tags`, 或者在 vim 下直接执行 `：set tags=./tags ` 临时设置
+
+> 不过还有一个小瑕疵, 你修改程序后, 比如增加了函数定义, 删除了变量定义, tags文件不能自动rebuild, 你必须手动再运行一下命令: `ctags -R`
+
+### 函数变量查找
+
+- 命令模式下  CTRL+] 跳转到函数或者变量
+
+- 查找完毕返回到当前：CTRL+o
+
+
+
+
+### ubuntu 安装 ag
+
+sudo apt-get install silversearcher-ag
+
+```
+ag -i xxxxx					搜索忽略大小写
+ag -A xxxxx     			搜索显示行号
+ag -B 2 "root" /etc/passwd  并显示匹配内容之前的n行文本
+ag -C 2 PATTERN			搜索含PATTERN文本，并同时显示匹配内容以及它前后各n行文本的内容。
+ag -w PATTERN			 全匹配搜索，只搜索与所搜内容完全匹配的文本。
+ag --ignore-dir /etc/ "kendall"  	忽略某些文件目录进行搜索。
+```
+
+命令使用参考 ：https://blog.csdn.net/weixin_39789796/article/details/117462856
+
 
 
 -----
