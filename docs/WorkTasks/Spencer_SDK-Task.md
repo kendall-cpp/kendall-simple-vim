@@ -26,7 +26,7 @@
     - [充电](#充电)
     - [自己制作ota包](#自己制作ota包)
   - [Task: FPN 模型](#task-fpn-模型)
-  - [freertos 学习](#freertos-学习)
+  - [freertos](#freertos)
     - [freertos 编译脚本分析](#freertos-编译脚本分析)
 
 
@@ -35,6 +35,8 @@
 
 
 # NN模型测试和转换
+
+> 总结文档 https://drive.google.com/drive/my-drive?hl=zh-CN
 
 ## 编译出 ssd_small_multiout_be.nb
 

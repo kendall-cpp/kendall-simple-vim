@@ -1,3 +1,6 @@
+
+> 波特率 921600
+
 # repo sync
 
 ```sh
@@ -379,6 +382,8 @@ wpa_cli -iwlan0 save
 
 ### 测试 sample
 
+#### audio
+
 ```sh
 # 找到编译的 sample
 make sample-rebuild
@@ -388,4 +393,12 @@ scp Z:\workspace\c3_buildroot_refapp\output\c3_aw409_refapp_a32_release\target\u
 scp Z:\windowFile\Korlan-SDK文件\audioFile\44100.wav root@192.168.137.127:/data/
 ```
 
+#### sample_venc
 
+```sh
+adb push Z:\workspace\C3-file\yuv420p_320x240.yuv /data
+
+# Usage : sample_venc [yuv file name] [width] [height] [type] [profile] [fps] [gop] [rcMode] [bitrate/quality] [isPowerTest]
+sample_venc /data/jpgtest.JPEG  618  297 26 0  0 0 1 64
+                 1               2    3   4 5  6 7 8  9
+```

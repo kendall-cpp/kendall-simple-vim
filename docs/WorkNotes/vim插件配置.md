@@ -6,7 +6,7 @@
 - [主题colorsheme](#主题colorsheme)
 - [YouCompleteMe 使用](#youcompleteme-使用)
   - [安装（网络）](#安装网络)
-- [NERDTree使用](#nerdtree使用)
+- [NERDTree 使用](#nerdtree-使用)
 - [ctags 使用](#ctags-使用)
   - [安装 ctags](#安装-ctags)
   - [使用 ctags](#使用-ctags)
@@ -170,7 +170,7 @@ python3 inst/usr/bin/python3 /home/book/.vim/bundle/youcompleteme/third_party/yc
 ```
 
 
-## NERDTree使用
+## NERDTree 使用
 
 
 Ctrl-n   打开和关闭目录
@@ -213,6 +213,11 @@ sudo apt-get install ctags
 最后在 .vimrc 下写入： `set tags=[your_path]./tags`, 或者在 vim 下直接执行 `：set tags=./tags ` 临时设置
 
 > 不过还有一个小瑕疵, 你修改程序后, 比如增加了函数定义, 删除了变量定义, tags文件不能自动rebuild, 你必须手动再运行一下命令: `ctags -R`
+
+不过，ctags -R 有个问题，成员变量没有包含在里面。所以自动完成对象的成员时没有提示。
+解决办法：
+
+ctags -R --fields=+iaS --extra=+q *
 
 ### 函数变量查找
 

@@ -412,6 +412,8 @@ board/amlogic/defconfigs/a1_korlan_b1_defconfig
 
 # Spencer
 
+> 波特率：921600
+
 ## sync spencer
 
 ```sh
