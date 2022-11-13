@@ -219,7 +219,14 @@ http://www.wowotech.net/sort/pm_subsystem
 
 ## camera架构
 
+https://deepinout.com/android-camera/android-camera-system-intro.html
+
+https://deepinout.com/mtk-camera-driver/introduction-to-camera-module-and-hardware-structure.html
+
 ### v4l2源码
 
+https://www.cnblogs.com/silence-hust/p/4464291.html
+
+https://zhuanlan.zhihu.com/p/105548113
 
 
