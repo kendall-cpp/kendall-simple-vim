@@ -199,5 +199,27 @@ dm_init 只是负责初始化并绑定了 udevice 和 driver，probe 探测函�
 - 调用driver的probe函数
 
 
+---
+
+# 需要研究的知识点
+
+## 中断子系统
+
+http://www.wowotech.net/sort/irq_subsystem
+
+## 电源管理子系统
+
+http://www.wowotech.net/sort/pm_subsystem
+
+## USB 子系统
+
+### USB控制器
+
+## MBP源码
+
+## camera架构
+
+### v4l2源码
+
 
 

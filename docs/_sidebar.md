@@ -1,20 +1,11 @@
 * [Kendall Memory](/README.md)
 
 
-* BookNote
-  * [Linux设备驱动开发详解](/读书笔记/Linux设备驱动开发详解.md)
-
-* MyNote
-
-  * [git笔记](/学习笔记/git笔记.md)
-  * [vim插件配置](/学习笔记/vim插件配置.md)
-  * [ZDNote](/学习笔记/ZDNote.md)
-
-* Summarize
-  * [芯片启动流程](/知识点总结/芯片启动流程.md)
-  * [kernel启动流程](/知识点总结/kernel启动流程.md)
+* LearnNotes
+  * [ForAmlogicLearn](/LearnNotes/ForAmlogicLearn.md)
+  * [chromium开发工具-gclient](/LearnNotes/chromium开发工具-gclient.md)
+  * [init.rc文件](/LearnNotes/init.rc文件.md)
   
-* 工作记录
-  * [01Google项目熟悉](/工作记录/01Google项目熟悉.md)
-  * [02培训结课](/工作记录/02培训结课.md)
-  * [记录事项(重要)](/工作记录/记录事项(重要).md)
+  * usb
+    * [Linux-USB驱动架构](/LearnNotes/USB/Linux-USB驱动架构.md)
+

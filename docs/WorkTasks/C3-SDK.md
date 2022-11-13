@@ -338,8 +338,7 @@ git checkout 29a9ddfcba947984e19e079c73e9a7f2f572a9cf
 make show-targets
 make mbi-rebuild
 
-rm /mnt/fileroot/shengken.lin/workspace/c3_buildroot_refapp/output/c3_aw409_refapp_a32_release/build/ipc-reference-1.0 -rf 
-# 只需要删除 .stamp_builted  这个文件就可以，不需要删除整个文件夹
+
 make ipc-reference-rebuild
 make
 ```

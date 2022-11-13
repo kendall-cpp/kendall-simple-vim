@@ -1,10 +1,172 @@
-# BuildRoot_A1 
+# BuildRoot
 
-## 编译
+## A1-sync
+
+```sh
+$mkdir BuildRoot_A1
+
+$pushd BuildRoot_A1
+
+$repo init -u git://git.myamlogic.com/linux/manifest.git -b master -m default.xml --repo-url=git://git.myamlogic.com/tools/repo.git
+
+$repo sync
+
+vim a1_buildroot/.repo/repo/.git/config
+[user]
+    name = shengken.lin
+    email = shengken.lin@amlogic.com
+```
+
+## C3-sync
+
+```sh
+repo init -u git://git.myamlogic.com/linux/manifest.git -b master -m br-ipc-c3.xml --repo-url=git://git.myamlogic.com/tools/repo.git
+
+# 有refapp
+repo init -u git://git.myamlogic.com/linux/manifest.git -b master -m br-ipc-c3-refapp.xml --repo-url=git://git.myamlogic.com/tools/repo.git
+
+# 修改 git user email
+# vim buildRoot_C3/.repo/repo/.git/config
+[user]   
+        name = shengken.lin
+        email = shengken.lin@amlogic.com 
+```
+
+### C3-MBP
+
+```sh
+# 编译
+make linux-rebuild
+make mbd-adla-rebuild 
+make mbd-audio-rebuild 
+make mbd-base-rebuild 
+make mbd-camera-rebuild 
+make mbd-cve-rebuild 
+make mbd-dewarp-rebuild 
+make mbd-ge2d-rebuild 
+make mbd-ppu-rebuild 
+make mbd-region-rebuild 
+make mbd-venc-rebuild 
+make mbd-vpu-rebuild  
+make pmz-rebuild
+
+make mbi-rebuild
+make ipc-reference-rebuild
+
+make
+
+make show-targets # 查看所有package
+```
+
+### 停止 refapp
+
+```
+# /etc/init.d/S81ipc-refapp  stop
+```
+
+## 编译BuildRoot
+
+### 整体编译
+
+```sh
+source setenv.sh 
+# 选择板子
+make
+```
+
+### 单独编译
+
+```sh
+# 编译uboot
+# 比如用409的bootloader
+ls bl33/v2019/board/amlogic/defconfigs/c3_aw409_defconfig 
+# 编译
+uboot-repo$ ./mk c3_aw409_av400
+
+# 编译kernel
+# buildRoot_C3$ make linux-dirclean 一般不用清理
+buildRoot_C3$ make linux-rebuild  
+
+# 编译uboot
+# buildRoot_C3$ make uboot-dirclean 一般不用清理
+buildRoot_C3$ make uboot-rebuild 
+
+make  # 打包成大的 img
+make show-targets # 查看所有package
+```
+
+### buildroot-output目录
+
+- build 包含所有的源文件，包括 Buildroot 所需主机工具和选择的包，这个目录包含所有 模块源码。
+
+- host 主机端编译需要的工具包括交叉编译工具
+
+- images 含压缩好的根文件系统镜像文件
+
+- staging 这个目录类似根文件系统的目录结构，包含编译生成的所有头文件和库，以及其他开发文件，不过他们没有裁剪，比较庞大，不适用于目标文件系统。
+
+- target 包含完整的根文件系统，对比 `staging/`，它没有开发文件，不包含头文件，二进制文件也经过 strip 处理。
+
+进行编译时，Buildroot 根据配置，会自动从网络获取相关的软件包，包括一些第三方库，插件，实用工具等，放在`dl/`目录。
+
+软件包会解压在 `output/build/` 目录下，然后进行编译
+
+如果要修改软件包的源码，可以通过打补丁的方式进行修改，补丁集中放在 `package/` 目录，Buildroot 会在解压软件包时为其打上相应的补丁
+
+#### output一些配置文件
+
+1. 直接删除源码包，例如我们要重新编译 openssh，那么可以直接删除 `output/build/openssh-vesion` 文件夹，那么当你 make 的时候，他就会自动从 dl 文件夹下，解压缩源码包，并重新安装
+
+2. 也是以 openssh 为例子，如果我们不想重新编译，只想重新配置，也就是 `./configure` ，
+
+- 我们可以直接删除 output/build/openssh-version 目录下的 `.stamp_configured`
+- 如果你只是想重新安装可以删除 `.stamp_target_install`
+- 重新 make 可以删除 `.stamp_built`
+
+```sh
+.stamp_configured,          此文件表示已经配置过
+.stamp_downloaded,          此文件表示源码已经下载过，没有此文件会重新下载
+.stamp_patched,             此文件表示已经打过补丁
+.stamp_extracted            此文件表示已经解压过
+.stamp_builted              此文件表示源码已经编译
+.stamp_target_installed     此文件表示软件已经安装过
+```
+
+注意：修改代码后（不是修改 output 目录下的），不用运行 linux-dirclean，只用 linux-rebuild 即可。Buildroot 会 rsync 将你外部的源码同步到 output/build 并且编译，并且不会删掉上次编译的缓存文件，自动只编译你修改的部分。
+
+## wpa_cli连接wifi
+
+```sh
+wpa_cli -iwlan0 remove_network 0
+wpa_cli -iwlan0 add_network 0
+wpa_cli -iwlan0 set_network 0 ssid '"Amlogic-vpn04_5G"'
+wpa_cli -iwlan0 set_network 0 key_mgmt WPA-PSK
+wpa_cli -iwlan0 set_network 0 psk '"Aml1234566"' 
+wpa_cli -iwlan0 set_network 0 pairwise CCMP
+wpa_cli -iwlan0 set_network 0 group CCMP
+wpa_cli -iwlan0 set_network 0 proto RSN
+wpa_cli -iwlan0 enable_network 0
+wpa_cli -iwlan0 status
+wpa_cli -iwlan0 save
+dhcpcd wlan0
+
+wpa_cli -iwlan0 remove_network 0
+wpa_cli -iwlan0 add_network 0
+wpa_cli -iwlan0 set_network 0 ssid '"kendall"'
+wpa_cli -iwlan0 set_network 0 key_mgmt WPA-PSK
+wpa_cli -iwlan0 set_network 0 psk '"12345678"' 
+wpa_cli -iwlan0 set_network 0 pairwise CCMP
+wpa_cli -iwlan0 set_network 0 group CCMP
+wpa_cli -iwlan0 set_network 0 proto RSN
+wpa_cli -iwlan0 enable_network 0
+wpa_cli -iwlan0 status
+wpa_cli -iwlan0 save
+dhcpcd wlan0
+```
 
 
 
-## 提交kernel gerrit
+## 提交gerrit
 
 
 > - https://scgit.amlogic.com/#/admin/projects/kernel/common
@@ -41,22 +203,17 @@ git push review HEAD:refs/for/amlogic-4.19-dev  # kernel的提交分支
 
 - uboot分支名 amlogic-4.19-dev
 - kernel 分支名 amlogic-4.19-dev
-
 - 提交查看：https://scgit.amlogic.com/#/dashboard/self
 
-# 提交uboot gerrit
+## 设置log级别
 
 ```sh
-git config --local user.name "shengken.lin"
-git config --local user.email "shengken.lin@amlogic.com"
-
-git branch -a | grep amlogic-4.19-dev
-git checkout -t remotes/amlogic/amlogic-4.19-dev  # 本地新建分支并和远程同名分支关联
-git commit --amend -s    -# s代表添加当前用户,签名  --amend  修改上一次注释
-git push review HEAD:refs/for/amlogic-dev-2019
+# 设置log 级别
+echo 9 > /proc/sys/kernel/printk
+echo 0 > /proc/sys/kernel/printk
 ```
 
->  最终提交：https://scgit.amlogic.com/245893
+
 
 # Google git
 
@@ -67,6 +224,8 @@ git config --local user.email shengken.lin@amlogic.corp-partner.google.com
 git pull eureka-partner korlan-master 
 git push eureka-partner HEAD:refs/for/korlan-master
 ```
+
+# audio工具
 
 ## arecord、aplay、amixer
 
@@ -1302,9 +1461,9 @@ find . |cpio -ov -H newc | lzop -9 > ../ramdisk.img
 cp ramdisk.img /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/out/target/product/gq/boot_unpack/
 ```
 
-# 其他事项
+# google 其他事项
 
-## 在 Ubuntu 下进入开发板
+## 在 Ubuntu/PC 下进入开发板
 
 连接串口和 USB
 

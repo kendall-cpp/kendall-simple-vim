@@ -4,9 +4,22 @@
 
 > linux-2.6.39
 
-## 内核模块
+# 内核模块
 
-### 模块加载过程
+## 内核模块的文件格式
+
+内核模块的驱动程序，比如 ko 文件，其文件格式是 ELF 格式
+
+```sh
+file filename.ko
+ELF 64-bit LSB relocatable, ARM aarch64, version 1 (SYSV),  with debug_info, not stripped
+```
+
+ELF 文件分为三部分，头部的 ELF header，中间的 Section，和尾部的 Section header table。
+
+其中 ELF 文件的主体是中间部分，当模块被内核加载时，符根据各自属性被重新分贝到新的内存区域。
+
+## 模块加载过程
 
 也就是使用 insmod demodev.ko 这样命令来向内核安装一个内核模块的加载过程
 
@@ -43,7 +56,7 @@ static struct module *load_module(void __user *umod, unsigned long len, const ch
 - const struct kernel_symbol *syms 内核模块导出的符号所在起始地址
 - int (*init)(void)  指向内核模块初始化函数的指针，在内核模块源码中由 module_init 宏指定。
 
-#### load_module
+### load_module
 
 - 模块 ELF 静态的内存内视图
 
@@ -51,7 +64,7 @@ static struct module *load_module(void __user *umod, unsigned long len, const ch
 
 sys_init_module 调用 load_module , 通过 copy_from_user 函数将用户空间文件数据复制到内核空间中去。从而在内核空间构造出 demodev.ko 的一个 ELF 静态的内存试图（HDR视图）。
 
-![](img/ELF视图.png)
+
 
 - 字符串表
 

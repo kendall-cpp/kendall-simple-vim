@@ -1,1 +1,0 @@
-pandoc -s Korlan_SDK.md -o Korlan_SDK.docx

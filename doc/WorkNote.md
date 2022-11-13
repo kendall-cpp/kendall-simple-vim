@@ -1,4 +1,9 @@
 
+软件：
+VScode
+Typora
+snipaste
+
 
 ## 网址：
 - 邮箱：https://mail-sz.amlogic.com/owa/#path=/mail
@@ -37,10 +42,9 @@
 
 
 
+
 --------------
-
 https://wiki-china.amlogic.com/ 
-
 - 汇总：https://confluence.amlogic.com/pages/viewpage.action?spaceKey=SW&title=AAA-For+New+coming+members
 - 文档：
 	- https://employees.myamlogic.com/Engineering/VLSI%20Documents/Forms/AllItems.aspx?RootFolder=%2FEngineering%2FVLSI%20Documents%2FVLSI%2FMeson%2FA1%2Fapp%2Fregister&FolderCTID=0x012000EB99DE675E1E9148A1C3238131CCDCDD&View=%7B773C7B32%2D679B%2D4F51%2DB993%2D9556C56C21C7%7D
@@ -57,6 +61,17 @@ https://wiki-china.amlogic.com/
   git config --global user.name "shengken.lin"
 
 
+  ### Git 命令
+
+```
+git config --global user.name "Yuegui He"
+git config --global user.email yuegui.he@amlogic.corp-partner.google.com
+
+
+
+git config user.name "Yuegui He"
+git config user.email yuegui.he@amlogic.com
+```
 
 ### 谷歌项目账号
 
@@ -65,11 +80,16 @@ Email		shengken.lin@amlogic.corp-partner.google.com
 Password		pHFP-eotQ-TtmZ
   
   
-## github amlogic 图床
 
-kendall-cpp/blog-01
+### 烧录过程命令
 
-token: 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
+```
+  E:\amlogic_tools\aml_dnl-win32\adnl.exe  Download u-boot.bin 0x10000
+E:\amlogic_tools\aml_dnl-win32\adnl.exe run
+E:\amlogic_tools\aml_dnl-win32\adnl.exe bl2_boot -F  u-boot.bin
+
+E:\amlogic_tools\aml_dnl-win32\adnl.exe oem "store init 1"
+```
 
 
 ## 任务记录
