@@ -305,6 +305,30 @@ ppu,region,vout,ge2dmbi通过接口调用方式直接使用ge2dmbd接口
 
 https://confluence.amlogic.com/display/SW/MBP+Memory+Usage+Framework+Design
 
+### venc 模块
+
+#### Video Encode 模块功能介绍
+
+典型的编码流程包括了输入图像的接收、图像内容的遮挡和覆盖、图像的编码、以及码流的输出等过程。
+
+VENC 模块由编码通道子模块（ VENC）和编码协议子模块（ H.264/H.265/JPEG/MJPEG）组成
+
+通道接收到图像之后，比较图像尺寸和编码通道尺寸：
+
+- 如果输入图像比编码通道尺寸大， VENC 将按照编码通道尺寸大小，调用 VGS 对源图像进行缩小，然后对缩小之后的图像进行编码。
+- 如果输入图像比编码通道尺寸小， VENC 丢弃源图像。 VENC 不支持放大输入图像编码。
+- 如果输入图像与编码通道尺寸相当， VENC 直接接受源图像，进行编码。
+
+REGION 模块支持对图像内容的遮挡和叠加。
+完成视频区域管理之后，图像被送入具体协议类型编码通道，完成视频编码，输出码流。
+
+> 启用元素流缓冲区循环模式，支持比特流异步写入和读取  
+> 减少视频编码，尤其是在多频道的情况下。
+
+### vpu 
+
+视频处理单元
+
 # refapp
 
 ```c
@@ -347,6 +371,7 @@ make
 
 ## wpa_cli连接wifi
 
+```
 wpa_cli -iwlan0 remove_network 0
 wpa_cli -iwlan0 add_network 0
 wpa_cli -iwlan0 set_network 0 ssid '"Amlogic-vpn04_5G"'
@@ -371,12 +396,20 @@ wpa_cli -iwlan0 set_network 0 proto RSN
 wpa_cli -iwlan0 enable_network 0
 wpa_cli -iwlan0 status
 wpa_cli -iwlan0 save
-
+```
 
 ## 停止 refapp
 
 ```sh
 /etc/init.d/S81ipc-refapp  stop
+```
+
+### 网线直连获取IP
+
+```sh
+dhcpcd eth0   # 自动获取 IP
+
+dhcpcd wlan0  # 自动获取 wifi 网卡 Ip
 ```
 
 ### 测试 sample
@@ -401,3 +434,7 @@ adb push Z:\workspace\C3-file\yuv420p_320x240.yuv /data
 sample_venc /data/jpgtest.JPEG  618  297 26 0  0 0 1 64
                  1               2    3   4 5  6 7 8  9
 ```
+
+#### MIPI 
+
+https://blog.csdn.net/dkmknjk/category_10960446.html
