@@ -203,6 +203,10 @@ dm_init 只是负责初始化并绑定了 udevice 和 driver，probe 探测函�
 
 # 需要研究的知识点
 
+## GPIO子系统
+
+
+
 ## 中断子系统
 
 http://www.wowotech.net/sort/irq_subsystem
@@ -242,10 +246,6 @@ https://deepinout.com/android-camera/android-camera-system-intro.html
 
 https://deepinout.com/mtk-camera-driver/introduction-to-camera-module-and-hardware-structure.html
 
-### v4l2源码
 
-https://www.cnblogs.com/silence-hust/p/4464291.html
-
-https://zhuanlan.zhihu.com/p/105548113
 
 
