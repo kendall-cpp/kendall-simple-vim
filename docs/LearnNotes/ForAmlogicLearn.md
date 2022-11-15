@@ -217,6 +217,25 @@ http://www.wowotech.net/sort/pm_subsystem
 
 ## MBP源码
 
+### 海思的 MPP
+
+> https://www.zhihu.com/column/technoteofxiaobei
+
+MPP核心的几大模块：
+
+- 负责视频输入的VI模块
+- 负责视频输出的VO模块
+- 负责视频中间处理的VPSS模块
+- 负责视频编码的VENC模块
+- 负责视频解码的VDEC模块
+- 负责图形处理的VGS模块
+- 负责音频处理的AUDIO模块
+
+
+#### MIPI 
+
+https://blog.csdn.net/dkmknjk/category_10960446.html
+
 ## camera架构
 
 https://deepinout.com/android-camera/android-camera-system-intro.html

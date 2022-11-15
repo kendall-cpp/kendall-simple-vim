@@ -305,6 +305,13 @@ ppu,region,vout,ge2dmbi通过接口调用方式直接使用ge2dmbd接口
 
 https://confluence.amlogic.com/display/SW/MBP+Memory+Usage+Framework+Design
 
+
+查看内存大小
+
+```
+cat /proc/mbp/pmz
+```
+
 ### venc 模块
 
 #### Video Encode 模块功能介绍
@@ -428,13 +435,20 @@ scp Z:\windowFile\Korlan-SDK文件\audioFile\44100.wav root@192.168.137.127:/dat
 #### sample_venc
 
 ```sh
+adb push .\sample_venc /data
+
+# 将 YUV 数据编码成 H264
 adb push Z:\workspace\C3-file\yuv420p_320x240.yuv /data
 
-# Usage : sample_venc [yuv file name] [width] [height] [type] [profile] [fps] [gop] [rcMode] [bitrate/quality] [isPowerTest]
-sample_venc /data/jpgtest.JPEG  618  297 26 0  0 0 1 64
-                 1               2    3   4 5  6 7 8  9
+width: 448
+height: 960
+encType: H.264: 96; H.265: 265; JPEG: 26;
+profile: 
+fps: 24 30 60   # 帧率： 美妙传输帧数
+gop: 25   # I帧间隔
+rcMode: 
+bitrate: 16000
+ /data/sample_venc /data/yuv420p_320x240.yuv 320 240 96 100 60 25 2 16000
+/data/sample_venc /data/encoder_test_video320x180_nv12_14.yuv 320 180 96 100 24 25 3 16000
 ```
 
-#### MIPI 
-
-https://blog.csdn.net/dkmknjk/category_10960446.html

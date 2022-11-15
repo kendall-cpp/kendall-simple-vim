@@ -1,5 +1,11 @@
 # Korlan
 
+## 实现根据 i2s 时钟检查 Enable/Disable Codec功能
+
+> https://partnerissuetracker.corp.google.com/issues/236912216
+
+> https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/247301
+
 ## fix fct-korlan 无法找到 ip 【Done】
 
 > issue: https://partnerissuetracker.corp.google.com/issues/247080714
