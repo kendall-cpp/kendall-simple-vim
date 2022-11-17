@@ -97,6 +97,8 @@ echo 0 > /proc/sys/kernel/printk
 
 ### adb 无法使用问题
 
+添加补丁： https://scgit.amlogic.com/#/c/270669/
+
 ```
 cd /mnt/fileroot/shengken.lin/workspace/c3_buildroot_refapp/output/c3_aw409_refapp_a32_release/build/linux-amlogic-5.15-dev/common_drivers
 ln -s /mnt/fileroot/shengken.lin/workspace/c3_buildroot_refapp/.repo/projects/kernel/aml-5.15/common_drivers.git .git
@@ -138,7 +140,7 @@ make
 
 ## 驱动接口
 
-> buildRoot_C3/vendor/amlogic/ipc/mbp/prebuilt/mbd/base/cppi/src/mbd_cppi_init.c
+> vendor/amlogic/ipc/mbp/prebuilt/mbd/base/cppi/src/mbd_cppi_init.c
 
 |  内核态对外接口   | 描述  |
 |  ----  | ----  |
@@ -207,6 +209,8 @@ Module Bind 的使用可分为三个步骤
   - 业务模块的 sender 是主动的，receiver 是被动的。需要注意一个 sender 的同一个 channel/instance 可以绑定多个 receiver channel，但同一个 receiver channel 只能绑定一个 sender channel
 
 ![](https://raw.githubusercontent.com/kendall-cpp/blogPic/main/blog-01/20221108095600.png)
+
+
 
 ### Audio Design
 
@@ -444,7 +448,7 @@ width: 448
 height: 960
 encType: H.264: 96; H.265: 265; JPEG: 26;
 profile: 
-fps: 24 30 60   # 帧率： 美妙传输帧数
+fps: 24 30 60   # 帧率： 每妙传输帧数
 gop: 25   # I帧间隔
 rcMode: 
 bitrate: 16000

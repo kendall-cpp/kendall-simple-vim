@@ -28,6 +28,8 @@
   - [Task: FPN 模型](#task-fpn-模型)
   - [freertos](#freertos)
     - [freertos 编译脚本分析](#freertos-编译脚本分析)
+- [AV400 NN模型测试](#av400-nn模型测试)
+  - [测试环境](#测试环境)
 
 
 ---
@@ -920,3 +922,46 @@ build_hifirtos()
 
 cp ./out_dsp/dspboot.bin.gz chrome/vendor/amlogic/spencer/prebuilt/bootloader/dspa.bin.spencer-p2
 ```
+
+
+
+# AV400 NN模型测试
+
+> https://jira.amlogic.com/browse/GH-3183
+
+```sh
+cd /mnt/fileroot/shengken.lin/workspace/a1_buildroot/bootloader/uboot-repo/bl33/v2019
+git pull amlogic amlogic-dev-2019
+
+cd /mnt/fileroot/shengken.lin/workspace/buildRoot_A1/kernel/aml-5.4
+
+分支：amlogic/amlogic-5.4-dev
+
+git pull amlogic HEAD:refs/for/amlogic-5.4-dev
+
+source setenv.sh 
+11. a5_av400_a6432_release
+
+
+
+/mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon$ git pull eureka-partner quartz-master
+```
+
+```sh
+vim hardware/aml-5.4/npu/nanoq/hal/os/linux/kernel/platform/amlogic/gc_hal_kernel_platform_amlogic.c 
+vim spencer-sdk/verisilicon/hal/os/linux/kernel/platform/amlogic/gc_hal_kernel_platform_amlogic.c 
+
+```
+
+## 测试环境
+
+- SW: buildroot a113x2   -- 对应 a5_buildroot av400 的代码
+- HW: AV400             -- 硬件
+- NPU driver: google 6.4.9 driver.    -- google 的 vsi 驱动
+
+
+- 修改 /build_ml.sh
+- 编译 ./build_ml.sh arm-amlogic spencer-p2 ./../../chrome
+
+
+

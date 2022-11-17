@@ -201,13 +201,34 @@ cat /sys/class/aml_ddr/bandwidth
 # Linux version 4.19.180-gf0c7983dcc17 (zhiqi.lai@walle01-sz) (Chromium OS 12.0_pre422132_p20210405-r4 clang version 13.0.0
 
 # 修改编译成静态库
-verisilicon/build_ml.sh
-304   BUILD_OPTION_gcdSTATIC_LINK=0  
+--- a/acuity-ovxlib-dev/build_vx.sh
++++ b/acuity-ovxlib-dev/build_vx.sh
+@@ -78,8 +78,8 @@ if [ -z $BUILD_OPTION_EGL_API_NULLWS ]; then
+ fi
+ if [ ${PRODUCT} == "gq" ] || [ ${PRODUCT} == "nq" ] ||
+    [ ${PRODUCT} == "spencer" ] || [ ${PRODUCT} == "venus" ]; then
+-  BUILD_OPTION_gcdSTATIC_LINK=1
+-  BUILD_OPTION_STATIC_LINK=1
++  BUILD_OPTION_gcdSTATIC_LINK=0
++  BUILD_OPTION_STATIC_LINK=0
+ else
+   BUILD_OPTION_gcdSTATIC_LINK=0
+   BUILD_OPTION_STATIC_LINK=0
+diff --git a/build_ml.sh b/build_ml.sh
+index e0dcec2d..4c31644c 100755
+--- a/build_ml.sh
++++ b/build_ml.sh
+@@ -301,7 +301,7 @@ elif [ ${PRODUCT} == "spencer" -o ${PRODUCT} == "venus" ]; then
+   BUILD_OPTION_USE_VSC_LITE=1
+   BUILD_OPTION_USE_VXC_BINARY=1
+   BUILD_OPTION_GPU_CONFIG="vip9000nanodi_pid0xBE"
+-  BUILD_OPTION_gcdSTATIC_LINK=1
++  BUILD_OPTION_gcdSTATIC_LINK=0
+   BUILD_OPTION_gcdPOWEROFF_TIMEOUT=5
+ else
+   BUILD_OPTION_USE_VSC_LITE=0
 
 
-vim ./acuity-ovxlib-dev/build_vx.sh
- 81   BUILD_OPTION_gcdSTATIC_LINK=0
- 82   BUILD_OPTION_STATIC_LINK=0
 
 # 回退kernel
 cd kernel

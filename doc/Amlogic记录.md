@@ -17,6 +17,19 @@ vim a1_buildroot/.repo/repo/.git/config
     email = shengken.lin@amlogic.com
 ```
 
+## A5-sync
+
+```sh
+mkdir a5_buildroot
+cd a5_buildroot
+repo init -u git://git.myamlogic.com/linux/manifest.git -b master -m default.xml --repo-url=git://git.myamlogic.com/tools/repo.git
+repo sync
+```
+
+
+
+
+
 ## C3-sync
 
 ```sh
@@ -633,6 +646,7 @@ cd kernel
 ### module NN
 
 ```sh
+# 用6.4.9分支
 cd verisilicon
 ./build_ml.sh arm64 spencer-p2 ./../../chrome
 cd -
