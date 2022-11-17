@@ -30,6 +30,7 @@
     - [freertos 编译脚本分析](#freertos-编译脚本分析)
 - [AV400 NN模型测试](#av400-nn模型测试)
   - [测试环境](#测试环境)
+    - [buildroot整理](#buildroot整理)
 
 
 ---
@@ -965,3 +966,77 @@ vim spencer-sdk/verisilicon/hal/os/linux/kernel/platform/amlogic/gc_hal_kernel_p
 
 
 
+### buildroot整理
+
+ /mnt/fileroot/shengken.lin/workspace/a5_buildroot/buildroot/configs/amlogic/npu_driver_k5.4.config 
+ 这里会配置一下全局的局部变量，给 package/amlogic 下的各个 package 用
+
+ 比如给 vim package/amlogic/npu/npu.mk  使用
+
+```sh
+ cd $(@D);./aml_buildroot.sh $(KERNEL_ARCH) $(LINUX_DIR) $(TARGET_KERNEL_CROSS)
+#  cd /mnt/fileroot/shengken.lin/workspace/a5_buildroot/output/a5_av400_a6432_release/build/npu-1.0;./aml_buildroot.sh arm64 /mnt/fileroot/shengken.lin/workspace/a5_buildroot/output/a5_av400_a6432_release/build/linux-amlogic-5.4-dev /mnt/fileroot/shengken.lin/workspace/a5_buildroot/buildroot/../toolchain/gcc/linux-x86/aarch64/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-
+```
+
+```sh
+#  /mnt/fileroot/shengken.lin/workspace/a5_buildroot/hardware/aml-4.9/npu/nanoq/aml_buildroot.sh 
+echo "====cross"=$CROSS 
+# ====cross=aarch64-linux-gnu-
+echo "====ARCH"=$ARCH 
+# ====ARCH=arm64
+# ====fstr=/mnt/fileroot/shengken.lin/workspace/a5_buildroot/buildroot/../toolchain/gcc/linux-x86/aarch64/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu
+
+export CROSS_COMPILE=aarch64-linux-gnu-
+
+export TOOLCHAIN=/mnt/fileroot/shengken.lin/workspace/a5_buildroot/buildroot/../toolchain/gcc/linux-x86/aarch64/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/bin
+
+export LIB_DIR=/mnt/fileroot/shengken.lin/workspace/a5_buildroot/buildroot/../toolchain/gcc/linux-x86/aarch64/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/libc/lib
+
+export PATH=$TOOLCHAIN:$PATH
+```
+
+makefile 中符号
+
+```sh
+“=”
+“=”是最普通的等号，然而在Makefile中确实是最容易搞错的赋值等号。使用”=”进行赋值，变量的值是整个makefile中最后被指定的值
+
+VIR_A = A
+VIR_B = $(VIR_A) B
+VIR_A = AA
+经过上面的赋值后，最后VIR_B的值是AAB，而不是AB。在make时，会把整个makefile展开，拉通决定变量的值
+
+“:=”
+”:=”就表示直接赋值，赋予当前位置的值
+
+VIR_A := A
+VIR_B := $(VIR_A) B
+VIR_A := AA
+最后，变量VIR_B的值是AB，即根据当前位置进行赋值。因此相比于”=”，”:=”才是真正意义上的直接赋值。
+
+ “?=”
+ “？=”表示如果该变量没有被赋值，则赋予等号后的值。举例：
+ VIR ?= new_value
+ 如果VIR在之前没有被赋值，那么现在VIR的值就为new_value
+VIR := old_value
+VIR ?= new_value
+这种情况下，VIR的值就是old_value
+
+“+=”
+“+=”和平时写代码的理解是一样的，表示将等号后面的值添加到前面的变量上
+```
+
+
+makefile 打印调试
+
+```sh
+# info 是不带行号的
+$(info “here is debug")
+
+# warning 是带行号的
+$(warning “here is debug")
+
+# error 停止当前makefile的编译
+$(error “here is debug")
+
+```
