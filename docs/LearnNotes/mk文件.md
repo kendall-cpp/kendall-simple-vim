@@ -1,17 +1,63 @@
-# Android.mk文件的作用
+# makefile 中符号
 
-Android.mk是Android工程管理文件，类似于编译文件的说明书，用来向编译系统描述源代码，并将源文件分组为模块（包括静态库、共享库、独立可执行文件）。Android.mk会被编译系统解析一次或多次，可以在每一个Android.mk文件中定义一个或多个模块，也可以多个模块使用同一个 .mk 文件。
 
-## Android.mk语法详解
+- "="
 
-LOCAL_PATH := $(call my-dir) 
+“=”是最普通的等号，然而在Makefile中确实是最容易搞错的赋值等号。使用”=”进行赋值，变量的值是整个makefile中最后被指定的值
 
-每个Android.mk文件必须以定义LOCAL_PATH为开始。它用于在开发tree中查找源文件。宏 my-dir 则由 Build System 提供。返回包含 Android.mk 的目录路径。
+```sh
+VIR_A = A
+VIR_B = $(VIR_A) B
+VIR_A = AA
+```
 
-include $(CLEAR_VARS) 
+经过上面的赋值后，最后VIR_B的值是AAB，而不是AB。在make时，会把整个makefile展开，拉通决定变量的值
 
-CLEAR_VARS 变量由 Build System 提供。并指向一个指定的 GNU Makefile，由它负责清理很多LOCAL_xxx.
+- “:=”
 
-例如：LOCAL_MODULE, LOCAL_SRC_FILES, LOCAL_STATIC_LIBRARIES等等。但不清理LOCAL_PATH.
+”:=”就表示直接赋值，赋予当前位置的值
 
-这个清理动作是必须的，因为所有的编译控制文件由同一个GNU Make解析和执行，其变量是全局的。所以清理后才能避免相互影响。
+```sh
+VIR_A := A
+VIR_B := $(VIR_A) B
+VIR_A := AA
+```
+
+最后，变量VIR_B的值是AB，即根据当前位置进行赋值。因此相比于”=”，”:=”才是真正意义上的直接赋值。
+
+- “?=”
+ 
+“？=”表示如果该变量没有被赋值，则赋予等号后的值。举例：
+
+```sh
+ VIR ?= new_value
+```
+
+如果VIR在之前没有被赋值，那么现在VIR的值就为new_value
+
+```sh
+VIR := old_value
+VIR ?= new_value
+```
+
+这种情况下，VIR 的值就是 old_value
+
+- “+=”
+
+“+=”和平时写代码的理解是一样的，表示将等号后面的值添加到前面的变量上
+
+# makefile 打印调试
+
+```sh
+# info 是不带行号的
+$(info “here is debug")
+
+# warning 是带行号的
+$(warning “here is debug")
+
+# error 停止当前makefile的编译
+$(error “here is debug")
+```
+
+
+
