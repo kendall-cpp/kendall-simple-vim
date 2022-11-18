@@ -169,7 +169,37 @@ issue: https://partnerissuetracker.corp.google.com/issues/246404063#comment2
 
 > https://jira.amlogic.com/browse/GH-3038 Wrong lcd panel power setting
 
+--- 
+
+# AV400 NN 模型测试
+
+## 修改 vsi 编译工具和kernel地址
+
+```sh
+参考 /mnt/fileroot/shengken.lin/workspace/a5_buildroot/hardware/aml-5.4/npu/nanoq 下面的文件
+aml_buildroot.sh makefile.linux 
+修改 build_ml.sh acuity-ovxlib-dev/build_vx.sh
+具体修改见附件问文件：nn-av400-test.patch
+
+# 编译
+cd verisilicon
+./build_ml.sh arm64 spencer-p2 ./../../chrome
+```
+
+## 修改 lib 地址
+
+```sh
+# 修改 arm64 目录
+# verisilicon/driver/khronos/libOpenVX/vipArchPerfMdl_dev
+cp arm64-v8a arm64 -r
+
+# verisilicon/compiler/所有
+cp arm64-v8a arm64 -r
+```
+
 ---
 
-# C3 Camera 【Doing】
+# C3 AW409 【Doing】
+
+MBP 理解和使用：https://confluence.amlogic.com/pages/viewpage.action?pageId=215566618
 

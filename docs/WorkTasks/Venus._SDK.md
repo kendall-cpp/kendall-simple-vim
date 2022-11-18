@@ -425,7 +425,7 @@ CONFIG_BOOTDELAY=5
 
 
 
-用 venus-p2 编译所有的 bootloader
+- 用 venus-p2 编译所有的 bootloader
 
 烧录
 

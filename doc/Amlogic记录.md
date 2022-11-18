@@ -1434,11 +1434,117 @@ start adbd
 echo ff400000.dwc2_a > /sys/kernel/config/usb_gadget/amlogic/UDC
 ```
 
+---
 
+# VSI-NN module测试
 
-----
+总结文档：https://docs.google.com/document/d/1JcOd5uLQAqdS8EtGSqvew1or_HZnDBiNP2-DE3C9zQ0/edit
 
+- 1.Get NN Driver
 
+> eg: Verisilicon_SW_Unified_Driver_6.4.9_Amlogic_20211231.tgz
+
+tar -zxf and copy 到 spencer-sdk/verisilicon，然后 cherry pick https://eureka-partner.googlesource.com/verisilicon-sdk （全部一个个cherry pick）
+
+## 在 ubuntu 上构建 NN 模型
+
+(1) Vivante_acuity_toolkit_binary_6.3.1_20211229_ubuntu18.04.tgz
+
+(2) Copy tgz to Ubuntu
+
+(3) Start convert NN
+
+(4) Build and get bin_r
+
+(5) test NN model in spencer-p2
+
+```sh
+# ~/NN/649/actool_6.3.1/acuity-toolkit-binary-6.3.1/google_test_mode/ssd_small_multiout
+# 编译 ssd_small_multiout
+$ bash step1.sh ssd_small_multiout
+$ bash step2.sh ssd_small_multiout
+# rm ssd_small_multiout_be/ -rf
+# rm ssd_small_multiout.data 
+# rm ssd_small_multiout.quantize 
+# rm ssd_small_multiout.quantize 
+# rm tflite.export.data 
+# rm ssd_small_multiout.json 
+# rm iter_0_*
+
+bash step1.sh ssd_small_multiout
+# 参考上面的doc修改
+vim ssd_small_multiout.json
+vim ssd_small_multiout_inputmeta.yml
+
+bash step2.sh ssd_small_multiout
+vim ../ssd_big_multiout/ssd_big_multiout_04_be.sh
+
+bash step3.sh ssd_small_multiout
+bash step4_inference.sh ssd_small_multiout
+```
+
+## 编译模型
+
+```sh
+# 模型测试需要退 verisilicon 回到 a3a7bfc470082aad8dd4fade29fabddb7deb850b 这个 commit
+
+# cp  /mnt/fileroot/yuegui.he/c2/amlogic_sdk/alexnet_caffe_be/build_vx.sh spencer-sdk/
+# eureka/spencer-sdk/alexnet_caffe_be
+vim makefile.linux 
+# change 114 line 
+114 TARGET_NAME = alexnet_caffe_be # 编译出来的文件名
+
+# 设置模型输出为txt文件
+# change vnn_post_process.c 46 line
+vim vnn_post_process.c 
+   46 //        vsi_nn_SaveTensorToBinary(graph, tensor, filename);
+   47         vsi_nn_SaveTensorToTextByFp32(graph, tensor, filename, "\n");
+or
+   47        vsi_nn_SaveTensorToTextByFp32( graph, tensor, filename, NULL );
+
+# 编译
+spencer-sdk/alexnet_caffe_be$ ./build_vx.sh 
+
+```
+
+## 测试模型
+
+```sh
+Z:\workspace\google_source\eureka\spencer-sdk\verisilicon> adb.exe push .\build\sdk\drivers\ /lib/
+Z:\workspace\google_source\eureka\spencer-sdk\verisilicon> adb.exe push .\galcore.ko /data
+
+rmmod galcore
+lsmod ./data/galcore.ko showArgs=1
+
+Z:\workspace\google_source\eureka\spencer-sdk> adb.exe push .\alexnet_caffe_be\data\space_shuttle.jpg /data/alexnet_caffe_be
+
+Z:\workspace\google_source\eureka\spencer-sdk> adb.exe push .\alexnet_caffe_be\alexnet_caffe_be.nb /alexnet_caffe_be
+
+Z:\workspace\google_source\eureka\spencer-sdk> adb.exe push .\alexnet_caffe_be\bin_r\alexnet_caffe_be /data/alexnet_caffe_be
+chmod /data/*
+
+# 执行测试
+/data/alexnet_caffe_be# chmod 777 *
+./alexnet_caffe_be ./alexnet_caffe_be.nb space_shuttle.jpg
+Create Neural Network: 75ms or 75138us
+Verify...
+Verify Graph: 1ms or 1242us
+Start run graph [1] times...
+Run the 1 time: 5.46ms or 5462.71us
+vxProcessGraph execution time:
+Total
+5.54ms or 5542.29us
+Average 5.54ms or 5542.29us
+--- Top5 ---
+812: 0.954590
+404: 0.024567
+895: 0.005264
+908: 0.003252
+565: 0.002954
+
+# 如果想一直跑需要声明环境变量 （venus）
+export VNN_LOOP_TIME=10000
+```
 
 # ramdisk.img 解包
 

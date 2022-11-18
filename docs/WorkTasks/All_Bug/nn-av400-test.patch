@@ -1,0 +1,81 @@
+diff --git a/acuity-ovxlib-dev/build_vx.sh b/acuity-ovxlib-dev/build_vx.sh
+index 46f2f608..10e5fd88 100755
+--- a/acuity-ovxlib-dev/build_vx.sh
++++ b/acuity-ovxlib-dev/build_vx.sh
+@@ -24,9 +24,26 @@ export VIVANTE_SDK_INC=$SDK_DIR/include
+ export VIVANTE_SDK_LIB=$SDK_DIR/drivers
+ export OVXLIB_DIR=/$AQROOT/acuity-ovxlib-dev
+ 
++TOOLCHAIN_DIR=/mnt/fileroot/shengken.lin/workspace/a5_buildroot/toolchain/gcc/linux-x86/aarch64/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu
++CROSS=${TOOLCHAIN_DIR}/bin/aarch64-linux-gnu-
++
+ case "$ARCH" in
+ 
+ arm64)
++    ARCH=arm64
++    export ARCH_TYPE=arm64
++    export CPU_TYPE=cortex-a53
++    export CPU_ARCH=armv8-a
++    export FIXED_ARCH_TYPE=arm64
++
++    #export KERNEL_DIR=/mnt/fileroot/shengken.lin/workspace/a5_buildroot/output/a5_av400_a6432_release/build/linux-amlogic-5.4-dev/
++    export CROSS_COMPILE=$CROSS
++    export TOOLCHAIN=${TOOLCHAIN_DIR}/bin
++    export LIB_DIR=${TOOLCHAIN_DIR}/lib
++    export PATH=$TOOLCHAIN:$PATH
++    ;;
++
++arm64-debug)
+     ARCH=arm64
+     export ARCH_TYPE=$ARCH
+     export CPU_TYPE=cortex-a53
+diff --git a/build_ml.sh b/build_ml.sh
+index 279f0892..f3566bd1 100755
+--- a/build_ml.sh
++++ b/build_ml.sh
+@@ -22,8 +22,25 @@ export AQARCH=$AQROOT/arch/XAQ2
+ 
+ export SDK_DIR=$AQROOT/build/sdk
+ 
++TOOLCHAIN_DIR=/mnt/fileroot/shengken.lin/workspace/a5_buildroot/toolchain/gcc/linux-x86/aarch64/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu
++CROSS=${TOOLCHAIN_DIR}/bin/aarch64-linux-gnu-
++
+ case "$ARCH" in
+ 
++arm64)
++    ARCH=arm64
++    export ARCH_TYPE=arm64
++    export CPU_TYPE=cortex-a53
++    export CPU_ARCH=armv8-a
++    export FIXED_ARCH_TYPE=arm64
++
++    export KERNEL_DIR=/mnt/fileroot/shengken.lin/workspace/a5_buildroot/output/a5_av400_a6432_release/build/linux-amlogic-5.4-dev/
++    export CROSS_COMPILE=$CROSS
++    export TOOLCHAIN=${TOOLCHAIN_DIR}/bin
++    export LIB_DIR=${TOOLCHAIN_DIR}/lib
++    export PATH=$TOOLCHAIN:$PATH
++    ;;
++
+ arm)
+     export ARCH_TYPE=$ARCH
+     export CPU_TYPE=arm920
+@@ -35,7 +52,7 @@ arm)
+     export LIB_DIR=$TOOLCHAIN/arm-none-linux-gnueabi/libc/usr/lib
+ ;;
+ 
+-arm64)
++arm64-debug)
+     ARCH=arm64
+     export ARCH_TYPE=$ARCH
+     export CPU_TYPE=cortex-a53
+@@ -379,7 +396,9 @@ export PATH=$TOOLCHAIN:$PATH
+ # build results will save to $SDK_DIR/
+ #
+ cd $AQROOT; make -j1 -f makefile.linux $BUILD_OPTIONS clean
+-cd $AQROOT; make -j1 CC=${cc_clang} HOSTCC=${cc_clang} LD=${CROSS_COMPILE}ld.lld NM=${TOOLCHAIN}/llvm-nm OBJCOPY=${TOOLCHAIN}/llvm-objcopy CLANG_TRIPLE=${CLANG_TRIPLE} CROSS_COMPILE=${CROSS_COMPILE} -f makefile.linux $BUILD_OPTIONS install 2>&1 | tee $AQROOT/linux_build.log
++cd $AQROOT; make -j64 -f makefile.linux $BUILD_OPTIONS install 2>&1 | tee $AQROOT/linux_build.log
++#cd $AQROOT; make -j1 -f makefile.linux $BUILD_OPTIONS clean
++#cd $AQROOT; make -j1 CC=${cc_clang} HOSTCC=${cc_clang} LD=${CROSS_COMPILE}ld.lld NM=${TOOLCHAIN}/llvm-nm OBJCOPY=${TOOLCHAIN}/llvm-objcopy CLANG_TRIPLE=${CLANG_TRIPLE} CROSS_COMPILE=${CROSS_COMPILE} -f makefile.linux $BUILD_OPTIONS install 2>&1 | tee $AQROOT/linux_build.log
+ 
+ ########################################################
+ # clean/build acuity-ovxlib-dev

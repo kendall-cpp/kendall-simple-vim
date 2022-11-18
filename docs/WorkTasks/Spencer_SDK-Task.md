@@ -31,6 +31,7 @@
 - [AV400 NN模型测试](#av400-nn模型测试)
   - [测试环境](#测试环境)
     - [buildroot整理](#buildroot整理)
+  - [测试](#测试)
 
 
 ---
@@ -964,11 +965,18 @@ vim spencer-sdk/verisilicon/hal/os/linux/kernel/platform/amlogic/gc_hal_kernel_p
 - 修改 /build_ml.sh
 - 编译 ./build_ml.sh arm-amlogic spencer-p2 ./../../chrome
 
+- 编译 AV400
 
+```sh
+source setenv.sh   # 11. a5_av400_a6432_release
+make show-targets | grep npu
+make npu-rebuild
+```
 
 ### buildroot整理
 
  /mnt/fileroot/shengken.lin/workspace/a5_buildroot/buildroot/configs/amlogic/npu_driver_k5.4.config 
+
  这里会配置一下全局的局部变量，给 package/amlogic 下的各个 package 用
 
  比如给 vim package/amlogic/npu/npu.mk  使用
@@ -996,5 +1004,38 @@ export PATH=$TOOLCHAIN:$PATH
 ```
 
 
+- common.target  文件
+
+```
+@$(CC) $(LDFLAGS) $(OBJECTS) -o $(TARGET_OUTPUT) $(LIBS)
+@aarch64-linux-gnu-gcc ----     -Wl,--version-script=libOpenCL30.map -Wall -shared -Wl,-soname,libOpenCL.so.3.0.0 -Wl,-z,defs ---- bin_r/gc_cl.o bin_r/gc_cl_log.o bin_r/gc_cl_command.o bin_r/gc_cl_context.o bin_r/gc_cl_device.o bin_r/gc_cl_enqueue.o bin_r/gc_cl_event.o bin_r/gc_cl_extension.o bin_r/gc_cl_api.o bin_r/gc_cl_chip.o bin_r/gc_cl_kernel.o bin_r/gc_cl_mem.o bin_r/gc_cl_platform.o bin_r/gc_cl_program.o bin_r/gc_cl_profiler.o bin_r/gc_cl_tracer.o bin_r/gc_cl_sampler.o bin_r/gc_cl_command_buffer.o bin_r/gc_cl_gl.o ----- -o ------ bin_r/libOpenCL.so.3.0.0 ----- -L /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/build/sdk/drivers -L /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/hal/user/bin_r -L /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/compiler/libVSC/bin_r -L /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/compiler/libCLC/bin_r -lGAL -lVSC -lCLC -lm -lSPIRV_viv -lrt
+
+
+makefile.linux:270: *** lsken00 --- /mnt/fileroot/shengken.lin/workspace/a5_buildroot/output/a5_av400_a6432_release/build/npu-1.0/driver/khronos/libOpenVG_3D/vg11/driver -- /mnt/fileroot/shengken.lin/workspace/a5_buildroot/output/a5_av400_a6432_release/build/npu-1.0/hal --- /mnt/fileroot/shengken.lin/workspace/a5_buildroot/output/a5_av400_a6432_release/build/npu-1.0/compiler/libVSC.  Stop
+
+makefile.linux:296: *** lsken00 --- /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/driver/khronos/libOpenVG_3D/vg11/driver -- /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/hal --- /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/compiler/libVSC.  Stop.
+```
+
+test 057b4ec654b6384de7089fdc80dd6f6fff5dc20e
+
+
+修改 arm64 目录
+
+verisilicon/driver/khronos/libOpenVX/vipArchPerfMdl_dev
+
+verisilicon/compiler
+
+---
+
+## 测试
+
+编译成功后，将 galcore.ko 文件 push 到 av400 的 /data 下
+
+```sh
+Z:\workspace\google_source\eureka\spencer-sdk\verisilicon> adb.exe push .\galcore.ko /data
+Z:\workspace\google_source\eureka\spencer-sdk\verisilicon> adb.exe push .\build\sdk\drivers\ /lib/
+
+insmod /data/galcore.ko
+```
 
 
