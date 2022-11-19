@@ -136,6 +136,16 @@ git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
 
 去这里的 colors 下下载自己想要的主题 https://github.com/flazz/vim-colorschemes
 
+推荐主题
+
+- earendel
+- gruvbox
+- mojave
+- evening
+- vimbrains
+
+
+
 ## YouCompleteMe 使用
 
 ### 安装（网络）

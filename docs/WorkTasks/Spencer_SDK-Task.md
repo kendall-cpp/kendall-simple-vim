@@ -31,7 +31,9 @@
 - [AV400 NN模型测试](#av400-nn模型测试)
   - [测试环境](#测试环境)
     - [buildroot整理](#buildroot整理)
+    - [修改 arm64 目录](#修改-arm64-目录)
   - [测试](#测试)
+    - [修改代码-使得 vsi 能够在 av400 中测试](#修改代码-使得-vsi-能够在-av400-中测试)
 
 
 ---
@@ -949,17 +951,14 @@ source setenv.sh
 /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon$ git pull eureka-partner quartz-master
 ```
 
-```sh
-vim hardware/aml-5.4/npu/nanoq/hal/os/linux/kernel/platform/amlogic/gc_hal_kernel_platform_amlogic.c 
-vim spencer-sdk/verisilicon/hal/os/linux/kernel/platform/amlogic/gc_hal_kernel_platform_amlogic.c 
 
-```
 
 ## 测试环境
 
 - SW: buildroot a113x2   -- 对应 a5_buildroot av400 的代码
 - HW: AV400             -- 硬件
 - NPU driver: google 6.4.9 driver.    -- google 的 vsi 驱动
+- dts: ./arm64/boot/dts/amlogic/a5_a113x2_av400_1g.dts
 
 
 - 修改 /build_ml.sh
@@ -1004,22 +1003,11 @@ export PATH=$TOOLCHAIN:$PATH
 ```
 
 
-- common.target  文件
 
-```
-@$(CC) $(LDFLAGS) $(OBJECTS) -o $(TARGET_OUTPUT) $(LIBS)
-@aarch64-linux-gnu-gcc ----     -Wl,--version-script=libOpenCL30.map -Wall -shared -Wl,-soname,libOpenCL.so.3.0.0 -Wl,-z,defs ---- bin_r/gc_cl.o bin_r/gc_cl_log.o bin_r/gc_cl_command.o bin_r/gc_cl_context.o bin_r/gc_cl_device.o bin_r/gc_cl_enqueue.o bin_r/gc_cl_event.o bin_r/gc_cl_extension.o bin_r/gc_cl_api.o bin_r/gc_cl_chip.o bin_r/gc_cl_kernel.o bin_r/gc_cl_mem.o bin_r/gc_cl_platform.o bin_r/gc_cl_program.o bin_r/gc_cl_profiler.o bin_r/gc_cl_tracer.o bin_r/gc_cl_sampler.o bin_r/gc_cl_command_buffer.o bin_r/gc_cl_gl.o ----- -o ------ bin_r/libOpenCL.so.3.0.0 ----- -L /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/build/sdk/drivers -L /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/hal/user/bin_r -L /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/compiler/libVSC/bin_r -L /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/compiler/libCLC/bin_r -lGAL -lVSC -lCLC -lm -lSPIRV_viv -lrt
+- test commit: 057b4ec654b6384de7089fdc80dd6f6fff5dc20e
 
 
-makefile.linux:270: *** lsken00 --- /mnt/fileroot/shengken.lin/workspace/a5_buildroot/output/a5_av400_a6432_release/build/npu-1.0/driver/khronos/libOpenVG_3D/vg11/driver -- /mnt/fileroot/shengken.lin/workspace/a5_buildroot/output/a5_av400_a6432_release/build/npu-1.0/hal --- /mnt/fileroot/shengken.lin/workspace/a5_buildroot/output/a5_av400_a6432_release/build/npu-1.0/compiler/libVSC.  Stop
-
-makefile.linux:296: *** lsken00 --- /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/driver/khronos/libOpenVG_3D/vg11/driver -- /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/hal --- /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/compiler/libVSC.  Stop.
-```
-
-test 057b4ec654b6384de7089fdc80dd6f6fff5dc20e
-
-
-修改 arm64 目录
+### 修改 arm64 目录
 
 verisilicon/driver/khronos/libOpenVX/vipArchPerfMdl_dev
 
@@ -1036,6 +1024,126 @@ Z:\workspace\google_source\eureka\spencer-sdk\verisilicon> adb.exe push .\galcor
 Z:\workspace\google_source\eureka\spencer-sdk\verisilicon> adb.exe push .\build\sdk\drivers\ /lib/
 
 insmod /data/galcore.ko
+```
+
+----
+
+###  修改代码-使得 vsi 能够在 av400 中测试
+
+```sh
+vim hardware/aml-5.4/npu/nanoq/hal/os/linux/kernel/platform/amlogic/gc_hal_kernel_platform_amlogic.c 
+vim spencer-sdk/verisilicon/hal/os/linux/kernel/platform/amlogic/gc_hal_kernel_platform_amlogic.c 
+```
+
+```c
+// hardware/aml-5.4/npu/nanoq/hal/os/linux/kernel/platform/amlogic/gc_hal_kernel_platform_amlogic.c 
+static const struct of_device_id galcore_dev_match[] = {
+  {
+    .compatible = "amlogic, galcore"  // 去 arm64/boot/dts/amlogic/a5_a113x2_av400_1g.dts 这里找到对应节点下的 compatible 值
+  },
+    { },
+};
+int gckPLATFORM_Init(struct platform_driver *pdrv, gcsPLATFORM **platform)
+{       
+    pdrv->driver.of_match_table = galcore_dev_match; //从上面复制下来
+    *platform = &default_platform; 
+    return 0; 
+} 
+
+//找到 dts
+	galcore {
+		compatible = "amlogic, galcore";
+		dev_name = "galcore";
+		status = "okay";
+		clocks = <&clkc CLKID_CTS_NNA_AXI_CLK>,
+		      <&clkc CLKID_CTS_NNA_CORE_CLK>;
+		clock-names = "cts_vipnanoq_axi_clk_composite",
+		      "cts_vipnanoq_core_clk_composite";
+		interrupts = <0 128 4>;
+		interrupt-names = "galcore";
+		power-domains = <&pwrdm PDID_A5_NNA>;
+		reg = <0x0 0xfdb00000 0x0 0x40000
+		      0x0 0xf7000000 0x0 0x200000
+		      0x0 0xfe00c040 0x0 0x4
+		      0x0 0xfe00c044 0x0 0x4
+		      0x0 0xfe00c034 0x0 0x4
+		      0X0 0xfe000220 0X0 0x4>;
+		reg-names = "NN_REG","NN_SRAM","NN_MEM0",
+		      "NN_MEM1","NN_RESET","NN_CLK";
+		nn_power_version = <6>;   // 这个是最重要的
+	};
+···
+
+- 编译报错
+
+```sh
+/mnt/fileroot/shengken.lin/workspace/a5_buildroot/toolchain/gcc/linux-x86/aarch64/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/7.3.1/../../../../aarch64-linux-gnu/bin/ld: cannot find -lVSC
+/mnt/fileroot/shengken.lin/workspace/a5_buildroot/toolchain/gcc/linux-x86/aarch64/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/7.3.1/../../../../aarch64-linux-gnu/bin/ld: cannot find -lCLC
+/mnt/fileroot/shengken.lin/workspace/a5_buildroot/toolchain/gcc/linux-x86/aarch64/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/7.3.1/../../../../aarch64-linux-gnu/bin/ld: cannot find -lSPIRV_viv
+collect2: error: ld returned 1 exit status
+```
+
+- 解决
+
+```sh
+driver/khronos/libOpenVX/vipArchPerfMdl_dev$ cp arm64-v8a arm64 -r
+compiler$ cp libCLC/arm64-v8a ./libCLC/arm64 -r
+compiler$ cp libGLSLC/arm64-v8a ./libGLSLC/arm64 -r
+compiler$ cp libSPIRV/arm64-v8a ./libSPIRV/arm64 -r
+compiler$ cp libVSC_Lite/arm64-v8a libVSC_Lite/arm64 -r
+
+
+ls ./build/sdk/drivers
+galcore.ko  libGAL.so  libOpenCL.so  libOpenCL.so.1  libOpenCL.so.3
+
+cp ./build/sdk/drivers/libGAL* ./driver/khronos/libCL30//bin_r/
+```
+
+- error
+
+```
+# insmod /data/galcore.ko
+[   46.289751@1]  galcore fdb00000.galcore: DMA mask not set
+[   46.289855@1]  reg resource 2, start: fe00c040,end: 4261462083
+[   46.290460@1]  reg resource 3, start: fe00c044,end: 4261462087
+[   46.291185@1]  reg resource 4, start: fe00c034,end: 4261462071
+[   46.291912@1]  reg resource NN_CLK, start: fe000220,end: fe000223
+[   46.292669@1]  npu_version: 6
+[   46.293154@1]  galcore irq number is 19.
+[   46.293555@1]  get axi_sram_size fail from dts
+[   46.294081@1]  Galcore version 6.4.9.436021
+[   46.295637@1]  Unable to handle kernel paging request at virtual address 00000000fdb00080
+[   46.295959@1]  Mem abort info:
+[   46.296338@1]    ESR = 0x96000006
+[   46.296751@1]    EC = 0x25: DABT (current EL), IL = 32 bits
+[   46.297472@1]    SET = 0, FnV = 0
+[   46.297855@1]    EA = 0, S1PTW = 0
+[   46.298277@1]  Data abort info:
+[   46.298667@1]    ISV = 0, ISS = 0x00000006
+[   46.299176@1]    CM = 0, WnR = 0
+[   46.299579@1]  user pgtable: 4k pages, 39-bit VAs, pgdp=000000003c82c000
+[   46.300412@1]  [00000000fdb00080] pgd=000000003a92b003, pud=000000003a92b003, pmd=0000000000000000
+[   46.301547@1]  Internal error: Oops: 96000006 [#1] PREEMPT SMP
+[   46.302257@1]  Modules linked in: galcore(O+) ntfs3 sdio_bt(O) vlsicomm(O) aml_sdio(O) snd_aloop optee_armtz(O) optee(O) [last unloaded: galcore]
+[   46.303880@1]  PC : ffffffd5105fae3c, PFN:***** V
+[   46.304463@1]  SP : ffffffc02025b5a0, PFN:3abcd V
+[   46.305048@1]  FAR : ffffffc02025aff0, PFN:3dfc3 V
+[   46.305644@1]  R0  : ffffffd5105fb0a4, PFN:***** V
+[   46.306240@1]  R1  : ffffff8aba936000, PFN:3a936 L
+[   46.306836@1]  R3  : ffffff8aba936000, PFN:3a936 L
+[   46.307432@1]  R5  : ffffffc02025b4e8, PFN:3abcd V
+[   46.308027@1]  R14 : ffffffd5110cc280, PFN:***** V
+[   46.308623@1]  R16 : ffffffd5105fb078, PFN:***** V
+[   46.309219@1]  R20 : ffffff8abc807880, PFN:3c807 L
+[   46.309815@1]  R21 : ffffff8aba6f3400, PFN:3a6f3 L
+[   46.310411@1]  R29 : ffffffc02025b5a0, PFN:3abcd V
+[   46.311006@1]  R30 : ffffffd5105fb0a4, PFN:***** V
+[   46.311605@1]  CPU: 1 PID: 1264 Comm: insmod Tainted: G           O      5.4.210-07226-g93c5ffd4ba28 #2
+[   46.312772@1]  Hardware name: Amlogic (DT)
+[   46.313283@1]  pstate: 60400009 (nZCv daif +PAN -UAO)
+[   46.313918@1]  pc : clk_core_prepare+0x1c/0x258
+[   46.314475@1]  lr : clk_prepare+0x2c/0x58
+[   46.314972@1]  sp : ffffffc02025b5a0
 ```
 
 

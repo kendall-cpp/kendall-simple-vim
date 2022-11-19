@@ -27,9 +27,6 @@ repo sync
 ```
 
 
-
-
-
 ## C3-sync
 
 ```sh
