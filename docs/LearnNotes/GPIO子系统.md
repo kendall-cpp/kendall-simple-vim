@@ -14,45 +14,68 @@
 
 linux 内核中提供了 GPIO 子系统，我们在驱动代码中使用 GPIO 子系统的 API 函数去控制 GPIO
 
-> 参考：https://www.cnblogs.com/liangliangge/category/1485102.html
 
-## GPIO 常用 API 总结
+> 深入理解 gpio: http://www.wowotech.net/sort/gpio_subsystem
 
-```c
-static inline bool gpio_is_valid(int number)
-{
-    return number >= 0 && number < ARCH_NR_GPIOS;
-}
-```
+# pinctrl 子系统概念
 
-函数 gpio_is_valid() 用来判断获取到的 gpio 号是否是有效的，只有有效的 gpio 号，才能向内核中进行申请使用，因此，当我们从设备树的设备节点获取到 gpio 号，可以使用该函数进行判断是否有效。
+一个设备（URAT)有两个状态，默认和休眠状态，默认状态时将对应引脚设置为 这个 URAT 功能，休眠状态时将引脚设置为普通的 GPIO 功能。
 
 ```c
-extern int gpio_request(unsigned gpio, const char *label);
-extern void gpio_free(unsigned gpio);
-```
+device {
+	pinctrl-names = "default", "sleep";   //1.设置设备的两种状态
+	pinctrl-0 = <&state_0_node_a>; //设置0状态的名字是 default，对应的引脚在 pinctrl-0里面定义
+	//这个节点描述在这个状态下要怎么做，这些节点位于 pinctrl 节点里面
+	pinctrl-1 = <&state_1_node_a>; //第1状态的名字是sleep，对应的引脚在pinctrl-1里定义
+};
 
-上面这两个函数用来向系统中申请 GPIO 和释放已经申请的 GPIO，在函数 gpio_request() 中传入的形参中，gpio 为 IO 号，label 为向系统中申请 GPIO使 用的标签，类似于 GPIO 的名称。
-
-struct gpio 用来描述一个需要配置的GPIO
-
-```c
-struct gpio {
-	unsigned    gpio;
-	unsigned long   flags;
-	const char  *label;
+picontroller {
+	state_0_node_a {
+		function = "urat0";
+		groups = "u0rxtx", "u0rtscts";
+	}
+	state_1_node_a {
+		function = "gpio";
+		groups = "u0rxtx", "u0rtscts";
+	}
 };
 ```
-https://www.bilibili.com/video/BV1w4411B7a4?p=114&vd_source=8578a3631d2dfb10ea828e367b923283
- 
-https://www.51cto.com/article/689477.html
 
-http://www.wowotech.net/sort/gpio_subsystem
+- 当这个设备属于 default 状态时，会使用 state_0_node_a 这个节点来配置引脚。也就是会把这一组引脚配置成 urat0 功能
+- 当这个设备属于 sleep 状态时，会使用 state_1_node_a 这个节点来配置引脚，也就是会把这一组引脚配置成 gpio 功能
 
-https://www.freesion.com/article/89301077969/
+所以 state_0_node_a 和 state_1_node_a 的作用就是复用引脚的功能，在内核中这类的引脚成为 pin multiplexing node .
 
-https://zhuanlan.zhihu.com/p/400309588
+
+```c
+device {
+	pinctrl-names = "default", "sleep";   //1.设置设备的两种状态
+	pinctrl-0 = <&state_0_node_a>; 
+	//这个节点描述在这个状态下要怎么做，这些节点位于 pinctrl 节点里面
+	pinctrl-1 = <&state_1_node_a>; 
+};
+
+picontroller {
+	state_0_node_a {
+		function = "urat0";
+		groups = "u0rxtx", "u0rtscts";
+	}
+	state_1_node_a {
+		groups = "u0rxtx", "u0rtscts";
+		output-high;
+	}
+};
+```
+
+- 当这个设备属于 default 状态时，会使用 state_0_node_a 这个节点来配置引脚。也就是会把这一组引脚配置成 urat0 功能
+- 当这个设备属于 sleep 状态时，会使用 state_1_node_a 这个节点来配置引脚，也就是会把这一组引脚配置成 输出高电平
+
+这类节点成为 pin configuration node 。
+
 
 https://www.cnblogs.com/zhuangquan/p/12750736.html
 
-https://www.cnblogs.com/liangliangge/p/11891789.html
+
+
+
+

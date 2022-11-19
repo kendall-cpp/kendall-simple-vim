@@ -1,3 +1,48 @@
+# kernel Kconfig defconfig .config
+
+**一般情况：**
+
+- defconfig 一般在arch/arm64/configs/目录下，是一个没有展开的内核配置，需要配合Kconfig展开成 .config
+
+- 从 defconfig 到 `.config` 不是简单的复制操作，而是 make ARCH=arm64 defconfig
+
+- `.confg` 也不是直接拷贝成 defconfig ，而是使用 make ARCH=arm64 savedefconfig
+
+正确使用和保存deconfig的流程：
+- 1. 要修改在 arch/arm/configs 下的文件 xxx_defconfig （芯片官网） （编译时会去读取 Kconfig 找到 xxx_defconfig)
+- 2. make ARCH=arm64 xxx_defconfig 会生成 `.config` 文件
+- 3. make ARCH=arm64 menuconfig 修改配置后保存（设置 `.config`）
+- 4. make ARCH=arm64 savedefconfig 生成 defconfg 文件
+- 5. cp defconfig arch/arm/configs/xxx_defconfig 保存
+这样保存的 defconfig 文件，配置最小化，且日后能恢复成 `.config` 。
+
+> make menuconfig ---- 从Kconfig中读出配置菜单 保存到 `.config`
+
+## 以添加一个具体驱动为例
+
+- 找到 arch/arm64/configs/aplex_cmi_aa158_defconfig（这个可以从芯片官网下载）
+- 修改配置
+- 编译配置
+
+make aplex_cmi_aa158_defconfig ARCH=arm64
+
+> 就是把 arch/arm64/configs/aplex_cmi_aa158_defconfig 里面的配置写到了 Linux 代码目录下的 .config 文件里面。
+
+- 执行 make menuconfig ARCH=arm64 , make menuconfig 操作就是把 .config 文件里面的配置读取出来，然后显示在一个可视化的界面里，在可视化界面修改后会重新写会到 .config 中。
+
+- 保存配置 make savedefconfig  ARCH=arm64
+
+> 执行完毕之后，会生成一个保存的配置文件为： `defconfig`
+
+- 再把 defconfig 文件配置覆盖先前的配置
+
+cp  defconfig  arch/arm64/configs/aplex_cmi_aa158_defconfig -rf 
+
+## Amlogic config
+
+和普通的defconfig不同，Amlogic 的 defconfig 是没有隐藏依赖的，直接 make menuconfig 生成 .config , 然后和 defconfig 对比，然后拷贝即可，使用 build_kernel 编译的时候会去 diff defconfig 和 `.config` 。
+
+---
 
 # 设备树
 
@@ -161,3 +206,105 @@ struct book gift = {
 ```
 
 正像数组一样，跟在一个指定初始化项目之后的常规初始化项目为跟在指定成员后的成员提供了初始值。
+
+---
+
+# makefile 中符号
+
+
+- "="
+
+“=”是最普通的等号，然而在Makefile中确实是最容易搞错的赋值等号。使用”=”进行赋值，变量的值是整个makefile中最后被指定的值
+
+```sh
+VIR_A = A
+VIR_B = $(VIR_A) B
+VIR_A = AA
+```
+
+经过上面的赋值后，最后VIR_B的值是AAB，而不是AB。在make时，会把整个makefile展开，拉通决定变量的值
+
+- “:=”
+
+”:=”就表示直接赋值，赋予当前位置的值
+
+```sh
+VIR_A := A
+VIR_B := $(VIR_A) B
+VIR_A := AA
+```
+
+最后，变量VIR_B的值是AB，即根据当前位置进行赋值。因此相比于”=”，”:=”才是真正意义上的直接赋值。
+
+- “?=”
+ 
+“？=”表示如果该变量没有被赋值，则赋予等号后的值。举例：
+
+```sh
+ VIR ?= new_value
+```
+
+如果VIR在之前没有被赋值，那么现在VIR的值就为new_value
+
+```sh
+VIR := old_value
+VIR ?= new_value
+```
+
+这种情况下，VIR 的值就是 old_value
+
+- “+=”
+
+“+=”和平时写代码的理解是一样的，表示将等号后面的值添加到前面的变量上
+
+## makefile 打印调试
+
+```sh
+# info 是不带行号的
+$(info “here is debug")
+
+# warning 是带行号的
+$(warning “here is debug")
+
+# error 停止当前makefile的编译
+$(error “here is debug")
+```
+
+---
+
+# freertos
+
+## xTaskCreat相关函数的使用
+
+```c
+ BaseType_t xTaskCreate(    TaskFunction_t pvTaskCode,  //指向任务函数，一般是个死循环
+                            const char * const pcName,  //任务函数的别名
+                            configSTACK_DEPTH_TYPE usStackDepth, //任务栈大小
+                            void *pvParameters,					// 任务函数的参数，不需要传参设为NULL即可
+                            UBaseType_t uxPriority, 			// 任务优先级
+                            TaskHandle_t *pxCreatedTask			//实际是一个指针，也是任务的任务堆栈
+                          );
+
+
+```
+
+示例：
+
+```c
+xTaskCreate(vStart_AudioTask, "audio_task", configMINIMAL_STACK_SIZE * 2, NULL, 3, NULL);
+```
+
+
+- 其他函数参考
+
+> https://www.w3cschool.cn/freertoschm/freertoschm-strb2u7m.html
+
+## vTaskStartScheduler
+
+**FreeRTOS是通过vTaskStartScheduler()函数来启动运行的**
+
+1. xTaskCreate() 创建空闲任务，其优先级为最低：0；
+2. 关闭中断功能，使能任务调度功能；
+3. 宏定义portCONFIGURE_TIMER_FOR_RUN_TIME_STATS：系统运行时间统计初始化；
+4. 设置系统节拍定时器，并启动第1个任务；
+5. 返回空闲任务句柄。
