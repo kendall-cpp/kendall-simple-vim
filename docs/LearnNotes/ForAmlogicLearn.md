@@ -116,19 +116,16 @@ dm_init 只是负责初始化并绑定了 udevice 和 driver，probe 探测函�
 
 # 需要研究的知识点
 
+- Linux应用开发完全手册
+- 嵌入式linux系统开发技术详解
+- 精通LINUX设备驱动程序开发
+- 深入Linux内核架构
+- 深入Linux设备驱动程序内核机制
+- 奔跑吧linux
+- linux情景分析
 
 
-## 中断子系统
 
-http://www.wowotech.net/sort/irq_subsystem
-
-## 电源管理子系统
-
-http://www.wowotech.net/sort/pm_subsystem
-
-## USB 子系统
-
-### USB控制器
 
 ## MBP源码
 
@@ -146,16 +143,6 @@ MPP核心的几大模块：
 - 负责图形处理的VGS模块
 - 负责音频处理的AUDIO模块
 
-
-#### MIPI 
-
-https://blog.csdn.net/dkmknjk/category_10960446.html
-
-## camera架构
-
-https://deepinout.com/android-camera/android-camera-system-intro.html
-
-https://deepinout.com/mtk-camera-driver/introduction-to-camera-module-and-hardware-structure.html
 
 
 

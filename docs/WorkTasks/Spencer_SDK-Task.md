@@ -960,6 +960,10 @@ source setenv.sh
 - NPU driver: google 6.4.9 driver.    -- google 的 vsi 驱动
 - dts: ./arm64/boot/dts/amlogic/a5_a113x2_av400_1g.dts
 
+- output下kernel的路径
+
+output/a5_av400_a6432_release/build/linux-amlogic-5.4-dev
+
 
 - 修改 /build_ml.sh
 - 编译 ./build_ml.sh arm-amlogic spencer-p2 ./../../chrome
@@ -970,6 +974,7 @@ source setenv.sh
 source setenv.sh   # 11. a5_av400_a6432_release
 make show-targets | grep npu
 make npu-rebuild
+make linux-rebuild
 ```
 
 ### buildroot整理
@@ -1050,7 +1055,7 @@ int gckPLATFORM_Init(struct platform_driver *pdrv, gcsPLATFORM **platform)
     return 0; 
 } 
 
-//找到 dts
+//找到 dts kernel/aml-5.4/arch/arm64/boot/dts/amlogic/meson-a5.dtsi
 	galcore {
 		compatible = "amlogic, galcore";
 		dev_name = "galcore";
@@ -1101,49 +1106,21 @@ cp ./build/sdk/drivers/libGAL* ./driver/khronos/libCL30//bin_r/
 
 - error
 
-```
+```sh
 # insmod /data/galcore.ko
-[   46.289751@1]  galcore fdb00000.galcore: DMA mask not set
-[   46.289855@1]  reg resource 2, start: fe00c040,end: 4261462083
-[   46.290460@1]  reg resource 3, start: fe00c044,end: 4261462087
-[   46.291185@1]  reg resource 4, start: fe00c034,end: 4261462071
-[   46.291912@1]  reg resource NN_CLK, start: fe000220,end: fe000223
-[   46.292669@1]  npu_version: 6
-[   46.293154@1]  galcore irq number is 19.
-[   46.293555@1]  get axi_sram_size fail from dts
-[   46.294081@1]  Galcore version 6.4.9.436021
-[   46.295637@1]  Unable to handle kernel paging request at virtual address 00000000fdb00080
-[   46.295959@1]  Mem abort info:
-[   46.296338@1]    ESR = 0x96000006
-[   46.296751@1]    EC = 0x25: DABT (current EL), IL = 32 bits
-[   46.297472@1]    SET = 0, FnV = 0
-[   46.297855@1]    EA = 0, S1PTW = 0
-[   46.298277@1]  Data abort info:
-[   46.298667@1]    ISV = 0, ISS = 0x00000006
-[   46.299176@1]    CM = 0, WnR = 0
-[   46.299579@1]  user pgtable: 4k pages, 39-bit VAs, pgdp=000000003c82c000
-[   46.300412@1]  [00000000fdb00080] pgd=000000003a92b003, pud=000000003a92b003, pmd=0000000000000000
-[   46.301547@1]  Internal error: Oops: 96000006 [#1] PREEMPT SMP
-[   46.302257@1]  Modules linked in: galcore(O+) ntfs3 sdio_bt(O) vlsicomm(O) aml_sdio(O) snd_aloop optee_armtz(O) optee(O) [last unloaded: galcore]
-[   46.303880@1]  PC : ffffffd5105fae3c, PFN:***** V
-[   46.304463@1]  SP : ffffffc02025b5a0, PFN:3abcd V
-[   46.305048@1]  FAR : ffffffc02025aff0, PFN:3dfc3 V
-[   46.305644@1]  R0  : ffffffd5105fb0a4, PFN:***** V
-[   46.306240@1]  R1  : ffffff8aba936000, PFN:3a936 L
-[   46.306836@1]  R3  : ffffff8aba936000, PFN:3a936 L
-[   46.307432@1]  R5  : ffffffc02025b4e8, PFN:3abcd V
-[   46.308027@1]  R14 : ffffffd5110cc280, PFN:***** V
-[   46.308623@1]  R16 : ffffffd5105fb078, PFN:***** V
-[   46.309219@1]  R20 : ffffff8abc807880, PFN:3c807 L
-[   46.309815@1]  R21 : ffffff8aba6f3400, PFN:3a6f3 L
-[   46.310411@1]  R29 : ffffffc02025b5a0, PFN:3abcd V
-[   46.311006@1]  R30 : ffffffd5105fb0a4, PFN:***** V
-[   46.311605@1]  CPU: 1 PID: 1264 Comm: insmod Tainted: G           O      5.4.210-07226-g93c5ffd4ba28 #2
-[   46.312772@1]  Hardware name: Amlogic (DT)
-[   46.313283@1]  pstate: 60400009 (nZCv daif +PAN -UAO)
-[   46.313918@1]  pc : clk_core_prepare+0x1c/0x258
-[   46.314475@1]  lr : clk_prepare+0x2c/0x58
-[   46.314972@1]  sp : ffffffc02025b5a0
+
+# error
+[   85.209473@0]  Unable to handle kernel read from unreadable memory at virtual address ffffff82bd534b30
+[  113.222304@2]  Unable to handle kernel read from unreadable memory at virtual address ffffff8a7d534b30
 ```
+
+
+- fix
+
+```c
+npu_core_clk = devm_clk_get(&pdev->dev, "cts_vipnanoq_core_clk_composite");
+//clk_put(npu_core_clk);
+```
+
 
 

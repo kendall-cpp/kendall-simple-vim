@@ -1511,7 +1511,7 @@ Z:\workspace\google_source\eureka\spencer-sdk\verisilicon> adb.exe push .\build\
 Z:\workspace\google_source\eureka\spencer-sdk\verisilicon> adb.exe push .\galcore.ko /data
 
 rmmod galcore
-lsmod ./data/galcore.ko showArgs=1
+insmod ./data/galcore.ko showArgs=1
 
 Z:\workspace\google_source\eureka\spencer-sdk> adb.exe push .\alexnet_caffe_be\data\space_shuttle.jpg /data/alexnet_caffe_be
 

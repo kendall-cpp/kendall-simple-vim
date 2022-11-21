@@ -173,6 +173,8 @@ issue: https://partnerissuetracker.corp.google.com/issues/246404063#comment2
 
 # AV400 NN 模型测试
 
+> https://jira.amlogic.com/browse/GH-3183
+
 ## 修改 vsi 编译工具和kernel地址
 
 ```sh
@@ -186,15 +188,33 @@ cd verisilicon
 ./build_ml.sh arm64 spencer-p2 ./../../chrome
 ```
 
-## 修改 lib 地址
+## 修改 lib errro
+
+- error log
 
 ```sh
-# 修改 arm64 目录
-# verisilicon/driver/khronos/libOpenVX/vipArchPerfMdl_dev
-cp arm64-v8a arm64 -r
+- 编译报错
 
-# verisilicon/compiler/所有
-cp arm64-v8a arm64 -r
+```sh
+/mnt/fileroot/shengken.lin/workspace/a5_buildroot/toolchain/gcc/linux-x86/aarch64/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/7.3.1/../../../../aarch64-linux-gnu/bin/ld: cannot find -lVSC
+/mnt/fileroot/shengken.lin/workspace/a5_buildroot/toolchain/gcc/linux-x86/aarch64/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/7.3.1/../../../../aarch64-linux-gnu/bin/ld: cannot find -lCLC
+/mnt/fileroot/shengken.lin/workspace/a5_buildroot/toolchain/gcc/linux-x86/aarch64/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/7.3.1/../../../../aarch64-linux-gnu/bin/ld: cannot find -lSPIRV_viv
+collect2: error: ld returned 1 exit status
+```
+
+- fix
+
+```sh
+driver/khronos/libOpenVX/vipArchPerfMdl_dev$ cp arm64-v8a arm64 -r
+compiler$ cp libCLC/arm64-v8a ./libCLC/arm64 -r
+compiler$ cp libGLSLC/arm64-v8a ./libGLSLC/arm64 -r
+compiler$ cp libSPIRV/arm64-v8a ./libSPIRV/arm64 -r
+compiler$ cp libVSC_Lite/arm64-v8a libVSC_Lite/arm64 -r
+
+ls ./build/sdk/drivers
+galcore.ko  libGAL.so  libOpenCL.so  libOpenCL.so.1  libOpenCL.so.3
+
+cp ./build/sdk/drivers/libGAL* ./driver/khronos/libCL30//bin_r/
 ```
 
 ---
