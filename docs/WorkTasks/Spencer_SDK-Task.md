@@ -34,6 +34,7 @@
     - [修改 arm64 目录](#修改-arm64-目录)
   - [测试](#测试)
     - [修改代码-使得 vsi 能够在 av400 中测试](#修改代码-使得-vsi-能够在-av400-中测试)
+    - [编译NN模型时出错](#编译nn模型时出错)
 
 
 ---
@@ -1123,4 +1124,24 @@ npu_core_clk = devm_clk_get(&pdev->dev, "cts_vipnanoq_core_clk_composite");
 ```
 
 
+### 编译NN模型时出错
 
+```sh
+build/sdk/drivers/libCLC.so, not found (try using -rpath or -rpath-link)
+sdk/drivers/libArchModelSw.so, not found (try using -rpath or -rpath-link)
+```
+
+- 解决方法
+
+```sh
+@$(CC) $(PFLAGS) $(OBJECTS) -o $(TARGET_OUTPUT) $(LIBS)
+@/mnt/fileroot/shengken.lin/workspace/a5_buildroot/toolchain/gcc/linux-x86/aarch64/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-gcc -----   -mtune=cortex-a53 -march=armv8-a -Wl,-rpath-link /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/build/sdk/drivers ----  bin_r/vnn_pre_process.o  bin_r/vnn_.o  bin_r/main.o  bin_r/vnn_post_process.o --- -o --- bin_r/tflite  ---- -L/mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/build/sdk/drivers -l OpenVX -l OpenVXU -l CLC -l VSC -lGAL //mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/acuity-ovxlib-dev/lib/libjpeg.a -L//mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/acuity-ovxlib-dev/lib -l ovxlib -L/mnt/fileroot/shengken.lin/workspace/a5_buildroot/toolchain/gcc/linux-x86/aarch64/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/lib/mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/build/sdk/drivers -lm -lrt  ".  Stop.
+```
+
+LIBS += -L$(VIVANTE_SDK_LIB) -l OpenVX -l OpenVXU -l CLC -l VSC -lGAL 
+LIBS += -L$(VIVANTE_SDK_LIB) -l OpenVX -l OpenVXU -l VSC -l CLC -l ArchModelSw -lGAL 
+
+/mnt/fileroot/shengken.lin/workspace/a5_buildroot/toolchain/gcc/linux-x86/aarch64/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-gcc   -mtune=cortex-a53 -march=armv8-a -Wl,-rpath-link /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/build/sdk/drivers   bin_r/vnn_pre_process.o  bin_r/vnn_.o  bin_r/main.o  bin_r/vnn_post_process.o  -o  bin_r/tflite   -L/mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/build/sdk/drivers -l OpenVX -l OpenVXU -l CLC -l VSC -lGAL //mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/acuity-ovxlib-dev/lib/libjpeg.a -L//mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/acuity-ovxlib-dev/lib -l ovxlib -L/mnt/fileroot/shengken.lin/workspace/a5_buildroot/toolchain/gcc/linux-x86/aarch64/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/lib -lm -lrt
+
+
+/mnt/fileroot/shengken.lin/workspace/a5_buildroot/toolchain/gcc/linux-x86/aarch64/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-gcc   -mtune=cortex-a53 -march=armv8-a   bin_r/vnn_pre_process.o  bin_r/vnn_.o  bin_r/main.o  bin_r/vnn_post_process.o  -o  bin_r/tflite   -L/mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/acuity-ovxlib-dev/lib/ -ljpeg -L/mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/build/sdk/drivers  -l ovxlib  -l OpenVX -l OpenVXU  -l CLC -l VSC  -lGAL 

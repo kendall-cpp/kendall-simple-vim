@@ -1480,6 +1480,17 @@ bash step3.sh ssd_small_multiout
 bash step4_inference.sh ssd_small_multiout
 ```
 
+### 选择对应的板子
+
+```sh
+# /mnt/fileroot/shengken.lin/workspace/a5_buildroot/hardware/aml-4.9/npu/nanoq/hal/inc/gc_vsim_configs.h  
+# 参考上面的文件修改这个值
+# ssd_big_multiout/ssd_big_multiout_04_be.sh
+--optimize VIPNANOQI_PID0XA1
+```
+
+
+
 ## 编译模型
 
 ```sh
