@@ -1466,7 +1466,7 @@ $ bash step2.sh ssd_small_multiout
 # rm ssd_small_multiout.quantize 
 # rm tflite.export.data 
 # rm ssd_small_multiout.json 
-# rm iter_0_*
+# rm iter_0_output*
 
 bash step1.sh ssd_small_multiout
 # 参考上面的doc修改
@@ -1487,6 +1487,13 @@ bash step4_inference.sh ssd_small_multiout
 # 参考上面的文件修改这个值
 # ssd_big_multiout/ssd_big_multiout_04_be.sh
 --optimize VIPNANOQI_PID0XA1
+--optimize VIP9000NANOS_PID0X1000000E  #av400
+```
+
+### linux打开当前文件夹
+
+```sh
+nautilus .
 ```
 
 
@@ -1494,7 +1501,7 @@ bash step4_inference.sh ssd_small_multiout
 ## 编译模型
 
 ```sh
-# 模型测试需要退 verisilicon 回到 a3a7bfc470082aad8dd4fade29fabddb7deb850b 这个 commit
+# 6.4.2 模型测试需要退 verisilicon 回到 a3a7bfc470082aad8dd4fade29fabddb7deb850b 这个 commit
 
 # cp  /mnt/fileroot/yuegui.he/c2/amlogic_sdk/alexnet_caffe_be/build_vx.sh spencer-sdk/
 # eureka/spencer-sdk/alexnet_caffe_be
@@ -1514,6 +1521,22 @@ or
 spencer-sdk/alexnet_caffe_be$ ./build_vx.sh 
 
 ```
+
+## push 相关库
+
+```
+adb.exe push .\build\sdk\drivers\. /lib/
+
+# 如果push到其他目录需要设置环境变量
+export LD_LIBRARY_PATH=/data:$LD_LIBRARY_PATH  # spencer
+
+# 声明环境变量 打印更多信息
+export VIV_VX_DEBUG_LEVEL=1
+
+
+```
+
+
 
 ## 测试模型
 
@@ -1589,7 +1612,7 @@ find . |cpio -ov -H newc | lzop -9 > ../ramdisk.img
 cp ramdisk.img /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/out/target/product/gq/boot_unpack/
 ```
 
-# google 其他事项
+# 其他事项
 
 ## 在 Ubuntu/PC 下进入开发板
 
@@ -1645,7 +1668,11 @@ CONFIG_BOOTDELAY=5
 CONFIG_ENABLE_UBOOT_CLI=y
 ```
 
+## 查看二进制依赖
 
+```
+ readelf -d libOpenVX.so | grep NEEDED
+```
 
 
 

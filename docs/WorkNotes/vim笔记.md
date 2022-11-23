@@ -138,12 +138,8 @@ git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
 
 推荐主题
 
-- mod8
 - gruvbox
-- mojave
 - evening
-- vimbrains
-
 
 
 ## YouCompleteMe 使用

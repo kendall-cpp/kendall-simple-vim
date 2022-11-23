@@ -34,7 +34,9 @@
     - [修改 arm64 目录](#修改-arm64-目录)
   - [测试](#测试)
     - [修改代码-使得 vsi 能够在 av400 中测试](#修改代码-使得-vsi-能够在-av400-中测试)
-    - [编译NN模型时出错](#编译nn模型时出错)
+    - [insmod galcore时 error](#insmod-galcore时-error)
+      - [fix](#fix)
+    - [编译 case 模型时出错](#编译-case-模型时出错)
 
 
 ---
@@ -1092,12 +1094,14 @@ collect2: error: ld returned 1 exit status
 - 解决
 
 ```sh
-driver/khronos/libOpenVX/vipArchPerfMdl_dev$ cp arm64-v8a arm64 -r
-compiler$ cp libCLC/arm64-v8a ./libCLC/arm64 -r
-compiler$ cp libGLSLC/arm64-v8a ./libGLSLC/arm64 -r
-compiler$ cp libSPIRV/arm64-v8a ./libSPIRV/arm64 -r
-compiler$ cp libVSC_Lite/arm64-v8a libVSC_Lite/arm64 -r
+# driver/khronos/libOpenVX/vipArchPerfMdl_dev$ cp arm64-v8a arm64 -r
+# compiler$ cp libCLC/arm64-v8a ./libCLC/arm64 -r
+# compiler$ cp libGLSLC/arm64-v8a ./libGLSLC/arm64 -r
+# compiler$ cp libSPIRV/arm64-v8a ./libSPIRV/arm64 -r
+# compiler$ cp libVSC_Lite/arm64-v8a libVSC_Lite/arm64 -r
 
+driver/khronos/libOpenVX/vipArchPerfMdl_dev$ cp arm-gnueabihf arm64 -rf
+verisilicon/compiler$ cp arm-gnueabihf arm64 -rf
 
 ls ./build/sdk/drivers
 galcore.ko  libGAL.so  libOpenCL.so  libOpenCL.so.1  libOpenCL.so.3
@@ -1105,7 +1109,7 @@ galcore.ko  libGAL.so  libOpenCL.so  libOpenCL.so.1  libOpenCL.so.3
 cp ./build/sdk/drivers/libGAL* ./driver/khronos/libCL30//bin_r/
 ```
 
-- error
+### insmod galcore时 error
 
 ```sh
 # insmod /data/galcore.ko
@@ -1116,7 +1120,7 @@ cp ./build/sdk/drivers/libGAL* ./driver/khronos/libCL30//bin_r/
 ```
 
 
-- fix
+#### fix
 
 ```c
 npu_core_clk = devm_clk_get(&pdev->dev, "cts_vipnanoq_core_clk_composite");
@@ -1124,7 +1128,7 @@ npu_core_clk = devm_clk_get(&pdev->dev, "cts_vipnanoq_core_clk_composite");
 ```
 
 
-### 编译NN模型时出错
+### 编译 case 模型时出错
 
 ```sh
 build/sdk/drivers/libCLC.so, not found (try using -rpath or -rpath-link)
@@ -1135,13 +1139,38 @@ sdk/drivers/libArchModelSw.so, not found (try using -rpath or -rpath-link)
 
 ```sh
 @$(CC) $(PFLAGS) $(OBJECTS) -o $(TARGET_OUTPUT) $(LIBS)
-@/mnt/fileroot/shengken.lin/workspace/a5_buildroot/toolchain/gcc/linux-x86/aarch64/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-gcc -----   -mtune=cortex-a53 -march=armv8-a -Wl,-rpath-link /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/build/sdk/drivers ----  bin_r/vnn_pre_process.o  bin_r/vnn_.o  bin_r/main.o  bin_r/vnn_post_process.o --- -o --- bin_r/tflite  ---- -L/mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/build/sdk/drivers -l OpenVX -l OpenVXU -l CLC -l VSC -lGAL //mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/acuity-ovxlib-dev/lib/libjpeg.a -L//mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/acuity-ovxlib-dev/lib -l ovxlib -L/mnt/fileroot/shengken.lin/workspace/a5_buildroot/toolchain/gcc/linux-x86/aarch64/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/lib/mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/build/sdk/drivers -lm -lrt  ".  Stop.
+@/mnt/fileroot/shengken.lin/workspace/a5_buildroot/toolchain/gcc/linux-x86/aarch64/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-gcc -----   -mtune=cortex-a53 -march=armv8-a -Wl,-rpath-link /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/build/sdk/drivers ----  bin_r/vnn_pre_process.o  bin_r/vnn_.o  bin_r/main.o  bin_r/vnn_post_process.o --- -o --- bin_r/tflite  ---- -L/mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/build/sdk/drivers -l OpenVX -l OpenVXU -l CLC -l VSC -lGAL //mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/acuity-ovxlib-dev/lib/libjpeg.a -L//mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/acuity-ovxlib-dev/lib -l ovxlib -L/mnt/fileroot/shengken.lin/workspace/a5_buildroot/toolchain/gcc/linux-x86/aarch64/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/lib  -lm -lrt  ".  Stop.
 ```
 
-LIBS += -L$(VIVANTE_SDK_LIB) -l OpenVX -l OpenVXU -l CLC -l VSC -lGAL 
-LIBS += -L$(VIVANTE_SDK_LIB) -l OpenVX -l OpenVXU -l VSC -l CLC -l ArchModelSw -lGAL 
 
-/mnt/fileroot/shengken.lin/workspace/a5_buildroot/toolchain/gcc/linux-x86/aarch64/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-gcc   -mtune=cortex-a53 -march=armv8-a -Wl,-rpath-link /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/build/sdk/drivers   bin_r/vnn_pre_process.o  bin_r/vnn_.o  bin_r/main.o  bin_r/vnn_post_process.o  -o  bin_r/tflite   -L/mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/build/sdk/drivers -l OpenVX -l OpenVXU -l CLC -l VSC -lGAL //mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/acuity-ovxlib-dev/lib/libjpeg.a -L//mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/acuity-ovxlib-dev/lib -l ovxlib -L/mnt/fileroot/shengken.lin/workspace/a5_buildroot/toolchain/gcc/linux-x86/aarch64/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/lib -lm -lrt
+- 修改 LDLIBS += -l ArchModelSw
+
+> driver/khronos/libOpenVX/driver/src/makefile.linux
+
+```sh
++LDLIBS += -L $(AQROOT)/driver/khronos/libOpenVX/vipArchPerfMdl_dev/aarch64-linux-gnu/
+ LDLIBS += -l ArchModelSw
+```
 
 
-/mnt/fileroot/shengken.lin/workspace/a5_buildroot/toolchain/gcc/linux-x86/aarch64/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-gcc   -mtune=cortex-a53 -march=armv8-a   bin_r/vnn_pre_process.o  bin_r/vnn_.o  bin_r/main.o  bin_r/vnn_post_process.o  -o  bin_r/tflite   -L/mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/acuity-ovxlib-dev/lib/ -ljpeg -L/mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/build/sdk/drivers  -l ovxlib  -l OpenVX -l OpenVXU  -l CLC -l VSC  -lGAL 
+build/sdk/driver 下的 so 是复制的
+
+```sh
+# verisilicon/compiler/libVSC/makefile.linux  
+cp -f arm64/libVSC.so /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/build/sdk/drivers 
+```
+
+- 重新编译 FPN_be
+
+```sh
+$pegasus_bin export ovxlib \
+	--model ${NAME}.json \
+	--model-data ${NAME}.data \
+	--model-quantize ${NAME}.quantize \
+	--with-input-meta ${NAME}_inputmeta.yml \
+	--dtype quantized \
+    --optimize VIPNANOQI_PID0XA1 \     #### VIP9000NANOS_PID0X1000000E
+    --viv-sdk /home/amlogic/VeriSilicon/VivanteIDE5.6.0/cmdtools/ \
+    --output-path ${NAME}/ \
+    --pack-nbg-unify
+```
