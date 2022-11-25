@@ -99,6 +99,12 @@ cd abd
 mma PARTNER_BUILD=true
 ```
 
+# flush-ubifs_7_0(adb push ota.zip) 线程 CPU 过高导致 tdm 无法运行
+
+> https://partnerissuetracker.corp.google.com/issues/241159916
+
+
+
 -----
 
 # Elaine
@@ -181,14 +187,18 @@ issue: https://partnerissuetracker.corp.google.com/issues/246404063#comment2
 参考 /mnt/fileroot/shengken.lin/workspace/a5_buildroot/hardware/aml-5.4/npu/nanoq 下面的文件
 aml_buildroot.sh makefile.linux 
 修改 build_ml.sh acuity-ovxlib-dev/build_vx.sh
-具体修改见附件问文件：nn-av400-test.patch
+具体修改见附件文件：`NN-av400-arm64-gc_hal_kernel_platform_amlogic.patch`
+```
 
-# 编译
+## 编译 verisilicon
+
+```sh
 cd verisilicon
 ./build_ml.sh arm64 spencer-p2 ./../../chrome
 ```
 
-## 修改 lib errro
+
+### 关于 so lib Errro
 
 - error log
 
@@ -200,22 +210,75 @@ cd verisilicon
 /mnt/fileroot/shengken.lin/workspace/a5_buildroot/toolchain/gcc/linux-x86/aarch64/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/7.3.1/../../../../aarch64-linux-gnu/bin/ld: cannot find -lCLC
 /mnt/fileroot/shengken.lin/workspace/a5_buildroot/toolchain/gcc/linux-x86/aarch64/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/7.3.1/../../../../aarch64-linux-gnu/bin/ld: cannot find -lSPIRV_viv
 collect2: error: ld returned 1 exit status
+
+build/sdk/drivers/libCLC.so, not found (try using -rpath or -rpath-link)
+sdk/drivers/libArchModelSw.so, not found (try using -rpath or -rpath-link)
 ```
 
-- fix
+- 这是由于编译器 FIXED_ARCH_TYPE 没选择对
+
+修改编译脚本 `build_aml.sh` 和 `acuity-ovxlib-dev/build_vx.sh `
 
 ```sh
-driver/khronos/libOpenVX/vipArchPerfMdl_dev$ cp arm64-v8a arm64 -r
-compiler$ cp libCLC/arm64-v8a ./libCLC/arm64 -r
-compiler$ cp libGLSLC/arm64-v8a ./libGLSLC/arm64 -r
-compiler$ cp libSPIRV/arm64-v8a ./libSPIRV/arm64 -r
-compiler$ cp libVSC_Lite/arm64-v8a libVSC_Lite/arm64 -r
-
-ls ./build/sdk/drivers
-galcore.ko  libGAL.so  libOpenCL.so  libOpenCL.so.1  libOpenCL.so.3
-
-cp ./build/sdk/drivers/libGAL* ./driver/khronos/libCL30//bin_r/
+export FIXED_ARCH_TYPE=aarch64-gnu
 ```
+
+> 具体参考
+
+- 另外 build/sdk/driver 下的 so 是直接 compiler 下复制的过去的，见如下代码调试
+
+```sh
+# verisilicon/compiler/libVSC/makefile.linux  
+284 cpfile:                       
+285     @-cp -f $(FIXED_ARCH_TYPE)/$(TARGET_NAME) $(INSTALL_DIR)   
+# cp -f arm64/libVSC.so /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/build/sdk/drivers 
+```
+
+
+### insmod galcore时 error
+
+```sh
+# insmod /data/galcore.ko
+
+# error
+[   85.209473@0]  Unable to handle kernel read from unreadable memory at virtual address ffffff82bd534b30
+[  113.222304@2]  Unable to handle kernel read from unreadable memory at virtual address ffffff8a7d534b30
+```
+
+如果出现类似上面的 error，就是 clock 没正确释放
+
+```c
+npu_core_clk = devm_clk_get(&pdev->dev, "cts_vipnanoq_core_clk_composite");
+//clk_put(npu_core_clk);
+static void put_clock(struct platform_device *pdev)
+// 具体见 av400-NN.patch
+```
+
+> **以上修改的 patch: NN-av400-arm64-arm32-all.patch**
+
+## 测试 case 错误
+
+> **模型测试文件系统32位于64位对不上问题**
+
+- error log
+
+```sh
+/data/FPN # ./tflite ./FPN_be.nb ./iter_0_input_0_out0_1_640_640_3.tensor
+/bin/sh: ./tflite: not found
+```
+
+> 因此需要将 verisilicon 和 case 都编译成 arm32 位的
+
+
+### 最终编译 verisilicon-arm32 
+
+编译 ddk
+
+```sh
+./build_ml.sh arm32 spencer-p2 ./../../chrome
+```
+
+> **还未解决**，需要找 google 重新编译
 
 ---
 

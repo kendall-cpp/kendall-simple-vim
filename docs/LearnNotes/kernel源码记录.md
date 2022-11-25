@@ -272,6 +272,64 @@ $(error “here is debug")
 
 ---
 
+# Buildroot记录
+
+## buildroot-output目录
+
+- build 包含所有的源文件，包括 Buildroot 所需主机工具和选择的包，这个目录包含所有 模块源码。
+
+- host 主机端编译需要的工具包括交叉编译工具
+
+- images 含压缩好的根文件系统镜像文件
+
+- staging 这个目录类似根文件系统的目录结构，包含编译生成的所有头文件和库，以及其他开发文件，不过他们没有裁剪，比较庞大，不适用于目标文件系统。
+
+- target 包含完整的根文件系统，对比 `staging/`，它没有开发文件，不包含头文件，二进制文件也经过 strip 处理。
+
+进行编译时，Buildroot 根据配置，会自动从网络获取相关的软件包，包括一些第三方库，插件，实用工具等，放在`dl/`目录。
+
+软件包会解压在 `output/build/` 目录下，然后进行编译
+
+如果要修改软件包的源码，可以通过打补丁的方式进行修改，补丁集中放在 `package/` 目录，Buildroot 会在解压软件包时为其打上相应的补丁
+
+### output一些配置文件
+
+1. 直接删除源码包，例如我们要重新编译 openssh，那么可以直接删除 `output/build/openssh-vesion` 文件夹，那么当你 make 的时候，他就会自动从 dl 文件夹下，解压缩源码包，并重新安装
+
+2. 也是以 openssh 为例子，如果我们不想重新编译，只想重新配置，也就是 `./configure` ，
+
+- 我们可以直接删除 output/build/openssh-version 目录下的 `.stamp_configured`
+- 如果你只是想重新安装可以删除 `.stamp_target_install`
+- 重新 make 可以删除 `.stamp_built`
+
+```sh
+.stamp_configured,          此文件表示已经配置过
+.stamp_downloaded,          此文件表示源码已经下载过，没有此文件会重新下载
+.stamp_patched,             此文件表示已经打过补丁
+.stamp_extracted            此文件表示已经解压过
+.stamp_builted              此文件表示源码已经编译
+.stamp_target_installed     此文件表示软件已经安装过
+```
+
+注意：修改代码后（不是修改 output 目录下的），不用运行 linux-dirclean，只用 linux-rebuild 即可。Buildroot 会 rsync 将你外部的源码同步到 output/build 并且编译，并且不会删掉上次编译的缓存文件，自动只编译你修改的部分。
+
+## config 和 mk 文件
+
+比如
+
+ /mnt/fileroot/shengken.lin/workspace/a5_buildroot/buildroot/configs/amlogic/npu_driver_k5.4.config 
+
+ 这里会配置全局的局部变量，给 package/amlogic 下的各个 package 用
+
+ 比如给 `vim package/amlogic/npu/npu.mk`  使用
+
+```sh
+ cd $(@D);./aml_buildroot.sh $(KERNEL_ARCH) $(LINUX_DIR) $(TARGET_KERNEL_CROSS)
+#  cd /mnt/fileroot/shengken.lin/workspace/a5_buildroot/output/a5_av400_a6432_release/build/npu-1.0;./aml_buildroot.sh arm64 /mnt/fileroot/shengken.lin/workspace/a5_buildroot/output/a5_av400_a6432_release/build/linux-amlogic-5.4-dev /mnt/fileroot/shengken.lin/workspace/a5_buildroot/buildroot/../toolchain/gcc/linux-x86/aarch64/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-
+```
+
+---
+
 # freertos
 
 ## xTaskCreat相关函数的使用

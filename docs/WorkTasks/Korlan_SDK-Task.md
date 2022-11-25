@@ -15,6 +15,7 @@
   - [GPIO测试](#gpio测试)
     - [Set internal default pull up/down/disabled](#set-internal-default-pull-updowndisabled)
     - [GPIO event](#gpio-event)
+- [flush-ubifs_7_0(adb push ota.zip) 线程 CPU 过高导致 tdm 无法运行](#flush-ubifs_7_0adb-push-otazip-线程-cpu-过高导致-tdm-无法运行)
 
 
 -------------
@@ -195,8 +196,6 @@ https://docs.google.com/document/d/16La7BkKlu0sbsQgruMoemk4QlBBqF8B7xHdMM74hXLk/
 ## 添加 dhcp fct-korlan
 
 > https://partnerissuetracker.corp.google.com/issues/247080714
-
-
 
 
 ###  kernel 打开个 CONFIG_USB_RTL8152
@@ -422,9 +421,6 @@ cat /sys/kernel/debug/pinctrl/fe000000.bus:pinctrl@0400-pinctrl-meson/pinconf-pi
 和 kernel/arch/arm64/boot/dts/amlogic/meson-a1.dtsi 对比
 ```
 
-
-
-
 #### Set internal default pull up/down/disabled
 
 
@@ -434,6 +430,10 @@ cat /sys/kernel/debug/pinctrl/fe000000.bus:pinctrl@0400-pinctrl-meson/pinconf-pi
 
 
 ----
+
+## flush-ubifs_7_0(adb push ota.zip) 线程 CPU 过高导致 tdm 无法运行
+
+> https://partnerissuetracker.corp.google.com/issues/241159916
 
 
 

@@ -283,7 +283,7 @@ aplay -Dhw:0,0 /data/the-stars-48k-60s.wav
 参考：[Sync chrome and korlan](https://confluence.amlogic.com/display/SW/Sync+chrome+and+korlan)
 
 ```sh
-cd eureka && mkdir amlogic_sdk
+cd eureka && mkdir korlan-sdk
 repo init -u https://eureka-partner.googlesource.com/amlogic/manifest -b korlan-master -m combined_sdk.xml
 repo sync
 ```
@@ -325,7 +325,7 @@ cd -
 - 整体编译
 
 ```sh
-cd amlogic_sdk
+cd korlan-sdk
 ./sdk/build_scripts/build_all.sh ../chrome korlan
 ```
 
@@ -336,6 +336,9 @@ cd amlogic_sdk
 ./sdk/build_scripts/build_all.sh ../chrome/ korlan --kernel=5.15
  
 # chrome ota 包
+source build/envsetup.sh 
+lunch  # 选korlan-eng
+PARTNER_BUILD=true BOARD_NAME=korlan-b1 make -j30 otapackage  
 PARTNER_BUILD=true BOARD_NAME=korlan-p2 make -j30 otapackage KERNEL_VERSION=5.15
 
 # 编译
@@ -372,7 +375,7 @@ cd kernel-5.15
 bash unpack_boot.sh ./boot.img ./boot_out unpack_boot 
 
 # 解压出ramdisk.img.xz 之后，拷贝
-cp ramdisk.img.xz /mnt/fileroot/shengken.lin/workspace/google_source/eureka/amlogic_sdk/build-sign-pdk/korlan/ramdisk.img
+cp ramdisk.img.xz /mnt/fileroot/shengken.lin/workspace/google_source/eureka/korlan-sdk/build-sign-pdk/korlan/ramdisk.img
 ```
 
 ## 签名korlan
@@ -388,8 +391,8 @@ mkdir -p ./korlan/korlan-b1
 # 打包 ramdisk
 # find . |cpio -ov -H newc | xz -9  --check=crc32  > ../ramdisk.img
 # ramdisk 需要拷贝到 ./korlan/ramdisk.img
-# /mnt/fileroot/shengken.lin/workspace/google_source/eureka/amlogic_sdk/build-sign-pdk
-./sign-kernel.sh ../../amlogic_sdk korlan/korlan-b1 b1 ../../chrome
+# /mnt/fileroot/shengken.lin/workspace/google_source/eureka/korlan-sdk/build-sign-pdk
+./sign-kernel.sh ../../korlan-sdk korlan/korlan-b1 b1 ../../chrome
 ```
 
 ## 烧录korlan
@@ -457,22 +460,24 @@ PARTNER_BUILD=true BOARD_NAME=korlan-b1 make -j30 otapackage
 # 如果出现 java version 问题，就是 out/host/linux-x86 的 dumpkey.jar  signapk.jar 替换过了，需要替换回repo sync 时候的 linux-x86 就可以了
 ```
 
-### 5.15 korlan-ota
+### 5.15 korlan5.15-ota
 
 ```sh
-
 # kernel 5.15 chrome ota
 # kernel-5.15分支切换成 korlan-master-5.15
 # kernel-5.15/common_drivers分支切换成 korlan-master-5.15-drivers
-# 整体编译 ./sdk/build_scripts/build_all.sh ../chrome/ korlan --kernel=5.15
+# 整体编译 
+./sdk/build_scripts/build_all.sh ../chrome/ korlan --kernel=5.15
 # 再执行 PARTNER_BUILD=true BOARD_NAME=korlan-p2 make -j30 otapackage KERNEL_VERSION=5.15  这一步
 cd chrome
 source build/envsetup.sh 
-rm out/target/product/korlan/recovery/root -rf
-rm out/target/product/korlan/root -rf
-rm out/target/product/korlan/obj/PACKAGING -rf
+# rm out/target/product/korlan/recovery/root -rf
+# rm out/target/product/korlan/root -rf
+# rm out/target/product/korlan/obj/PACKAGING -rf
+# 删掉之后需要重新编译 korlan
 PARTNER_BUILD=true BOARD_NAME=korlan-b1 make -j30 otapackage KERNEL_VERSION=5.15
-# error1 chromium/chromecast_gn.mk:68: *** Unknown PRODUCT_SETUP_NAME: "" Must be one of {chromecast, tv, audio}.  Stop.
+# error1 
+# chromium/chromecast_gn.mk:68: *** Unknown PRODUCT_SETUP_NAME: "" Must be one of {chromecast, tv, audio}.  Stop.
 # 解决 --全部编译 korlan-eng
 source build/envsetup.sh 
 lunch   # 选korlan-eng
@@ -480,7 +485,7 @@ lunch   # 选korlan-eng
 # error 2 
 # clang++-14: error: invalid linker name in argument '-fuse-ld=lld'
 # [build/core/shared_library.mk:101: out/target/product/korlan/obj/SHARED_LIBRARIES/libz_intermediates/LINKED/libz.so] Error 1
-# 解决：添加 /prebuilt/toolchain/aarch64/bin 到环境变量中
+# 解决：添加 chrome/prebuilt/toolchain/aarch64/bin 到环境变量中
 
 # error 3
 #*** No rule to make target 'vendor/amlogic/korlan/prebuilt/kernel_5.15/kernel.korlan.gz-dtb.korlan-proto', needed by 'out/target/product/korlan/root/lib/kernel/kernel-korlan-proto'.  Stop.
@@ -491,6 +496,13 @@ cd kernel-5.15
 ./build_kernel.sh korlan-b4 ../../chrome
 # 再打 ota 包
 # 编译出来的ota包在：out/target/product/korlan/korlan-ota-eng.shengken.lin.zip
+
+#error 4
+# make: *** [chromium/src/chromecast/internal/chromecast.mk:524: out/target/product/korlan/obj/FAKE/chromium-iot-dock_intermediates/chromium-iot-dock-timestamp-phony] Error 1
+# 这个原因是 chromium 没有 gclient sync
+cd ./chromium
+gclient setdep --deps-file=src/DEPS --var=fuchsia_sdk_bucket=fuchsia
+gclient sync
 ```
 
 
@@ -1525,15 +1537,13 @@ spencer-sdk/alexnet_caffe_be$ ./build_vx.sh
 ## push 相关库
 
 ```
-adb.exe push .\build\sdk\drivers\. /lib/
+adb.exe push .\build\sdk\drivers\. /usr/lib/
 
 # 如果push到其他目录需要设置环境变量
 export LD_LIBRARY_PATH=/data:$LD_LIBRARY_PATH  # spencer
 
 # 声明环境变量 打印更多信息
 export VIV_VX_DEBUG_LEVEL=1
-
-
 ```
 
 

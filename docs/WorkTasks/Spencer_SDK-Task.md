@@ -30,13 +30,15 @@
     - [freertos 编译脚本分析](#freertos-编译脚本分析)
 - [AV400 NN模型测试](#av400-nn模型测试)
   - [测试环境](#测试环境)
-    - [buildroot整理](#buildroot整理)
-    - [修改 arm64 目录](#修改-arm64-目录)
-  - [测试](#测试)
+  - [buildroot整理](#buildroot整理)
+  - [开始测试](#开始测试)
     - [修改代码-使得 vsi 能够在 av400 中测试](#修改代码-使得-vsi-能够在-av400-中测试)
     - [insmod galcore时 error](#insmod-galcore时-error)
       - [fix](#fix)
     - [编译 case 模型时出错](#编译-case-模型时出错)
+    - [重新编译 FPN_be 修改 optimize](#重新编译-fpn_be-修改-optimize)
+    - [测试 case 错误](#测试-case-错误)
+      - [解决](#解决)
 
 
 ---
@@ -949,11 +951,8 @@ git pull amlogic HEAD:refs/for/amlogic-5.4-dev
 source setenv.sh 
 11. a5_av400_a6432_release
 
-
-
 /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon$ git pull eureka-partner quartz-master
 ```
-
 
 
 ## 测试环境
@@ -980,56 +979,47 @@ make npu-rebuild
 make linux-rebuild
 ```
 
-### buildroot整理
+## buildroot整理
 
  /mnt/fileroot/shengken.lin/workspace/a5_buildroot/buildroot/configs/amlogic/npu_driver_k5.4.config 
 
  这里会配置一下全局的局部变量，给 package/amlogic 下的各个 package 用
 
- 比如给 vim package/amlogic/npu/npu.mk  使用
+ 比如给 `vim package/amlogic/npu/npu.mk`  使用
 
 ```sh
  cd $(@D);./aml_buildroot.sh $(KERNEL_ARCH) $(LINUX_DIR) $(TARGET_KERNEL_CROSS)
 #  cd /mnt/fileroot/shengken.lin/workspace/a5_buildroot/output/a5_av400_a6432_release/build/npu-1.0;./aml_buildroot.sh arm64 /mnt/fileroot/shengken.lin/workspace/a5_buildroot/output/a5_av400_a6432_release/build/linux-amlogic-5.4-dev /mnt/fileroot/shengken.lin/workspace/a5_buildroot/buildroot/../toolchain/gcc/linux-x86/aarch64/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-
 ```
 
-```sh
-#  /mnt/fileroot/shengken.lin/workspace/a5_buildroot/hardware/aml-4.9/npu/nanoq/aml_buildroot.sh 
-echo "====cross"=$CROSS 
-# ====cross=aarch64-linux-gnu-
-echo "====ARCH"=$ARCH 
-# ====ARCH=arm64
-# ====fstr=/mnt/fileroot/shengken.lin/workspace/a5_buildroot/buildroot/../toolchain/gcc/linux-x86/aarch64/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu
-
-export CROSS_COMPILE=aarch64-linux-gnu-
-
-export TOOLCHAIN=/mnt/fileroot/shengken.lin/workspace/a5_buildroot/buildroot/../toolchain/gcc/linux-x86/aarch64/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/bin
-
-export LIB_DIR=/mnt/fileroot/shengken.lin/workspace/a5_buildroot/buildroot/../toolchain/gcc/linux-x86/aarch64/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/libc/lib
-
-export PATH=$TOOLCHAIN:$PATH
-```
-
-
 
 - test commit: 057b4ec654b6384de7089fdc80dd6f6fff5dc20e
 
 
-### 修改 arm64 目录
+- 预编译的包目录
 
+```
 verisilicon/driver/khronos/libOpenVX/vipArchPerfMdl_dev
 
 verisilicon/compiler
+```
 
----
+- 编译出来的 so 目录
 
-## 测试
+```sh
+verisilicon/build/sdk/drivers 
+```
+
+
+## 开始测试
+
+push 动态库和 ko 文件
 
 编译成功后，将 galcore.ko 文件 push 到 av400 的 /data 下
 
 ```sh
 Z:\workspace\google_source\eureka\spencer-sdk\verisilicon> adb.exe push .\galcore.ko /data
-Z:\workspace\google_source\eureka\spencer-sdk\verisilicon> adb.exe push .\build\sdk\drivers\ /lib/
+Z:\workspace\google_source\eureka\spencer-sdk\verisilicon> adb.exe push .\build\sdk\drivers\ /usr/lib/
 
 insmod /data/galcore.ko
 ```
@@ -1080,34 +1070,8 @@ int gckPLATFORM_Init(struct platform_driver *pdrv, gcsPLATFORM **platform)
 		      "NN_MEM1","NN_RESET","NN_CLK";
 		nn_power_version = <6>;   // 这个是最重要的
 	};
-···
-
-- 编译报错
-
-```sh
-/mnt/fileroot/shengken.lin/workspace/a5_buildroot/toolchain/gcc/linux-x86/aarch64/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/7.3.1/../../../../aarch64-linux-gnu/bin/ld: cannot find -lVSC
-/mnt/fileroot/shengken.lin/workspace/a5_buildroot/toolchain/gcc/linux-x86/aarch64/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/7.3.1/../../../../aarch64-linux-gnu/bin/ld: cannot find -lCLC
-/mnt/fileroot/shengken.lin/workspace/a5_buildroot/toolchain/gcc/linux-x86/aarch64/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/7.3.1/../../../../aarch64-linux-gnu/bin/ld: cannot find -lSPIRV_viv
-collect2: error: ld returned 1 exit status
 ```
 
-- 解决
-
-```sh
-# driver/khronos/libOpenVX/vipArchPerfMdl_dev$ cp arm64-v8a arm64 -r
-# compiler$ cp libCLC/arm64-v8a ./libCLC/arm64 -r
-# compiler$ cp libGLSLC/arm64-v8a ./libGLSLC/arm64 -r
-# compiler$ cp libSPIRV/arm64-v8a ./libSPIRV/arm64 -r
-# compiler$ cp libVSC_Lite/arm64-v8a libVSC_Lite/arm64 -r
-
-driver/khronos/libOpenVX/vipArchPerfMdl_dev$ cp arm-gnueabihf arm64 -rf
-verisilicon/compiler$ cp arm-gnueabihf arm64 -rf
-
-ls ./build/sdk/drivers
-galcore.ko  libGAL.so  libOpenCL.so  libOpenCL.so.1  libOpenCL.so.3
-
-cp ./build/sdk/drivers/libGAL* ./driver/khronos/libCL30//bin_r/
-```
 
 ### insmod galcore时 error
 
@@ -1135,32 +1099,21 @@ build/sdk/drivers/libCLC.so, not found (try using -rpath or -rpath-link)
 sdk/drivers/libArchModelSw.so, not found (try using -rpath or -rpath-link)
 ```
 
-- 解决方法
+- 解决
 
 ```sh
-@$(CC) $(PFLAGS) $(OBJECTS) -o $(TARGET_OUTPUT) $(LIBS)
-@/mnt/fileroot/shengken.lin/workspace/a5_buildroot/toolchain/gcc/linux-x86/aarch64/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-gcc -----   -mtune=cortex-a53 -march=armv8-a -Wl,-rpath-link /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/build/sdk/drivers ----  bin_r/vnn_pre_process.o  bin_r/vnn_.o  bin_r/main.o  bin_r/vnn_post_process.o --- -o --- bin_r/tflite  ---- -L/mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/build/sdk/drivers -l OpenVX -l OpenVXU -l CLC -l VSC -lGAL //mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/acuity-ovxlib-dev/lib/libjpeg.a -L//mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/acuity-ovxlib-dev/lib -l ovxlib -L/mnt/fileroot/shengken.lin/workspace/a5_buildroot/toolchain/gcc/linux-x86/aarch64/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/lib  -lm -lrt  ".  Stop.
+# 修改编译脚本
+export FIXED_ARCH_TYPE=aarch64-gnu
 ```
 
-
-- 修改 LDLIBS += -l ArchModelSw
-
-> driver/khronos/libOpenVX/driver/src/makefile.linux
-
-```sh
-+LDLIBS += -L $(AQROOT)/driver/khronos/libOpenVX/vipArchPerfMdl_dev/aarch64-linux-gnu/
- LDLIBS += -l ArchModelSw
-```
-
-
-build/sdk/driver 下的 so 是复制的
+- build/sdk/driver 下的 so 是复制的
 
 ```sh
 # verisilicon/compiler/libVSC/makefile.linux  
 cp -f arm64/libVSC.so /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon/build/sdk/drivers 
 ```
 
-- 重新编译 FPN_be
+### 重新编译 FPN_be 修改 optimize
 
 ```sh
 $pegasus_bin export ovxlib \
@@ -1174,3 +1127,56 @@ $pegasus_bin export ovxlib \
     --output-path ${NAME}/ \
     --pack-nbg-unify
 ```
+
+### 测试 case 错误
+
+```sh
+/data/FPN # ./tflite
+/bin/sh: ./tflite: not found
+```
+
+#### 解决
+
+**需要编译 32 位的应用去测试**
+
+修改编译脚本
+
+```sh
+- export FIXED_ARCH_TYPE=aarch64-gnu
++ export FIXED_ARCH_TYPE=arm-linux-gnueabihf
+```
+
+编译 ddk
+
+```sh
+./build_ml.sh arm32 spencer-p2 ./../../chrome
+```
+
+
+在这里去找 /mnt/fileroot/shengken.lin/workspace/a5_buildroot/buildroot/configs/amlogic/arch_a6432_10.3_7.3.1.config  应用所用的编译器
+
+```sh
+# FPN_be\build_vx.sh
+    ################### arm 32
+    TOOLCHAIN_DIR=/mnt/fileroot/shengken.lin/workspace/a5_buildroot/toolchain/gcc/linux-x86/arm/gcc-arm-10.3-2021.07-x86_64-arm-none-linux-gnueabihf
+    CROSS=${TOOLCHAIN_DIR}/bin/arm-none-linux-gnueabihf-
+
+    ARCH=arm
+    export ARCH_TYPE=$ARCH
+    export CPU_TYPE=cortex-a9
+    export CPU_ARCH=armv7-a
+    export FIXED_ARCH_TYPE=arm-gnueabihf
+    # export FIXED_ARCH_TYPE=arm-linux-gnueabihf
+
+    export CROSS_COMPILE=$CROSS
+    export TOOLCHAIN=${TOOLCHAIN_DIR}/bin
+    export LIB_DIR=${TOOLCHAIN_DIR}/arm-none-linux-gnueabihf/libc/lib
+    export PATH=$TOOLCHAIN:$PATH
+::
+
+# 编译
+FPN_be$ ./build_vx.sh
+```
+
+
+

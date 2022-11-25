@@ -4,7 +4,7 @@
 
 ## gclient简介
 
-gclient是谷歌开发的一套跨平台git仓库管理工具，用来将多个git仓库组成一个 solution 进行管理。总体上，其核心功能是根据一个Solution 的 DEPS 文件所定义的规则将多个 git 仓库拉取到指定目录。例如，chromium 就是由 80 多个独立仓库组成。
+gclient 是谷歌开发的一套跨平台git仓库管理工具，用来将多个git仓库组成一个 solution 进行管理。总体上，其核心功能是根据一个Solution 的 DEPS 文件所定义的规则将多个 git 仓库拉取到指定目录。例如，chromium 就是由 80 多个独立仓库组成。
 
 - hooks: 当gclient拉完代码后执行的额外脚本；
 - solution: 一个包含DEPS文件的仓库，可以认为是一个完整的项目；
@@ -33,20 +33,20 @@ solutions = [
 
 ### gclient sync
 
-该命令用于同步solution的各个仓库，它有一些参数：
+该命令用于同步 solution 的各个仓库，它有一些参数：
 
 - -f、--force: 强制更新未更改的模块；
 - --with_branch_heads： 除了clone默认refspecs外，还会clone "branch_heads" refspecs;
 - --with_tags: 除了默认的refspec之外，还可以clone git tags;
 - --no-history： 不拉取git提交历史信息；
 - `--revision <version>`: 将代码切换到 version 版本 ;
-- --nohooks：拉取代码之后不执行hooks。
+- --nohooks：拉取代码之后不执行 hooks。
 
 拉取代码主要是根据 DEPS 文件来进行，它里面的内容包括
 
 - deps: 要获取的子依赖项:
 
-```
+```js
    deps = {
        "src/outside" : "http://outside-server/trunk@1234",
    }
@@ -54,7 +54,7 @@ solutions = [
 
 - vars：定义字符串变量，一般用于替代公共的字符串，然后通过Var来获取实际的值:
 
-```
+```js
     vars = {
         'chromium_git': 'https://chromium.googlesource.com'
     }
@@ -69,7 +69,7 @@ solutions = [
 
 - Hooks：DEPS包含可选的内容 hooks，也有重要的作用，它表示在sync, update或者recert后，执行一个hook操作,也即执行对应的脚本；
 
-```
+```js
     hooks = [
       {
         #config git log format  
