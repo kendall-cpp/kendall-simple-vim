@@ -16,6 +16,7 @@
     - [Set internal default pull up/down/disabled](#set-internal-default-pull-updowndisabled)
     - [GPIO event](#gpio-event)
 - [flush-ubifs_7_0(adb push ota.zip) 线程 CPU 过高导致 tdm 无法运行](#flush-ubifs_7_0adb-push-otazip-线程-cpu-过高导致-tdm-无法运行)
+  - [复现问题](#复现问题)
 
 
 -------------
@@ -436,7 +437,15 @@ cat /sys/kernel/debug/pinctrl/fe000000.bus:pinctrl@0400-pinctrl-meson/pinconf-pi
 > https://partnerissuetracker.corp.google.com/issues/241159916
 
 
+### 复现问题
 
+```sh
+Z:\workspace\google_source\eureka-v2\chrome\out\target\product\korlan> adb push .\korlan-ota-eng.shengken.lin.zip /data
+
+# 在push期间执行下面命令检测
+ top -m 5 -t
+
+```
 
 
 

@@ -31,7 +31,7 @@
 	- [打patch发生冲突](#打patch发生冲突)
 	- [patch 例子](#patch-例子)
 - [cherry-pick](#cherry-pick)
-- [问题解决](#问题解决)
+- [repo 命令](#repo-命令)
 
 -----
 
@@ -527,14 +527,26 @@ git cherry-pick <commitHash>
 git fetch https://eureka-partner.googlesource.com/verisilicon-sdk refs/changes/27/245927/1 && git cherry-pick FETCH_HEAD -x
 ```
 
-## 问题解决
+---
 
-参考 patch: https://git.kernel.org/pub/scm/linux/kernel/git/gregkh/usb.git/commit/?h=usb-testing&id=a44623d9279086c89f631201d993aa332f7c9e66
+## repo 命令
 
-https://bugzilla.kernel.org/show_bug.cgi?id=214021
+```sh
+# 将HEAD强制指向manifest的库，而忽略本地的改动。
+repo sync -d
 
+# Remove all working directory (and staged) changes. 删除所有工作目录（和暂存）更改
+repo forall -c 'git reset --hard'   
 
+# Clean untracked files 清楚所有缓冲中间文件
+repo forall -c 'git clean -f -d' 
 
+# 拉代码
+repo sync -c
+
+# repo撤销本地代码修改：
+repo forall -c “git clean -df” && repo forall -c “git checkout .”
+```
 
 
 

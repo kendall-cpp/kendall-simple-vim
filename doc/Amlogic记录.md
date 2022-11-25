@@ -375,7 +375,11 @@ cd kernel-5.15
 bash unpack_boot.sh ./boot.img ./boot_out unpack_boot 
 
 # 解压出ramdisk.img.xz 之后，拷贝
-cp ramdisk.img.xz /mnt/fileroot/shengken.lin/workspace/google_source/eureka/korlan-sdk/build-sign-pdk/korlan/ramdisk.img
+cp ramdisk.img.xz /mnt/fileroot/shengken.lin/workspace/google_source/eureka-v2/korlan-sdk/build-sign-pdk/korlan/ramdisk.img
+# cp ramdisk.img.xz /mnt/fileroot/shengken.lin/workspace/google_source/eureka/korlan-sdk/build-sign-pdk/korlan/ramdisk.img
+
+## 注意5.15制作ramdisk需要将对应的ko拷贝到ramdisk 中的 /lib/modules 下
+vim vendor/amlogic/korlan/early_load_ko_5.15.rc 
 ```
 
 ## 签名korlan
@@ -392,7 +396,8 @@ mkdir -p ./korlan/korlan-b1
 # find . |cpio -ov -H newc | xz -9  --check=crc32  > ../ramdisk.img
 # ramdisk 需要拷贝到 ./korlan/ramdisk.img
 # /mnt/fileroot/shengken.lin/workspace/google_source/eureka/korlan-sdk/build-sign-pdk
-./sign-kernel.sh ../../korlan-sdk korlan/korlan-b1 b1 ../../chrome
+# ./sign-kernel.sh ../../korlan-sdk korlan/korlan-p2 p2 ../../chrome
+./sign-kernel-5.15.sh ../../korlan-sdk korlan/korlan-p2 p2 ../../chrome
 ```
 
 ## 烧录korlan
@@ -491,18 +496,19 @@ lunch   # 选korlan-eng
 #*** No rule to make target 'vendor/amlogic/korlan/prebuilt/kernel_5.15/kernel.korlan.gz-dtb.korlan-proto', needed by 'out/target/product/korlan/root/lib/kernel/kernel-korlan-proto'.  Stop.
 # 编译的时候不是编译 p2 b3 b4 
 cd kernel-5.15
+./build_kernel.sh korlan-b1 ../../chrome
 ./build_kernel.sh korlan-p2 ../../chrome
 ./build_kernel.sh korlan-b3 ../../chrome
 ./build_kernel.sh korlan-b4 ../../chrome
-# 再打 ota 包
-# 编译出来的ota包在：out/target/product/korlan/korlan-ota-eng.shengken.lin.zip
 
 #error 4
-# make: *** [chromium/src/chromecast/internal/chromecast.mk:524: out/target/product/korlan/obj/FAKE/chromium-iot-dock_intermediates/chromium-iot-dock-timestamp-phony] Error 1
-# 这个原因是 chromium 没有 gclient sync
-cd ./chromium
-gclient setdep --deps-file=src/DEPS --var=fuchsia_sdk_bucket=fuchsia
-gclient sync
+ninja: error: gen/chromecast/internal/build/ota/iot/iot_dock_add_to_ota_stamp.d: depfile mentions '../../../../out/target/product/korlan/obj/NOTICE_FILES/src/system/chrome/bin/standalone_mojo_broker.txt' as an output, but no such output was declared
+make: *** [chromium/src/chromecast/internal/chromecast.mk:524: out/target/product/korlan/obj/FAKE/chromium-iot-dock_intermediates/chromium-iot-dock-timestamp-phony] Error 1
+
+
+
+# 再打 ota 包
+# 编译出来的ota包在：out/target/product/korlan/korlan-ota-eng.shengken.lin.zip
 ```
 
 
