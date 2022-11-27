@@ -541,6 +541,8 @@ repo forall -c 'git reset --hard'
 # Clean untracked files 清楚所有缓冲中间文件
 repo forall -c 'git clean -f -d' 
 
+# 上面三条会后，本地代码和远程服务器的代码就完全一致了
+
 # 拉代码
 repo sync -c
 

@@ -421,8 +421,6 @@ adnl.exe Partition -P system  -F system.img
 # adnl.exe oem "store erase fts  0 0"
 adnl.exe oem "reset"
 
-
-
 # 烧录工厂模式
 adnl.exe  Download u-boot.bin 0x10000  
 adnl.exe run
@@ -502,9 +500,18 @@ cd kernel-5.15
 ./build_kernel.sh korlan-b4 ../../chrome
 
 #error 4
+Acquiring ninja lock: chromium/src/chromecast/internal/build/guarded_ninja.py -C /mnt/fileroot/shengken.lin/workspace/google_source/eureka-v2/chrome/chromium/src/out_chromecast_korlan/release iot_dock_add_to_ota
+Ninja lock acquired: chromium/src/chromecast/internal/build/guarded_ninja.py -C /mnt/fileroot/shengken.lin/workspace/google_source/eureka-v2/chrome/chromium/src/out_chromecast_korlan/release iot_dock_add_to_ota
+Acquiring ninja lock: chromium/src/chromecast/internal/build/guarded_ninja.py -C /mnt/fileroot/shengken.lin/workspace/google_source/eureka-v2/chrome/chromium/src/out_chromecast_korlan/release debug_endpoint_broker debug_service_server dump_syms minidump-2-core minidump_stackwalk symupload
+fatal: not a git repository (or any parent up to mount point /mnt)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+ninja: Entering directory `/mnt/fileroot/shengken.lin/workspace/google_source/eureka-v2/chrome/chromium/src/out_chromecast_korlan/release'
 ninja: error: gen/chromecast/internal/build/ota/iot/iot_dock_add_to_ota_stamp.d: depfile mentions '../../../../out/target/product/korlan/obj/NOTICE_FILES/src/system/chrome/bin/standalone_mojo_broker.txt' as an output, but no such output was declared
-make: *** [chromium/src/chromecast/internal/chromecast.mk:524: out/target/product/korlan/obj/FAKE/chromium-iot-dock_intermediates/chromium-iot-dock-timestamp-phony] Error 1
-
+# 解决
+cd /mnt/fileroot/shengken.lin/workspace/google_source/eureka-v2/chrome/chromium/src/out_chromecast_korlan/release/gen/chromecast/internal/build/ota/iot
+mv iot_dock_add_to_ota_stamp.d iot_dock_add_to_ota_stamp.d-bak
+# 这个问题和Acquiring ninja lock没有关系，这些是print打印出来的，这是因为iot_dock_add_to_ota_stamp.d 这个文件的原因，打ot包的时候生成的，这个文件会去standalone_mojo_broker.txt 检索对应的网址然后去做一些版本号相关的检测工作吧（具体没研究），版本版本对不上就会出错，问题就出在一次打ota包之后生成了这个文件，下一次打包并不会重新生成新的，我觉得这是一个bug，应该每次编译ota包都要去重新生成一个最新的。所以我将iot_dock_add_to_ota_stamp.d这个文件删掉就OK了。这问题太诡异了，需要记一下。
+而且，就算你重新repo sync 也不会去更新这个文件，所以就算repo sync ，甚至 repo forall -c 'git clean -f -d' 清除所有中间缓冲都不会起作用
 
 
 # 再打 ota 包
