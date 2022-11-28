@@ -116,12 +116,6 @@ dm_init 只是负责初始化并绑定了 udevice 和 driver，probe 探测函�
 
 
 
----
-
-## proc 文件系统
-
-
-
 
 ## MBP源码
 

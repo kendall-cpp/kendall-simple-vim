@@ -116,6 +116,7 @@ model = "Samsung S3C2416 SoC";
 - `#address-cells` 属性值决定了子节点 reg 属性中地址信息所占用的字长(32 位)，
 - `#size-cells` 属性值决定了子节点 reg 属性中长度信息所占的字长(32 位)。
   
+
 `#address-cells` 和`#size-cells` 表明了子节点应该如何编写 reg 属性值，一般 reg 属性都是和地址有关的内容，和地址相关的信息有两种：起始地址和地址长度，reg 属性的格式一为：
 
 ```
@@ -237,7 +238,7 @@ VIR_A := AA
 最后，变量VIR_B的值是AB，即根据当前位置进行赋值。因此相比于”=”，”:=”才是真正意义上的直接赋值。
 
 - “?=”
- 
+
 “？=”表示如果该变量没有被赋值，则赋予等号后的值。举例：
 
 ```sh
@@ -366,3 +367,144 @@ xTaskCreate(vStart_AudioTask, "audio_task", configMINIMAL_STACK_SIZE * 2, NULL, 
 3. 宏定义portCONFIGURE_TIMER_FOR_RUN_TIME_STATS：系统运行时间统计初始化；
 4. 设置系统节拍定时器，并启动第1个任务；
 5. 返回空闲任务句柄。
+
+----
+
+# proc文件系统
+
+## 什么是proc文件系统
+
+- proc是虚拟文件系统，虚拟的意思就是 proc 文件系统里的文件不对应硬盘上任何文件，我们用去查看 proc 目录下的文件大小都是零；
+- proc 文件系统是开放给上层了解内核运行状态的窗口，通过读取 proc 系统里的文件，可以知道内核中一些重要数据结构的数值，从而知道内核的运行情况，也可以方便调试内核和应用程序；
+- proc 文件系统的思路：在内核中构建一个 虚拟文件系统/proc，内核运行时将内核中一些关键的数据结构以文件的方式呈现在`/proc`目录中的一些特定文件中，这样相当于将不可见的内核中的数据结构以可视化的方式呈现给内核的开发者.
+
+## 常见的proc文件介绍
+
+| 文件名  | Describe |
+| :---: | :------------------------------- |
+| /proc/cmdline | 查看内核的启动参数 |
+| /proc/cpuinfo | 查看CPU的信息 |
+| /proc/devices | 查看内核中已经注册的设备 |
+| /proc/filesystems | 内核当前支持的文件系统类型 |
+| /proc/interrupts | 中断的使用及触发次数，调试中断时很有用 |
+| /proc/misc | 内核中注册的misc类设备 |
+| /proc/modules | 已经加载的模块列表，对应lsmod命令 |
+| /proc/partitions | 系统的分区表 |
+| /proc/version | 当前正在运行的内核版本 |
+| 数字（PID） | 数字的文件夹都是相应的进程 |
+| /proc/mounts | 已加载的文件系统的列表，对应mount命令 |
+| /proc/meminfo | 内核的内存信息 |
+| /proc/fb | 内核中注册的显示设备 |
+| buddyinfo | 用于诊断内存碎片问题。 |
+| bus | 已安装的总线 |
+| cgroups | 信息汇总，字段 subsys_name; hierarchy; num_cgroups; enabled |
+| stat | 全面统计状态表，CPU内存的利用率等都是从这里提取数据。对应ps命令
+
+
+> 其余的: https://blog.csdn.net/fly0512/article/details/122362624
+
+- 查看进程调用栈信息 |
+
+```sh
+/proc/1818 # cd ..
+/proc # cat 1818/stack 
+[<0>] __switch_to+0x12c/0x148
+[<0>] futex_wait_queue_me+0xd8/0x144
+[<0>] futex_wait+0x120/0x2d0
+[<0>] do_futex+0x128/0x7b4
+[<0>] __arm64_sys_futex+0xa8/0x1d0
+[<0>] el0_svc_common+0x9c/0x114
+[<0>] el0_svc_handler+0x2c/0x38
+[<0>] el0_svc+0x8/0x14c
+[<0>] 0xffffffffffffffff
+```
+
+## 和sys文件系统的比较
+
+- (1) proc 文件系统主要是用来调试内核，在内核运行时可以知道内核中一些重要的数据结构的值，一般都是读，很少写；
+- (2) proc 文件系统出现的比 sys 文件系统早，proc 文件系统的目录结构比较乱，在 proc 文件系统下面有很多文件夹，比如一个进程就有一个文件夹，现在内核越来越复杂，支持的设备类型也越来越多，显得很混乱；于是又开发出了 sys 系统，sys 系统可以说是 proc 的升级，将来用 sys 系统会是主流；
+- (3) proc 文件系统和 sys 文件系统都是虚拟系统，并且有对应关系，比如"`/proc/misc`"对应于"`sys/class/misc`"下面的设备，都是描述 misc 类设备的；
+
+---
+
+# GPIO 子系统的作用
+
+芯片内部有很多引脚，这些引脚可以接到 GPIO 模块，也可以接到 I2C 模块，通过 Pinctrl 子系统来选择引脚的功能（mux function），配置引脚。当一个引脚被复用为 GPIO 功能时，我们可以去设置它的方向（输入或者输出），设置/读取 它的值。GPIO 可能是芯片自带的，也可能是通过 I2C、SPI 接口扩展。
+
+![](https://img-blog.csdnimg.cn/1aa6ca3fb83a40e1a59aaa51aa5223f9.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBA5Lmg5oOv5bCx5aW9eno=,size_20,color_FFFFFF,t_70,g_se,x_16)
+
+## 通用功能
+
+- 可以设为输出，让它输出高低电平
+- 可以设为输入，读取引脚当前电平
+- 可以用来触发中断
+
+对于芯片自带的 GPIO，它的访问速度很快，可以在获得 spinlocks 的情况下操作它。但是，对于通用 I2C、SPI 等接口扩展的 GPIO，访问它们时可能导致休眠，所以这些“GPIO Expander”就不能在获得 spinlocks 的情况下使用。
+
+linux 内核中提供了 GPIO 子系统，我们在驱动代码中使用 GPIO 子系统的 API 函数去控制 GPIO
+
+
+> 深入理解 gpio: http://www.wowotech.net/sort/gpio_subsystem
+
+# pinctrl 子系统概念
+
+一个设备（URAT)有两个状态，默认和休眠状态，默认状态时将对应引脚设置为 这个 URAT 功能，休眠状态时将引脚设置为普通的 GPIO 功能。
+
+```c
+device {
+	pinctrl-names = "default", "sleep";   //1.设置设备的两种状态
+	pinctrl-0 = <&state_0_node_a>; //设置0状态的名字是 default，对应的引脚在 pinctrl-0里面定义
+	//这个节点描述在这个状态下要怎么做，这些节点位于 pinctrl 节点里面
+	pinctrl-1 = <&state_1_node_a>; //第1状态的名字是sleep，对应的引脚在pinctrl-1里定义
+};
+
+picontroller {
+	state_0_node_a {
+		function = "urat0";
+		groups = "u0rxtx", "u0rtscts";
+	}
+	state_1_node_a {
+		function = "gpio";
+		groups = "u0rxtx", "u0rtscts";
+	}
+};
+```
+
+- 当这个设备属于 default 状态时，会使用 state_0_node_a 这个节点来配置引脚。也就是会把这一组引脚配置成 urat0 功能
+- 当这个设备属于 sleep 状态时，会使用 state_1_node_a 这个节点来配置引脚，也就是会把这一组引脚配置成 gpio 功能
+
+所以 state_0_node_a 和 state_1_node_a 的作用就是复用引脚的功能，在内核中这类的引脚成为 pin multiplexing node .
+
+
+```c
+device {
+	pinctrl-names = "default", "sleep";   //1.设置设备的两种状态
+	pinctrl-0 = <&state_0_node_a>; 
+	//这个节点描述在这个状态下要怎么做，这些节点位于 pinctrl 节点里面
+	pinctrl-1 = <&state_1_node_a>; 
+};
+
+picontroller {
+	state_0_node_a {
+		function = "urat0";
+		groups = "u0rxtx", "u0rtscts";
+	}
+	state_1_node_a {
+		groups = "u0rxtx", "u0rtscts";
+		output-high;
+	}
+};
+```
+
+- 当这个设备属于 default 状态时，会使用 state_0_node_a 这个节点来配置引脚。也就是会把这一组引脚配置成 urat0 功能
+- 当这个设备属于 sleep 状态时，会使用 state_1_node_a 这个节点来配置引脚，也就是会把这一组引脚配置成 输出高电平
+
+这类节点成为 pin configuration node 。
+
+
+https://www.cnblogs.com/zhuangquan/p/12750736.html
+
+
+
+
+
