@@ -278,6 +278,8 @@ static void put_clock(struct platform_device *pdev)
 ./build_ml.sh arm32 spencer-p2 ./../../chrome
 ```
 
+目前位置的 patch: NN-av400-arm64-arm32-all.patch
+
 > **还未解决**，需要找 google 重新编译
 
 ---

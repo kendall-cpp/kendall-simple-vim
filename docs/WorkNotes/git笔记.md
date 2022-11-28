@@ -11,7 +11,7 @@
 	- [查看日志](#查看日志)
 	- [重命名](#重命名)
 	- [查重提交说明/修改注释](#查重提交说明修改注释)
-	- [更改以前 commit 的注释](#更改以前-commit-的注释)
+		- [更改以前 commit 的注释](#更改以前-commit-的注释)
 	- [branch 分支](#branch-分支)
 	- [保存现场 stash](#保存现场-stash)
 	- [在分支下修改文件](#在分支下修改文件)
@@ -184,7 +184,7 @@ git commit --amend -m "修正最近一次 commit 的提交信息"
 
 git commit --amend -s    `-->` 修正最后一次 commit 提交的注释
 
-### 更改以前 commit 的注释
+#### 更改以前 commit 的注释
 
 例，修改倒数第三个
 
@@ -192,7 +192,11 @@ git rebase -i HEAD~3  倒数第3个（以1开始）
 
 把 pick 改为 edit
 
-git commit --amend   #修改上一次注释
+接着执行以下命令修改注释： 
+
+git commit --amend   # 修改上一次注释
+
+最后执行，复原现在的点
 
 git rebase --continue
 

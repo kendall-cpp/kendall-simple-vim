@@ -17,6 +17,10 @@
     - [GPIO event](#gpio-event)
 - [flush-ubifs_7_0(adb push ota.zip) 线程 CPU 过高导致 tdm 无法运行](#flush-ubifs_7_0adb-push-otazip-线程-cpu-过高导致-tdm-无法运行)
   - [复现问题](#复现问题)
+    - [perf 工具使用](#perf-工具使用)
+- [工作流程](#工作流程)
+  - [isp 内部优化 usleep](#isp-内部优化-usleep)
+  - [yi-u_audio-log_uac_timing-tdm-cpu](#yi-u_audio-log_uac_timing-tdm-cpu)
 
 
 -------------
@@ -434,6 +438,8 @@ cat /sys/kernel/debug/pinctrl/fe000000.bus:pinctrl@0400-pinctrl-meson/pinconf-pi
 
 ## flush-ubifs_7_0(adb push ota.zip) 线程 CPU 过高导致 tdm 无法运行
 
+> 用 kernel 4.19 来解决
+
 > https://partnerissuetracker.corp.google.com/issues/241159916
 
 
@@ -444,8 +450,84 @@ Z:\workspace\google_source\eureka-v2\chrome\out\target\product\korlan> adb push 
 
 # 在push期间执行下面命令检测
  top -m 5 -t
+```
+
+#### perf 工具使用
+
+```sh
+# 编译
+/mnt/fileroot/shengken.lin/workspace/google_source/eureka/korlan-sdk/kernel$ ./build_perf.sh korlan ../../chrome
+```
+
+如果想在板子上能使用 perf ,可以直接打上这个  patch  开取相应的 config 即可。
+
+https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/239808
+
+```sh
+https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/239808
+kernel$ git fetch https://eureka-partner.googlesource.com/amlogic/kernel refs/changes/08/239808/10 && git cherry-pick FETCH_HEAD
+# commit id: 8fb66d4b95ea24013c73470ae004f111158f6ca3
+
+bash build_perf.sh korlan
+
+adb push ./tools/perf/perf /data
+chmod 777 /data/perf
+
+# 测试
+/data/perf top
+
+# 测试全局函数
+cd data
+./perf record -e cpu-clock -F 500 -a -g sleep 60
+./perf script > out.perf
+
+
+# 将 out.perf pull 到 /mnt/fileroot/shengken.lin/workspace/github/FlameGraph
+adb pull /data/out.perf ./out
+
+ ./stackcollapse-perf.pl ./out/out.perf > ./out/out.folded
+ ./flamegraph.pl ./out/out.folded > ./out/kernel.svg
 
 ```
+
+## 工作流程
+
+往 tdm 中写数据时，出现了 underrun ，就是写 太慢了，读快了，通过轮训的方式去读取会出现卡顿问题
+
+USB 写数据 （先写到 ddr，再 sync 到 falsh，在 sync 的时候会占用 CPU ） --> tdm_bridge --> codec -- >spinc 播放
+
+
+```sh
+vim sound/soc/amlogic/auge/tdm_bridge.c 
+
+# 往 tdm_bridge 写数据函数
+int aml_tdm_br_write_data(void *data, unsigned int len)
+
+# 调用
+drivers/usb/gadget/function/u_audio.c
+```
+
+
+### isp 内部优化 usleep
+
+```sh
+https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/244846
+# git fetch https://eureka-partner.googlesource.com/amlogic/kernel refs/changes/46/244846/3 && git cherry-pick FETCH_HEAD
+# 26da25f44a02588c0525d3b1e6d1dc8f5cb72856
+```
+
+### yi-u_audio-log_uac_timing-tdm-cpu
+
+```sh
+https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/246965
+commit ID: 182c1d24317734067caa440efd0df4f879c5ea2f
+
+
+https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/250805
+git fetch https://eureka-partner.googlesource.com/amlogic/kernel refs/changes/05/250805/4 && git cherry-pick FETCH_HEAD
+commit ID: c108b9c0c97bb5af5dfcaa5ab994a9b1d9ac2a00
+```
+
 
 
 

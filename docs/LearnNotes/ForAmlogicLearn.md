@@ -118,12 +118,7 @@ dm_init 只是负责初始化并绑定了 udevice 和 driver，probe 探测函�
 
 ---
 
-# 需要研究的知识点
-
-- 深入Linux内核架构
-- 深入Linux设备驱动程序内核机制
-- 奔跑吧linux
-
+## proc 文件系统
 
 
 
