@@ -133,6 +133,18 @@ MPP核心的几大模块：
 - 负责图形处理的VGS模块
 - 负责音频处理的AUDIO模块
 
+---
+
+## USB专题
+
+- dwc
+- gadget
+- phy
+
+
+## sound 专题
+
+- sound/soc/amlogic
 
 
 
