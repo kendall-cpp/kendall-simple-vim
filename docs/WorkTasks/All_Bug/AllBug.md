@@ -99,7 +99,7 @@ cd abd
 mma PARTNER_BUILD=true
 ```
 
-# flush-ubifs_7_0(adb push ota.zip) 线程 CPU 过高导致 tdm 无法运行
+# flush-ubifs_7_0(adb push ota.zip) 线程 CPU 过高导致 tdm underrun 
 
 > https://partnerissuetracker.corp.google.com/issues/241159916
 
@@ -190,6 +190,17 @@ aml_buildroot.sh makefile.linux
 具体修改见附件文件：`NN-av400-arm64-gc_hal_kernel_platform_amlogic.patch`
 ```
 
+### 对应 buildroot 配置文件
+
+```
+在这里去找 /mnt/fileroot/shengken.lin/workspace/a5_buildroot/buildroot/configs/amlogic/arch_a6432_10.3_7.3.1.config  应用所用的编译器 和 kernel 的编译器
+vim package/amlogic/npu/npu.mk  找编译 npu 的编译脚本
+
+ /mnt/fileroot/shengken.lin/workspace/a5_buildroot/buildroot/configs/amlogic/npu_driver_k5.4.config 
+  这里会配置一下全局的局部变量，给 package/amlogic 下的各个 package 用
+ 比如给 package/amlogic/npu/npu.mk 使用
+```
+
 ## 编译 verisilicon
 
 ```sh
@@ -267,7 +278,9 @@ static void put_clock(struct platform_device *pdev)
 /bin/sh: ./tflite: not found
 ```
 
-> 因此需要将 verisilicon 和 case 都编译成 arm32 位的
+> -  因此需要将  case 都编译成 arm32 位的
+> - verisilicon 仍然是 64 位
+> - 参考：a5_buildroot/buildroot/configs/amlogic/arch_a6432_10.3_7.3.1.config
 
 
 ### 最终编译 verisilicon-arm32 

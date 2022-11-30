@@ -39,6 +39,12 @@
     - [重新编译 FPN_be 修改 optimize](#重新编译-fpn_be-修改-optimize)
     - [测试 case 错误](#测试-case-错误)
       - [解决](#解决)
+  - [升级到 NN6.4.11.2](#升级到-nn64112)
+    - [下载 6.4.11.2 压缩包并一个个解压](#下载-64112-压缩包并一个个解压)
+      - [build](#build)
+    - [在 av400 上测试](#在-av400-上测试)
+    - [下载 actuity tool](#下载-actuity-tool)
+      - [到 linux 上重新编译 NN](#到-linux-上重新编译-nn)
 
 
 ---
@@ -1178,5 +1184,162 @@ $pegasus_bin export ovxlib \
 FPN_be$ ./build_vx.sh
 ```
 
+----
+
+## 升级到 NN6.4.11.2
+
+### 下载 6.4.11.2 压缩包并一个个解压
+
+```sh
+# eureka/Spencer-file/NN64112/Verisilicon_SW_Unified_Driver_6.4.11.2_Amlogic_20220719
+
+tar xzf Verisilicon_SW_Unified_Driver_6.4.11.2_Amlogic_20220719.tgz
+
+├── Verisilicon_SW_Unified_Driver_6.4.11.2_Amlogic_20220719.tgz
+├── Vivante_GALVIP_Unified_Src_drv_6.4.11.2.tgz
+├── Vivante_GALVIP_Unified_Src_drv_AMLOGIC_GCFeature-addon_6.4.11.2.org.tgz
+├── Vivante_GALVIP_Unified_Src_drv_amlogic-platform-addon_6.4.11.2.tgz
+├── Vivante_GALVIP_Unified_Src_drv_AMLOGIC-prebuilt-addon_6.4.11.2.tgz
+├── Vivante_GALVIP_Unified_Src_drv_android-addon_6.4.11.2.noGPL.org.tgz
+├── Vivante_GALVIP_Unified_Src_drv_OCL-addon_6.4.11.2.noGPL.tgz
+├── Vivante_GALVIP_Unified_Src_drv_OVX-addon_6.4.11.2.noGPL.tgz
+├── Vivante_GALVIP_Unified_Src_drv_OVXLIB-addon_6.4.11.2.tgz
+├── Vivante_GALVIP_Unified_Src_drv_SPIRV-addon_6.4.11.2.noGPL.tgz
+├── Vivante_GALVIP_Unified_Src_drv_VIP9000NANODI_PID0XBE_VXC_addon_6.4.11.2.tgz
+├── Vivante_GALVIP_Unified_Src_drv_VIP9000NANODI_PID0XE8_VXC_addon_6.4.11.2.tgz
+├── Vivante_GALVIP_Unified_Src_drv_VIP9000NANOSI_PID0XB9_VXC_addon_6.4.11.2.tgz
+├── Vivante_GALVIP_Unified_Src_drv_VIP9000NANOS_PID0X1000000E_VXC_addon_6.4.11.2.tgz
+├── Vivante_GALVIP_Unified_Src_drv_VIPNANOQI_PID0X88_VXC_addon_6.4.11.2.tgz
+├── Vivante_GALVIP_Unified_Src_drv_VIPNANOQI_PID0XA1_VXC_addon_6.4.11.2.tgz
+├── Vivante_GALVIP_Unified_Src_drv_VIPPICO_V3_PID0X99_VXC_addon_6.4.11.2.tgz
+└── Vivante_GALVIP_Unified_Src_kernel_6.4.11.2.tgz
+```
+
+- 一个个解压并拷贝
+
+- git commit 
+
+**注意顺序**
+
+```sh
+mkdir Vivante_GALVIP_Unified_Src_drv_6.4.11.2 & tar -zxf Vivante_GALVIP_Unified_Src_drv_6.4.11.2.tgz -C Vivante_GALVIP_Unified_Src_drv_6.4.11.2
+mv Vivante_GALVIP_Unified_Src_drv_6.4.11.2/* /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon-6.4.11.2/
+
+mkdir Vivante_GALVIP_Unified_Src_drv_AMLOGIC_GCFeature-addon_6.4.11.2.org & tar -zxf Vivante_GALVIP_Unified_Src_drv_AMLOGIC_GCFeature-addon_6.4.11.2.org.tgz -C Vivante_GALVIP_Unified_Src_drv_AMLOGIC_GCFeature-addon_6.4.11.2.org
+cp Vivante_GALVIP_Unified_Src_drv_AMLOGIC_GCFeature-addon_6.4.11.2.org/* /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon-6.4.11.2/ -r
+rm Vivante_GALVIP_Unified_Src_drv_AMLOGIC_GCFeature-addon_6.4.11.2.org/* -r
+
+mkdir Vivante_GALVIP_Unified_Src_drv_amlogic-platform-addon_6.4.11.2 & tar -zxf Vivante_GALVIP_Unified_Src_drv_amlogic-platform-addon_6.4.11.2.tgz -C Vivante_GALVIP_Unified_Src_drv_amlogic-platform-addon_6.4.11.2
+cp Vivante_GALVIP_Unified_Src_drv_amlogic-platform-addon_6.4.11.2/* /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon-6.4.11.2/ -r
+rm Vivante_GALVIP_Unified_Src_drv_amlogic-platform-addon_6.4.11.2/* -r
+
+mkdir Vivante_GALVIP_Unified_Src_drv_AMLOGIC-prebuilt-addon_6.4.11.2 & tar -zxf Vivante_GALVIP_Unified_Src_drv_AMLOGIC-prebuilt-addon_6.4.11.2.tgz -C Vivante_GALVIP_Unified_Src_drv_AMLOGIC-prebuilt-addon_6.4.11.2
+cp Vivante_GALVIP_Unified_Src_drv_AMLOGIC-prebuilt-addon_6.4.11.2/* /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon-6.4.11.2/ -r
+rm Vivante_GALVIP_Unified_Src_drv_AMLOGIC-prebuilt-addon_6.4.11.2/* -r
+
+mkdir Vivante_GALVIP_Unified_Src_drv_android-addon_6.4.11.2.noGPL.org & tar -zxf Vivante_GALVIP_Unified_Src_drv_android-addon_6.4.11.2.noGPL.org.tgz -C Vivante_GALVIP_Unified_Src_drv_android-addon_6.4.11.2.noGPL.org
+cp Vivante_GALVIP_Unified_Src_drv_android-addon_6.4.11.2.noGPL.org/* /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon-6.4.11.2/ -r
+rm Vivante_GALVIP_Unified_Src_drv_android-addon_6.4.11.2.noGPL.org/* -r
+
+mkdir Vivante_GALVIP_Unified_Src_drv_OCL-addon_6.4.11.2.noGPL & tar -zxf Vivante_GALVIP_Unified_Src_drv_OCL-addon_6.4.11.2.noGPL.tgz -C Vivante_GALVIP_Unified_Src_drv_OCL-addon_6.4.11.2.noGPL
+cp Vivante_GALVIP_Unified_Src_drv_OCL-addon_6.4.11.2.noGPL/* /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon-6.4.11.2/ -r
+rm Vivante_GALVIP_Unified_Src_drv_OCL-addon_6.4.11.2.noGPL/* -r
+
+mkdir Vivante_GALVIP_Unified_Src_drv_OVX-addon_6.4.11.2.noGPL & tar -zxf Vivante_GALVIP_Unified_Src_drv_OVX-addon_6.4.11.2.noGPL.tgz -C Vivante_GALVIP_Unified_Src_drv_OVX-addon_6.4.11.2.noGPL
+cp Vivante_GALVIP_Unified_Src_drv_OVX-addon_6.4.11.2.noGPL/* /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon-6.4.11.2/ -r
+rm Vivante_GALVIP_Unified_Src_drv_OVX-addon_6.4.11.2.noGPL/* -r
+
+
+mkdir Vivante_GALVIP_Unified_Src_drv_OVXLIB-addon_6.4.11.2 & tar -zxf Vivante_GALVIP_Unified_Src_drv_OVXLIB-addon_6.4.11.2.tgz -C Vivante_GALVIP_Unified_Src_drv_OVXLIB-addon_6.4.11.2
+cp Vivante_GALVIP_Unified_Src_drv_OVXLIB-addon_6.4.11.2/* /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon-6.4.11.2/ -r
+rm Vivante_GALVIP_Unified_Src_drv_OVXLIB-addon_6.4.11.2/* -r
+
+mkdir Vivante_GALVIP_Unified_Src_drv_VIPNANOQI_PID0XA1_VXC_addon_6.4.11.2 & tar -zxf Vivante_GALVIP_Unified_Src_drv_VIPNANOQI_PID0XA1_VXC_addon_6.4.11.2.tgz -C Vivante_GALVIP_Unified_Src_drv_VIPNANOQI_PID0XA1_VXC_addon_6.4.11.2
+rm Vivante_GALVIP_Unified_Src_drv_VIPNANOQI_PID0XA1_VXC_addon_6.4.11.2/* -r
+
+
+mkdir Vivante_GALVIP_Unified_Src_drv_VIP9000NANODI_PID0XBE_VXC_addon_6.4.11.2 & tar -zxf Vivante_GALVIP_Unified_Src_drv_VIP9000NANODI_PID0XBE_VXC_addon_6.4.11.2.tgz -C Vivante_GALVIP_Unified_Src_drv_VIP9000NANODI_PID0XBE_VXC_addon_6.4.11.2
+cp Vivante_GALVIP_Unified_Src_drv_VIP9000NANODI_PID0XBE_VXC_addon_6.4.11.2/* /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon-6.4.11.2/ -r
+rm Vivante_GALVIP_Unified_Src_drv_VIP9000NANODI_PID0XBE_VXC_addon_6.4.11.2/* -r
+
+mkdir Vivante_GALVIP_Unified_Src_drv_VIP9000NANODI_PID0XE8_VXC_addon_6.4.11.2 & tar -zxf Vivante_GALVIP_Unified_Src_drv_VIP9000NANODI_PID0XE8_VXC_addon_6.4.11.2.tgz -C Vivante_GALVIP_Unified_Src_drv_VIP9000NANODI_PID0XE8_VXC_addon_6.4.11.2
+
+ mkdir Vivante_GALVIP_Unified_Src_drv_VIP9000NANOSI_PID0XB9_VXC_addon_6.4.11.2 & tar -zxf Vivante_GALVIP_Unified_Src_drv_VIP9000NANOSI_PID0XB9_VXC_addon_6.4.11.2.tgz -C Vivante_GALVIP_Unified_Src_drv_VIP9000NANOSI_PID0XB9_VXC_addon_6.4.11.2
+ cp Vivante_GALVIP_Unified_Src_drv_VIP9000NANOSI_PID0XB9_VXC_addon_6.4.11.2/* /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon-6.4.11.2/ -r
+ rm Vivante_GALVIP_Unified_Src_drv_VIP9000NANOSI_PID0XB9_VXC_addon_6.4.11.2/* -r
+
+
+mkdir Vivante_GALVIP_Unified_Src_drv_VIP9000NANOS_PID0X1000000E_VXC_addon_6.4.11.2 & tar -zxf Vivante_GALVIP_Unified_Src_drv_VIP9000NANOS_PID0X1000000E_VXC_addon_6.4.11.2.tgz -C Vivante_GALVIP_Unified_Src_drv_VIP9000NANOS_PID0X1000000E_VXC_addon_6.4.11.2
+cp Vivante_GALVIP_Unified_Src_drv_VIP9000NANOS_PID0X1000000E_VXC_addon_6.4.11.2/* /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon-6.4.11.2/ -r
+
+mkdir Vivante_GALVIP_Unified_Src_drv_VIPNANOQI_PID0X88_VXC_addon_6.4.11.2 & tar -zxf Vivante_GALVIP_Unified_Src_drv_VIPNANOQI_PID0X88_VXC_addon_6.4.11.2.tgz -C Vivante_GALVIP_Unified_Src_drv_VIPNANOQI_PID0X88_VXC_addon_6.4.11.2
+cp Vivante_GALVIP_Unified_Src_drv_VIPNANOQI_PID0X88_VXC_addon_6.4.11.2/* /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon-6.4.11.2/ -r
+rm Vivante_GALVIP_Unified_Src_drv_VIPNANOQI_PID0X88_VXC_addon_6.4.11.2/* -r
+
+
+mkdir Vivante_GALVIP_Unified_Src_drv_VIPPICO_V3_PID0X99_VXC_addon_6.4.11.2 & tar -zxf Vivante_GALVIP_Unified_Src_drv_VIPPICO_V3_PID0X99_VXC_addon_6.4.11.2.tgz -C Vivante_GALVIP_Unified_Src_drv_VIPPICO_V3_PID0X99_VXC_addon_6.4.11.2
+cp Vivante_GALVIP_Unified_Src_drv_VIPPICO_V3_PID0X99_VXC_addon_6.4.11.2/* /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon-6.4.11.2/ -r
+rm Vivante_GALVIP_Unified_Src_drv_VIPPICO_V3_PID0X99_VXC_addon_6.4.11.2/* -r
+
+ mkdir Vivante_GALVIP_Unified_Src_drv_SPIRV-addon_6.4.11.2.noGPL & tar -zxf Vivante_GALVIP_Unified_Src_drv_SPIRV-addon_6.4.11.2.noGPL.tgz -C Vivante_GALVIP_Unified_Src_drv_SPIRV-addon_6.4.11.2.noGPL
+cp Vivante_GALVIP_Unified_Src_drv_SPIRV-addon_6.4.11.2.noGPL/* /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon-6.4.11.2/ -r
+rm Vivante_GALVIP_Unified_Src_drv_SPIRV-addon_6.4.11.2.noGPL/* -r
+
+mkdir Vivante_GALVIP_Unified_Src_kernel_6.4.11.2 & tar -zxf Vivante_GALVIP_Unified_Src_kernel_6.4.11.2.tgz -C Vivante_GALVIP_Unified_Src_kernel_6.4.11.2
+cp Vivante_GALVIP_Unified_Src_kernel_6.4.11.2/* /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon-6.4.11.2/ -r
+rm Vivante_GALVIP_Unified_Src_kernel_6.4.11.2/* -r
+
+
+git apply ../../Spencer-file/NN64112/Verisilicon_SW_Unified_Driver_6.4.11.2_Amlogic_20220719/patch/0001-platform-patch-of-6.4.11.2-for-AMLOGIC.patch
+git add Android.mk
+git add Android.mk.def
+git add config
+git add hal/inc/gc_hal_options.h
+git add hal/kernel/inc/gc_hal_options.h
+git add hal/os/linux/kernel/allocator/default/gc_hal_kernel_allocator_gfp.c
+git add hal/user/gc_hal_user_profiler.c
+
+
+# commit:
+Import from 0001-platform-patch-of-6.4.11.2-for-AMLOGIC.patch
+
+Bug: None
+Test: None
+```
+
+
+#### build
+
+- 在这里去找 /mnt/fileroot/shengken.lin/workspace/a5_buildroot/buildroot/configs/amlogic/arch_a6432_10.3_7.3.1.config  应用所用的编译器 和 kernel 的编译器。
+
+- NN 用 kernel 一样的，FPN_be 用 userspace 一样的
+
+- 拷贝 build_ml.sh 和 acuity-ovxlib-dev/build_vx.sh 
+
+- 修改 TOOLCHAIN 和 kernel
+
+- 编译
+
+```sh
+./build_ml.sh arm64 spencer-p2 ./../../chrome
+```
+
+- 编译模型
+
+```sh
+FPN_be$ ./build_vx.sh 
+```
+
+- 报错 errror
+
+```sh
+/mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon-6.4.11.2/build/sdk/drivers/libOpenVX.so: file not recognized: file format not recognized
+```
+
+### 在 av400 上测试
+
+### 下载 actuity tool
+
+#### 到 linux 上重新编译 NN
 
 

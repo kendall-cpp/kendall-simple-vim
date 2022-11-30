@@ -15,7 +15,7 @@
   - [GPIO测试](#gpio测试)
     - [Set internal default pull up/down/disabled](#set-internal-default-pull-updowndisabled)
     - [GPIO event](#gpio-event)
-- [flush-ubifs_7_0(adb push ota.zip) 线程 CPU 过高导致 tdm 无法运行](#flush-ubifs_7_0adb-push-otazip-线程-cpu-过高导致-tdm-无法运行)
+- [flush-ubifs_7_0(adb push ota.zip) 线程 CPU 过高导致 tdm underrun](#flush-ubifs_7_0adb-push-otazip-线程-cpu-过高导致-tdm-underrun)
   - [复现问题](#复现问题)
     - [perf 工具使用](#perf-工具使用)
 - [工作流程](#工作流程)
@@ -436,7 +436,7 @@ cat /sys/kernel/debug/pinctrl/fe000000.bus:pinctrl@0400-pinctrl-meson/pinconf-pi
 
 ----
 
-## flush-ubifs_7_0(adb push ota.zip) 线程 CPU 过高导致 tdm 无法运行
+## flush-ubifs_7_0(adb push ota.zip) 线程 CPU 过高导致 tdm underrun 
 
 > 用 kernel 4.19 来解决
 
@@ -449,7 +449,7 @@ cat /sys/kernel/debug/pinctrl/fe000000.bus:pinctrl@0400-pinctrl-meson/pinconf-pi
 Z:\workspace\google_source\eureka-v2\chrome\out\target\product\korlan> adb push .\korlan-ota-eng.shengken.lin.zip /data
 
 # 在push期间执行下面命令检测
- top -m 5 -t
+top -m 5 -t
 ```
 
 #### perf 工具使用
@@ -494,7 +494,7 @@ adb pull /data/out.perf ./out
 
 往 tdm 中写数据时，出现了 underrun ，就是写 太慢了，读快了，通过轮训的方式去读取会出现卡顿问题
 
-USB 写数据 （先写到 ddr，再 sync 到 falsh，在 sync 的时候会占用 CPU ） --> tdm_bridge --> codec -- >spinc 播放
+USB 写数据 （先写到 ddr，再 sync 到 falsh，在 sync 的时候会占用 CPU ） --> tdm_bridge --> codec -- > Speaker  播放
 
 
 ```sh
@@ -519,10 +519,12 @@ https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/244846
 ### yi-u_audio-log_uac_timing-tdm-cpu
 
 ```sh
+# 第一个patch comment #8
 https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/246965
 commit ID: 182c1d24317734067caa440efd0df4f879c5ea2f
 
-
+ 
+# 第二个patch   comment #21
 https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/250805
 git fetch https://eureka-partner.googlesource.com/amlogic/kernel refs/changes/05/250805/4 && git cherry-pick FETCH_HEAD
 commit ID: c108b9c0c97bb5af5dfcaa5ab994a9b1d9ac2a00

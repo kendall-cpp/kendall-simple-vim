@@ -90,7 +90,7 @@ git commit
 
 # git commit --amend -s --no-verify     # 第二次 commit 加 changeID  --no-verify 忽略代码检查，-s 是添加签名,会出现Signed-off-by：
 
-# 如果没有 change-ID 需要拷贝 .git/hooks$ cp [other_path]]/.git/hooks/commit-msg  .
+# 如果没有 changeID 需要拷贝 .git/hooks$ cp [other_path]]/.git/hooks/commit-msg  .
 # 然后再执行 git commit --amend 就有 Change-Id 了
 
 
@@ -340,7 +340,7 @@ git diff   查看文件差异
 
 ## 邮箱设置
 
- git config -l 常看使用
+ git config -l 插看使用
 
  git config --global  (整个计算机设置)
 
@@ -469,6 +469,9 @@ git am --resolved
 ### git apply 与 git am的区别
 
 - git apply 只更新改动内容，打完之后需要自己 git add 和  git commit
+
+少用 git am
+
 - git am 是更新的 commit，会将 commit 的所有信息打上去，author 也是 patch 的 author 而不是打 patch的人。
 
 ### 打patch发生冲突

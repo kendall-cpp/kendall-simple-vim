@@ -235,43 +235,6 @@ git pull eureka-partner korlan-master
 git push eureka-partner HEAD:refs/for/korlan-master
 ```
 
-# audio工具
-
-## arecord、aplay、amixer
-
-> 上传音频数据 adb push .\the-stars-48k-60s.wav /data/
-
-### arecord与aplay
-
-```sh
-arecord  -l  # 查询 linux 系统下设备声卡信息
-
-arecord -D hw:0,0 -r 16000 -c 1 -f S16_LE test.wav  # 录制音频
-
-Recording WAVE 'test.wav' : Signed 16 bit Little Endian, Rate 16000 Hz, Mono
-^CAborted by signal Interrupt...  # 这里使用Ctrl+c 结束了录制
-
-aplay -Dhw:0,0 /data/the-stars-48k-60s.wav   # 播放音频
-```
-
-
-### amixer
-
-- amixer controls 用于查看音频系统提供的操作接口
-- amixer contents 用于查看接口配置参数
-- amixer cget + 接口函数
-- amixer cset + 接口函数 + 设置值
-
-```sh
-dmesg  -n 8   # 开 log
-amixer cget numid=2       # 查看音量
-amixer cset numid=2 150   # 修改音量
-# 或者
-amixer cset numid=2,iface=MIXER,name='tas5805 Digital Volume' 150
-
-aplay -Dhw:0,0 /data/the-stars-48k-60s.wav 
-```
-
 
 
 -----
@@ -601,6 +564,58 @@ board/amlogic/defconfigs/a1_korlan_b1_defconfig
 +CONFIG_SPL_LOGLEVEL=7
 +CONFIG_TPL_LOGLEVEL=7
  CONFIG_CMD_USB_MODE=y
+```
+
+## audio工具
+
+### arecord、aplay、amixer
+
+> 上传音频数据 adb push .\the-stars-48k-60s.wav /data/
+
+#### arecord与aplay
+
+```sh
+arecord  -l  # 查询 linux 系统下设备声卡信息
+
+arecord -D hw:0,0 -r 16000 -c 1 -f S16_LE test.wav  # 录制音频
+
+Recording WAVE 'test.wav' : Signed 16 bit Little Endian, Rate 16000 Hz, Mono
+^CAborted by signal Interrupt...  # 这里使用Ctrl+c 结束了录制
+
+aplay -l # 查看播放设备
+aplay -Dhw:0,0 /data/the-stars-48k-60s.wav   # 播放音频
+```
+
+
+#### amixer
+
+- amixer controls 用于查看音频系统提供的操作接口
+- amixer contents 用于查看接口配置参数
+- amixer cget + 接口函数
+- amixer cset + 接口函数 + 设置值
+
+```sh
+dmesg  -n 8   # 开 log
+amixer cget numid=2       # 查看音量
+amixer cset numid=2 150   # 修改音量
+# 或者
+amixer cset numid=2,iface=MIXER,name='tas5805 Digital Volume' 150
+
+aplay -Dhw:0,0 /data/the-stars-48k-60s.wav 
+```
+
+### ubuntu 测试
+
+```sh
+# 查看所有 usb 设备
+lsusb
+
+# ssh 连接 ubuntu
+ssh amlogic@10.28.39.83    # 1233456
+# scp 文件
+scp .\the-stars-48k-60s.wav amlogic@10.28.39.83:~/Desktop/lsken00
+# 在测试中选 korlan 输出
+
 ```
 
 
@@ -1696,10 +1711,14 @@ CONFIG_BOOTDELAY=5
 CONFIG_ENABLE_UBOOT_CLI=y
 ```
 
-## 查看二进制依赖
+## 查看二进制依赖和编译器
 
 ```
  readelf -d libOpenVX.so | grep NEEDED
+ 
+ # 看GLIB版本信息
+ strings libOpenVX.so | grep GLI
+ strings libOpenVX.so | grep GCC
 ```
 
 
