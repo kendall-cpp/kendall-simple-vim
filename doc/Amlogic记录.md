@@ -1486,7 +1486,7 @@ echo ff400000.dwc2_a > /sys/kernel/config/usb_gadget/amlogic/UDC
 
 > eg: Verisilicon_SW_Unified_Driver_6.4.9_Amlogic_20211231.tgz
 
-tar -zxf and copy 到 spencer-sdk/verisilicon，然后 cherry pick https://eureka-partner.googlesource.com/verisilicon-sdk （全部一个个cherry pick）
+> tar -zxf and copy 到 spencer-sdk/verisilicon，然后 cherry pick https://eureka-partner.googlesource.com/verisilicon-sdk （全部一个个cherry pick）
 
 ## 在 ubuntu 上构建 NN 模型
 
@@ -1507,7 +1507,6 @@ $ bash step1.sh ssd_small_multiout
 $ bash step2.sh ssd_small_multiout
 # rm ssd_small_multiout_be/ -rf
 # rm ssd_small_multiout.data 
-# rm ssd_small_multiout.quantize 
 # rm ssd_small_multiout.quantize 
 # rm tflite.export.data 
 # rm ssd_small_multiout.json 
@@ -1531,7 +1530,7 @@ bash step4_inference.sh ssd_small_multiout
 # /mnt/fileroot/shengken.lin/workspace/a5_buildroot/hardware/aml-4.9/npu/nanoq/hal/inc/gc_vsim_configs.h  
 # 参考上面的文件修改这个值
 # ssd_big_multiout/ssd_big_multiout_04_be.sh
---optimize VIPNANOQI_PID0XA1
+https://docs.google.com/document/d/1JcOd5uLQAqdS8EtGSqvew1or_HZnDBiNP2-DE3C9zQ0/edit# VIPNANOQI_PID0XA1
 --optimize VIP9000NANOS_PID0X1000000E  #av400
 ```
 

@@ -44,7 +44,7 @@
       - [build](#build)
     - [在 av400 上测试](#在-av400-上测试)
     - [下载 actuity tool](#下载-actuity-tool)
-      - [到 linux 上重新编译 NN](#到-linux-上重新编译-nn)
+      - [到 linux 上重新编译 NN case](#到-linux-上重新编译-nn-case)
 
 
 ---
@@ -1318,6 +1318,9 @@ Test: None
 
 - 修改 TOOLCHAIN 和 kernel
 
+
+- 修改 hal/os/linux/kernel/platform/amlogic/gc_hal_kernel_platform_amlogic.c
+
 - 编译
 
 ```sh
@@ -1338,8 +1341,145 @@ FPN_be$ ./build_vx.sh
 
 ### 在 av400 上测试
 
+```
+rmmod galcore
+insmod ./data/galcore.ko showArgs=1
+```
+
 ### 下载 actuity tool
 
-#### 到 linux 上重新编译 NN
+#### 到 linux 上重新编译 NN case
+
+**ubuntu 中编译 acuity-toolkit-binary**
+
+```sh
+# 解压出来的目录
+~/NN/64112/acuity-toolkit-binary-6.9.0
+
+/home/amlogic/NN/64112/acuity-toolkit-binary-6.9.0/google_test_model/FPN
+```
+
+- FPN_01.sh FPN
+
+```sh
+!/bin/bash
+
+pegasus_bin=../../bin/pegasus
+NAME=$1
+
+if [ ! -e "$pegasus_bin" ]; then
+    pegasus_bin=../../bin/pegasus.py
+fi
+
+$pegasus_bin import tflite \
+        --model tflite_graph.tflite \
+        --output-data ${NAME}.data \
+        --output-model ${NAME}.json
+```
+
+- FPN_02.sh FPN
+
+```sh
+#!/bin/bash
+
+pegasus_bin=../../bin/pegasus
+
+NAME=$1
+if [ ! -e "$pegasus_bin" ]; then
+    pegasus_bin=../../bin/pegasus.py
+fi
+
+$pegasus_bin generate inputmeta \
+        --model ${NAME}.json \
+        --input-meta-output ${NAME}_inputmeta.yml
+```
+
+- 修改 FPN_inputmeta.yml
+
+> https://docs.google.com/document/d/1JcOd5uLQAqdS8EtGSqvew1or_HZnDBiNP2-DE3C9zQ0/edit#
+
+
+- FPN_03.sh FPN
+
+```
+#!/bin/bash
+
+pegasus_bin=../../bin/pegasus
+NAME=$1
+
+if [ ! -e "$pegasus_bin" ]; then
+    pegasus_bin=../../bin/pegasus.py
+fi
+
+$pegasus_bin quantize --quantizer asymmetric_affine \
+        --qtype uint8 \
+        --with-input-meta ${NAME}_inputmeta.yml \
+        --model ${NAME}.json \
+        --model-data ${NAME}.data \
+        --rebuild
+```
+
+
+- FPN_04_a1.sh FPN
+
+- FPN_04_be.sh FPN
+
+> **这里需要修改对应的板子**    
+> --optimize VIP9000NANOS_PID0X1000000E  #av400
+> --optimize VIP9000NANODI_PID0XBE   #c2
+
+```sh
+#!/bin/bash
+
+pegasus_bin=../../bin/pegasus
+NAME=$1
+
+if [ ! -e "$pegasus_bin" ]; then
+    pegasus_bin=../../bin/pegasus.py
+fi
+
+$pegasus_bin export ovxlib \
+        --model ${NAME}.json \
+        --model-data ${NAME}.data \
+        --model-quantize ${NAME}.quantize \
+        --with-input-meta ${NAME}_inputmeta.yml \
+        --dtype quantized \
+        --optimize VIP9000NANOS_PID0X1000000E \
+        --viv-sdk /home/amlogic/VeriSilicon/VivanteIDE5.6.0/cmdtools/ \
+        --output-path ${NAME}/ \
+        --pack-nbg-unify
+
+        #--optimize VIP9000NANODI_PID0XBE \
+
+mv ${NAME}_nbg_unify ${NAME}_be
+mv ${NAME}_be/network_binary.nb ${NAME}_be/${NAME}_be.nb
+```
+
+- step4_inference.sh FPN
+
+```sh
+#!/bin/bash
+
+NAME=$1
+pegasus_bin=../../bin/pegasus
+
+if [ ! -e "$pegasus_bin" ]; then
+    pegasus_bin=../../bin/pegasus.py
+fi
+
+$pegasus_bin inference \
+        --dtype quantized \
+        --model ${NAME}.json \
+        --model-data ${NAME}.data \
+        --with-input-meta ${NAME}_inputmeta.yml
+```
+
+- 清除所有中间文件
+
+
+bash clean.sh FPN
+
+
+
 
 
