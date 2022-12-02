@@ -21,6 +21,10 @@
 - [工作流程](#工作流程)
   - [isp 内部优化 usleep](#isp-内部优化-usleep)
   - [yi-u_audio-log_uac_timing-tdm-cpu](#yi-u_audio-log_uac_timing-tdm-cpu)
+- [kernel 裁剪](#kernel-裁剪)
+  - [yuegui 飞书记录](#yuegui-飞书记录)
+- [kernel 起来 nandread去读卡](#kernel-起来-nandread去读卡)
+- [kernel 裁剪优化记录](#kernel-裁剪优化记录)
 
 
 -------------
@@ -530,7 +534,112 @@ git fetch https://eureka-partner.googlesource.com/amlogic/kernel refs/changes/05
 commit ID: c108b9c0c97bb5af5dfcaa5ab994a9b1d9ac2a00
 ```
 
+测试 patch： tmp_patch/u_audio_stash_google_underrun.patch
+
+---
+
+## kernel 裁剪
+
+https://partnerissuetracker.corp.google.com/issues/235426120
+
+> 裁剪 1m
+
+###  yuegui 飞书记录
+
+```
+抓trace 命令：
+echo 0 > /sys/kernel/debug/tracing/tracing_on
+echo 0 > /sys/kernel/debug/tracing/events/enable
+echo ""  > /sys/kernel/debug/tracing/trace
+echo 10240 > /sys/kernel/debug/tracing/buffer_size_kb
+
+echo 1 > /sys/kernel/debug/tracing/options/record-tgid
+echo 1 > /sys/kernel/debug/tracing/options/print-tgid
+echo 1 > /sys/kernel/debug/tracing/events/ipi/enable
+echo 1 > /sys/kernel/debug/tracing/events/cpufreq_interactive/enable
+echo 1 > /sys/kernel/debug/tracing/events/irq/enable
+echo 1 > /sys/kernel/debug/tracing/events/sched/enable
+echo 1 > /sys/kernel/debug/tracing/events/timer/enable
+echo 1 > /sys/kernel/debug/tracing/events/power/cpu_idle/enable
+echo 1 > /sys/kernel/debug/tracing/events/cpufreq_meson_trace/enable
+echo 0 > /sys/kernel/debug/tracing/events/kprobes/enable
+echo 0 > /sys/kernel/debug/tracing/events/rcu/enable
+echo 1 > /sys/kernel/debug/tracing/events/sched/sched_switch/enable
+echo 0 > /sys/kernel/debug/tracing/events/workqueue/enable
+
+echo 1 > /sys/kernel/debug/tracing/tracing_on
+echo "" > /sys/kernel/debug/tracing/trace
+
+busybox time nandread -d /dev/mtd/mtd4 -L 6144000 -f /cache/.data/dump-page0.hex &
+
+等 五秒 按回车
+
+sleep 5
+
+echo 0 > /sys/kernel/debug/tracing/tracing_on
+cat /sys/kernel/debug/tracing/trace > /data/trace_01.txt
+```
+
+查看 trace.txt 工具
+
+```sh
+https://ui.perfetto.dev/
+# 要chrome打开
+```
+
+
+- 打开 trace patch
+
+https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/239808
+
+```c
+git cherry-pick --continue  // 1. 解决完冲突以后，继续下一个 cherry-pick
+git cherry-pick --abort   // 2. 如果不想解决冲突，要放弃合并，用此命令回到操作以前
+git cherry-pick --quit   // 3. 不想解决冲突，放弃合并，且保持现有情况，不回到操作以前
+```
+
+## kernel 起来 nandread去读卡
+
+nand 读测试： busybox time nandread -d /dev/mtd/mtd4 -L 6144000 -f /cache/.data/dump-page0.hex
+
+
+## kernel 裁剪优化记录
+
+查看大小
+
+```
+ ./arch/arm64/boot/kernel.korlan.gz-dtb.korlan-b1
+```
+
+- 打上这两个 patch 前的大小
+
+```sh
+-rw-r--r--  1 shengken.lin szsoftware  6247908 Nov 25 23:59 kernel.korlan.gz-dtb.korlan-p2
+```
+
+- 优化后
+
+```sh
+https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/268825
+
+https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/268826
+
+-rw-r--r--  1 shengken.lin szsoftware  5241196 Dec  2 13:56 fct_kernel.korlan.gz-dtb.korlan-p2
+
+#  < > VFAT (Windows-95) fs support    关掉这个
+-rw-r--r--  1 shengken.lin szsoftware  5232327 Dec  2 15:58 kernel.korlan.gz-dtb.korlan-p2
+
+
+```
+
+
+busybox time nandread -d /dev/mtd/mtd4 -L 6144000 -f /cache/.data/dump-page0.hex & 
+/data/iostat -d 1 > /data/5.15-iostat-test2.log
+
+/data/iostat  -d 1 > /data/5.15-iostat-test3.log &
+busybox time nandread -d /dev/mtd/mtd4 -L 6144000 -f /cache/.data/dump-page0.hex
 
 
 
-
+/data/iostat  -d 1 > /data/5.15-iostat-1min.log
+/data/iostat  -d 1 > /data/4.19-iostat-1min.log
