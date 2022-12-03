@@ -1532,6 +1532,7 @@ bash step4_inference.sh ssd_small_multiout
 # ssd_big_multiout/ssd_big_multiout_04_be.sh
 https://docs.google.com/document/d/1JcOd5uLQAqdS8EtGSqvew1or_HZnDBiNP2-DE3C9zQ0/edit# VIPNANOQI_PID0XA1
 --optimize VIP9000NANOS_PID0X1000000E  #av400
+--optimize VIP9000NANODI_PID0XBE   #c2
 ```
 
 ### linux打开当前文件夹
@@ -1617,6 +1618,10 @@ Average 5.54ms or 5542.29us
 
 # 如果想一直跑需要声明环境变量 （venus）
 export VNN_LOOP_TIME=10000
+
+# 声明环境变量 打印更多信息
+export VIV_VX_DEBUG_LEVEL=1
+export VIV_NN_LOGLEVEL=5
 ```
 
 # ramdisk.img 解包

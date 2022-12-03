@@ -1,9 +1,9 @@
 
 - [NN模型测试和转换](#nn模型测试和转换)
-  - [编译出 ssd_small_multiout_be.nb](#编译出-ssd_small_multiout_benb)
+  - [编译出 ssd\_small\_multiout\_be.nb](#编译出-ssd_small_multiout_benb)
 - [TASK: VSI 版本编译问题 bug](#task-vsi-版本编译问题-bug)
   - [复现测试](#复现测试)
-    - [update kernel & uboot & system](#update-kernel--uboot--system)
+    - [update kernel \& uboot \& system](#update-kernel--uboot--system)
     - [编译 spencer ota 包](#编译-spencer-ota-包)
     - [Replace bootloader](#replace-bootloader)
       - [拷贝解压烧录](#拷贝解压烧录)
@@ -36,7 +36,7 @@
     - [insmod galcore时 error](#insmod-galcore时-error)
       - [fix](#fix)
     - [编译 case 模型时出错](#编译-case-模型时出错)
-    - [重新编译 FPN_be 修改 optimize](#重新编译-fpn_be-修改-optimize)
+    - [重新编译 FPN\_be 修改 optimize](#重新编译-fpn_be-修改-optimize)
     - [测试 case 错误](#测试-case-错误)
       - [解决](#解决)
   - [升级到 NN6.4.11.2](#升级到-nn64112)
@@ -45,6 +45,16 @@
     - [在 av400 上测试](#在-av400-上测试)
     - [下载 actuity tool](#下载-actuity-tool)
       - [到 linux 上重新编译 NN case](#到-linux-上重新编译-nn-case)
+    - [测试模型](#测试模型)
+      - [ssd\_small\_multiout\_be](#ssd_small_multiout_be)
+      - [FPN](#fpn)
+      - [alexnet\_caffe](#alexnet_caffe)
+      - [googlenet\_caffe](#googlenet_caffe)
+      - [mobilenetv1](#mobilenetv1)
+      - [yolov2](#yolov2)
+      - [inceptionv1](#inceptionv1)
+      - [ssd\_mobilenet\_v1](#ssd_mobilenet_v1)
+      - [ssd\_big\_multiout](#ssd_big_multiout)
 
 
 ---
@@ -387,6 +397,7 @@ chmod 777 /data/*
 
 # 声明环境变量 打印更多信息
 export VIV_VX_DEBUG_LEVEL=1
+export VIV_NN_LOGLEVEL=5
 
 # 开始测试
 cd /data && ./mynn ./mynn.export.data ./iter_0_input_0_out0_1_3_227_227.tensor 
@@ -1479,7 +1490,296 @@ $pegasus_bin inference \
 
 bash clean.sh FPN
 
+- 测试方法
+
+```sh
+bash step1.sh FPN 
+vim FPN_inputmeta.yml 
+bash step2.sh FPN
+vim FPN_04_be.sh   # 修改成对应的板子
+bash step3.sh FPN
+ bash step4_inference.sh FPN 
+```
+
+---
+
+### 测试模型
+
+#### ssd_small_multiout_be
+
+```sh
+/data/ssd_small_multiout_be # ./tflite ./ssd_small_multiout_be.nb iter_0_input_0 
+_out0_1_288_512_3.tensor
+Create Neural Network: 14ms or 14604us 
+Verify...
+Verify Graph: 2ms or 2259us 
+Start run graph [1] times... 
+Run the 1 time: 4.20ms or 4199.62us 
+vxProcessGraph execution time:
+Total   4.30ms or 4303.92us
+Average 4.30ms or 4303.92us
+ --- Top5 ---
+2719: 7162.175781
+3103: 7162.175781
+4255: 7162.175781
+1567: 7021.740723
+2335: 7021.740723
+
+output0_12_32_18_1.dat
+output10_24_1_1_1.dat
+output11_546_1_1_1.dat
+output1_273_32_18_1.dat
+output2_24_16_9_1.dat
+output3_546_16_9_1.dat
+output4_24_8_5_1.dat
+output5_546_8_5_1.dat
+output6_24_4_3_1.dat
+output7_546_4_3_1.dat
+output8_24_2_2_1.dat
+output9_546_2_2_1.dat
+```
+
+#### FPN
+
+```sh
+/data/FPN # ./tflite ./FPN_be.nb ./iter_0_input_0_out0_1_640_640_3.tensor
+#productname=VIP9000Nano-S, pid=0x1000000e 
+graph gpuCount=1 interConnectRingCount=0
+NN ring buffer is disabled
+Create Neural Network: 55ms or 55517us 
+Verify...
+vxoGraph_InitializeAllNodeKernels:22238, graph: 0x102c928, count: 1 
+generate command buffer, total device count=1, core count per-device: 1,
+binaryGenerateStatesBuffer:7067 current device id=0
+binaryGenerateStatesBuffer:7068 VIP SRAM base address=0x400000 physical=0x40aa00 size=0x35600
+binaryGenerateStatesBuffer:7069 AXI SRAM base address=0x0 physical=0x0 size=0x0
+vxoBinaryGraph_CheckInputOutputParametes[3851]: tensor shape doesn't matched. index = 8, NBG shape: 24 5 5 1 , run time shape: 24 80 80 1
+tp patch output failed, please check your output format, output 8
+fail to initial memory in generate states buffer
+fail in import kernel from file initializer
+Failed to initialize Kernel "FPN_be" of Node 0x1049a78 (status = -1)
+E [main.c:vnn_VerifyGraph:91]CHECK STATUS(-1:A generic error code, used when no other describes the error.)
+E [main.c:main:240]CHECK STATUS(-1:A generic error code, used when no other describes the error.)
+```
+
+#### alexnet_caffe
+
+```sh
+/data/alexnet_caffe # ./tflite ./alexnet_caffe_be.nb ./space_shuttle.jpg
+Create Neural Network: 55ms or 55621us
+Verify Graph: 1ms or 1541us
+Start run graph [1] times... 
+Total segments: 1.
+Run segment 0. Type: 1, operations: [1, 46].
+Segment 0 submited.
+Run the 1 time: 5.98ms or 5975.17us 
+vxProcessGraph execution time:
+Total   6.05ms or 6048.79us
+Average 6.05ms or 6048.79us
+ --- Top5 ---
+812: 0.954590
+404: 0.024567
+895: 0.005264
+908: 0.003252
+565: 0.002954
+```
+
+#### googlenet_caffe
+
+差距很大
+
+```sh
+/data/googlenet_caffe_be # ./tflite ./googlenet_caffe_be.nb ./goldfish_224x224.j 
+peg
+Create Neural Network: 18ms or 18343us 
+Verify...
+Verify Graph: 1ms or 1487us
+Start run graph [1] times... 
+Run the 1 time: 8.02ms or 8019.38us 
+vxProcessGraph execution time:
+Total   8.10ms or 8102.88us
+Average 8.10ms or 8102.88us
+ --- Top5 ---
+  1: 0.999512
+124: 0.000121
+963: 0.000121
+ 27: 0.000096
+122: 0.000068
+```
+
+#### mobilenetv1
+
+```sh
+/data/mobilenetv1 # ./tflite ./mobilenetv1_be.nb goldfish_224x224.jpeg
+Create Neural Network: 15ms or 15948us 
+Verify...
+Verify Graph: 1ms or 1590us 
+Start run graph [1] times... 
+Run the 1 time: 3.86ms or 3862.96us 
+vxProcessGraph execution time:
+Total   3.95ms or 3949.04us
+Average 3.95ms or 3949.04us
+ --- Top5 ---
+  1: 14.733068
+115: 11.277164
+925: 9.003542
+ 29: 8.275983
+117: 8.275983
 
 
+/data/mobilenetv1 # ./tflite ./mobilenetv1_be.nb iter_0_data_0_out0_1_3_224_224. 
+tensor
+Create Neural Network: 16ms or 16642us 
+Verify...
+Verify Graph: 1ms or 1547us 
+Start run graph [1] times... 
+Run the 1 time: 3.83ms or 3830.00us 
+vxProcessGraph execution time:
+Total   3.92ms or 3916.33us
+Average 3.92ms or 3916.33us
+ --- Top5 ---
+  1: 14.733068
+115: 10.913383
+925: 8.912597
+ 29: 8.094093
+117: 8.094093
+```
+
+#### yolov2
+
+> 有点差距
+
+```
+/data/yolov2 # ./tflite ./yolov2_be.nb space_shuttle_416x416.jpg
+Create Neural Network: 42ms or 42236us 
+Verify...
+Verify Graph: 1ms or 1949us 
+Start run graph [1] times... 
+Run the 1 time: 30.51ms or 30513.04us 
+vxProcessGraph execution time:
+Total   30.60ms or 30600.83us
+Average 30.60ms or 30600.83us
+ --- Top5 --- 
+2311: 10.914330
+2312: 10.412522
+2313: 10.412522
+1283: 9.910713
+2128: 9.785261
+
+/data/yolov2 # ./tflite ./yolov2_be.nb iter_0_input_0_out0_1_3_416_416.tensor
+Create Neural Network: 42ms or 42444us 
+Verify...
+Verify Graph: 2ms or 2040us 
+Start run graph [1] times... 
+Run the 1 time: 30.45ms or 30446.79us 
+vxProcessGraph execution time:
+Total   30.53ms or 30533.46us
+Average 30.53ms or 30533.46us
+ --- Top5 --- 
+2311: 10.914330
+2313: 10.412522
+1283: 10.287070
+2312: 10.287070
+1284: 9.910713
+```
+
+#### inceptionv1
+
+```
+/data/inceptionv1 # ./tflite inceptionv1_be.nb ./goldfish.jpeg
+Create Neural Network: 17ms or 17803us 
+Verify...
+Verify Graph: 1ms or 1472us
+Start run graph [1] times... 
+Run the 1 time: 6.38ms or 6376.12us 
+vxProcessGraph execution time:
+Total   6.46ms or 6460.88us
+Average 6.46ms or 6460.88us
+ --- Top5 ---
+  2: 0.884766
+928: 0.053040
+116: 0.012253
+869: 0.005085
+  1: 0.003000
+/data/inceptionv1 # ./tflite inceptionv1_be.nb ./iter_0_input_1_out0_1_224_224_3 
+.tensor
+Create Neural Network: 18ms or 18603us 
+Verify...
+Verify Graph: 1ms or 1532us 
+Start run graph [1] times... 
+Run the 1 time: 6.37ms or 6367.71us 
+vxProcessGraph execution time:
+Total   6.44ms or 6440.46us
+Average 6.44ms or 6440.46us
+ --- Top5 ---
+  2: 0.882324
+928: 0.049896
+116: 0.016373
+869: 0.004780
+964: 0.004009
+```
+
+#### ssd_mobilenet_v1
+
+```sh
+/data/ssd_mobilenet_v1 # ./tflite ssd_mobilenet_v1_be.nb iter_0_input_0_out0_1_3 
+00_300_3.tensor
+#productname=VIP9000Nano-S, pid=0x1000000e 
+graph gpuCount=1 interConnectRingCount=0
+NN ring buffer is disabled
+Create Neural Network: 19ms or 19578us 
+Verify...
+vxoGraph_InitializeAllNodeKernels:22238, graph: 0x14a9928, count: 1
+generate command buffer, total device count=1, core count per-device: 1,
+binaryGenerateStatesBuffer:7067 current device id=0
+binaryGenerateStatesBuffer:7068 VIP SRAM base address=0x400000 physical=0x40aa00 size=0x35600
+binaryGenerateStatesBuffer:7069 AXI SRAM base address=0x0 physical=0x0 size=0x0
+vxoBinaryGraph_CheckInputOutputParametes[3851]: tensor shape doesn't matched. index = 5, NBG shape: 24 1 1 1 , run time shape: 546 5 5 1
+tp patch output failed, please check your output format, output 5
+fail to initial memory in generate states buffer
+fail in import kernel from file initializer
+Failed to initialize Kernel "ssd_mobilenet_v1_b" of Node 0x14d3118 (status = -1)
+E [main.c:vnn_VerifyGraph:91]CHECK STATUS(-1:A generic error code, used when no other describes the error.)
+E [main.c:main:240]CHECK STATUS(-1:A generic error code, used when no other describes the error.)
 
 
+/data/ssd_mobilenet_v1 # ./tflite ssd_mobilenet_v1_be.nb 300_300.jpg
+#productname=VIP9000Nano-S, pid=0x1000000e 
+graph gpuCount=1 interConnectRingCount=0
+NN ring buffer is disabled
+Create Neural Network: 20ms or 20288us
+Verify...
+vxoGraph_InitializeAllNodeKernels:22238, graph: 0xf43928, count: 1 
+generate command buffer, total device count=1, core count per-device: 1,
+binaryGenerateStatesBuffer:7067 current device id=0
+binaryGenerateStatesBuffer:7068 VIP SRAM base address=0x400000 physical=0x40aa00 size=0x35600
+binaryGenerateStatesBuffer:7069 AXI SRAM base address=0x0 physical=0x0 size=0x0
+vxoBinaryGraph_CheckInputOutputParametes[3851]: tensor shape doesn't matched. index = 5, NBG shape: 24 1 1 1 , run time shape: 546 5 5 1
+tp patch output failed, please check your output format, output 5
+fail to initial memory in generate states buffer
+fail in import kernel from file initializer
+Failed to initialize Kernel "ssd_mobilenet_v1_b" of Node 0xf6d118 (status = -1)
+E [main.c:vnn_VerifyGraph:91]CHECK STATUS(-1:A generic error code, used when no other describes the error.)
+E [main.c:main:240]CHECK STATUS(-1:A generic error code, used when no other describes the error.)
+```
+
+#### ssd_big_multiout
+
+```sh
+/data/ssd_big_multiout # ./tflite ./ssd_big_multiout_be.nb ./iter_0_input_0_out0 
+_1_448_800_3.tensor
+Create Neural Network: 17ms or 17738us 
+Verify...
+Verify Graph: 3ms or 3859us
+Start run graph [1] times... 
+Run the 1 time: 13.61ms or 13611.79us 
+vxProcessGraph execution time:
+Total   13.70ms or 13698.42us
+Average 13.70ms or 13698.42us
+ --- Top5 --- 
+1243: 13279.916992
+1843: 13279.916992
+2443: 13279.916992
+3043: 13279.916992
+3643: 13279.916992
+```
