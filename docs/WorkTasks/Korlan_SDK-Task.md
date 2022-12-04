@@ -4,7 +4,7 @@
   - [最终提交2](#最终提交2)
   - [复现 dock-test-tool 测试问题](#复现-dock-test-tool-测试问题)
 - [添加 dhcp fct-korlan](#添加-dhcp-fct-korlan)
-  - [kernel 打开个 CONFIG_USB_RTL8152](#kernel-打开个-config_usb_rtl8152)
+  - [kernel 打开个 CONFIG\_USB\_RTL8152](#kernel-打开个-config_usb_rtl8152)
   - [fctory 设置 IP](#fctory-设置-ip)
   - [设置开机自动获取 ip](#设置开机自动获取-ip)
   - [adb调试ipv6](#adb调试ipv6)
@@ -15,12 +15,12 @@
   - [GPIO测试](#gpio测试)
     - [Set internal default pull up/down/disabled](#set-internal-default-pull-updowndisabled)
     - [GPIO event](#gpio-event)
-- [flush-ubifs_7_0(adb push ota.zip) 线程 CPU 过高导致 tdm underrun](#flush-ubifs_7_0adb-push-otazip-线程-cpu-过高导致-tdm-underrun)
+- [flush-ubifs\_7\_0(adb push ota.zip) 线程 CPU 过高导致 tdm underrun](#flush-ubifs_7_0adb-push-otazip-线程-cpu-过高导致-tdm-underrun)
   - [复现问题](#复现问题)
     - [perf 工具使用](#perf-工具使用)
 - [工作流程](#工作流程)
   - [isp 内部优化 usleep](#isp-内部优化-usleep)
-  - [yi-u_audio-log_uac_timing-tdm-cpu](#yi-u_audio-log_uac_timing-tdm-cpu)
+  - [yi-u\_audio-log\_uac\_timing-tdm-cpu](#yi-u_audio-log_uac_timing-tdm-cpu)
 - [kernel 裁剪](#kernel-裁剪)
   - [yuegui 飞书记录](#yuegui-飞书记录)
 - [kernel 起来 nandread去读卡](#kernel-起来-nandread去读卡)
@@ -629,7 +629,9 @@ https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/268826
 #  < > VFAT (Windows-95) fs support    关掉这个
 -rw-r--r--  1 shengken.lin szsoftware  5232327 Dec  2 15:58 kernel.korlan.gz-dtb.korlan-p2
 
-
+# ？？
+# Debug the x86 FPU code    向内核添加额外的完整性检查和(启动时)调试打印
+# [ ] Runtime Testing  ---- 没有
 ```
 
 
