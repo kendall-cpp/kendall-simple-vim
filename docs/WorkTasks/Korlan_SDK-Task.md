@@ -4,7 +4,7 @@
   - [最终提交2](#最终提交2)
   - [复现 dock-test-tool 测试问题](#复现-dock-test-tool-测试问题)
 - [添加 dhcp fct-korlan](#添加-dhcp-fct-korlan)
-  - [kernel 打开个 CONFIG\_USB\_RTL8152](#kernel-打开个-config_usb_rtl8152)
+  - [kernel 打开个 CONFIG_USB_RTL8152](#kernel-打开个-config_usb_rtl8152)
   - [fctory 设置 IP](#fctory-设置-ip)
   - [设置开机自动获取 ip](#设置开机自动获取-ip)
   - [adb调试ipv6](#adb调试ipv6)
@@ -15,16 +15,17 @@
   - [GPIO测试](#gpio测试)
     - [Set internal default pull up/down/disabled](#set-internal-default-pull-updowndisabled)
     - [GPIO event](#gpio-event)
-- [flush-ubifs\_7\_0(adb push ota.zip) 线程 CPU 过高导致 tdm underrun](#flush-ubifs_7_0adb-push-otazip-线程-cpu-过高导致-tdm-underrun)
+- [flush-ubifs_7_0(adb push ota.zip) 线程 CPU 过高导致 tdm underrun](#flush-ubifs_7_0adb-push-otazip-线程-cpu-过高导致-tdm-underrun)
   - [复现问题](#复现问题)
     - [perf 工具使用](#perf-工具使用)
 - [工作流程](#工作流程)
   - [isp 内部优化 usleep](#isp-内部优化-usleep)
-  - [yi-u\_audio-log\_uac\_timing-tdm-cpu](#yi-u_audio-log_uac_timing-tdm-cpu)
-- [kernel 裁剪](#kernel-裁剪)
+  - [yi-u_audio-log_uac_timing-tdm-cpu](#yi-u_audio-log_uac_timing-tdm-cpu)
+- [nandread去读卡](#nandread去读卡)
   - [yuegui 飞书记录](#yuegui-飞书记录)
-- [kernel 起来 nandread去读卡](#kernel-起来-nandread去读卡)
-- [kernel 裁剪优化记录](#kernel-裁剪优化记录)
+  - [测试 nandread](#测试-nandread)
+- [kernel 裁剪](#kernel-裁剪)
+  - [kernel 裁剪优化记录](#kernel-裁剪优化记录)
 
 
 -------------
@@ -538,11 +539,9 @@ commit ID: c108b9c0c97bb5af5dfcaa5ab994a9b1d9ac2a00
 
 ---
 
-## kernel 裁剪
+## nandread去读卡
 
-https://partnerissuetracker.corp.google.com/issues/235426120
-
-> 裁剪 1m
+> https://jira.amlogic.com/browse/GH-3176
 
 ###  yuegui 飞书记录
 
@@ -598,12 +597,122 @@ git cherry-pick --abort   // 2. 如果不想解决冲突，要放弃合并，用
 git cherry-pick --quit   // 3. 不想解决冲突，放弃合并，且保持现有情况，不回到操作以前
 ```
 
-## kernel 起来 nandread去读卡
+### 测试 nandread
 
-nand 读测试： busybox time nandread -d /dev/mtd/mtd4 -L 6144000 -f /cache/.data/dump-page0.hex
+> https://jira.amlogic.com/browse/GH-3176
+
+```
+busybox time nandread -d /dev/mtd/mtd4 -L 6144000 -f /cache/.data/dump-page0.hex & 
+/data/iostat -d 1 > /data/5.15-iostat-test2.log
+
+/data/iostat  -d 1 > /data/5.15-iostat-test3.log &
+busybox time nandread -d /dev/mtd/mtd4 -L 6144000 -f /cache/.data/dump-page0.hex
 
 
-## kernel 裁剪优化记录
+/data/iostat  -d 1 > /data/5.15-iostat-1min.log
+/data/iostat  -d 1 > /data/4.19-iostat-1min.log
+```
+
+- 关掉 iot_dock_usb
+
+```sh
+修改 vendor/amlogic/korlan/init.rc
+
+ /data/iotop  -m 5 -s read -n 30
+```
+
+jiucheng.xu 测试 nandrad 读卡
+
+```sh
+
+echo > /sys/kernel/debug/tracing/trace
+echo 40960 > /sys/kernel/debug/tracing/buffer_size_kb
+echo 'p:my_kprobe __spi_pump_messages' >> /sys/kernel/debug/tracing/kprobe_events
+echo 1 > /sys/kernel/debug/tracing/events/kprobes/my_kprobe/enable
+echo 1 > /sys/kernel/debug/tracing/options/stacktrace  
+echo 1 > /sys/kernel/debug/tracing/tracing_on
+# 测试程序 &
+
+busybox time nandread -d /dev/mtd/mtd4 -L 6144000 -f /cache/.data/dump-page0.hex &
+# sleep 2
+echo 0 > /sys/kernel/debug/tracing/tracing_on
+cat /sys/kernel/debug/tracing/trace > /data/b.txt
+```
+
+- 关掉 cgroup-metricsd  & standalone_mojo & process_monitor 
+
+- 开机执行：
+
+```sh
+/data/iotop -m 5 -s read -n 20 > /data/a.txt
+busybox time nandread -d /dev/mtd/mtd4 -L 6144000 -f /cache/.data/dump-page0.hex
+```
+
+```sh
+/data/iotop -m 5 -s read -n 20 > /data/a.txt &
+/data/iostat 1 > /data/b.txt &
+busybox time nandread -d /dev/mtd/mtd4 -L 6144000 -f /cache/.data/dump-page0.hex
+killall iostat
+```
+
+測試
+
+```
+echo 0 > /sys/kernel/debug/tracing/tracing_on
+echo 0 > /sys/kernel/debug/tracing/events/enable
+echo ""  > /sys/kernel/debug/tracing/trace
+echo 10240 > /sys/kernel/debug/tracing/buffer_size_kb
+
+echo 1 > /sys/kernel/debug/tracing/options/record-tgid
+echo 1 > /sys/kernel/debug/tracing/options/print-tgid
+echo 1 > /sys/kernel/debug/tracing/events/ipi/enable
+echo 1 > /sys/kernel/debug/tracing/events/cpufreq_interactive/enable
+echo 1 > /sys/kernel/debug/tracing/events/irq/enable
+echo 1 > /sys/kernel/debug/tracing/events/sched/enable
+echo 1 > /sys/kernel/debug/tracing/events/timer/enable
+echo 1 > /sys/kernel/debug/tracing/events/power/cpu_idle/enable
+echo 1 > /sys/kernel/debug/tracing/events/cpufreq_meson_trace/enable
+echo 0 > /sys/kernel/debug/tracing/events/kprobes/enable
+echo 0 > /sys/kernel/debug/tracing/events/rcu/enable
+echo 1 > /sys/kernel/debug/tracing/events/sched/sched_switch/enable
+echo 0 > /sys/kernel/debug/tracing/events/workqueue/enable
+
+echo 1 > /sys/kernel/debug/tracing/tracing_on
+busybox time nandread -d /dev/mtd/mtd4 -L 6144000 -f /cache/.data/dump-page0.hex
+echo 0 > /sys/kernel/debug/tracing/tracing_on
+dd if=/sys/kernel/debug/tracing/trace of=/tmp/trace.bringup.bin bs=1M
+```
+
+```
+echo 0 > /sys/kernel/debug/tracing/tracing_on
+echo 0 > /sys/kernel/debug/tracing/events/enable
+echo ""  > /sys/kernel/debug/tracing/trace
+echo 40960 > /sys/kernel/debug/tracing/buffer_size_kb
+
+echo 1 > /sys/kernel/debug/tracing/options/record-tgid
+echo 1 > /sys/kernel/debug/tracing/events/ipi/enable
+echo 1 > /sys/kernel/debug/tracing/events/irq/enable
+echo 1 > /sys/kernel/debug/tracing/events/sched/enable
+echo 1 > /sys/kernel/debug/tracing/events/timer/enable
+echo 1 > /sys/kernel/debug/tracing/events/power/cpu_idle/enable
+echo 1 > /sys/kernel/debug/tracing/events/sched/sched_switch/enable
+echo 1 > /sys/kernel/debug/tracing/tracing_on
+busybox time nandread -d /dev/mtd/mtd4 -L 6144000 -f /cache/.data/dump-page0.hex &
+sleep 10
+echo 0 > /sys/kernel/debug/tracing/tracing_on
+dd if=/sys/kernel/debug/tracing/trace of=/tmp/trace bs=1M
+```
+
+
+
+## kernel 裁剪
+
+https://partnerissuetracker.corp.google.com/issues/235426120
+
+> 裁剪 1m
+
+
+### kernel 裁剪优化记录
 
 查看大小
 
@@ -635,13 +744,3 @@ https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/268826
 ```
 
 
-busybox time nandread -d /dev/mtd/mtd4 -L 6144000 -f /cache/.data/dump-page0.hex & 
-/data/iostat -d 1 > /data/5.15-iostat-test2.log
-
-/data/iostat  -d 1 > /data/5.15-iostat-test3.log &
-busybox time nandread -d /dev/mtd/mtd4 -L 6144000 -f /cache/.data/dump-page0.hex
-
-
-
-/data/iostat  -d 1 > /data/5.15-iostat-1min.log
-/data/iostat  -d 1 > /data/4.19-iostat-1min.log

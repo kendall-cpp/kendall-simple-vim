@@ -1,9 +1,9 @@
 
 - [NN模型测试和转换](#nn模型测试和转换)
-  - [编译出 ssd\_small\_multiout\_be.nb](#编译出-ssd_small_multiout_benb)
+  - [编译出 ssd_small_multiout_be.nb](#编译出-ssd_small_multiout_benb)
 - [TASK: VSI 版本编译问题 bug](#task-vsi-版本编译问题-bug)
   - [复现测试](#复现测试)
-    - [update kernel \& uboot \& system](#update-kernel--uboot--system)
+    - [update kernel & uboot & system](#update-kernel--uboot--system)
     - [编译 spencer ota 包](#编译-spencer-ota-包)
     - [Replace bootloader](#replace-bootloader)
       - [拷贝解压烧录](#拷贝解压烧录)
@@ -36,7 +36,7 @@
     - [insmod galcore时 error](#insmod-galcore时-error)
       - [fix](#fix)
     - [编译 case 模型时出错](#编译-case-模型时出错)
-    - [重新编译 FPN\_be 修改 optimize](#重新编译-fpn_be-修改-optimize)
+    - [重新编译 FPN_be 修改 optimize](#重新编译-fpn_be-修改-optimize)
     - [测试 case 错误](#测试-case-错误)
       - [解决](#解决)
   - [升级到 NN6.4.11.2](#升级到-nn64112)
@@ -46,15 +46,15 @@
     - [下载 actuity tool](#下载-actuity-tool)
       - [到 linux 上重新编译 NN case](#到-linux-上重新编译-nn-case)
     - [测试模型](#测试模型)
-      - [ssd\_small\_multiout\_be](#ssd_small_multiout_be)
+      - [ssd_small_multiout_be](#ssd_small_multiout_be)
       - [FPN](#fpn)
-      - [alexnet\_caffe](#alexnet_caffe)
-      - [googlenet\_caffe](#googlenet_caffe)
+      - [alexnet_caffe](#alexnet_caffe)
+      - [googlenet_caffe](#googlenet_caffe)
       - [mobilenetv1](#mobilenetv1)
       - [yolov2](#yolov2)
       - [inceptionv1](#inceptionv1)
-      - [ssd\_mobilenet\_v1](#ssd_mobilenet_v1)
-      - [ssd\_big\_multiout](#ssd_big_multiout)
+      - [ssd_mobilenet_v1](#ssd_mobilenet_v1)
+      - [ssd_big_multiout](#ssd_big_multiout)
 
 
 ---
@@ -1721,6 +1721,8 @@ Average 6.44ms or 6440.46us
 
 #### ssd_mobilenet_v1
 
+参考 6.4.0.12 修改 vnn_.c output 文件顺序
+
 ```sh
 /data/ssd_mobilenet_v1 # ./tflite ssd_mobilenet_v1_be.nb iter_0_input_0_out0_1_3 
 00_300_3.tensor
@@ -1743,24 +1745,22 @@ E [main.c:vnn_VerifyGraph:91]CHECK STATUS(-1:A generic error code, used when no 
 E [main.c:main:240]CHECK STATUS(-1:A generic error code, used when no other describes the error.)
 
 
-/data/ssd_mobilenet_v1 # ./tflite ssd_mobilenet_v1_be.nb 300_300.jpg
-#productname=VIP9000Nano-S, pid=0x1000000e 
-graph gpuCount=1 interConnectRingCount=0
-NN ring buffer is disabled
-Create Neural Network: 20ms or 20288us
+/data/ssd_small_multiout_be # ./tflite ./ssd_mobilenet_v1_be.nb iter_0_input_0_o
+ut0_1_288_512_3.tensor
+Create Neural Network: 18ms or 18898us
 Verify...
-vxoGraph_InitializeAllNodeKernels:22238, graph: 0xf43928, count: 1 
-generate command buffer, total device count=1, core count per-device: 1,
-binaryGenerateStatesBuffer:7067 current device id=0
-binaryGenerateStatesBuffer:7068 VIP SRAM base address=0x400000 physical=0x40aa00 size=0x35600
-binaryGenerateStatesBuffer:7069 AXI SRAM base address=0x0 physical=0x0 size=0x0
-vxoBinaryGraph_CheckInputOutputParametes[3851]: tensor shape doesn't matched. index = 5, NBG shape: 24 1 1 1 , run time shape: 546 5 5 1
-tp patch output failed, please check your output format, output 5
-fail to initial memory in generate states buffer
-fail in import kernel from file initializer
-Failed to initialize Kernel "ssd_mobilenet_v1_b" of Node 0xf6d118 (status = -1)
-E [main.c:vnn_VerifyGraph:91]CHECK STATUS(-1:A generic error code, used when no other describes the error.)
-E [main.c:main:240]CHECK STATUS(-1:A generic error code, used when no other describes the error.)
+Verify Graph: 3ms or 3168us
+Start run graph [1] times...
+Run the 1 time: 8.70ms or 8702.71us
+vxProcessGraph execution time:
+Total   8.79ms or 8791.00us
+Average 8.79ms or 8791.00us
+ --- Top5 ---
+3646: 4.105077
+3190: 3.442968
+3418: 3.442968
+1594: 3.376757
+1822: 3.310546
 ```
 
 #### ssd_big_multiout

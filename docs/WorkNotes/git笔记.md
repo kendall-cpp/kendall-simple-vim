@@ -216,6 +216,8 @@ git checkout -b new_branch   创建并切换分支
 
 git branch -d new_branch   删除分支，但是不能删除自己，得切换到其他分支，而且**当前分支如果有文件也不能删除**，建议想先合并
 
+git branch -D new_branch    没有 merge 删除
+
 ```sh
 git checkout -b <branch> origin/<branch>   # 先在本地建立一个分支，并切换到该分支，然后从远程分支上同步代码到该分支上，并建立关联
 git checkout -t origin/<branch>		# 这个的作用和上面的一样
@@ -534,6 +536,13 @@ git cherry-pick <commitHash>
 git fetch https://eureka-partner.googlesource.com/verisilicon-sdk refs/changes/27/245927/1 && git cherry-pick FETCH_HEAD -x
 ```
 
+- 如果遇到冲突，解决冲突，然后 git commit -s 
+
+```c
+git cherry-pick --continue  // 1. 解决完冲突以后，继续下一个 cherry-pick
+git cherry-pick --abort   // 2. 如果不想解决冲突，要放弃合并，用此命令回到操作以前
+git cherry-pick --quit   // 3. 不想解决冲突，放弃合并，且保持现有情况，不回到操作以前
+```
 ---
 
 ## repo 命令
