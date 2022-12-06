@@ -42,6 +42,11 @@ cp  defconfig  arch/arm64/configs/aplex_cmi_aa158_defconfig -rf
 
 和普通的defconfig不同，Amlogic 的 defconfig 是没有隐藏依赖的，直接 make menuconfig 生成 .config , 然后和 defconfig 对比，然后拷贝即可，使用 build_kernel 编译的时候会去 diff defconfig 和 `.config` 。
 
+- make menuconfig 修改
+- 编译一遍
+- vim -d 修改 .config 和 defconfig
+- 再编译
+
 ---
 
 # 设备树

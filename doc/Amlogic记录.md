@@ -447,6 +447,7 @@ source build/envsetup.sh
 # rm out/target/product/korlan/obj/PACKAGING -rf
 # 删掉之后需要重新编译 korlan
 PARTNER_BUILD=true BOARD_NAME=korlan-b1 make -j30 otapackage KERNEL_VERSION=5.15
+PARTNER_BUILD=true BOARD_NAME=korlan-p2 make -j30 otapackage KERNEL_VERSION=5.15
 # error1 
 # chromium/chromecast_gn.mk:68: *** Unknown PRODUCT_SETUP_NAME: "" Must be one of {chromecast, tv, audio}.  Stop.
 # 解决 --全部编译 korlan-eng
@@ -480,7 +481,7 @@ cd /mnt/fileroot/shengken.lin/workspace/google_source/eureka-v2/chrome/chromium/
 mv iot_dock_add_to_ota_stamp.d iot_dock_add_to_ota_stamp.d-bak
 # 这个问题和Acquiring ninja lock没有关系，这些是print打印出来的，这是因为iot_dock_add_to_ota_stamp.d 这个文件的原因，打ota包的时候生成的，这个文件会去standalone_mojo_broker.txt 检索对应的网址然后去做一些版本相关的检测工作吧（具体没研究），版本对不上就会出错，问题就出在一次打ota包之后生成了这个文件，下一次打包并不会重新生成新的，我觉得这是一个bug，应该每次编译ota包都要去重新生成一个最新的。所以我将 iot_dock_add_to_ota_stamp.d 这个文件删掉就OK了。这问题太诡异了，需要记一下。
 # 而且，就算重新repo sync 也不会去更新这个文件，所以就算 repo sync ，甚至 repo forall -c 'git clean -f -d' 清除所有中间缓冲都不会起作用
-
+rm  ./chromium/src/out_chromecast_korlan/release/gen/chromecast/internal/build/ota/iot/iot_dock_add_to_ota_stamp.d
 
 # 再打 ota 包
 # 编译出来的ota包在：out/target/product/korlan/korlan-ota-eng.shengken.lin.zip
@@ -1477,6 +1478,40 @@ echo ff400000.dwc2_a > /sys/kernel/config/usb_gadget/amlogic/UDC
 ```
 
 ---
+
+
+
+# Chrome
+
+## 单独编译一个模块
+
+- 比如 adb
+
+```sh
+# /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/system/core/adb
+source build/envsetup.sh 
+lunch
+cd system/core/adb
+mma PARTNER_BUILD=true
+```
+
+- 比如 nandread
+
+```sh
+# /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/system/core/toolbox
+source build/envsetup.sh 
+lunch
+cd system/core/toolbox
+mma PARTNER_BUILD=true
+```
+
+## ramdisk 路径
+
+```
+vendor/amlogic/korlan/
+```
+
+
 
 # VSI-NN module测试
 

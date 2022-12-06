@@ -4,7 +4,7 @@
   - [最终提交2](#最终提交2)
   - [复现 dock-test-tool 测试问题](#复现-dock-test-tool-测试问题)
 - [添加 dhcp fct-korlan](#添加-dhcp-fct-korlan)
-  - [kernel 打开个 CONFIG_USB_RTL8152](#kernel-打开个-config_usb_rtl8152)
+  - [kernel 打开个 CONFIG\_USB\_RTL8152](#kernel-打开个-config_usb_rtl8152)
   - [fctory 设置 IP](#fctory-设置-ip)
   - [设置开机自动获取 ip](#设置开机自动获取-ip)
   - [adb调试ipv6](#adb调试ipv6)
@@ -15,15 +15,16 @@
   - [GPIO测试](#gpio测试)
     - [Set internal default pull up/down/disabled](#set-internal-default-pull-updowndisabled)
     - [GPIO event](#gpio-event)
-- [flush-ubifs_7_0(adb push ota.zip) 线程 CPU 过高导致 tdm underrun](#flush-ubifs_7_0adb-push-otazip-线程-cpu-过高导致-tdm-underrun)
+- [flush-ubifs\_7\_0(adb push ota.zip) 线程 CPU 过高导致 tdm underrun](#flush-ubifs_7_0adb-push-otazip-线程-cpu-过高导致-tdm-underrun)
   - [复现问题](#复现问题)
     - [perf 工具使用](#perf-工具使用)
 - [工作流程](#工作流程)
   - [isp 内部优化 usleep](#isp-内部优化-usleep)
-  - [yi-u_audio-log_uac_timing-tdm-cpu](#yi-u_audio-log_uac_timing-tdm-cpu)
+  - [yi-u\_audio-log\_uac\_timing-tdm-cpu](#yi-u_audio-log_uac_timing-tdm-cpu)
 - [nandread去读卡](#nandread去读卡)
   - [yuegui 飞书记录](#yuegui-飞书记录)
   - [测试 nandread](#测试-nandread)
+  - [单独编译 nandread](#单独编译-nandread)
 - [kernel 裁剪](#kernel-裁剪)
   - [kernel 裁剪优化记录](#kernel-裁剪优化记录)
 
@@ -579,7 +580,7 @@ echo 0 > /sys/kernel/debug/tracing/tracing_on
 cat /sys/kernel/debug/tracing/trace > /data/trace_01.txt
 ```
 
-查看 trace.txt 工具
+- 查看 trace.txt 工具
 
 ```sh
 https://ui.perfetto.dev/
@@ -613,7 +614,7 @@ busybox time nandread -d /dev/mtd/mtd4 -L 6144000 -f /cache/.data/dump-page0.hex
 /data/iostat  -d 1 > /data/4.19-iostat-1min.log
 ```
 
-- 关掉 iot_dock_usb
+- 关掉 iot_dock_usb 查看 IO
 
 ```sh
 修改 vendor/amlogic/korlan/init.rc
@@ -621,7 +622,7 @@ busybox time nandread -d /dev/mtd/mtd4 -L 6144000 -f /cache/.data/dump-page0.hex
  /data/iotop  -m 5 -s read -n 30
 ```
 
-jiucheng.xu 测试 nandrad 读卡
+- jiucheng.xu 测试 nandrad 读卡
 
 ```sh
 
@@ -655,7 +656,7 @@ busybox time nandread -d /dev/mtd/mtd4 -L 6144000 -f /cache/.data/dump-page0.hex
 killall iostat
 ```
 
-測試
+- 測試
 
 ```
 echo 0 > /sys/kernel/debug/tracing/tracing_on
@@ -703,7 +704,34 @@ echo 0 > /sys/kernel/debug/tracing/tracing_on
 dd if=/sys/kernel/debug/tracing/trace of=/tmp/trace bs=1M
 ```
 
+```
+strace -e read -o /data/a5.15.txt nandread -d /dev/mtd/mtd4 -L 6144000 -f /cache/.data/dump-page0.hex
 
+strace -e read -o /data/a4.19.txt -T nandread -d /dev/mtd/mtd4 -L 6144000 -f /cache/.data/dump-page0.hex
+strace -e read -o /data/a5.15.txt -T nandread -d /dev/mtd/mtd4 -L 6144000 -f /cache/.data/dump-page0.hex
+```
+
+- 重启执行测试
+
+busybox time nandread -d /dev/mtd/mtd4 -L 6144000 -f /cache/.data/dump-page0.hex
+
+
+### 单独编译 nandread
+
+```sh
+source build/envsetup.sh 
+lunch 
+16 Korlan-eng
+cd chrome/system/core/toolbox
+lrwxrwxrwx 1 shengken.lin szsoftware 7 Dec  5 19:11 ./out/target/product/korlan/recovery/root/bin/nandread -> toolbox
+```
+
+```sh
+/mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/system/core/toolbox
+ mma PARTNER_BUILD=true
+
+./out/target/product/korlan/recovery/root/bin/nandread
+```
 
 ## kernel 裁剪
 
@@ -733,14 +761,12 @@ https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/268825
 
 https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/268826
 
--rw-r--r--  1 shengken.lin szsoftware  5241196 Dec  2 13:56 fct_kernel.korlan.gz-dtb.korlan-p2
+-rw-r--r--  1 shengken.lin szsoftware  5241185 Dec  6 10:28 kernel.korlan.gz-dtb.korlan-p2
 
 #  < > VFAT (Windows-95) fs support    关掉这个
--rw-r--r--  1 shengken.lin szsoftware  5232327 Dec  2 15:58 kernel.korlan.gz-dtb.korlan-p2
 
-# ？？
-# Debug the x86 FPU code    向内核添加额外的完整性检查和(启动时)调试打印
-# [ ] Runtime Testing  ---- 没有
+# ASIX AX88xxx Based USB 2.0 Ethernet Adapters  使用 AX88772B 模块进行扩展百兆网口
+# <*>     ASIX AX88179/178A USB 3.0/2.0 to Gigabit Ethernet
 ```
 
 
