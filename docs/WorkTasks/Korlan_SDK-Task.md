@@ -18,13 +18,17 @@
 - [flush-ubifs\_7\_0(adb push ota.zip) 线程 CPU 过高导致 tdm underrun](#flush-ubifs_7_0adb-push-otazip-线程-cpu-过高导致-tdm-underrun)
   - [复现问题](#复现问题)
     - [perf 工具使用](#perf-工具使用)
-- [工作流程](#工作流程)
+  - [工作流程](#工作流程)
   - [isp 内部优化 usleep](#isp-内部优化-usleep)
   - [yi-u\_audio-log\_uac\_timing-tdm-cpu](#yi-u_audio-log_uac_timing-tdm-cpu)
 - [nandread去读卡](#nandread去读卡)
   - [yuegui 飞书记录](#yuegui-飞书记录)
   - [测试 nandread](#测试-nandread)
   - [单独编译 nandread](#单独编译-nandread)
+  - [打印时间](#打印时间)
+    - [4.19](#419)
+    - [5.15 默认](#515-默认)
+    - [5.15 修改](#515-修改)
 - [kernel 裁剪](#kernel-裁剪)
   - [kernel 裁剪优化记录](#kernel-裁剪优化记录)
 
@@ -493,10 +497,11 @@ adb pull /data/out.perf ./out
 
  ./stackcollapse-perf.pl ./out/out.perf > ./out/out.folded
  ./flamegraph.pl ./out/out.folded > ./out/kernel.svg
-
 ```
 
-## 工作流程
+打完 patch 的 commit id： d7c8eae34cdc182639dd6101f5eadbcbb787ff10
+
+### 工作流程
 
 往 tdm 中写数据时，出现了 underrun ，就是写 太慢了，读快了，通过轮训的方式去读取会出现卡顿问题
 
@@ -731,6 +736,103 @@ lrwxrwxrwx 1 shengken.lin szsoftware 7 Dec  5 19:11 ./out/target/product/korlan/
  mma PARTNER_BUILD=true
 
 ./out/target/product/korlan/recovery/root/bin/nandread
+```
+
+
+
+### 打印时间
+
+```
+main.c   start_kernel() --- arch_call_rest_init() -- rest_init() -- kernel_thread(kernel_init, NULL, CLONE_FS); --   kernel_init_freeable  -- prepare_namespace  -- mount_root
+```
+
+- 修改 init.rc
+
+```sh
+write /dev/kmsg "TEST : nandread  lsken00"
+exec /sbin/busybox time nandread -d /dev/mtd/mtd4 -L 6144000 -f /cache/.data/dump-page0.hex
+```
+
+
+- 在 kernel 中修改
+
+```sh
+diff --git a/drivers/spi/spi.c b/drivers/spi/spi.c
+index 49f592e433a8..5de26f14c1ec 100644
+--- a/drivers/spi/spi.c
++++ b/drivers/spi/spi.c
+@@ -346,6 +346,8 @@ static int spi_drv_probe(struct device *dev)
+        struct spi_device               *spi = to_spi_device(dev);
+        int ret;
+ 
++        printk("-- %s -- %d -- lsken00\n",__func__, __LINE__);
++
+        ret = of_clk_set_defaults(dev->of_node, false);
+        if (ret)
+                return ret;
+diff --git a/fs/namespace.c b/fs/namespace.c
+index 2f3c6a0350a8..39569c215bab 100644
+--- a/fs/namespace.c
++++ b/fs/namespace.c
+@@ -3019,6 +3019,7 @@ int ksys_mount(char __user *dev_name, char __user *dir_name, char __user *type,
+        char *kernel_type;
+        char *kernel_dev;
+        void *options;
++        char  *k_dir_name = strndup_user(dir_name, PATH_MAX);
+ 
+        kernel_type = copy_mount_string(type);
+        ret = PTR_ERR(kernel_type);
+@@ -3035,7 +3036,9 @@ int ksys_mount(char __user *dev_name, char __user *dir_name, char __user *type,
+        if (IS_ERR(options))
+                goto out_data;
+ 
++        printk("lsken00 --- do_mount kernel_dev = %s; k_dir_name = %s\n", kernel_dev, k_dir_name);
+        ret = do_mount(kernel_dev, dir_name, kernel_type, flags, options);
++        printk("lsken00 --- do_mount end \n");
+ 
+        kfree(options);
+```
+
+#### 4.19
+
+- spi start :        1.898291
+- rootfs mount end:   5.305296
+- iot_usb_dock end:   6.056671
+- nandread test:    12.488889
+
+```sh
+busybox time nandread -d /dev/mtd/mtd4 -L 6144000 -f /cache/.data/dump-page0.hex
+real    0m 5.08s
+user    0m 0.02s
+sys     0m 2.06s
+```
+
+#### 5.15 默认
+
+- spi start :         2.511331
+- rootfs mount end:   6.075754
+- iot_usb_dock end:   7.161908
+- nandread test:      15.816891
+
+```sh
+busybox time nandread -d /dev/mtd/mtd4 -L 6144000 -f /cache/.data/dump-page0.hex
+real    0m 12.01s
+user    0m 0.03s
+sys     0m 2.59s
+```
+
+#### 5.15 修改
+
+- spi start :         2.346131
+- rootfs mount end:   6.015829
+- iot_usb_dock end:   7.145709
+- nandread test:      14.219185
+
+```sh
+busybox time nandread -d /dev/mtd/mtd4 -L 6144000 -f /cache/.data/dump-page0.hex
+real    0m 1.90s
+user    0m 0.03s
+sys     0m 1.48s
 ```
 
 ## kernel 裁剪

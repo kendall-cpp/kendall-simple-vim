@@ -301,7 +301,6 @@ cd korlan-sdk
 # chrome ota 包
 source build/envsetup.sh 
 lunch  # 选korlan-eng
-PARTNER_BUILD=true BOARD_NAME=korlan-b1 make -j30 otapackage  
 PARTNER_BUILD=true BOARD_NAME=korlan-p2 make -j30 otapackage KERNEL_VERSION=5.15
 
 # 编译
@@ -447,6 +446,8 @@ source build/envsetup.sh
 # rm out/target/product/korlan/obj/PACKAGING -rf
 # 删掉之后需要重新编译 korlan
 PARTNER_BUILD=true BOARD_NAME=korlan-b1 make -j30 otapackage KERNEL_VERSION=5.15
+
+rm  ./chromium/src/out_chromecast_korlan/release/gen/chromecast/internal/build/ota/iot/iot_dock_add_to_ota_stamp.d
 PARTNER_BUILD=true BOARD_NAME=korlan-p2 make -j30 otapackage KERNEL_VERSION=5.15
 # error1 
 # chromium/chromecast_gn.mk:68: *** Unknown PRODUCT_SETUP_NAME: "" Must be one of {chromecast, tv, audio}.  Stop.
