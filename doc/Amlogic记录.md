@@ -193,7 +193,6 @@ git config --local user.name "shengken.lin"
     email = shengken.lin@amlogic.com
 
 
-
 # 第二个会提示：fatal: remote review already exists.
 # git remote add origin url  类似
 git remote add review ssh://shengken.lin@scgit.amlogic.com:29418/kernel/common.git
@@ -425,9 +424,24 @@ source build/envsetup.sh
 
 # 全部编译 korlan-eng
 lunch  # 选korlan-eng
+rm ./chromium/src/out_chromecast_korlan/release/gen/chromecast/internal/build/ota/iot/iot_dock_add_to_ota_stamp.d
 PARTNER_BUILD=true BOARD_NAME=korlan-b1 make -j30 otapackage  
 # 输出obj路径： /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/out/target/product/korlan
 # 如果出现 java version 问题，就是 out/host/linux-x86 的 dumpkey.jar  signapk.jar 替换过了，需要替换回repo sync 时候的 linux-x86 就可以了
+
+# 转变 kernel4.19 & 5.15 to build,
+    You need do this follow,
+rm out/target/product/korlan/recovery/root -rf
+rm out/target/product/korlan/root -rf
+rm out/target/product/korlan/obj/PACKAGING -rf
+rm  ./chromium/src/out_chromecast_korlan/release/gen/chromecast/internal/build/ota/iot/iot_dock_add_to_ota_stamp.d
+PARTNER_BUILD=true BOARD_NAME=korlan-p2 make -j30 otapackage KERNEL_VERSION=5.15
+    
+rm out/target/product/korlan/recovery/root -rf
+rm out/target/product/korlan/root -rf
+rm out/target/product/korlan/obj/PACKAGING -rf
+rm  ./chromium/src/out_chromecast_korlan/release/gen/chromecast/internal/build/ota/iot/iot_dock_add_to_ota_stamp.d
+PARTNER_BUILD=true BOARD_NAME=korlan-b1 make -j30 otapackage
 ```
 
 ### 5.15 korlan5.15-ota

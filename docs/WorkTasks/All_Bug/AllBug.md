@@ -113,6 +113,20 @@ https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/268825
 https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/268826
 ```
 
+```sh
+# Device Drivers  ---> SCSI device support  ---> SCSI device support
+#  < > VFAT (Windows-95) fs support 
+# Device Drivers  ---> --- Network device support  <*>   USB Network Adapters  --->  直接全部关闭 Multi-purpose USB Networking Framework
+```
+
+```
+https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/270868
+```
+
+
+
+
+
 -----
 
 # Elaine
@@ -311,7 +325,7 @@ static void put_clock(struct platform_device *pdev)
 ./build_ml.sh arm64 spencer-p2 ./../../chrome
 ```
 
-- 去掉 kernel 路径编译 so
+- 去掉 kernel 路径编译获得 so
 
 ```sh
 ./build_ml.sh arm32 spencer-p2 ./../../chrome

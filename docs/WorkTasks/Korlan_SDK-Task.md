@@ -33,6 +33,7 @@
     - [总结回复 google](#总结回复-google)
 - [kernel 裁剪](#kernel-裁剪)
   - [kernel 裁剪优化记录](#kernel-裁剪优化记录)
+- [USB hang when host write message while AIO read is cancelled](#usb-hang-when-host-write-message-while-aio-read-is-cancelled)
 
 
 -------------
@@ -882,10 +883,10 @@ busybox time nandread -d /dev/mtd/mtd4 -L 6144000 -f /cache/.data/dump-page0.hex
 - 4.19
 
 ```
-spi_probe:                   1.897363
-rootfs mount end:            5.381280
-iot_usb_dock                 6.039354
-time test_cast_auth test :   12.87419
+spi_probe:                   1.489926
+rootfs mount end:            3.625621
+iot_usb_dock                 4.267736
+time test_cast_auth test :   9.923957
 ```
 
 - 5.15 默认
@@ -905,6 +906,20 @@ rootfs mount end:            6.096657
 iot_usb_dock                 7.135366
 time test_cast_auth test :   14.226662
 ```
+
+Hi Yi,
+
+I am working on Optimize kernel config. It is interesting to find that when adding these patches and cropping some config, the problem of comment #4 does not appear again.
+
+Here is cl about kernel tailoring.
+
+```
+https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/268826
+https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/268825
+https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/270868
+```
+
+
 
 ## kernel 裁剪
 
@@ -945,7 +960,6 @@ https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/268826
 -rw-r--r--  1 shengken.lin szsoftware  5137860 Dec  8 10:39 kernel.korlan.gz-dtb.korlan-p2
 
 
-# Device Drivers  --->  X86 Platform Specific Device Drivers ？？
 
 # Device Drivers  ---> --- Network device support  <*>   USB Network Adapters  --->  ？？？
 # ASIX AX88xxx Based USB 2.0 Ethernet Adapters  使用 AX88772B 模块进行扩展百兆网口
@@ -976,3 +990,12 @@ Based on comment#43, I made more cropping, please review this cl.
 ```
 https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/270868
 ```
+
+eureka-v2 commit Id: 62d8fe0cb22be5de4ce0e00a532cbda8e1edca12
+
+## USB hang when host write message while AIO read is cancelled
+
+> https://partnerissuetracker.corp.google.com/issues/261493839
+
+
+
