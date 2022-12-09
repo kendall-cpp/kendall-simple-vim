@@ -1,0 +1,235 @@
+diff --git a/hal/os/linux/kernel/platform/amlogic/gc_hal_kernel_platform_amlogic.c b/hal/os/linux/kernel/platform/amlogic/gc_hal_kernel_platform_amlogic.c
+index 99f7f3a..aae2719 100644
+--- a/hal/os/linux/kernel/platform/amlogic/gc_hal_kernel_platform_amlogic.c
++++ b/hal/os/linux/kernel/platform/amlogic/gc_hal_kernel_platform_amlogic.c
+@@ -70,6 +70,8 @@
+ #include <dt-bindings/clock/amlogic,g12a-clkc.h>
+ #endif
+ 
++#define AMLOGIC_AV400_NN_NO 0
++
+ /*======== power version 0 hardware reg begin ===========*/
+ #define AO_RTI_BASE           0xff800000
+ #define AO_RTI_GEN_PWR_SLEEP0 (AO_RTI_BASE + (0x3a<<2))
+@@ -84,7 +86,9 @@ static    uint32_t HHI_NANOQ_MEM_PD_REG0 = 0xff63c10c;
+ static    uint32_t HHI_NANOQ_MEM_PD_REG1 = 0xff63c110;
+ static  uint32_t RESET_LEVEL2 = 0xffd01088;
+ 
++#if AMLOGIC_AV400_NN_NO
+ static  uint32_t NN_clk = 0xff63c1c8;
++#endif
+ static  uint32_t nn_power_version = 0;
+ 
+ 
+@@ -93,13 +97,16 @@ module_param(hardwareResetNum, int, 0644);
+ static int nanoqFreq = 800000000;
+ module_param(nanoqFreq, int, 0644);
+ 
++static struct clk *npu_axi_clk = NULL;
++static struct clk *npu_core_clk = NULL;
++
+ gceSTATUS _InitDtsRegValue(IN gcsPLATFORM *Platform)
+ {
+     int ret = 0;
+-    struct resource *res = NULL;
++    // struct resource *res = NULL;
+     struct platform_device *pdev = Platform->device;
+ 
+-
++#if AMLOGIC_AV400_NN_NO
+     res = platform_get_resource(pdev, IORESOURCE_MEM, 2);
+     if (res)
+     {
+@@ -127,6 +134,7 @@ gceSTATUS _InitDtsRegValue(IN gcsPLATFORM *Platform)
+         NN_clk = (unsigned long)res->start;
+         printk("reg resource NN_CLK, start: %lx,end: %lx\n",(unsigned long)res->start,(unsigned long)res->end);
+     }
++#endif
+ 
+     ret = of_property_read_u32(pdev->dev.of_node,"nn_power_version",&nn_power_version);
+     printk("npu_version: %d\n",nn_power_version);
+@@ -251,9 +259,8 @@ void delay(uint32_t time)
+ /* dynamic set clock function */
+ static void set_clock(struct platform_device *pdev)
+ {
+-    struct clk *npu_axi_clk = NULL;
+-    struct clk *npu_core_clk = NULL;
+-    npu_axi_clk = clk_get(&pdev->dev, "cts_vipnanoq_axi_clk_composite");
++    //npu_axi_clk = clk_get(&pdev->dev, "cts_vipnanoq_axi_clk_composite");
++    npu_axi_clk = devm_clk_get(&pdev->dev, "cts_vipnanoq_axi_clk_composite");
+     if (IS_ERR(npu_axi_clk))
+    {
+         printk("%s: get npu_axi_clk error!!!\n", __func__);
+@@ -264,9 +271,10 @@ static void set_clock(struct platform_device *pdev)
+         clk_prepare_enable(npu_axi_clk);
+     }
+     clk_set_rate(npu_axi_clk, nanoqFreq);
+-    clk_put(npu_axi_clk);
++    //clk_put(npu_axi_clk);
+ 
+-    npu_core_clk = clk_get(&pdev->dev, "cts_vipnanoq_core_clk_composite");
++    //npu_core_clk = clk_get(&pdev->dev, "cts_vipnanoq_core_clk_composite");
++    npu_core_clk = devm_clk_get(&pdev->dev, "cts_vipnanoq_core_clk_composite");
+     if (IS_ERR(npu_core_clk))
+     {
+         printk("%s: get npu_core_clk error!!!\n", __func__);
+@@ -277,9 +285,44 @@ static void set_clock(struct platform_device *pdev)
+         clk_prepare_enable(npu_core_clk);
+     }
+     clk_set_rate(npu_core_clk, nanoqFreq);
+-    clk_put(npu_core_clk);
++    //clk_put(npu_core_clk);
+     return;
+ }
++
++static void put_clock(struct platform_device *pdev)
++{
++    if (!IS_ERR(npu_axi_clk)) {
++        devm_clk_put(&pdev->dev,npu_axi_clk);
++    }
++    if (!IS_ERR(npu_core_clk)) {
++        devm_clk_put(&pdev->dev,npu_core_clk);
++    }
++}
++
++static int clk_switch(int flag)
++{
++    if ((!npu_axi_clk) || (!npu_core_clk))
++    {
++        return -1;
++    }
++
++    if (flag)
++    {
++        clk_prepare_enable(npu_axi_clk);
++        clk_set_rate(npu_axi_clk,nanoqFreq);
++
++        clk_prepare_enable(npu_core_clk);
++        clk_set_rate(npu_core_clk,nanoqFreq);
++    }
++    else
++    {
++        clk_disable_unprepare(npu_axi_clk);
++        clk_disable_unprepare(npu_core_clk);
++    }
++
++    return 0;
++}
++
+ #if (LINUX_VERSION_CODE == KERNEL_VERSION(4, 9, 99))
+ #define AO_RTI_BASE           0xff800000
+ #define AO_RTI_GEN_PWR_SLEEP0 (AO_RTI_BASE + (0x3a<<2))   //0xff8000e8
+@@ -307,6 +350,12 @@ _GetPower_4_9_99(IN gcsPLATFORM *Platform)
+ }
+ #endif
+ 
++void Getpower_0x1000000e(struct platform_device *pdev)
++{
++    /*A5 added power domain, it will get domain power when prob*/
++    set_clock(pdev);
++    return;
++}
+ 
+ /* Getpower: enable the nna power for platform */
+ void Getpower_88(struct platform_device *pdev)
+@@ -414,6 +463,14 @@ void Downpower_be(void)
+     /*C2 added power domain, it will down domain power when rmmod */
+     return;
+ }
++
++void Downpower_0x1000000e(struct platform_device *pdev)
++{
++    /*A5 added power domain, it will down domain power when rmmod */
++    put_clock(pdev);
++    return;
++}
++
+ /* Runtime power manage */
+ void Runtime_getpower_88(struct platform_device *pdev)
+ {
+@@ -459,6 +516,23 @@ void Runtime_downpower_be(struct platform_device *pdev)
+     pm_runtime_put_sync(&pdev->dev);
+     pm_runtime_disable(&pdev->dev);
+ }
++
++void Runtime_getpower_0x1000000e(struct platform_device *pdev)
++{
++    int ret;
++
++    pm_runtime_enable(&pdev->dev);
++    ret = pm_runtime_get_sync(&pdev->dev);
++    if (ret < 0) printk("===runtime getpower error===\n");
++    clk_switch(1);
++}
++void Runtime_downpower_0x1000000e(struct platform_device *pdev)
++{
++    pm_runtime_put_sync(&pdev->dev);
++    pm_runtime_disable(&pdev->dev);
++    clk_switch(0);
++}
++
+ gceSTATUS _GetPower(IN gcsPLATFORM *Platform)
+ {
+     struct platform_device *pdev = Platform->device;
+@@ -479,6 +553,10 @@ gceSTATUS _GetPower(IN gcsPLATFORM *Platform)
+             nanoqFreq=666*1024*1024;
+             Getpower_be(pdev);
+             break;
++        case 6:
++            nanoqFreq=800*1024*1024;
++            Getpower_0x1000000e(pdev);
++            break;
+         default:
+             printk("not find power_version\n");
+     }
+@@ -504,6 +582,9 @@ gceSTATUS  _SetPower(IN gcsPLATFORM * Platform,IN gctUINT32 DevIndex, IN gceCORE
+             case 4:
+                 Runtime_downpower_be(pdev);
+                 break;
++            case 6:
++                Runtime_downpower_0x1000000e(pdev);
++                break;
+             default:
+                 printk("not find power_version\n");
+         }
+@@ -524,6 +605,10 @@ gceSTATUS  _SetPower(IN gcsPLATFORM * Platform,IN gctUINT32 DevIndex, IN gceCORE
+             case 4:
+                 Runtime_getpower_be(pdev);
+                 break;
++            case 6:
++                Runtime_getpower_0x1000000e(pdev);
++                mdelay(1);
++                break;
+             default:
+                 printk("not find power_version\n");
+         }
+@@ -556,6 +641,11 @@ gceSTATUS _Reset(IN gcsPLATFORM * Platform, IN gctUINT32 DevIndex, IN gceCORE GP
+             mdelay(10);
+             Runtime_getpower_be(pdev);
+             break;
++        case 6:
++            Runtime_downpower_0x1000000e(pdev);
++            mdelay(10);
++            Runtime_getpower_0x1000000e(pdev);
++            break;
+         default:
+             printk("not find power_version\n");
+     }
+@@ -572,6 +662,7 @@ gceSTATUS _Reset(IN gcsPLATFORM * Platform, IN gctUINT32 DevIndex, IN gceCORE GP
+ 
+ gceSTATUS _DownPower(IN gcsPLATFORM *Platform)
+ {
++    struct platform_device *pdev = Platform->device;
+     switch (nn_power_version)
+     {
+         case 1:
+@@ -586,6 +677,9 @@ gceSTATUS _DownPower(IN gcsPLATFORM *Platform)
+         case 4:
+             Downpower_be();
+             break;
++        case 6:
++            Downpower_0x1000000e(pdev);
++            break;
+         default:
+             printk("not find power_version\n");
+     }

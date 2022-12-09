@@ -99,11 +99,19 @@ cd abd
 mma PARTNER_BUILD=true
 ```
 
-# flush-ubifs_7_0(adb push ota.zip) 线程 CPU 过高导致 tdm underrun 
+## flush-ubifs_7_0(adb push ota.zip) 线程 CPU 过高导致 tdm underrun 
 
 > https://partnerissuetracker.corp.google.com/issues/241159916
 
+## kernel 裁剪
 
+- yuegui 裁剪 patch
+  
+```sh
+https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/268825
+
+https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/268826
+```
 
 -----
 
@@ -133,7 +141,7 @@ commitId: 6b7f44b5eed0a00ef73bb94dbf5c64551fdb40a9
 ```
 
 
-### 根据kernel patch 修复
+### 根据 kernel patch 修复
 
 - 讨论 (patch 链接在最后)：https://bugzilla.kernel.org/show_bug.cgi?id=214021
 
@@ -246,7 +254,7 @@ export FIXED_ARCH_TYPE=aarch64-gnu
 ```
 
 
-### insmod galcore时 error
+### insmod galcore 时 error
 
 ```sh
 # insmod /data/galcore.ko
@@ -285,15 +293,55 @@ static void put_clock(struct platform_device *pdev)
 
 ### 最终编译 verisilicon-arm32 
 
-编译 ddk
+- 编译 ddk
+
+```sh
+./build_ml.sh arm64 spencer-p2 ./../../chrome
+```
+
+目前位置的 patch: NN-av400-arm64-arm32-all.patch
+
+## 编译和测试 verisilicon-6.4.11.2
+
+修改的 gc_hal_kernel_platform_amlogic.c 见附件：NN-av400-arm64-verisilicon-6.4.11.2-gc_hal_kernel_platform_amlogic.patch
+
+- 编译 verisilicon-6.4.11.2 获得 galcore.ko
+
+```sh
+./build_ml.sh arm64 spencer-p2 ./../../chrome
+```
+
+- 去掉 kernel 路径编译 so
 
 ```sh
 ./build_ml.sh arm32 spencer-p2 ./../../chrome
 ```
 
-目前位置的 patch: NN-av400-arm64-arm32-all.patch
+> build_ml.sh 参考 附件 
 
-> **还未解决**，需要找 google 重新编译
+```sh
+verisilicon-6.4.11.2/build/sdk/drivers
+```
+
+- 测试的时候需要将 verisilicon-6.4.11.2/build/sdk/drivers 下所有 so push 到 av400 的 /usr/lib/ 目录下
+
+- 注意：**ubuntu 中编译 acuity-toolkit-binary** 时 FPN 和 ssd_mobilenet_v1 这两个 case 
+  - 编译出来的 FPN_be 需要的 vnn_.c 需要参考 6.4.0.12 修改 vnn_.c output 文件顺序
+
+```c
+//修改大致这个范围
+    graph->input.tensors[0] = norm_tensor[0];
+    graph->output.tensors[0] = norm_tensor[1];
+    graph->output.tensors[1] = norm_tensor[2];
+    graph->output.tensors[2] = norm_tensor[3];
+    graph->output.tensors[3] = norm_tensor[4];
+    graph->output.tensors[4] = norm_tensor[5];
+    graph->output.tensors[5] = norm_tensor[6];
+    graph->output.tensors[6] = norm_tensor[7];
+    graph->output.tensors[7] = norm_tensor[8];
+    graph->output.tensors[8] = norm_tensor[9];
+    graph->output.tensors[9] = norm_tensor[10]
+```
 
 ---
 

@@ -279,3 +279,15 @@ vim arch/arm64/boot/dts/amlogic/elaine-sm1-panel.dtsi
 
 vim u-boot/drivers/amlogic/media/vout/lcd/lcd_common.c
 ```
+
+-----
+
+## 测试 mali-driver
+
+checkout https://eureka-partner-review.googlesource.com/c/amlogic/mali-driver/+/270825
+
+编译命令
+
+```sh
+ ./build_mali.sh elaine-b1
+```

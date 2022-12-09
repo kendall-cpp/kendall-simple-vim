@@ -29,6 +29,8 @@
     - [4.19](#419)
     - [5.15 默认](#515-默认)
     - [5.15 修改](#515-修改)
+  - [总结](#总结)
+    - [总结回复 google](#总结回复-google)
 - [kernel 裁剪](#kernel-裁剪)
   - [kernel 裁剪优化记录](#kernel-裁剪优化记录)
 
@@ -605,6 +607,8 @@ git cherry-pick --quit   // 3. 不想解决冲突，放弃合并，且保持现�
 
 ### 测试 nandread
 
+> https://partnerissuetracker.corp.google.com/issues/258016139
+
 > https://jira.amlogic.com/browse/GH-3176
 
 ```
@@ -835,6 +839,73 @@ user    0m 0.03s
 sys     0m 1.48s
 ```
 
+### 总结
+
+- 调整 ko 加载顺序
+
+见附件：early_load_ko_5.15.rc-jiucheng
+
+- 修改 init.rc.base
+
+```sh
+--- a/korlan/init.rc.base
++++ b/korlan/init.rc.base
+@@ -366,7 +366,9 @@ on boot
+     start servicemanager
+ 
+     # Note: this daemon is expected to call `setprop chrome.usb.init init-me`
++    write /dev/kmsg "TEST: iot_usb_dock start  lsken00"
+     start iot_usb_dock
++    write /dev/kmsg "TEST: iot_usb_dock end  lsken00"
+ 
+     # depends on device certificate in /factory_setting and kernal flags
+     # network_service.sh starts bluetooth and wifi services if necessary.
+@@ -436,6 +438,10 @@ on boot
+     # set uac and tdm affinities to CPU-1
+     exec /bin/sh /sbin/pcie_affinity.sh
+ 
++    #exec /system/bin/sleep 5
++    write /dev/kmsg "TEST : nandread  lsken00"
++    exec /sbin/busybox time nandread -d /dev/mtd/mtd4 -L 6144000 -f /cache/.data/dump-page0.hex
++
+ ## Daemon processes to be run by init.
+```
+
+- 测试
+
+```sh
+busybox time nandread -d /dev/mtd/mtd4 -L 6144000 -f /cache/.data/dump-page0.hex
+```
+
+#### 总结回复 google
+
+- 4.19
+
+```
+spi_probe:                   1.897363
+rootfs mount end:            5.381280
+iot_usb_dock                 6.039354
+time test_cast_auth test :   12.87419
+```
+
+- 5.15 默认
+
+```
+spi_probe:                   2.538475
+rootfs mount end:            6.178444
+iot_usb_dock                 7.295909
+time test_cast_auth test :   14.650420
+```
+
+- 5.15 change
+
+```
+spi_probe:                   2.364961
+rootfs mount end:            6.096657
+iot_usb_dock                 7.135366
+time test_cast_auth test :   14.226662
+```
+
 ## kernel 裁剪
 
 https://partnerissuetracker.corp.google.com/issues/235426120
@@ -865,10 +936,43 @@ https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/268826
 
 -rw-r--r--  1 shengken.lin szsoftware  5241185 Dec  6 10:28 kernel.korlan.gz-dtb.korlan-p2
 
-#  < > VFAT (Windows-95) fs support    关掉这个
 
+# Device Drivers  ---> SCSI device support  ---> SCSI device support
+-rw-r--r--  1 shengken.lin szsoftware  5143260 Dec  8 10:18 kernel.korlan.gz-dtb.korlan-p2
+
+
+#  < > VFAT (Windows-95) fs support    关掉这个
+-rw-r--r--  1 shengken.lin szsoftware  5137860 Dec  8 10:39 kernel.korlan.gz-dtb.korlan-p2
+
+
+# Device Drivers  --->  X86 Platform Specific Device Drivers ？？
+
+# Device Drivers  ---> --- Network device support  <*>   USB Network Adapters  --->  ？？？
 # ASIX AX88xxx Based USB 2.0 Ethernet Adapters  使用 AX88772B 模块进行扩展百兆网口
 # <*>     ASIX AX88179/178A USB 3.0/2.0 to Gigabit Ethernet
+
+# 直接全部关闭 Multi-purpose USB Networking Framework
+-rw-r--r--  1 shengken.lin szsoftware  5096888 Dec  8 16:37 kernel.korlan.gz-dtb.korlan-p2
+
 ```
 
+commit id : 2ec287b739a6406664d6a6777109f6464976603e
 
+```sh
+[Korlan] Optimize kernel config
+
+1. Disable VFAT (Windows-95) fs
+2. SCSI device
+3. Multi-purpose USB Net
+
+Bug: b/235426120
+Test: build ok, tdm-bridge work fine, adb work fine.
+```
+
+Hi Yi,
+
+Based on comment#43, I made more cropping, please review this cl.
+
+```
+https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/270868
+```
