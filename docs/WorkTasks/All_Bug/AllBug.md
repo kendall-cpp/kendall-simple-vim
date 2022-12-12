@@ -357,6 +357,8 @@ verisilicon-6.4.11.2/build/sdk/drivers
     graph->output.tensors[9] = norm_tensor[10]
 ```
 
+**总结文档**：https://docs.google.com/document/d/12e76aVCW-EFLc9Bgydmmnozzui3B4dJ2Pbe0UqcomLk/edit?usp=sharing
+
 ---
 
 # C3 AW409 【Doing】

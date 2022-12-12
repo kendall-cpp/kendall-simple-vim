@@ -1743,7 +1743,7 @@ fail in import kernel from file initializer
 Failed to initialize Kernel "ssd_mobilenet_v1_b" of Node 0x14d3118 (status = -1)
 E [main.c:vnn_VerifyGraph:91]CHECK STATUS(-1:A generic error code, used when no other describes the error.)
 E [main.c:main:240]CHECK STATUS(-1:A generic error code, used when no other describes the error.)
-
+'
 
 /data/ssd_small_multiout_be # ./tflite ./ssd_mobilenet_v1_be.nb iter_0_input_0_o
 ut0_1_288_512_3.tensor

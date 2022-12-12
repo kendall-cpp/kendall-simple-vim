@@ -461,20 +461,12 @@ source build/envsetup.sh
 # 删掉之后需要重新编译 korlan
 PARTNER_BUILD=true BOARD_NAME=korlan-b1 make -j30 otapackage KERNEL_VERSION=5.15
 
-rm  ./chromium/src/out_chromecast_korlan/release/gen/chromecast/internal/build/ota/iot/iot_dock_add_to_ota_stamp.d
-PARTNER_BUILD=true BOARD_NAME=korlan-p2 make -j30 otapackage KERNEL_VERSION=5.15
-# error1 
-# chromium/chromecast_gn.mk:68: *** Unknown PRODUCT_SETUP_NAME: "" Must be one of {chromecast, tv, audio}.  Stop.
-# 解决 --全部编译 korlan-eng
-source build/envsetup.sh 
-lunch   # 选korlan-eng
-
-# error 2 
+# error 1 
 # clang++-14: error: invalid linker name in argument '-fuse-ld=lld'
 # [build/core/shared_library.mk:101: out/target/product/korlan/obj/SHARED_LIBRARIES/libz_intermediates/LINKED/libz.so] Error 1
 # 解决：添加 chrome/prebuilt/toolchain/aarch64/bin 到环境变量中
 
-# error 3
+# error 2
 #*** No rule to make target 'vendor/amlogic/korlan/prebuilt/kernel_5.15/kernel.korlan.gz-dtb.korlan-proto', needed by 'out/target/product/korlan/root/lib/kernel/kernel-korlan-proto'.  Stop.
 # 编译的时候不是编译 p2 b3 b4 
 cd kernel-5.15
@@ -483,11 +475,7 @@ cd kernel-5.15
 ./build_kernel.sh korlan-b3 ../../chrome
 ./build_kernel.sh korlan-b4 ../../chrome
 
-#error 4
-Acquiring ninja lock: chromium/src/chromecast/internal/build/guarded_ninja.py -C /mnt/fileroot/shengken.lin/workspace/google_source/eureka-v2/chrome/chromium/src/out_chromecast_korlan/release iot_dock_add_to_ota
-Ninja lock acquired: chromium/src/chromecast/internal/build/guarded_ninja.py -C /mnt/fileroot/shengken.lin/workspace/google_source/eureka-v2/chrome/chromium/src/out_chromecast_korlan/release iot_dock_add_to_ota
-Acquiring ninja lock: chromium/src/chromecast/internal/build/guarded_ninja.py -C /mnt/fileroot/shengken.lin/workspace/google_source/eureka-v2/chrome/chromium/src/out_chromecast_korlan/release debug_endpoint_broker debug_service_server dump_syms minidump-2-core minidump_stackwalk symupload
-fatal: not a git repository (or any parent up to mount point /mnt)
+#error 3
 Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
 ninja: Entering directory `/mnt/fileroot/shengken.lin/workspace/google_source/eureka-v2/chrome/chromium/src/out_chromecast_korlan/release'
 ninja: error: gen/chromecast/internal/build/ota/iot/iot_dock_add_to_ota_stamp.d: depfile mentions '../../../../out/target/product/korlan/obj/NOTICE_FILES/src/system/chrome/bin/standalone_mojo_broker.txt' as an output, but no such output was declared
@@ -1772,6 +1760,7 @@ CONFIG_ENABLE_UBOOT_CLI=y
  
  # 看GLIB版本信息
  strings libOpenVX.so | grep GLI
+  # 看GCC版本信息
  strings libOpenVX.so | grep GCC
 ```
 

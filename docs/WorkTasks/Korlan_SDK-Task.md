@@ -33,7 +33,6 @@
     - [总结回复 google](#总结回复-google)
 - [kernel 裁剪](#kernel-裁剪)
   - [kernel 裁剪优化记录](#kernel-裁剪优化记录)
-- [USB hang when host write message while AIO read is cancelled](#usb-hang-when-host-write-message-while-aio-read-is-cancelled)
 
 
 -------------
@@ -472,7 +471,7 @@ top -m 5 -t
 /mnt/fileroot/shengken.lin/workspace/google_source/eureka/korlan-sdk/kernel$ ./build_perf.sh korlan ../../chrome
 ```
 
-如果想在板子上能使用 perf ,可以直接打上这个  patch  开取相应的 config 即可。
+如果想在板子上能使用 perf ,可以直接打上这个  patch  开启相应的 config 即可。
 
 https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/239808
 
@@ -481,6 +480,8 @@ https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/239808
 kernel$ git fetch https://eureka-partner.googlesource.com/amlogic/kernel refs/changes/08/239808/10 && git cherry-pick FETCH_HEAD
 # commit id: 8fb66d4b95ea24013c73470ae004f111158f6ca3
 
+
+# korlan-sdk/kerne
 bash build_perf.sh korlan
 
 adb push ./tools/perf/perf /data
@@ -993,9 +994,6 @@ https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/270868
 
 eureka-v2 commit Id: 62d8fe0cb22be5de4ce0e00a532cbda8e1edca12
 
-## USB hang when host write message while AIO read is cancelled
-
-> https://partnerissuetracker.corp.google.com/issues/261493839
 
 
 
