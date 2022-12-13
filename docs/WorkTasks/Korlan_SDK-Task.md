@@ -33,6 +33,7 @@
     - [总结回复 google](#总结回复-google)
 - [kernel 裁剪](#kernel-裁剪)
   - [kernel 裁剪优化记录](#kernel-裁剪优化记录)
+- [Korlan 开机声卡顿问题](#korlan-开机声卡顿问题)
 
 
 -------------
@@ -996,4 +997,44 @@ eureka-v2 commit Id: 62d8fe0cb22be5de4ce0e00a532cbda8e1edca12
 
 
 
+
+
+
+
+
+## Korlan 开机声卡顿问题
+
+https://partnerissuetracker.corp.google.com/issues/262155155
+
+```sh
+cat /sys/module/u_audio/parameters/free_run 
+```
+
+- 在 PC 端播放 音频，
+- 然后 echo 0 > /sys/module/u_audio/parameters/free_run
+  - 这时会没有声音
+- aplay -Dhw:0,0 /data/the-stars-48k-60s.wav
+- echo 1 > /sys/module/u_audio/parameters/free_run   
+  - 这时 PC 的音乐开始
+- 这时候 crtl+C 掉 aplay
+- 发现 PC 的音乐也停止了
+
+
+free_run 标志的位置： korlan-sdk/kernel/drivers/usb/gadget/function/u_audio.c
+
+tdm 开始和关闭：korlan-sdk/kernel/sound/soc/amlogic/auge/tdm.c
+
+在 PC 继续播放时，手动修改
+
+这时 free_run 为 1
+
+```
+echo 0 > /sys/module/u_audio/parameters/free_run   
+echo 1 > /sys/module/u_audio/parameters/free_run   
+```
+
+就可以正常运行
+
+
+Thanks for Mingyu update, please let us if it still our assistance.
 
