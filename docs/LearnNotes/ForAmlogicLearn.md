@@ -151,16 +151,16 @@ USB gadget驱动描述了USB设备控制器的硬件操作方法，不同的USB�
 
 https://blog.csdn.net/u011037593/article/details/121458492
 
-UVC（USB Audio Class）定义了使用USB协议播放或采集音频数据的设备应当遵循的规范。目前，UAC协议有UAC1.0和UAC2.0。UAC2.0协议相比UAC1.0协议，提供了更多的功能，支持更高的带宽，拥有更低的延迟。Linux内核中包含了UAC1.0和UAC2.0驱动，分别在f_uac1.c和f_uac2.c文件中实现。下面将以UAC2驱动为例，具体分析USB设备驱动的初始化、描述符配置、数据传输过程等。
+UAC（USB Audio Class）定义了使用USB协议播放或采集音频数据的设备应当遵循的规范。目前，UAC协议有UAC1.0和UAC2.0。UAC2.0协议相比UAC1.0协议，提供了更多的功能，支持更高的带宽，拥有更低的延迟。Linux内核中包含了UAC1.0和UAC2.0驱动，分别在f_uac1.c和f_uac2.c文件中实现。下面将以UAC2驱动为例，具体分析USB设备驱动的初始化、描述符配置、数据传输过程等。
 
-下面是 UAC2.0 的Gadget Function驱动的定义，驱动名称为uac2。alloc_inst被设置为afunc_alloc_inst，alloc_func被设置为afunc_alloc，这两个函数在Gadget Function API层被回调。该宏将定义一个usb_function_driver数据结构，使用usb_function_register函数注册到function API层。
+下面是 UAC2.0 的 Gadget Function 驱动的定义，驱动名称为 uac2。alloc_inst 被设置为 afunc_alloc_inst，alloc_func 被设置为 afunc_alloc，这两个函数在 Gadget Function API 层被回调。该宏将定义一个 usb_function_driver 数据结构，使用 usb_function_register 函数注册到 function API 层。
 
 ```c
 // 定义UAC设备驱动
  DECLARE_USB_FUNCTION_INIT(uac2, afunc_alloc_inst, afunc_alloc); 
 ```
 
-uac2驱动的数据结构关系如下图所示。struct f_uac2表示uac2设备，由afunc_alloc分配，包含了具体音频设备和USB配置信息。如g_audio表示音频设备，包含了音频运行时参数、声卡、PCM设备等信息，uac_pcm_ops 表示音频PCM设备流的操作方法，in_ep和out_ep表示USB设备输入和输出端点，in_ep_maxpsize和out_ep_maxpsize表示输入端点和输出端点数据包最大长度，params表示音频设备参数。比较重要的是func，描述了USB设备功能，uac2设备驱动需要填充该数据结构。struct f_uac2_opts表示uac2设备的选项，由afunc_alloc_inst动态分配，内部嵌入了struct usb_function_instance数据结构，表示一个USB Function实例，内部的fd指针指向DECLARE_USB_FUNCTION_INIT宏定义的uac2设备驱动结构体。
+uac2 驱动的数据结构关系如下图所示。struct f_uac2 表示 uac2 设备，由 afunc_alloc 分配，包含了具体音频设备和USB配置信息。如g_audio表示音频设备，包含了音频运行时参数、声卡、PCM设备等信息，uac_pcm_ops 表示音频PCM设备流的操作方法，in_ep和out_ep表示USB设备输入和输出端点，in_ep_maxpsize和out_ep_maxpsize表示输入端点和输出端点数据包最大长度，params表示音频设备参数。比较重要的是func，描述了USB设备功能，uac2设备驱动需要填充该数据结构。struct f_uac2_opts表示uac2设备的选项，由afunc_alloc_inst动态分配，内部嵌入了struct usb_function_instance数据结构，表示一个USB Function实例，内部的fd指针指向DECLARE_USB_FUNCTION_INIT宏定义的uac2设备驱动结构体。
 
 ```c
 [drivers/usb/gadget/function/f_uac2.c]

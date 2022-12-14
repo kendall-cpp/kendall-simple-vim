@@ -34,6 +34,7 @@
 - [kernel 裁剪](#kernel-裁剪)
   - [kernel 裁剪优化记录](#kernel-裁剪优化记录)
 - [Korlan 开机声卡顿问题](#korlan-开机声卡顿问题)
+  - [tdm\_bridge 优化](#tdm_bridge-优化)
 
 
 -------------
@@ -996,15 +997,9 @@ https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/270868
 eureka-v2 commit Id: 62d8fe0cb22be5de4ce0e00a532cbda8e1edca12
 
 
-
-
-
-
-
-
 ## Korlan 开机声卡顿问题
 
-https://partnerissuetracker.corp.google.com/issues/262155155
+https://partnerissuetracker.corp.google.com/issues/262155155  comment#23
 
 ```sh
 cat /sys/module/u_audio/parameters/free_run 
@@ -1038,3 +1033,47 @@ echo 1 > /sys/module/u_audio/parameters/free_run
 
 Thanks for Mingyu update, please let us if it still our assistance.
 
+----
+
+
+### tdm_bridge 优化
+
+> https://partnerissuetracker.corp.google.com/issues/262352934  
+> https://blog.csdn.net/u011037593/article/details/121458492
+
+> u_audio_iso_cap_complete(), tdm_bridge does not have enough space to write.
+
+composite_setup  afunc_set_alt   u_audio_start_capture  u_audio_iso_cap_complete( free_run )   aml_tdm_br_write_data (auge/tdm_bridge.c)
+
+```c
+afunc_set_alt(struct usb_function *fn, unsigned intf, unsigned alt)  
+// 若intf=2，alt=1，则开始录音，若intf=1，alt=1，则开始播放
+```
+
+录音（capture）时，USB主机控制器向USB设备控制器发送音频数据，USB设备控制器收到以后通过DMA将其写入到 usb_request 的缓冲区中，随后再拷贝到DMA缓冲区中，用户可使用 arecord、tinycap 等工具从DMA缓冲区中读取音频数据，DMA缓冲区是一个 FIFO，uac2 驱动往里面填充数据，用户从里面读取数据。播放（playback）时，用户通过aplay、tinyplay等工具将音频数据写道DMA缓冲区中，uac2 驱动从 DMA 缓冲区中读取数据，然后构造成 usb_request，送到USB设备控制器，USB设备控制器再将音频数据发送到USB主机控制器。可以看出录音和播放的音频数据流方向相反，用户和uac2驱动构造了一个生产者和消费者模型，录音时，uac2驱动是生产者，用户是消费者，播放时则相反。
+
+```c
+as_out_intf=1   //播放
+
+as_in_intf=2    //录音
+```
+
+
+处理 DMA 缓冲区的数据
+
+播放时
+
+```c
+if (substream->stream == SNDRV_PCM_STREAM_CAPTURE) {
+                if (unlikely(pending < req->actual)) {
+                        memcpy(runtime->dma_area + hw_ptr, req->buf, pending);
+                        memcpy(runtime->dma_area, req->buf + pending,
+                                        req->actual - pending);
+                } else {
+                        memcpy(runtime->dma_area + hw_ptr, req->buf,
+                                        req->actual);
+                }
+                uac_irq_cnt++;
+                uac_data_count += req->actual;
+}
+```
