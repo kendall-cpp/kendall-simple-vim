@@ -347,6 +347,19 @@ Gadget Function驱动：控制USB设备功能的实现
 - USB主机控制器 HCD：完成主机控制器的初始化以及数据的传输，并监测外部设备插入，完成设备枚举。
 
 ![](https://raw.githubusercontent.com/kendall-cpp/blogPic/main/blog-01/202212172254392.png)
+
+
+usb Function driver 可以细分为 legacy 和 funtions
+
+- legacy: 整个 gadget 设备驱动入口，位于 drivers/usb/gadget/legacy , 里面给出了常用 usb 类设备的驱动 sample,  其作用就是配置 USB 设备描述符信息，支持的协议等，提供一个 usb_composite_driver , 然后注册到 composite 层
+
+- function： 各种 usb 之类设备功能驱动，位于 drivers/usb/gadget/function， 里面给出了对应的 sample , 其作用是配置 usb 之类协议的接口描述符以及其他之类协议，比如 uvc 协议，hid协议等。
+
+> **注意，一个 compsite 设备对应一个或者多个 function ，也就是对应多个 function driver**。
+
+
+
+
 -----
 
 ## gadget 设备层
@@ -384,3 +397,4 @@ function 注册就是将这个 function 驱动添加到 func_list (双向循环�
 ```
 
 > 注意：usb_get_function_instance 和 usb_get_function 类似这样的函数，XXX_instance 才是从 list 中查找 function ，而 usb_get_function 只是 alloc 一个 usb_function 节点。
+
