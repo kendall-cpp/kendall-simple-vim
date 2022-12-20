@@ -21,14 +21,14 @@ snipaste
 - 部门：ENG SW(410)
 - 邮箱地址	shengken.lin@amlogic.com	
 - 谷歌邮箱：shengken.lin@amlogic.corp-partner.google.com
-- 密码：pHFP-eotQ-TtmZ Kendall@000
+- 密码：
 
 
 
 ## 服务器信息
 
 - Your linux account:	shengken.lin
-- Your linux password:	pF%B8f4r
+- Your linux password:	
 - Server hostname :	walle01-sz  
 - Work directory: /mnt/fileroot/shengken.lin
 - Your directory size:	2T
@@ -37,7 +37,7 @@ snipaste
 ---------------------------------------------------
 - windows mount path : \\walle01-sz\fileroot\shengken.lin
 - login name:	walle01-sz\shengken.lin
-- Login password:	pF%B8f4r  (command smbpasswd change samba - password)
+- Login password:	  (command smbpasswd change samba - password)
 - (note: if your samba password doesn't work, please find cary.wu@amlogic.com or local IT guys)
 
 
@@ -66,11 +66,6 @@ https://wiki-china.amlogic.com/
 ```
 git config --global user.name "Yuegui He"
 git config --global user.email yuegui.he@amlogic.corp-partner.google.com
-
-
-
-git config user.name "Yuegui He"
-git config user.email yuegui.he@amlogic.com
 ```
 
 ### 谷歌项目账号

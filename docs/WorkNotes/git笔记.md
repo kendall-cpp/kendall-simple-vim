@@ -351,8 +351,8 @@ git diff   查看文件差异
  git config --loacl (给当前项目一次性设置)
 
 ```
-git config --local user.name "kendall-cpp"
-git config --local user.email "lsken00@foxmail.com"
+git config --local user.name ""
+git config --local user.email ""
 ```
 
 > 如果是当前用户 --system 设置，存在 ~/.gitconfig 文件下
