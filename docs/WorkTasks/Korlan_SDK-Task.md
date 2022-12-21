@@ -1039,6 +1039,7 @@ Thanks for Mingyu update, please let us if it still our assistance.
 ### tdm_bridge 优化
 
 > https://partnerissuetracker.corp.google.com/issues/262352934  
+
 >参考博客：UAC2驱动分析  https://blog.csdn.net/u011037593/article/details/121458492
 
 > u_audio_iso_cap_complete(), tdm_bridge does not have enough space to write.
@@ -1077,3 +1078,26 @@ if (substream->stream == SNDRV_PCM_STREAM_CAPTURE) {
                 uac_data_count += req->actual;
 }
 ```
+
+直接用 aplay 往声卡中送数据的时候，会不停往 fddr 中送数据，usb 播放也是通过 fddr 中送数据， 会通过一个全局的 aml_tdm（？？） 数据结构。
+
+aplay 播放的时候，会不停的调用这个哈数
+
+```c
+static snd_pcm_uframes_t aml_tdm_pointer(struct snd_pcm_substream *substream)    
+
+
+// aplay 播放主要是这个结构体
+static struct snd_pcm_ops aml_tdm_ops = {
+        .open = aml_tdm_open,
+        .close = aml_tdm_close,
+        .ioctl = snd_pcm_lib_ioctl,
+        .hw_params = aml_tdm_hw_params,
+        .hw_free = aml_tdm_hw_free,                                                                                                                                                                                                                         
+        .prepare = aml_tdm_prepare,
+        .pointer = aml_tdm_pointer,
+        .mmap = aml_tdm_mmap,
+};
+```
+
+aml_tdm_open

@@ -600,11 +600,15 @@ aplay -Dhw:0,0 /data/the-stars-48k-60s.wav   # 播放音频
 ```sh
 dmesg  -n 8   # 开 log
 amixer cget numid=2       # 查看音量
-amixer cset numid=2 150   # 修改音量
+amixer cset numid=2 140   # 修改音量
 # 或者
 amixer cset numid=2,iface=MIXER,name='tas5805 Digital Volume' 150
 
-aplay -Dhw:0,0 /data/the-stars-48k-60s.wav 
+aplay -Dhw:0,0 /data/the-stars-48k-60s.wav
+
+# 强制启动和关闭tdm_bridge
+echo 0 > /sys/module/u_audio/parameters/free_run   
+echo 1 > /sys/module/u_audio/parameters/free_run  
 ```
 
 ### ubuntu 测试
@@ -618,7 +622,6 @@ ssh amlogic@10.28.39.83    # 1233456
 # scp 文件
 scp .\the-stars-48k-60s.wav amlogic@10.28.39.83:~/Desktop/lsken00
 # 在测试中选 korlan 输出
-
 ```
 
 
