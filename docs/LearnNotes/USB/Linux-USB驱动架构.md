@@ -318,3 +318,83 @@ hub_configure 注册了中断，一旦接入新的usb设备就会调用 hub_irq
 
 ----
 
+# USB整体框架
+
+USB 驱动分为主机侧和设备侧，主机侧和设备侧的 USB 控制器分别称为主机控制器( Host Controller )和 USB 设备控制器(UDC)。USB 核心层向上下提供编程接口，维护整个系统的 USB 信息，完成热插拔控制，数据传输控制。
+
+- 主机侧：
+
+从上图看，我们需要实现两个驱动，USB主机控制器驱动和USB设备驱动。
+
+USB主机控制器驱动：控制插入的USB设备
+
+USB设备驱动：控制具体USB设备和主机如何通信
+
+- 设备侧：
+
+设备侧也需要实现两部分驱动，UDC驱动和Gadget Function驱动。
+
+UDC驱动：控制USB设备和主机的通信
+
+Gadget Function驱动：控制USB设备功能的实现
+
+其中 Compsite Framwork 提供了一个通用的 sb_gadget_driver 模板，包括各种方法供上层 Function driver 使用。（`driver/usb/gadget/compsite.c`）
+
+- USB设备驱动：用于和枚举到的USB设备进行绑定，完成特定的功能。
+
+- USB Core：用于内核USB总线的初始化及USB相关API，为设备驱动和HCD的交互提供桥梁。
+
+- USB主机控制器 HCD：完成主机控制器的初始化以及数据的传输，并监测外部设备插入，完成设备枚举。
+
+![](https://raw.githubusercontent.com/kendall-cpp/blogPic/main/blog-01/202212172254392.png)
+
+
+usb Function driver 可以细分为 legacy 和 funtions
+
+- legacy: 整个 gadget 设备驱动入口，位于 drivers/usb/gadget/legacy , 里面给出了常用 usb 类设备的驱动 sample,  其作用就是配置 USB 设备描述符信息，支持的协议等，提供一个 usb_composite_driver , 然后注册到 composite 层
+
+- function： 各种 usb 之类设备功能驱动，位于 drivers/usb/gadget/function， 里面给出了对应的 sample , 其作用是配置 usb 之类协议的接口描述符以及其他之类协议，比如 uvc 协议，hid协议等。
+
+> **注意，一个 compsite 设备对应一个或者多个 function ，也就是对应多个 function driver**。
+
+
+
+
+-----
+
+## gadget 设备层
+
+> drivers/usb/gadget/functions.c  提供了操作 gadget 设备驱动（也就是 function 驱动）的 API。
+
+function 注册就是将这个 function 驱动添加到 func_list (双向循环链表) 中，注销就是将这个 function 驱动从 func_list 中删除。
+
+```c
+  int usb_function_register(struct usb_function_driver *newf)
+  {
+          struct usb_function_driver *fd;
+          int ret;
+  
+          ret = -EEXIST;
+  
+          mutex_lock(&func_lock);
+          list_for_each_entry(fd, &func_list, list) {
+                  if (!strcmp(fd->name, newf->name))
+                          goto out;
+          }   
+          ret = 0;
+          list_add_tail(&newf->list, &func_list);
+  out:
+          mutex_unlock(&func_lock);
+          return ret;
+  }
+  
+  void usb_function_unregister(struct usb_function_driver *fd)  
+  {
+          mutex_lock(&func_lock);
+          list_del(&fd->list);
+          mutex_unlock(&func_lock);
+  }
+```
+
+> 注意：usb_get_function_instance 和 usb_get_function 类似这样的函数，XXX_instance 才是从 list 中查找 function ，而 usb_get_function 只是 alloc 一个 usb_function 节点。
+

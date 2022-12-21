@@ -726,26 +726,3 @@ adb pull /data/out.perf ./out
  ./stackcollapse-perf.pl ./out/out.perf > ./out/out.folded
  ./flamegraph.pl ./out/out.folded > ./out/kernel.svg
  ```
-
- # USB gadget driver
-
- > 参考： https://www.cnblogs.com/blogs-of-lxl/p/16815102.html
-
- USB gadget驱动描述了USB设备控制器的硬件操作方法，不同的USB控制器实现不同。有的USB控制器只能作为设备控制器 (UDC)，如ompa、pxa2等USB设备控制器，其驱动在drivers/usb/gadget/udc文件夹中。有的USB控制器即可做主机控制器，也可做设备控制器，具有OTG功能，可以在两种模式中切换，如dwc3 USB控制器，其驱动在drivers/usb/dwc3文件中。
-
- ![](https://img2022.cnblogs.com/blog/821933/202210/821933-20221021190408700-398364600.png)
-
-由三部分组成：
-
-- （1）UDC驱动核心层，在 drivers/usb/gadget/udc/core.c 文件中实现，该层是一个兼容层，将USB Function 驱动和具体的USB gadget 驱动隔离开，抽象了统一的接口和数据结构，向 USB Function 驱动提供了统一且稳定的接口，同时完成 USB Function 驱动和 USB gadget 驱动的匹配。
-
-- （2）gadget driver 层，负责驱动硬件工作，和具体的USB设备控制器硬件相关，dwc3的gadget driver驱动在 drivers/usb/dwc3/gadget.c 文件中实现。
-
-- （3）USB设备控制器硬件。
-
-![](https://img2022.cnblogs.com/blog/821933/202210/821933-20221022151545036-1041964704.png)
-
-----
-
-# tdm 音频驱动
-
