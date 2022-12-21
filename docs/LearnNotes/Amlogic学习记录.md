@@ -744,3 +744,8 @@ adb pull /data/out.perf ./out
 - （3）USB设备控制器硬件。
 
 ![](https://img2022.cnblogs.com/blog/821933/202210/821933-20221022151545036-1041964704.png)
+
+----
+
+# tdm 音频驱动
+

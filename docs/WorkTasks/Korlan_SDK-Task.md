@@ -1039,6 +1039,7 @@ Thanks for Mingyu update, please let us if it still our assistance.
 ### tdm_bridge 优化
 
 > https://partnerissuetracker.corp.google.com/issues/262352934  
+> 
 > https://blog.csdn.net/u011037593/article/details/121458492
 
 > u_audio_iso_cap_complete(), tdm_bridge does not have enough space to write.

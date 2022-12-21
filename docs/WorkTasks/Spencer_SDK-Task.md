@@ -55,6 +55,7 @@
       - [inceptionv1](#inceptionv1)
       - [ssd\_mobilenet\_v1](#ssd_mobilenet_v1)
       - [ssd\_big\_multiout](#ssd_big_multiout)
+  - [verisilicon 6.4.11.2](#verisilicon-64112)
 
 
 ---
@@ -1163,7 +1164,7 @@ $pegasus_bin export ovxlib \
 + export FIXED_ARCH_TYPE=arm-linux-gnueabihf
 ```
 
-编译 ddk
+- **编译 ddk**
 
 ```sh
 ./build_ml.sh arm32 spencer-p2 ./../../chrome
@@ -1783,3 +1784,140 @@ Average 13.70ms or 13698.42us
 3043: 13279.916992
 3643: 13279.916992
 ```
+
+## verisilicon 6.4.11.2
+
+创建 issue ： https://partnerissuetracker.corp.google.com/issues/263204650
+
+自己的文档总结： https://docs.google.com/document/d/12e76aVCW-EFLc9Bgydmmnozzui3B4dJ2Pbe0UqcomLk/edit#
+
+
+
+
+```sh
+cd /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon
+
+git fetch
+
+ git branch -a | grep 6.4.11.2
+
+git checkout -t eureka-partner/6.4.11.2
+```
+
+将 verisilicon-6.4.11.2 reset 到某个 commit，然后 cp 到 verisillicon 
+
+```sh
+verisilicon-6.4.11.2$ cp * ../verisilicon/ -r
+```
+
+- commit 记录
+
+```
+commit id: 8a27f8e77b34bb9038b380e735efba5e8aeb374d
+git push eureka-partner HEAD:refs/for/6.4.11.2
+https://eureka-partner-review.googlesource.com/c/verisilicon-sdk/+/273125
+
+
+ce449d3a4270fbcbcb36f5535386de79bb9af813
+https://eureka-partner-review.googlesource.com/c/verisilicon-sdk/+/273126
+
+2db679f0b70fcedce2d2ff6e77bea7a0ff6d980c
+https://eureka-partner-review.googlesource.com/c/verisilicon-sdk/+/273127
+
+ffb25035e0eb2f5b72e06d02a5657424ab95a010
+https://eureka-partner-review.googlesource.com/c/verisilicon-sdk/+/273128
+
+e21d4752a88d38ae2bc5550d4b64f1302a926c1d
+https://eureka-partner-review.googlesource.com/c/verisilicon-sdk/+/273129
+
+1278df1fdb0211e68d45a4bb769b8975d682c0b1
+https://eureka-partner-review.googlesource.com/c/verisilicon-sdk/+/273130
+
+6a50db267a81d5b2a00b119ed58ad86639072085
+https://eureka-partner-review.googlesource.com/c/verisilicon-sdk/+/273132
+
+8cce94d9b300f16c307ad012ded564a3d56a2744
+https://eureka-partner-review.googlesource.com/c/verisilicon-sdk/+/273145
+
+3a6ea5ffea6b29cdd8791da6b589e9ee0fd5f552
+https://eureka-partner-review.googlesource.com/c/verisilicon-sdk/+/273148
+
+da8226c744a93f182aec94d71b133b408dae643f
+https://eureka-partner-review.googlesource.com/c/verisilicon-sdk/+/273149
+
+573822c01dcdfc336822f8b8bcc1f0ef6ed0d464
+https://eureka-partner-review.googlesource.com/c/verisilicon-sdk/+/273150
+
+cb5f2276a876dc60177dd1451e99b14e7fddf2b1
+https://eureka-partner-review.googlesource.com/c/verisilicon-sdk/+/273151
+
+3f99ee5d9dc42148292b689b2ee00127fe13ef6f
+https://eureka-partner-review.googlesource.com/c/verisilicon-sdk/+/273152
+
+79d3eac21c1ba5ad8b862b62dd0bc0d34d1ec6fe
+https://eureka-partner-review.googlesource.com/c/verisilicon-sdk/+/273153
+
+922eb66ded509ea6b3cb0adcdb97c698f92b69e7
+https://eureka-partner-review.googlesource.com/c/verisilicon-sdk/+/273154
+
+f0ac9f088431fbbd3cb1c685d706c48aa3770dff
+https://eureka-partner-review.googlesource.com/c/verisilicon-sdk/+/273155
+
+03d82e229df22efdfe853031ef06ce0bb5fe7ec0
+https://eureka-partner-review.googlesource.com/c/verisilicon-sdk/+/273156
+
+abd8d26d7ae7d37966f17f0923a389ac54a126a4
+https://eureka-partner-review.googlesource.com/c/verisilicon-sdk/+/273157
+
+07ec1e746e65e89176b001691417bb28605969c4
+https://eureka-partner-review.googlesource.com/c/verisilicon-sdk/+/273158
+```
+
+- 所有的 topic cls : https://eureka-partner-review.googlesource.com/q/topic:%22verisilicon-6.4.11.2%22
+- 给 google 的文档：https://docs.google.com/document/d/1JTUCzPwTrY9xw1cA3fbS8vDJmZ5PMTw6JBZGAIk51Ts/edit#
+
+
+
+- 回复 issue
+
+Hi Jamie,
+
+The Verisilicon 6.4.11.2 Driver has been released, And I have verified it with google_test_model. Here is Verisilicon Driver 6.4.11.2 AML Release Note
+
+```
+https://docs.google.com/document/d/1JTUCzPwTrY9xw1cA3fbS8vDJmZ5PMTw6JBZGAIk51Ts/edit?usp=share_link
+```
+
+Here is all CLs: 
+
+```
+https://eureka-partner-review.googlesource.com/q/topic:%22verisilicon-6.4.11.2%22
+```
+
+In addition, the kernel and toolchain I used to compile galcore.ko are respectively: `kernel5.4 & gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu`
+
+
+The toolchain used to compile the related lib so is: `gcc-linaro-6.3.1-2017.02-x86_64_arm-linux-gnueabihf `
+
+And I have attached my compile script, please check: build_ml.sh & acuity-ovxlib-dev/build_vx.sh
+
+
+
+
+- 回复邮件
+
+Hi Jamie,
+
+The Verisilicon 6.4.11.2 Driver has been released, And I have verified it with google_test_model, you can also review by this doc,
+
+https://docs.google.com/document/d/1JTUCzPwTrY9xw1cA3fbS8vDJmZ5PMTw6JBZGAIk51Ts/edit#
+
+Here is all CLs,
+
+https://eureka-partner-review.googlesource.com/q/topic:%22verisilicon-6.4.11.2%22
+
+By the way, you can also check this issue for more details,
+
+https://partnerissuetracker.corp.google.com/issues/263204650
+
+Thanks 

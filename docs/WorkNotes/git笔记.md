@@ -110,7 +110,7 @@ git status          --> nothing to commit, working tree clean
 
 ===> 删除对象区中已经提交的文件
 
-git rm bbb.txt    从对象区删除，同时会删除本地工作区 bbb.txt 源文件（这时候的操作命令[也可以理解bbb.txt文件]在 暂存区 中）
+git rm bbb.txt    从对象区删除，同时会删除本地工作区 bbb.txt 源文件（这时候的操作命令【也可以理解bbb.txt文件】在 暂存区 中）
 
 git commit        提交删除操作，会彻底删除
 
