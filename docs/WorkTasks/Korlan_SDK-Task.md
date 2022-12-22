@@ -1089,15 +1089,15 @@ static snd_pcm_uframes_t aml_tdm_pointer(struct snd_pcm_substream *substream)
 
 // aplay 播放主要是这个结构体
 static struct snd_pcm_ops aml_tdm_ops = {
-        .open = aml_tdm_open,
-        .close = aml_tdm_close,
-        .ioctl = snd_pcm_lib_ioctl,
-        .hw_params = aml_tdm_hw_params,
-        .hw_free = aml_tdm_hw_free,                                                                                                                                                                                                                         
-        .prepare = aml_tdm_prepare,
-        .pointer = aml_tdm_pointer,
+        .open = aml_tdm_open,  // 1
+        .close = aml_tdm_close,    //6
+        .ioctl = snd_pcm_lib_ioctl,  //2
+        .hw_params = aml_tdm_hw_params,  //3
+        .hw_free = aml_tdm_hw_free,                                                                                  
+        .prepare = aml_tdm_prepare,  //4
+        .pointer = aml_tdm_pointer,  //5
         .mmap = aml_tdm_mmap,
 };
 ```
 
-aml_tdm_open
+
