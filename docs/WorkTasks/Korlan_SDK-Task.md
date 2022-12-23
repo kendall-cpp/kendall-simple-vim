@@ -1094,3 +1094,14 @@ static struct snd_pcm_ops aml_tdm_ops = {
 - aml_tdm_open 的调用顺序
 
 aml_tdm_open  --  soc_pcm_open  --  snd_pcm_playback_open
+
+
+Hi Mingyu,
+
+```
+"When trying to write data when ALSA is taking over the audio pipeline"
+```
+
+For the error mentioned in the issue, this playback method is unreasonable, because when aplay stops playing, it will close the TDMOUT_B register. At this time, the read pointer (cur_rd_addr) has stopped. But the write pointer (last_wr_addr) continues to move, which will cause many problems.
+
+I am working on the optimization of this issue.

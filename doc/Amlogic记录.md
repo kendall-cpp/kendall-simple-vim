@@ -610,6 +610,9 @@ aplay -Dhw:0,0 /data/the-stars-48k-60s.wav
 echo 0 > /sys/module/u_audio/parameters/free_run   
 echo 1 > /sys/module/u_audio/parameters/free_run  
 
+echo 0xfe0501c0 10 > /sys/kernel/debug/aml_reg/dump
+cat /sys/kernel/debug/aml_reg/dump 
+
  echo 0 > /sys/module/u_audio/parameters/free_run  & aplay -Dhw:0,0 /data/the-stars-48k-60s.wav & echo 1 > /sys/module/u_audio/parameters/free_run 
 ```
 
