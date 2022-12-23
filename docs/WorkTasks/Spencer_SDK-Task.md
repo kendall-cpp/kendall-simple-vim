@@ -1206,25 +1206,6 @@ FPN_be$ ./build_vx.sh
 # eureka/Spencer-file/NN64112/Verisilicon_SW_Unified_Driver_6.4.11.2_Amlogic_20220719
 
 tar xzf Verisilicon_SW_Unified_Driver_6.4.11.2_Amlogic_20220719.tgz
-
-├── Verisilicon_SW_Unified_Driver_6.4.11.2_Amlogic_20220719.tgz
-├── Vivante_GALVIP_Unified_Src_drv_6.4.11.2.tgz
-├── Vivante_GALVIP_Unified_Src_drv_AMLOGIC_GCFeature-addon_6.4.11.2.org.tgz
-├── Vivante_GALVIP_Unified_Src_drv_amlogic-platform-addon_6.4.11.2.tgz
-├── Vivante_GALVIP_Unified_Src_drv_AMLOGIC-prebuilt-addon_6.4.11.2.tgz
-├── Vivante_GALVIP_Unified_Src_drv_android-addon_6.4.11.2.noGPL.org.tgz
-├── Vivante_GALVIP_Unified_Src_drv_OCL-addon_6.4.11.2.noGPL.tgz
-├── Vivante_GALVIP_Unified_Src_drv_OVX-addon_6.4.11.2.noGPL.tgz
-├── Vivante_GALVIP_Unified_Src_drv_OVXLIB-addon_6.4.11.2.tgz
-├── Vivante_GALVIP_Unified_Src_drv_SPIRV-addon_6.4.11.2.noGPL.tgz
-├── Vivante_GALVIP_Unified_Src_drv_VIP9000NANODI_PID0XBE_VXC_addon_6.4.11.2.tgz
-├── Vivante_GALVIP_Unified_Src_drv_VIP9000NANODI_PID0XE8_VXC_addon_6.4.11.2.tgz
-├── Vivante_GALVIP_Unified_Src_drv_VIP9000NANOSI_PID0XB9_VXC_addon_6.4.11.2.tgz
-├── Vivante_GALVIP_Unified_Src_drv_VIP9000NANOS_PID0X1000000E_VXC_addon_6.4.11.2.tgz
-├── Vivante_GALVIP_Unified_Src_drv_VIPNANOQI_PID0X88_VXC_addon_6.4.11.2.tgz
-├── Vivante_GALVIP_Unified_Src_drv_VIPNANOQI_PID0XA1_VXC_addon_6.4.11.2.tgz
-├── Vivante_GALVIP_Unified_Src_drv_VIPPICO_V3_PID0X99_VXC_addon_6.4.11.2.tgz
-└── Vivante_GALVIP_Unified_Src_kernel_6.4.11.2.tgz
 ```
 
 - 一个个解压并拷贝

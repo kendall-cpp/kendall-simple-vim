@@ -975,16 +975,7 @@ https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/268826
 
 commit id : 2ec287b739a6406664d6a6777109f6464976603e
 
-```sh
-[Korlan] Optimize kernel config
 
-1. Disable VFAT (Windows-95) fs
-2. SCSI device
-3. Multi-purpose USB Net
-
-Bug: b/235426120
-Test: build ok, tdm-bridge work fine, adb work fine.
-```
 
 Hi Yi,
 
@@ -1100,4 +1091,6 @@ static struct snd_pcm_ops aml_tdm_ops = {
 };
 ```
 
+- aml_tdm_open 的调用顺序
 
+aml_tdm_open  --  soc_pcm_open  --  snd_pcm_playback_open

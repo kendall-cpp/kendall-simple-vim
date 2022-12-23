@@ -194,9 +194,9 @@ struct f_uac2_opts {
 
 ```
 
-## sound 专题
 
-- sound/soc/amlogic
+
+
 
 
 
