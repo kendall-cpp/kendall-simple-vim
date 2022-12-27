@@ -1089,6 +1089,15 @@ static struct snd_pcm_ops aml_tdm_ops = {
         .pointer = aml_tdm_pointer,  //5
         .mmap = aml_tdm_mmap,
 };
+
+
+aml_frddr_get_position
+reg = calc_frddr_address(EE_AUDIO_FRDDR_A_STATUS2, reg_base); 
+// aplay reg_base = 128  EE_AUDIO_FRDDR_B_STATUS2 76
+// uac  reg_base = 112  EE_AUDIO_FRDDR_A_STATUS2 86
+
+
+return aml_audiobus_read(actrl, reg);   
 ```
 
 - aml_tdm_open 的调用顺序

@@ -600,7 +600,7 @@ aplay -Dhw:0,0 /data/the-stars-48k-60s.wav   # 播放音频
 ```sh
 dmesg  -n 8   # 开 log
 amixer cget numid=2       # 查看音量
-amixer cset numid=2 140   # 修改音量
+amixer cset numid=2 130   # 修改音量
 # 或者
 amixer cset numid=2,iface=MIXER,name='tas5805 Digital Volume' 150
 
@@ -611,6 +611,7 @@ echo 0 > /sys/module/u_audio/parameters/free_run
 echo 1 > /sys/module/u_audio/parameters/free_run  
 
 echo 0xfe0501c0 10 > /sys/kernel/debug/aml_reg/dump
+echo  0xfe050540 28 > /sys/kernel/debug/aml_reg/dump
 cat /sys/kernel/debug/aml_reg/dump 
 
  echo 0 > /sys/module/u_audio/parameters/free_run  & aplay -Dhw:0,0 /data/the-stars-48k-60s.wav & echo 1 > /sys/module/u_audio/parameters/free_run 
