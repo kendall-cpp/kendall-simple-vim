@@ -320,6 +320,9 @@ cd -
 # kernel
 cd kernel-5.15
 ./build_kernel.sh korlan-p2 ../../chrome
+
+# 使用 make menuconfig
+make  CLANG_TRIPLE=../prebuilt/toolchain/aarch64/bin/aarch64-cros-linux-gnu- CC=../prebuilt/toolchain/aarch64/bin/aarch64-cros-linux-gnu-clang CROSS_COMPILE=../prebuilt/toolchain/aarch64/bin/aarch64-cros-linux-gnu- ARCH=arm64 korlan-p2_defconfig CONFIG_DEBUG_SECTION_MISMATCH=y menuconfig
 ```
 
 
@@ -495,7 +498,7 @@ rm  ./chromium/src/out_chromecast_korlan/release/gen/chromecast/internal/build/o
 
 - u-boot
 
-> - u-boot/arch/arm/dts/meson-a1-a113l-korlan.dts
+> - u-boot/arch/arm/dts/meson-a1-a113l-korlan.dtsi
 > - u-boot/arch/arm/mach-meson/board-common.c
 > - arch/arm/mach-meson/
 
@@ -600,7 +603,7 @@ aplay -Dhw:0,0 /data/the-stars-48k-60s.wav   # 播放音频
 ```sh
 dmesg  -n 8   # 开 log
 amixer cget numid=2       # 查看音量
-amixer cset numid=2 130   # 修改音量
+amixer cset numid=2 150   # 修改音量
 # 或者
 amixer cset numid=2,iface=MIXER,name='tas5805 Digital Volume' 150
 
