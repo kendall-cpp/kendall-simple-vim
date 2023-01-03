@@ -34,7 +34,10 @@
 - [kernel 裁剪](#kernel-裁剪)
   - [kernel 裁剪优化记录](#kernel-裁剪优化记录)
 - [Korlan 开机声卡顿问题](#korlan-开机声卡顿问题)
-  - [tdm\_bridge 优化](#tdm_bridge-优化)
+- [tdm\_bridge 优化](#tdm_bridge-优化)
+  - [分析 tdm 代码](#分析-tdm-代码)
+    - [函数调用](#函数调用)
+    - [tdm\_bridge 代码分析](#tdm_bridge-代码分析)
 
 
 -------------
@@ -1027,11 +1030,11 @@ Thanks for Mingyu update, please let us if it still our assistance.
 ----
 
 
-### tdm_bridge 优化
+## tdm_bridge 优化
 
 > https://partnerissuetracker.corp.google.com/issues/262352934  
 
->参考博客：UAC2驱动分析  https://blog.csdn.net/u011037593/article/details/121458492
+> 添加录音的 patch： https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/236887
 
 > u_audio_iso_cap_complete(), tdm_bridge does not have enough space to write.
 
@@ -1092,9 +1095,9 @@ static struct snd_pcm_ops aml_tdm_ops = {
 
 
 aml_frddr_get_position
-reg = calc_frddr_address(EE_AUDIO_FRDDR_A_STATUS2, reg_base); 
-// aplay reg_base = 128  EE_AUDIO_FRDDR_B_STATUS2 76
-// uac  reg_base = 112  EE_AUDIO_FRDDR_A_STATUS2 86
+reg = calc_frddr_address(EE_AUDIO_FRDDR_A_STATUS2, reg_base);   //EE_AUDIO_FRDDR_A_STATUS2   76
+// uac reg_base = 0x80  EE_AUDIO_FRDDR_B_STATUS2 76   ===> ret = 76 --> EE_AUDIO_FRDDR_A_STATUS2  返回值 121 次循环？
+\// aplay EE_AUDIO_FRDDR_B_STATUS2
 
 
 return aml_audiobus_read(actrl, reg);   
@@ -1104,13 +1107,51 @@ return aml_audiobus_read(actrl, reg);
 
 aml_tdm_open  --  soc_pcm_open  --  snd_pcm_playback_open
 
+当 aml_tdm_close 之后，space 就会一直下降到 192 
 
-Hi Mingyu,
+----
 
-```
-"When trying to write data when ALSA is taking over the audio pipeline"
-```
+### 分析 tdm 代码
 
-For the error mentioned in the issue, this playback method is unreasonable, because when aplay stops playing, it will close the TDMOUT_B register. At this time, the read pointer (cur_rd_addr) has stopped. But the write pointer (last_wr_addr) continues to move, which will cause many problems.
+#### 函数调用
 
-I am working on the optimization of this issue.
+aml_tdm_open  <-- soc_pcm_open  <-- snd_pcm_open_substream <-- snd_pcm_open  <-- snd_pcm_playback_open  <-- snd_open
+
+aml_tdm_close  <-- soc_pcm_close  <-- snd_pcm_release_substream <-- snd_pcm_release  
+
+aml_audio_unregister_frddr  <---  aml_tdm_close
+
+
+aml_frddr_get_position_kentest  <---  aml_tdm_pointer  <---  static struct snd_pcm_ops aml_tdm_ops  <---  soc_pcm_pointer ( component->driver->ops->pointer(substream) )
+
+aml_tdm_open  -- aml_audio_register_frddr(aml_tdm_ddr_isr)  snd_pcm_period_elapsed  snd_pcm_update_hw_ptr0  soc_pcm_pointer  aml_tdm_pointer  aml_frddr_get_position_kentest
+
+#### tdm_bridge 代码分析
+
+```c
+return aml_audiobus_read(actrl, reg);
+
+// 找到这个结构体  aml_audio_controller    aml_audio_ctrl_ops
+// actrlr->ops->read
+// 然后搜索 aml_audio_ctrl_ops 找它定义的 read 函数的地方
+
+struct aml_audio_ctrl_ops aml_actrl_mmio_ops = { 
+        .read                   = aml_audio_mmio_read, 
+        .write                  = aml_audio_mmio_write,
+        .update_bits    = aml_audio_mmio_update_bits,
+};
+static unsigned int aml_audio_mmio_read(struct aml_audio_controller *actrlr, unsigned int reg)
+{
+        struct regmap *regmap = actrlr->regmap;   //drivers/base/regmap/internal.h
+        unsigned int val; 
+        regmap_read(regmap, (reg << 2), &val);
+        return val;
+}
+regmap_read(regmap, (reg << 2), &val);
+ret = _regmap_read(map, reg, val); 
+
+````
+
+ snd_pcm_period_elapsed - update the pcm status for the next period
+
+This function is called from the interrupt handler when the  PCM has processed the period size.  It will update the current  pointer, wake up sleepers, etc.  Even if more than one periods have elapsed since the last call, you  have to call this only once.

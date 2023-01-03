@@ -188,7 +188,7 @@ USB Host 带有 Root Hub，第一个 USB 设备是一个根集线器（Root Hub)
 
 > 先简单概述一下 dwd
 
-dwc 作为一个 platform device ,这杯信息由设备树解析，与驱动匹配后执行 dwc3_probe（`drivers/usb/dwc3/core.c`）。
+dwc 作为一个 platform device ,这些信息由设备树解析，与驱动匹配后执行 dwc3_probe（`drivers/usb/dwc3/core.c`）。
 
 ```c
 dwc3_probe
