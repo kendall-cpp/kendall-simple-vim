@@ -123,7 +123,13 @@ https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/268826
 https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/270868
 ```
 
+## 优化 tdm_bridge
 
+https://partnerissuetracker.corp.google.com/issues/262352934
+
+ 给 tdm 增加一个 busy 状态，当 aplay 播放时， uac 等待 aplay 播放结束
+
+ 修复的 cl: https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/275167
 
 
 

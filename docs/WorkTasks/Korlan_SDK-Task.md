@@ -35,9 +35,6 @@
   - [kernel 裁剪优化记录](#kernel-裁剪优化记录)
 - [Korlan 开机声卡顿问题](#korlan-开机声卡顿问题)
 - [tdm\_bridge 优化](#tdm_bridge-优化)
-  - [分析 tdm 代码](#分析-tdm-代码)
-    - [函数调用](#函数调用)
-    - [tdm\_bridge 代码分析](#tdm_bridge-代码分析)
 
 
 -------------
@@ -1034,124 +1031,22 @@ Thanks for Mingyu update, please let us if it still our assistance.
 
 > https://partnerissuetracker.corp.google.com/issues/262352934  
 
-> 添加录音的 patch： https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/236887
 
-> u_audio_iso_cap_complete(), tdm_bridge does not have enough space to write.
+-----
 
-composite_setup  afunc_set_alt   u_audio_start_capture  u_audio_iso_cap_complete( free_run )   aml_tdm_br_write_data (auge/tdm_bridge.c)
+Hi Mingyu,
 
-```c
-afunc_set_alt(struct usb_function *fn, unsigned intf, unsigned alt)  
-// 若intf=2，alt=1，则开始录音，若intf=1，alt=1，则开始播放
+Here is fix comment #1 cl
+
+```
+https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/275167
 ```
 
-录音（capture）时，USB主机控制器向USB设备控制器发送音频数据，USB设备控制器收到以后通过DMA将其写入到 usb_request 的缓冲区中，随后再拷贝到DMA缓冲区中，用户可使用 arecord、tinycap 等工具从DMA缓冲区中读取音频数据，DMA缓冲区是一个 FIFO，uac2 驱动往里面填充数据，用户从里面读取数据。播放（playback）时，用户通过aplay、tinyplay等工具将音频数据写道DMA缓冲区中，uac2 驱动从 DMA 缓冲区中读取数据，然后构造成 usb_request，送到USB设备控制器，USB设备控制器再将音频数据发送到USB主机控制器。可以看出录音和播放的音频数据流方向相反，用户和uac2驱动构造了一个生产者和消费者模型，录音时，uac2驱动是生产者，用户是消费者，播放时则相反。
+In addition, I tested the following cases, 
 
-```c
-as_out_intf=1   //播放
+- case 1:  aplay *.wav ,and connect uac, wait aplay finish, uac work normal.
+- case 2:  aplay *.wav ,and connect uac, manunal stop aplay, uac work normal.
+- case 3:  aplay *.wav , and connect uac, uac stop,  aplay work normal.
+- case 4:  uac working, and aplay *.wav ( tdm is busy), uac stop, then aplay *.wav again, the sound of the aplay disappears after a period of time.
+  -  `amixer cset numid=3 on;`  aplay  work fine.
 
-as_in_intf=2    //录音
-```
-
-
-处理 DMA 缓冲区的数据
-
-播放时
-
-```c
-if (substream->stream == SNDRV_PCM_STREAM_CAPTURE) {
-                if (unlikely(pending < req->actual)) {
-                        memcpy(runtime->dma_area + hw_ptr, req->buf, pending);
-                        memcpy(runtime->dma_area, req->buf + pending,
-                                        req->actual - pending);
-                } else {
-                        memcpy(runtime->dma_area + hw_ptr, req->buf,
-                                        req->actual);
-                }
-                uac_irq_cnt++;
-                uac_data_count += req->actual;
-}
-```
-
-直接用 aplay 往声卡中送数据的时候，会不停往 fddr 中送数据，usb 播放也是通过 fddr 中送数据， 会通过一个全局的 aml_tdm（？？） 数据结构。
-
-aplay 播放的时候，会不停的调用这个哈数
-
-```c
-static snd_pcm_uframes_t aml_tdm_pointer(struct snd_pcm_substream *substream)    
-
-
-// aplay 播放主要是这个结构体
-static struct snd_pcm_ops aml_tdm_ops = {
-        .open = aml_tdm_open,  // 1
-        .close = aml_tdm_close,    //6
-        .ioctl = snd_pcm_lib_ioctl,  //2
-        .hw_params = aml_tdm_hw_params,  //3
-        .hw_free = aml_tdm_hw_free,                                                                                  
-        .prepare = aml_tdm_prepare,  //4
-        .pointer = aml_tdm_pointer,  //5
-        .mmap = aml_tdm_mmap,
-};
-
-
-aml_frddr_get_position
-reg = calc_frddr_address(EE_AUDIO_FRDDR_A_STATUS2, reg_base);   //EE_AUDIO_FRDDR_A_STATUS2   76
-// uac reg_base = 0x80  EE_AUDIO_FRDDR_B_STATUS2 76   ===> ret = 76 --> EE_AUDIO_FRDDR_A_STATUS2  返回值 121 次循环？
-\// aplay EE_AUDIO_FRDDR_B_STATUS2
-
-
-return aml_audiobus_read(actrl, reg);   
-```
-
-- aml_tdm_open 的调用顺序
-
-aml_tdm_open  --  soc_pcm_open  --  snd_pcm_playback_open
-
-当 aml_tdm_close 之后，space 就会一直下降到 192 
-
-----
-
-### 分析 tdm 代码
-
-#### 函数调用
-
-aml_tdm_open  <-- soc_pcm_open  <-- snd_pcm_open_substream <-- snd_pcm_open  <-- snd_pcm_playback_open  <-- snd_open
-
-aml_tdm_close  <-- soc_pcm_close  <-- snd_pcm_release_substream <-- snd_pcm_release  
-
-aml_audio_unregister_frddr  <---  aml_tdm_close
-
-
-aml_frddr_get_position_kentest  <---  aml_tdm_pointer  <---  static struct snd_pcm_ops aml_tdm_ops  <---  soc_pcm_pointer ( component->driver->ops->pointer(substream) )
-
-aml_tdm_open  -- aml_audio_register_frddr(aml_tdm_ddr_isr)  snd_pcm_period_elapsed  snd_pcm_update_hw_ptr0  soc_pcm_pointer  aml_tdm_pointer  aml_frddr_get_position_kentest
-
-#### tdm_bridge 代码分析
-
-```c
-return aml_audiobus_read(actrl, reg);
-
-// 找到这个结构体  aml_audio_controller    aml_audio_ctrl_ops
-// actrlr->ops->read
-// 然后搜索 aml_audio_ctrl_ops 找它定义的 read 函数的地方
-
-struct aml_audio_ctrl_ops aml_actrl_mmio_ops = { 
-        .read                   = aml_audio_mmio_read, 
-        .write                  = aml_audio_mmio_write,
-        .update_bits    = aml_audio_mmio_update_bits,
-};
-static unsigned int aml_audio_mmio_read(struct aml_audio_controller *actrlr, unsigned int reg)
-{
-        struct regmap *regmap = actrlr->regmap;   //drivers/base/regmap/internal.h
-        unsigned int val; 
-        regmap_read(regmap, (reg << 2), &val);
-        return val;
-}
-regmap_read(regmap, (reg << 2), &val);
-ret = _regmap_read(map, reg, val); 
-
-````
-
- snd_pcm_period_elapsed - update the pcm status for the next period
-
-This function is called from the interrupt handler when the  PCM has processed the period size.  It will update the current  pointer, wake up sleepers, etc.  Even if more than one periods have elapsed since the last call, you  have to call this only once.
