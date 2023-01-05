@@ -35,6 +35,10 @@
   - [kernel 裁剪优化记录](#kernel-裁剪优化记录)
 - [Korlan 开机声卡顿问题](#korlan-开机声卡顿问题)
 - [tdm\_bridge 优化](#tdm_bridge-优化)
+- [开启并制作 erofs 文件系统](#开启并制作-erofs-文件系统)
+  - [下载和编译 erofs-utils](#下载和编译-erofs-utils)
+  - [压缩到 image](#压缩到-image)
+  - [学习给korlan增加一个分区](#学习给korlan增加一个分区)
 
 
 -------------
@@ -1049,4 +1053,90 @@ In addition, I tested the following cases,
 - case 3:  aplay *.wav , and connect uac, uac stop,  aplay work normal.
 - case 4:  uac working, and aplay *.wav ( tdm is busy), uac stop, then aplay *.wav again, the sound of the aplay disappears after a period of time.
   -  `amixer cset numid=3 on;`  aplay  work fine.
+
+---
+
+## 开启并制作 erofs 文件系统
+
+
+参考：https://tjtech.me/how-to-build-mkfs-erofs-for-arm64.html
+
+### 下载和编译 erofs-utils
+
+```sh
+git clone git://git.kernel.org/pub/scm/linux/kernel/git/xiang/erofs-utils.git
+ 
+cd erofs-utils
+./autogen.sh
+./configure
+make -j4
+
+# 如果需要更换编译器
+# ./configure --host aarch64-linux-android  & make
+```
+
+
+
+### 压缩到 image
+
+先创建一个文件夹并拷贝一些文件进去
+
+```sh
+srcd/
+├── ChangeLog
+├── COPYING
+├── Makefile
+└── README
+```
+
+制作 img
+
+```sh
+./mkfs.erofs  erofs.img srcd/
+adb push erofs.img /data/
+
+chmod 777 ./erofs.img 
+mkdir /data/aaa/
+# 挂载
+mount -t erofs /data/erofs.img /data/aaa/ -o loop
+
+/data/aaa # ls -l /data/aaa/
+-rw-r--r-- 9515     8000          585 2023-01-05 00:41 COPYING
+-rw-r--r-- 9515     8000         3818 2023-01-05 00:41 ChangeLog
+-rw-r--r-- 9515     8000        26617 2023-01-05 00:41 Makefile
+-rw-r--r-- 9515     8000         9867 2023-01-05 00:41 README
+```
+
+
+### 学习给korlan增加一个分区
+
+
+
+- google_source/eureka/korlan-sdk/u-boot/board/amlogic/a1_korlan_p2/a1_korlan_p2.c
+
+- kernel-5.15/common_drivers/arch/arm64/boot/dts/amlogic/korlan-common.dtsi
+
+在这两个文件下找 partition ，然后计算和修改大小
+
+```sh
+cache{
+        offset=<0x0 0x0>;
+        size=<0x0 0x32e0000>;
+};  
+system_1{
+        offset=<0xffffffff 0xffffffff>;
+        size=<0x0 0x0>;
+};
+
+# 板子上查看 分区
+cat /proc/mtd
+
+# 增加一个 block dev
+ls /dev/block/mtdblock8 
+
+# 注意 cache 默认是 mtd7
+# 可以在 init.rc 中查看
+# exec /bin/sh /sbin/check_and_mount_ubifs.sh 7 cache /cache 20 
+```
+
 

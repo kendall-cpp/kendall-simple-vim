@@ -388,6 +388,9 @@ adnl.exe oem "store erase system 0 0"
 adnl.exe Partition -P bootloader  -F  u-boot.bin
 adnl.exe Partition -P boot  -F boot.img    # boot-sign.img 
 adnl.exe Partition -P system  -F system.img
+
+adnl.exe oem "store erase system_1 0 0"
+adnl.exe Partition -P system_1  -F erofs_disk
 # 关闭工厂模式 如果之前设置了工厂模式
 # adnl.exe oem "store erase fts  0 0"
 adnl.exe oem "reset"
@@ -1771,6 +1774,7 @@ CONFIG_ENABLE_UBOOT_CLI=y
 ## 查看二进制依赖和编译器
 
 ```
+ # 查看依赖的库
  readelf -d libOpenVX.so | grep NEEDED
  
  # 看GLIB版本信息
