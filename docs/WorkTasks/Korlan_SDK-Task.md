@@ -39,6 +39,8 @@
   - [下载和编译 erofs-utils](#下载和编译-erofs-utils)
   - [压缩到 image](#压缩到-image)
   - [学习给korlan增加一个分区](#学习给korlan增加一个分区)
+  - [读取分区表](#读取分区表)
+  - [将自己制作的文件系统挂载起来](#将自己制作的文件系统挂载起来)
 
 
 -------------
@@ -1059,7 +1061,13 @@ In addition, I tested the following cases,
 ## 开启并制作 erofs 文件系统
 
 
-参考：https://tjtech.me/how-to-build-mkfs-erofs-for-arm64.html
+参考：
+
+- https://blog.csdn.net/ZR_Lang/article/details/88859477
+
+- https://tjtech.me/how-to-build-mkfs-erofs-for-arm64.html
+
+- https://blog.csdn.net/u014001096/article/details/124831748
 
 ### 下载和编译 erofs-utils
 
@@ -1119,15 +1127,50 @@ mount -t erofs /data/erofs.img /data/aaa/ -o loop
 在这两个文件下找 partition ，然后计算和修改大小
 
 ```sh
-cache{
-        offset=<0x0 0x0>;
-        size=<0x0 0x32e0000>;
-};  
-system_1{
-        offset=<0xffffffff 0xffffffff>;
-        size=<0x0 0x0>;
-};
+@ken@:/mnt/fileroot/shengken.lin/workspace/google_source/eureka/korlan-sdk/kernel-5.15/common_drivers$ git diff
+diff --git a/arch/arm64/boot/dts/amlogic/korlan-common.dtsi b/arch/arm64/boot/dts/amlogic/korlan-common.dtsi
+index febcc0e872c6..7768e7572c0a 100644
+--- a/arch/arm64/boot/dts/amlogic/korlan-common.dtsi
++++ b/arch/arm64/boot/dts/amlogic/korlan-common.dtsi
+@@ -663,6 +663,10 @@
+                                size=<0x0 0x1E00000>;
+                        };
+                        cache{
++                               offset=<0x0 0x0>;
++                               size=<0x0 0x3200000>;
++                       };
++                       system_1{
+                                offset=<0xffffffff 0xffffffff>;
+                                size=<0x0 0x0>;
+                        };
 
+@ken@:/mnt/fileroot/shengken.lin/workspace/google_source/eureka/korlan-sdk/u-boot$ git diff
+diff --git a/board/amlogic/a1_korlan_p2/a1_korlan_p2.c b/board/amlogic/a1_korlan_p2/a1_korlan_p2.c
+index d1a19855a1..b3660ab80d 100644
+--- a/board/amlogic/a1_korlan_p2/a1_korlan_p2.c
++++ b/board/amlogic/a1_korlan_p2/a1_korlan_p2.c
+@@ -285,12 +285,28 @@ static const struct mtd_partition spinand_partitions[] = {
+                .offset = 0,
+                .size = 30 * SZ_1M,
+        },
+-       /* last partition get the rest capacity */
+        {
+                .name = "cache",
++               .offset = 0,
++               .size = 50 * SZ_1M,
++       },
++       /* last partition get the rest capacity */
++       {
++               .name = "system_1",
+                .offset = MTDPART_OFS_APPEND,
+                .size = MTDPART_SIZ_FULL,
+-       }
++        }
+```
+
+- 板子上查看 
+
+```sh
 # 板子上查看 分区
 cat /proc/mtd
 
@@ -1139,4 +1182,74 @@ ls /dev/block/mtdblock8
 # exec /bin/sh /sbin/check_and_mount_ubifs.sh 7 cache /cache 20 
 ```
 
+-----
 
+### 读取分区表
+
+```sh
+分区表，
+0x000000000000-0x000000200000 : "bootloader"
+0x000000800000-0x000001000000 : "tpl"
+0x000001000000-0x000001100000 : "fts"
+0x000001100000-0x000001500000 : "factory"
+0x000001500000-0x000002120000 : "recovery"
+0x000002120000-0x000002d20000 : "boot"
+0x000002d20000-0x000004be0000 : "system"
+0x000004be0000-0x000008000000 : "cache"
+
+step1: 读fts分区到 0x1080000 
+E:\amlogic_tools\aml_dnl-win32\adnl.exe oem "store read 0x1080000 fts 0 0x100000"
+
+step2: 从1080000， dump 出 0x100000 到fts.bin.
+E:\amlogic_tools\aml_dnl-win32\adnl.exe upload -f fts.bin  -z 0x100000 -m mem -p 0x1080000
+```
+
+```sh
+/ # cat /proc/mtd 
+dev:    size   erasesize  name
+mtd0: 00200000 00020000 "bootloader"
+mtd1: 00800000 00020000 "tpl"
+mtd2: 00100000 00020000 "fts"
+mtd3: 00400000 00020000 "factory"
+mtd4: 00c20000 00020000 "recovery"
+mtd5: 00c00000 00020000 "boot"
+mtd6: 01e00000 00020000 "system"
+mtd7: 03220000 00020000 "cache"
+mtd8: 002c0000 00020000 "system_1"
+
+adnl oem "store read 0x1080000 system_1 0 0x2c0000"
+adnl upload -f system_1.bin  -z 0x2c0000 -m mem -p 0x1080000
+
+# 对比 system_1.bin 和 erofs.img
+第一种方法： 将后缀改成一样然后用 compare 工具比较
+第二种方法：
+hexdump -C system_1.bin > system_1.bin.txt 
+hexdump -C erofs.img > erofs.img.txt 
+vim -d erofs.img.txt  system_1.bin.txt 
+
+
+# 挂载
+mount -t erofs /dev/block/mtdblock8  /data/aaa/
+```
+
+
+### 将自己制作的文件系统挂载起来
+
+```sh
+vim chrome/vendor/amlogic/build/tools/releasetools/ota_from_target_files +1059
+
+```
+mksquashfs system /tmp/tmpl5r9cghr -noappend
+            sourcedir    img.name
+
+['mksquashfs', 'system', '/tmp/tmpl5r9cghr', '-noappend', '-context-file', '/tmp/targetfiles-8196l_l5/BOOT/RAMDISK/file_contexts']    
+
+mksquashfs system/tmp/tmpl5r9cghr -noappend -context-file /tmp/targetfiles-8196l_l5/BOOT/RAMDISK/
+
+
+mksquashfs rootfs ./rootfs.squashfs.img -b 64K –comp xz
+
+./mkfs.erofs  erofs.img srcd/
+mount -t erofs /data/erofs.img /data/aaa/ -o loop
+
+  print('Print Message: lsken00 ========>  ' + ' ,File: "'+__file__+'", Line '+str(sys._getframe().f_lineno)+' , in '+sys._getframe().f_code.co_name)

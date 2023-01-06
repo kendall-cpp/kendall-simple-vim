@@ -389,8 +389,9 @@ adnl.exe Partition -P bootloader  -F  u-boot.bin
 adnl.exe Partition -P boot  -F boot.img    # boot-sign.img 
 adnl.exe Partition -P system  -F system.img
 
+# 定义自己的分区和烧录
 adnl.exe oem "store erase system_1 0 0"
-adnl.exe Partition -P system_1  -F erofs_disk
+adnl.exe Partition -P system_1  -F erofs.img
 # 关闭工厂模式 如果之前设置了工厂模式
 # adnl.exe oem "store erase fts  0 0"
 adnl.exe oem "reset"
@@ -1782,6 +1783,16 @@ CONFIG_ENABLE_UBOOT_CLI=y
   # 看GCC版本信息
  strings libOpenVX.so | grep GCC
 ```
+
+### 查看二进制文件
+
+```
+hexdump system_1.bin | head
+# 导出十六进制
+hexdump -C system_1.bin > system_1.bin.txt
+```
+
+
 
 
 
