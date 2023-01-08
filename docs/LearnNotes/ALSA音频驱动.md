@@ -1,24 +1,11 @@
+- [ALSA 声卡驱动](#alsa-声卡驱动)
+	- [ASOC 简介](#asoc-简介)
 
-> 任何一个专题都应该全面去理解，并总结文档，自己多花时间看源码研究
+-----------------
 
-# 需要学习的知识
-
-- sound 专题
-
-aml_tdm_open  --  soc_pcm_open  --  snd_pcm_playback_open
-
-- Linux ALSA声卡驱动
-- USB audio
-- USB 控制器
-- DDR内存读写
-- SPI驱动
-- regmap子系统
 
 # ALSA 声卡驱动
 
-> https://blog.csdn.net/Bill_xiao/article/details/104756455
->
-> https://blog.csdn.net/mo_daizi/article/details/109560200
 
 ALSA是 Advanced Linux Sound Architecture 的缩写，目前已经成为了linux的主流音频体系结构，想了解更多的关于ALSA的这一开源项目的信息和知识，请查看以下网址：http://www.alsa-project.org/。
 
@@ -35,11 +22,11 @@ kernel/sound/soc 针对system-on-chip体系的中间层代码
 
 ## ASOC 简介
 
-ASoC把音频系统同样分为3大部分：Machine，Platform和Codec
+ASoC把音频系统同样分为3大部分：Machine，Platform 和 Codec
 
-在ASoC驱动框架中cpu部分称作platform，声卡部分被称作codec，两者通过machine进行匹配连接；machine可以理解为对开发板的抽象，开发板可能包括多个声卡.
+在 ASoC 驱动框架中 cpu 部分称作 platform，声卡部分被称作 codec，两者通过 machine 进行匹配连接；machine 可以理解为对开发板的抽象，开发板可能包括多个声卡.
 
-Platform  一般是指某一个SoC平台，比如MT6582, MT6595, MT6752等等，与音频相关的通常包含该SoC中的Clock、FAE、I2S、DMA等等,该模块负责DMA的控制和I2S的控制, 由CPU厂商负责编写此部分代码。
+Platform  一般是指某一个SoC平台，比如 MT6582, MT6595, MT6752 等等，与音频相关的通常包含该SoC中的Clock、FAE、I2S、DMA等等,该模块负责DMA的控制和I2S的控制, 由CPU厂商负责编写此部分代码。
 
 - 录音数据通路：麦克风---->声卡–(I2S)->DMA---->内存；
 - 播放数据通路：内存---->DMA–(I2S)->声卡---->扬声器；
@@ -55,11 +42,5 @@ Machine 是指某一款机器，可以是某款设备，某款开发板，又或
 
 ![](https://img-blog.csdnimg.cn/20200309172704582.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0JpbGxfeGlhbw==,size_16,color_FFFFFF,t_70)
 
-### Platform
-
-Platform 驱动的主要作用是完成音频数据的管理，把音频数据通过 dma 或其他操作传送至 cpu dai中，最终 CPU 的数字音频接口（dai）把音频数据传送给 Codec 进行处理，最终由 Codec 输出驱动耳机或者是喇叭的音信信号。
-
-
-platform --> dma --> cpu dai --> codec --> 喇叭
 
 

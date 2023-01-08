@@ -3,26 +3,23 @@
   - [最终提交1](#最终提交1)
   - [最终提交2](#最终提交2)
   - [复现 dock-test-tool 测试问题](#复现-dock-test-tool-测试问题)
-- [添加 dhcp fct-korlan](#添加-dhcp-fct-korlan)
+- [添加 fct-korlan 实现联网](#添加-fct-korlan-实现联网)
   - [kernel 打开个 CONFIG\_USB\_RTL8152](#kernel-打开个-config_usb_rtl8152)
-  - [fctory 设置 IP](#fctory-设置-ip)
+  - [fct-kolran 设置 IP](#fct-kolran-设置-ip)
   - [设置开机自动获取 ip](#设置开机自动获取-ip)
   - [adb调试ipv6](#adb调试ipv6)
-  - [开启 ipv6和RTL8152](#开启-ipv6和rtl8152)
+  - [开启 ipv6 和 RTL8152](#开启-ipv6-和-rtl8152)
   - [重新编译成 ko 文件，并加载到init.rc](#重新编译成-ko-文件并加载到initrc)
     - [提交](#提交)
 - [熟悉和测试 korlan5.15](#熟悉和测试-korlan515)
-  - [GPIO测试](#gpio测试)
-    - [Set internal default pull up/down/disabled](#set-internal-default-pull-updowndisabled)
-    - [GPIO event](#gpio-event)
 - [flush-ubifs\_7\_0(adb push ota.zip) 线程 CPU 过高导致 tdm underrun](#flush-ubifs_7_0adb-push-otazip-线程-cpu-过高导致-tdm-underrun)
   - [复现问题](#复现问题)
     - [perf 工具使用](#perf-工具使用)
   - [工作流程](#工作流程)
   - [isp 内部优化 usleep](#isp-内部优化-usleep)
   - [yi-u\_audio-log\_uac\_timing-tdm-cpu](#yi-u_audio-log_uac_timing-tdm-cpu)
-- [nandread去读卡](#nandread去读卡)
-  - [yuegui 飞书记录](#yuegui-飞书记录)
+  - [nandread去读卡](#nandread去读卡)
+    - [yuegui 飞书记录](#yuegui-飞书记录)
   - [测试 nandread](#测试-nandread)
   - [单独编译 nandread](#单独编译-nandread)
   - [打印时间](#打印时间)
@@ -35,9 +32,6 @@
   - [kernel 裁剪优化记录](#kernel-裁剪优化记录)
 - [Korlan 开机声卡顿问题](#korlan-开机声卡顿问题)
 - [tdm\_bridge 优化](#tdm_bridge-优化)
-  - [分析 tdm 代码](#分析-tdm-代码)
-    - [函数调用](#函数调用)
-    - [tdm\_bridge 代码分析](#tdm_bridge-代码分析)
 
 
 -------------
@@ -215,19 +209,20 @@ https://partnerissuetracker.corp.google.com/issues/230885799
 https://docs.google.com/document/d/16La7BkKlu0sbsQgruMoemk4QlBBqF8B7xHdMM74hXLk/edit?usp=sharing
 
 
-## 添加 dhcp fct-korlan
+## 添加 fct-korlan 实现联网
 
 > https://partnerissuetracker.corp.google.com/issues/247080714
 
 
 ###  kernel 打开个 CONFIG_USB_RTL8152
 
+```sh
 arch/arm64/configs/korlan-p2_defconfig
 
 CONFIG_USB_RTL8152=y
+```
 
-
-### fctory 设置 IP
+### fct-kolran 设置 IP
   
 - comment
 
@@ -291,32 +286,6 @@ on post-fd
 start dhcpcd
 ```
 
-- connect rejected
-
-```c
-system/core/adb/transport_local.c::server_socket_thread():server: cannot bind socket yet
-```
-
-
-```c
-  352 //#  define ADB_TRACING  ((adb_trace_mask & (1 << TRACE_TAG)) != 0)
-  353 #  define ADB_TRACING  1
-  354                                                                                                                                                                                                                        
-  355   /* you must define TRACE_TAG before using this macro */
-  356 #  define  D(...)                                      \
-  357         do {                                           \
-  358             if (ADB_TRACING) {                         \
-  359                 int save_errno = errno;                \
-  360                 adb_mutex_lock(&D_lock);               \
-  361                 fprintf(stdout, "%s::%s():",           \
-  362                         __FILE__, __FUNCTION__);       \
-  363                 errno = save_errno;                    \
-  364                 fprintf(stdout, __VA_ARGS__ );         \
-  365                 fflush(stdout);                        \
-  366                 adb_mutex_unlock(&D_lock);             \
-  367                 errno = save_errno;                    \
-  368            }                                           \
-```
 
 ### adb调试ipv6
 
@@ -339,20 +308,19 @@ echo 0 > /sys/kernel/debug/usb_mode/mode
 # libcutils/socket_inaddr_any_server_unix.cpp
 ```
 
-### 开启 ipv6和RTL8152
+### 开启 ipv6 和 RTL8152
 
 
 ### 重新编译成 ko 文件，并加载到init.rc
 
 拷贝到 ramdisk sbin 目录下
 
-```
+```sh
 cp kernel/net/ipv6/ipv6.ko  /mnt/fileroot/shengken.lin/workspace/google_source/eureka/amlogic_sdk/build-sign-pdk/korlan/fct_ramdisk/sbin
 
-- 顺序，只需要
+# 只需要这个 ko
 
 insmod /sbin/ipv6.ko
-
 ```
 
 #### 提交
@@ -425,30 +393,6 @@ cherry-pick kernel5.15 all cl  直接 git  checkout
 	1) build amlogic_sdk, 
 		./sdk/build_scripts/build_all.sh /path/chrome/ sprinkles --kernel=5.15
 ```
-
-### GPIO测试
-
-和 4.19 进行对比
-
-```sh
-# step1 check pin mux function,
-cat /sys/kernel/debug/pinctrl/fe000000.bus:pinctrl@0400-pinctrl-meson/pinmux-pins
-
-
-# step2:
-cat /sys/kernel/debug/pinctrl/fe000000.bus:pinctrl@0400-pinctrl-meson/pinconf-pins
-
-# kernel-5.15/common_drivers/arch/arm64/boot/dts/amlogic/meson-a1.dtsi
-检查kernel的： drive-strength-microamp   ===》 step2 log 中的 drive strength (3 mA)
-和 kernel/arch/arm64/boot/dts/amlogic/meson-a1.dtsi 对比
-```
-
-#### Set internal default pull up/down/disabled
-
-
-#### GPIO event
-
-参考测试cl: https://partnerissuetracker.corp.google.com/issues/195367613
 
 
 ----
@@ -554,11 +498,11 @@ commit ID: c108b9c0c97bb5af5dfcaa5ab994a9b1d9ac2a00
 
 ---
 
-## nandread去读卡
+### nandread去读卡
 
 > https://jira.amlogic.com/browse/GH-3176
 
-###  yuegui 飞书记录
+####  yuegui 飞书记录
 
 ```
 抓trace 命令：
@@ -696,28 +640,9 @@ echo 0 > /sys/kernel/debug/tracing/events/workqueue/enable
 
 echo 1 > /sys/kernel/debug/tracing/tracing_on
 busybox time nandread -d /dev/mtd/mtd4 -L 6144000 -f /cache/.data/dump-page0.hex
+# sleep 一会
 echo 0 > /sys/kernel/debug/tracing/tracing_on
 dd if=/sys/kernel/debug/tracing/trace of=/tmp/trace.bringup.bin bs=1M
-```
-
-```
-echo 0 > /sys/kernel/debug/tracing/tracing_on
-echo 0 > /sys/kernel/debug/tracing/events/enable
-echo ""  > /sys/kernel/debug/tracing/trace
-echo 40960 > /sys/kernel/debug/tracing/buffer_size_kb
-
-echo 1 > /sys/kernel/debug/tracing/options/record-tgid
-echo 1 > /sys/kernel/debug/tracing/events/ipi/enable
-echo 1 > /sys/kernel/debug/tracing/events/irq/enable
-echo 1 > /sys/kernel/debug/tracing/events/sched/enable
-echo 1 > /sys/kernel/debug/tracing/events/timer/enable
-echo 1 > /sys/kernel/debug/tracing/events/power/cpu_idle/enable
-echo 1 > /sys/kernel/debug/tracing/events/sched/sched_switch/enable
-echo 1 > /sys/kernel/debug/tracing/tracing_on
-busybox time nandread -d /dev/mtd/mtd4 -L 6144000 -f /cache/.data/dump-page0.hex &
-sleep 10
-echo 0 > /sys/kernel/debug/tracing/tracing_on
-dd if=/sys/kernel/debug/tracing/trace of=/tmp/trace bs=1M
 ```
 
 ```
@@ -1024,7 +949,6 @@ echo 1 > /sys/module/u_audio/parameters/free_run
 
 就可以正常运行
 
-
 Thanks for Mingyu update, please let us if it still our assistance.
 
 ----
@@ -1053,105 +977,3 @@ as_out_intf=1   //播放
 as_in_intf=2    //录音
 ```
 
-
-处理 DMA 缓冲区的数据
-
-播放时
-
-```c
-if (substream->stream == SNDRV_PCM_STREAM_CAPTURE) {
-                if (unlikely(pending < req->actual)) {
-                        memcpy(runtime->dma_area + hw_ptr, req->buf, pending);
-                        memcpy(runtime->dma_area, req->buf + pending,
-                                        req->actual - pending);
-                } else {
-                        memcpy(runtime->dma_area + hw_ptr, req->buf,
-                                        req->actual);
-                }
-                uac_irq_cnt++;
-                uac_data_count += req->actual;
-}
-```
-
-直接用 aplay 往声卡中送数据的时候，会不停往 fddr 中送数据，usb 播放也是通过 fddr 中送数据， 会通过一个全局的 aml_tdm（？？） 数据结构。
-
-aplay 播放的时候，会不停的调用这个哈数
-
-```c
-static snd_pcm_uframes_t aml_tdm_pointer(struct snd_pcm_substream *substream)    
-
-
-// aplay 播放主要是这个结构体
-static struct snd_pcm_ops aml_tdm_ops = {
-        .open = aml_tdm_open,  // 1
-        .close = aml_tdm_close,    //6
-        .ioctl = snd_pcm_lib_ioctl,  //2
-        .hw_params = aml_tdm_hw_params,  //3
-        .hw_free = aml_tdm_hw_free,                                                                                  
-        .prepare = aml_tdm_prepare,  //4
-        .pointer = aml_tdm_pointer,  //5
-        .mmap = aml_tdm_mmap,
-};
-
-
-aml_frddr_get_position
-reg = calc_frddr_address(EE_AUDIO_FRDDR_A_STATUS2, reg_base);   //EE_AUDIO_FRDDR_A_STATUS2   76
-// uac reg_base = 0x80  EE_AUDIO_FRDDR_B_STATUS2 76   ===> ret = 76 --> EE_AUDIO_FRDDR_A_STATUS2  返回值 121 次循环？
-\// aplay EE_AUDIO_FRDDR_B_STATUS2
-
-
-return aml_audiobus_read(actrl, reg);   
-```
-
-- aml_tdm_open 的调用顺序
-
-aml_tdm_open  --  soc_pcm_open  --  snd_pcm_playback_open
-
-当 aml_tdm_close 之后，space 就会一直下降到 192 
-
-----
-
-### 分析 tdm 代码
-
-#### 函数调用
-
-aml_tdm_open  <-- soc_pcm_open  <-- snd_pcm_open_substream <-- snd_pcm_open  <-- snd_pcm_playback_open  <-- snd_open
-
-aml_tdm_close  <-- soc_pcm_close  <-- snd_pcm_release_substream <-- snd_pcm_release  
-
-aml_audio_unregister_frddr  <---  aml_tdm_close
-
-
-aml_frddr_get_position_kentest  <---  aml_tdm_pointer  <---  static struct snd_pcm_ops aml_tdm_ops  <---  soc_pcm_pointer ( component->driver->ops->pointer(substream) )
-
-aml_tdm_open  -- aml_audio_register_frddr(aml_tdm_ddr_isr)  snd_pcm_period_elapsed  snd_pcm_update_hw_ptr0  soc_pcm_pointer  aml_tdm_pointer  aml_frddr_get_position_kentest
-
-#### tdm_bridge 代码分析
-
-```c
-return aml_audiobus_read(actrl, reg);
-
-// 找到这个结构体  aml_audio_controller    aml_audio_ctrl_ops
-// actrlr->ops->read
-// 然后搜索 aml_audio_ctrl_ops 找它定义的 read 函数的地方
-
-struct aml_audio_ctrl_ops aml_actrl_mmio_ops = { 
-        .read                   = aml_audio_mmio_read, 
-        .write                  = aml_audio_mmio_write,
-        .update_bits    = aml_audio_mmio_update_bits,
-};
-static unsigned int aml_audio_mmio_read(struct aml_audio_controller *actrlr, unsigned int reg)
-{
-        struct regmap *regmap = actrlr->regmap;   //drivers/base/regmap/internal.h
-        unsigned int val; 
-        regmap_read(regmap, (reg << 2), &val);
-        return val;
-}
-regmap_read(regmap, (reg << 2), &val);
-ret = _regmap_read(map, reg, val); 
-
-````
-
- snd_pcm_period_elapsed - update the pcm status for the next period
-
-This function is called from the interrupt handler when the  PCM has processed the period size.  It will update the current  pointer, wake up sleepers, etc.  Even if more than one periods have elapsed since the last call, you  have to call this only once.
