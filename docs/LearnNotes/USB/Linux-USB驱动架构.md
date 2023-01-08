@@ -1,4 +1,23 @@
+<!-- TOC -->
 
+- [bus,driver,device 框架](#busdriverdevice-框架)
+	- [注册](#注册)
+	- [device 和 driver绑定](#device-和-driver绑定)
+- [USB_driver结构体](#usb_driver结构体)
+- [USB主控制器 HCD 分析](#usb主控制器-hcd-分析)
+	- [概述](#概述)
+	- [USB 主控制器驱动](#usb-主控制器驱动)
+		- [usb主机控制器硬件情况](#usb主机控制器硬件情况)
+		- [dwc](#dwc)
+		- [xhci](#xhci)
+- [USB-Hub](#usb-hub)
+	- [usb_hub_init](#usb_hub_init)
+	- [hub_configure](#hub_configure)
+	- [hub_activate](#hub_activate)
+- [USB整体框架](#usb整体框架)
+	- [gadget 设备层](#gadget-设备层)
+
+<!-- /TOC -->
 
 kernel 分为两个模块，一个是 core：cpu ，中断，进程，内存几大管理，提供系统呼叫，另一个是 driver，driver 各类结构成为 "子系统" ，比如：block 子系统，net 子系统，usb 子系统等。另外，微内核和宏内核的区别就是 驱动是否放在内核。
 

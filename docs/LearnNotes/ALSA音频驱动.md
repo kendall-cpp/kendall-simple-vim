@@ -1,10 +1,23 @@
-- [ALSA 声卡驱动](#alsa-声卡驱动)
-	- [ASOC 简介](#asoc-简介)
+
+<!-- TOC -->
+
+- [1. ALSA 声卡驱动](#1-alsa-声卡驱动)
+	- [1.1. ASOC 简介](#11-asoc-简介)
+- [2. 注册 aml\_tdm\_driver](#2-注册-aml_tdm_driver)
+	- [2.1. module\_platform\_driver](#21-module_platform_driver)
+	- [2.2. 通过 module\_platform\_driver 注册 aml\_tdm\_driver](#22-通过-module_platform_driver-注册-aml_tdm_driver)
+		- [2.2.1. platform 驱动之 probe 函数](#221-platform-驱动之-probe-函数)
+		- [2.2.2. aml\_tdm\_driver 的 probe 函数](#222-aml_tdm_driver-的-probe-函数)
+	- [2.3. aml\_tdm\_platform\_probe 函数分析](#23-aml_tdm_platform_probe-函数分析)
+		- [2.3.1. match data 匹配数据](#231-match-data-匹配数据)
+		- [2.3.2. 获取设备控制器和控制节点](#232-获取设备控制器和控制节点)
+
+<!-- /TOC -->
 
 -----------------
 
 
-# ALSA 声卡驱动
+# 1. ALSA 声卡驱动
 
 
 ALSA是 Advanced Linux Sound Architecture 的缩写，目前已经成为了linux的主流音频体系结构，想了解更多的关于ALSA的这一开源项目的信息和知识，请查看以下网址：http://www.alsa-project.org/。
@@ -20,7 +33,7 @@ kernel/sound/core该目录包含了ALSA驱动的中间层，它是整个ALSA驱�
 
 kernel/sound/soc 针对system-on-chip体系的中间层代码
 
-## ASOC 简介
+## 1.1. ASOC 简介
 
 ASoC把音频系统同样分为3大部分：Machine，Platform 和 Codec
 
@@ -42,5 +55,87 @@ Machine 是指某一款机器，可以是某款设备，某款开发板，又或
 
 ![](https://img-blog.csdnimg.cn/20200309172704582.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0JpbGxfeGlhbw==,size_16,color_FFFFFF,t_70)
 
+---
 
+# 2. 注册 aml_tdm_driver
 
+## 2.1. module_platform_driver
+
+module_platform_driver() 用于在模块 初始化/退出 时, 不需要执行任何特殊操作的驱动程序。 遮掩每个模块只能使用一次这个宏，调用它来代替 module_init() 和 module_exit()。
+
+也就是说注册一个驱动，注销调用 module_platform_driver(driver) 这个函数即可，这个函数会注册和注销创建来的 driver。
+
+## 2.2. 通过 module_platform_driver 注册 aml_tdm_driver
+
+```c
+#define DRV_NAME "snd_tdm"
+
+struct platform_driver aml_tdm_driver = {
+	.driver  = {
+		.name           = DRV_NAME,  // 设备驱动的名字 snd_tdm
+		.of_match_table = aml_tdm_device_id,  
+		//aml_tdm_device_id 是驱动文件的匹配列表， 也就是设置这个 platform_driver 所使用的 OF 匹配表
+	},
+	.probe   = aml_tdm_platform_probe,
+	.suspend = aml_tdm_platform_suspend,
+	.resume  = aml_tdm_platform_resume,
+};
+```
+
+`platform_driver.suspend/resume` 的是电源管理相关函数。korlan 中暂时不需要使用这两个函数。
+
+### 2.2.1. platform 驱动之 probe 函数
+
+probe 函数在设备驱动注册最后收尾工作，当设备的 device 和其对应的 driver 在总线上完成配对之后，系统就调用 platform 设备的 probe 函数完成驱动注册最后工作。资源、 中断调用函数以及其他相关工作。下面是 probe 被调用的一些程序流程。
+
+### 2.2.2. aml_tdm_driver 的 probe 函数
+
+```c
+static int aml_tdm_platform_probe(struct platform_device *pdev)   // pdev 表示这个 platform_device
+
+//有几个比较重要的结构体
+struct aml_audio_controller *actrl = NULL;   // 控制器的数据
+struct aml_tdm *p_tdm = NULL;
+struct tdm_chipinfo *p_chipinfo;  // 保存设备节点的数据
+```
+
+## 2.3. aml_tdm_platform_probe 函数分析
+
+### 2.3.1. match data 匹配数据
+
+```c
+p_chipinfo = (struct tdm_chipinfo *) of_device_get_match_data(dev);
+
+// dev：设备节点
+// 返回值：没有 data 则返回NULL，成功则返回 data
+```
+
+of_device_get_match_data 函数主要是通过调用 of_match_device 来实现，通过设备节点，获取设备节点里面的 data 属性。
+
+为了在同一个 driver 中支持多个 soc，可以将 struct pinctrl_desc 变量的指针保存在每个 soc 的 match table 中，并在 probe 中借助 of_device_get_match_data 将其获取出来。
+
+- 接着把从 dev 设备节点中获取到的数据存到 p_tdm 中
+
+```c
+p_tdm->chipinfo = p_chipinfo;
+p_tdm->id = p_chipinfo->id;
+p_tdm->lane_cnt = p_chipinfo->lane_cnt
+// p_chipinfo->lane_cnt 表示最大 lane 通道技术
+```
+
+### 2.3.2. 获取设备控制器和控制节点
+
+```c
+/* get audio controller */
+node_prt = of_get_parent(node);
+pdev_parent = of_find_device_by_node(node_prt);
+actrl = (struct aml_audio_controller *) platform_get_drvdata(pdev_parent);
+```
+
+platform_get_drvdata(_dev) 是为通过传入 struct platform_device 结构体类型的指针，得到设备传给驱动的数据。与 platform_set_drvdata 函数相对应。
+
+> [参考：平台总线之platform_get_drvdata(_dev)宏分析](https://blog.csdn.net/qq_16777851/article/details/80834926)
+
+这样做主要是为了驱动数据和驱动操作分离。这样可以尽可能的让一个驱动程序，被多个驱动设备所使用。
+
+> vim korlan-sdk/kernel/sound/soc/amlogic/auge/tdm.c +1629
