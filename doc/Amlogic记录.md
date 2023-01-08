@@ -282,6 +282,9 @@ cd -
 cd kernel
 ./build_kernel.sh korlan-b1  ../../chrome
 cd -
+
+# 使用 make menuconfig 4.19
+make  CLANG_TRIPLE=../prebuilt/toolchain/aarch64/bin/aarch64-cros-linux-gnu- CC=../prebuilt/toolchain/aarch64/bin/aarch64-cros-linux-gnu-clang CROSS_COMPILE=../prebuilt/toolchain/aarch64/bin/aarch64-cros-linux-gnu- ARCH=arm64 korlan-bx_defconfig CONFIG_DEBUG_SECTION_MISMATCH=y menuconfig
 ```
 
 - 整体编译
@@ -321,7 +324,7 @@ cd -
 cd kernel-5.15
 ./build_kernel.sh korlan-p2 ../../chrome
 
-# 使用 make menuconfig
+# 使用 make menuconfig 5.15
 make  CLANG_TRIPLE=../prebuilt/toolchain/aarch64/bin/aarch64-cros-linux-gnu- CC=../prebuilt/toolchain/aarch64/bin/aarch64-cros-linux-gnu-clang CROSS_COMPILE=../prebuilt/toolchain/aarch64/bin/aarch64-cros-linux-gnu- ARCH=arm64 korlan-p2_defconfig CONFIG_DEBUG_SECTION_MISMATCH=y menuconfig
 ```
 
@@ -385,6 +388,10 @@ adnl.exe oem "store erase system 0 0"
 adnl.exe Partition -P bootloader  -F  u-boot.bin
 adnl.exe Partition -P boot  -F boot.img    # boot-sign.img 
 adnl.exe Partition -P system  -F system.img
+
+# 定义自己的分区和烧录
+adnl.exe oem "store erase system_1 0 0"
+adnl.exe Partition -P system_1  -F erofs.img
 # 关闭工厂模式 如果之前设置了工厂模式
 # adnl.exe oem "store erase fts  0 0"
 adnl.exe oem "reset"
@@ -438,7 +445,8 @@ rm out/target/product/korlan/root -rf
 rm out/target/product/korlan/obj/PACKAGING -rf
 rm  ./chromium/src/out_chromecast_korlan/release/gen/chromecast/internal/build/ota/iot/iot_dock_add_to_ota_stamp.d
 PARTNER_BUILD=true BOARD_NAME=korlan-p2 make -j30 otapackage KERNEL_VERSION=5.15
-    
+ 
+# 4.19
 rm out/target/product/korlan/recovery/root -rf
 rm out/target/product/korlan/root -rf
 rm out/target/product/korlan/obj/PACKAGING -rf
@@ -603,7 +611,7 @@ aplay -Dhw:0,0 /data/the-stars-48k-60s.wav   # 播放音频
 ```sh
 dmesg  -n 8   # 开 log
 amixer cget numid=2       # 查看音量
-amixer cset numid=2 150   # 修改音量
+amixer cset numid=2 130   # 修改音量
 # 或者
 amixer cset numid=2,iface=MIXER,name='tas5805 Digital Volume' 150
 
@@ -1767,6 +1775,7 @@ CONFIG_ENABLE_UBOOT_CLI=y
 ## 查看二进制依赖和编译器
 
 ```
+ # 查看依赖的库
  readelf -d libOpenVX.so | grep NEEDED
  
  # 看GLIB版本信息
@@ -1774,6 +1783,16 @@ CONFIG_ENABLE_UBOOT_CLI=y
   # 看GCC版本信息
  strings libOpenVX.so | grep GCC
 ```
+
+### 查看二进制文件
+
+```
+hexdump system_1.bin | head
+# 导出十六进制
+hexdump -C system_1.bin > system_1.bin.txt
+```
+
+
 
 
 

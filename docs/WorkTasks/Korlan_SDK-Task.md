@@ -1,37 +1,45 @@
-- [TASK：测试 i2s clock](#task测试-i2s-clock)
-  - [在 Ubuntu 下测试](#在-ubuntu-下测试)
-  - [最终提交1](#最终提交1)
-  - [最终提交2](#最终提交2)
-  - [复现 dock-test-tool 测试问题](#复现-dock-test-tool-测试问题)
-- [添加 fct-korlan 实现联网](#添加-fct-korlan-实现联网)
-  - [kernel 打开个 CONFIG\_USB\_RTL8152](#kernel-打开个-config_usb_rtl8152)
-  - [fct-kolran 设置 IP](#fct-kolran-设置-ip)
-  - [设置开机自动获取 ip](#设置开机自动获取-ip)
-  - [adb调试ipv6](#adb调试ipv6)
-  - [开启 ipv6 和 RTL8152](#开启-ipv6-和-rtl8152)
-  - [重新编译成 ko 文件，并加载到init.rc](#重新编译成-ko-文件并加载到initrc)
-    - [提交](#提交)
-- [熟悉和测试 korlan5.15](#熟悉和测试-korlan515)
-- [flush-ubifs\_7\_0(adb push ota.zip) 线程 CPU 过高导致 tdm underrun](#flush-ubifs_7_0adb-push-otazip-线程-cpu-过高导致-tdm-underrun)
-  - [复现问题](#复现问题)
-    - [perf 工具使用](#perf-工具使用)
-  - [工作流程](#工作流程)
-  - [isp 内部优化 usleep](#isp-内部优化-usleep)
-  - [yi-u\_audio-log\_uac\_timing-tdm-cpu](#yi-u_audio-log_uac_timing-tdm-cpu)
-  - [nandread去读卡](#nandread去读卡)
-    - [yuegui 飞书记录](#yuegui-飞书记录)
-  - [测试 nandread](#测试-nandread)
-  - [单独编译 nandread](#单独编译-nandread)
-  - [打印时间](#打印时间)
-    - [4.19](#419)
-    - [5.15 默认](#515-默认)
-    - [5.15 修改](#515-修改)
-  - [总结](#总结)
-    - [总结回复 google](#总结回复-google)
-- [kernel 裁剪](#kernel-裁剪)
-  - [kernel 裁剪优化记录](#kernel-裁剪优化记录)
-- [Korlan 开机声卡顿问题](#korlan-开机声卡顿问题)
-- [tdm\_bridge 优化](#tdm_bridge-优化)
+- [\<\<\<\<\<\<\< HEAD](#-head)
+  - [TASK：测试 i2s clock](#task测试-i2s-clock)
+    - [在 Ubuntu 下测试](#在-ubuntu-下测试)
+    - [最终提交1](#最终提交1)
+    - [最终提交2](#最终提交2)
+    - [复现 dock-test-tool 测试问题](#复现-dock-test-tool-测试问题)
+  - [添加 fct-korlan 实现联网](#添加-fct-korlan-实现联网)
+    - [kernel 打开个 CONFIG\_USB\_RTL8152](#kernel-打开个-config_usb_rtl8152)
+    - [fct-kolran 设置 IP](#fct-kolran-设置-ip)
+    - [设置开机自动获取 ip](#设置开机自动获取-ip)
+    - [adb调试ipv6](#adb调试ipv6)
+    - [开启 ipv6 和 RTL8152](#开启-ipv6-和-rtl8152)
+    - [重新编译成 ko 文件，并加载到init.rc](#重新编译成-ko-文件并加载到initrc)
+      - [提交](#提交)
+  - [熟悉和测试 korlan5.15](#熟悉和测试-korlan515)
+  - [flush-ubifs\_7\_0(adb push ota.zip) 线程 CPU 过高导致 tdm underrun](#flush-ubifs_7_0adb-push-otazip-线程-cpu-过高导致-tdm-underrun)
+    - [复现问题](#复现问题)
+      - [perf 工具使用](#perf-工具使用)
+    - [工作流程](#工作流程)
+    - [isp 内部优化 usleep](#isp-内部优化-usleep)
+    - [yi-u\_audio-log\_uac\_timing-tdm-cpu](#yi-u_audio-log_uac_timing-tdm-cpu)
+    - [nandread去读卡](#nandread去读卡)
+      - [yuegui 飞书记录](#yuegui-飞书记录)
+    - [测试 nandread](#测试-nandread)
+    - [单独编译 nandread](#单独编译-nandread)
+    - [打印时间](#打印时间)
+      - [4.19](#419)
+      - [5.15 默认](#515-默认)
+      - [5.15 修改](#515-修改)
+    - [总结](#总结)
+      - [总结回复 google](#总结回复-google)
+  - [kernel 裁剪](#kernel-裁剪)
+    - [kernel 裁剪优化记录](#kernel-裁剪优化记录)
+  - [Korlan 开机声卡顿问题](#korlan-开机声卡顿问题)
+  - [tdm\_bridge 优化](#tdm_bridge-优化)
+  - [开启并制作 erofs 文件系统](#开启并制作-erofs-文件系统)
+    - [下载和编译 erofs-utils](#下载和编译-erofs-utils)
+    - [压缩到 image](#压缩到-image)
+    - [学习给korlan增加一个分区](#学习给korlan增加一个分区)
+    - [读取分区表](#读取分区表)
+    - [将自己制作的文件系统挂载起来](#将自己制作的文件系统挂载起来)
+>>>>>>> 4e70d81561321021de26f97724a2502c0abef3a3
 
 
 -------------
@@ -958,22 +966,219 @@ Thanks for Mingyu update, please let us if it still our assistance.
 
 > https://partnerissuetracker.corp.google.com/issues/262352934  
 
-> 添加录音的 patch： https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/236887
 
-> u_audio_iso_cap_complete(), tdm_bridge does not have enough space to write.
+-----
 
-composite_setup  afunc_set_alt   u_audio_start_capture  u_audio_iso_cap_complete( free_run )   aml_tdm_br_write_data (auge/tdm_bridge.c)
+Hi Mingyu,
 
-```c
-afunc_set_alt(struct usb_function *fn, unsigned intf, unsigned alt)  
-// 若intf=2，alt=1，则开始录音，若intf=1，alt=1，则开始播放
+Here is fix comment #1 cl
+
+```
+https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/275167
 ```
 
-录音（capture）时，USB主机控制器向USB设备控制器发送音频数据，USB设备控制器收到以后通过DMA将其写入到 usb_request 的缓冲区中，随后再拷贝到DMA缓冲区中，用户可使用 arecord、tinycap 等工具从DMA缓冲区中读取音频数据，DMA缓冲区是一个 FIFO，uac2 驱动往里面填充数据，用户从里面读取数据。播放（playback）时，用户通过aplay、tinyplay等工具将音频数据写道DMA缓冲区中，uac2 驱动从 DMA 缓冲区中读取数据，然后构造成 usb_request，送到USB设备控制器，USB设备控制器再将音频数据发送到USB主机控制器。可以看出录音和播放的音频数据流方向相反，用户和uac2驱动构造了一个生产者和消费者模型，录音时，uac2驱动是生产者，用户是消费者，播放时则相反。
+In addition, I tested the following cases, 
 
-```c
-as_out_intf=1   //播放
+- case 1:  aplay *.wav ,and connect uac, wait aplay finish, uac work normal.
+- case 2:  aplay *.wav ,and connect uac, manunal stop aplay, uac work normal.
+- case 3:  aplay *.wav , and connect uac, uac stop,  aplay work normal.
+- case 4:  uac working, and aplay *.wav ( tdm is busy), uac stop, then aplay *.wav again, the sound of the aplay disappears after a period of time.
+  -  `amixer cset numid=3 on;`  aplay  work fine.
 
-as_in_intf=2    //录音
+---
+
+## 开启并制作 erofs 文件系统
+
+
+参考：
+
+- https://blog.csdn.net/ZR_Lang/article/details/88859477
+
+- https://tjtech.me/how-to-build-mkfs-erofs-for-arm64.html
+
+- https://blog.csdn.net/u014001096/article/details/124831748
+
+### 下载和编译 erofs-utils
+
+```sh
+git clone git://git.kernel.org/pub/scm/linux/kernel/git/xiang/erofs-utils.git
+ 
+cd erofs-utils
+./autogen.sh
+./configure
+make -j4
+
+# 如果需要更换编译器
+# ./configure --host aarch64-linux-android  & make
 ```
 
+
+
+### 压缩到 image
+
+先创建一个文件夹并拷贝一些文件进去
+
+```sh
+srcd/
+├── ChangeLog
+├── COPYING
+├── Makefile
+└── README
+```
+
+制作 img
+
+```sh
+./mkfs.erofs  erofs.img srcd/
+adb push erofs.img /data/
+
+chmod 777 ./erofs.img 
+mkdir /data/aaa/
+# 挂载
+mount -t erofs /data/erofs.img /data/aaa/ -o loop
+
+/data/aaa # ls -l /data/aaa/
+-rw-r--r-- 9515     8000          585 2023-01-05 00:41 COPYING
+-rw-r--r-- 9515     8000         3818 2023-01-05 00:41 ChangeLog
+-rw-r--r-- 9515     8000        26617 2023-01-05 00:41 Makefile
+-rw-r--r-- 9515     8000         9867 2023-01-05 00:41 README
+```
+
+
+### 学习给korlan增加一个分区
+
+
+
+- google_source/eureka/korlan-sdk/u-boot/board/amlogic/a1_korlan_p2/a1_korlan_p2.c
+
+- kernel-5.15/common_drivers/arch/arm64/boot/dts/amlogic/korlan-common.dtsi
+
+在这两个文件下找 partition ，然后计算和修改大小
+
+```sh
+@ken@:/mnt/fileroot/shengken.lin/workspace/google_source/eureka/korlan-sdk/kernel-5.15/common_drivers$ git diff
+diff --git a/arch/arm64/boot/dts/amlogic/korlan-common.dtsi b/arch/arm64/boot/dts/amlogic/korlan-common.dtsi
+index febcc0e872c6..7768e7572c0a 100644
+--- a/arch/arm64/boot/dts/amlogic/korlan-common.dtsi
++++ b/arch/arm64/boot/dts/amlogic/korlan-common.dtsi
+@@ -663,6 +663,10 @@
+                                size=<0x0 0x1E00000>;
+                        };
+                        cache{
++                               offset=<0x0 0x0>;
++                               size=<0x0 0x3200000>;
++                       };
++                       system_1{
+                                offset=<0xffffffff 0xffffffff>;
+                                size=<0x0 0x0>;
+                        };
+
+@ken@:/mnt/fileroot/shengken.lin/workspace/google_source/eureka/korlan-sdk/u-boot$ git diff
+diff --git a/board/amlogic/a1_korlan_p2/a1_korlan_p2.c b/board/amlogic/a1_korlan_p2/a1_korlan_p2.c
+index d1a19855a1..b3660ab80d 100644
+--- a/board/amlogic/a1_korlan_p2/a1_korlan_p2.c
++++ b/board/amlogic/a1_korlan_p2/a1_korlan_p2.c
+@@ -285,12 +285,28 @@ static const struct mtd_partition spinand_partitions[] = {
+                .offset = 0,
+                .size = 30 * SZ_1M,
+        },
+-       /* last partition get the rest capacity */
+        {
+                .name = "cache",
++               .offset = 0,
++               .size = 50 * SZ_1M,
++       },
++       /* last partition get the rest capacity */
++       {
++               .name = "system_1",
+                .offset = MTDPART_OFS_APPEND,
+                .size = MTDPART_SIZ_FULL,
+-       }
++        }
+```
+
+- 板子上查看 
+
+```sh
+# 板子上查看 分区
+cat /proc/mtd
+
+# 增加一个 block dev
+ls /dev/block/mtdblock8 
+
+# 注意 cache 默认是 mtd7
+# 可以在 init.rc 中查看
+# exec /bin/sh /sbin/check_and_mount_ubifs.sh 7 cache /cache 20 
+```
+
+-----
+
+### 读取分区表
+
+```sh
+分区表，
+0x000000000000-0x000000200000 : "bootloader"
+0x000000800000-0x000001000000 : "tpl"
+0x000001000000-0x000001100000 : "fts"
+0x000001100000-0x000001500000 : "factory"
+0x000001500000-0x000002120000 : "recovery"
+0x000002120000-0x000002d20000 : "boot"
+0x000002d20000-0x000004be0000 : "system"
+0x000004be0000-0x000008000000 : "cache"
+
+step1: 读fts分区到 0x1080000 
+E:\amlogic_tools\aml_dnl-win32\adnl.exe oem "store read 0x1080000 fts 0 0x100000"
+
+step2: 从1080000， dump 出 0x100000 到fts.bin.
+E:\amlogic_tools\aml_dnl-win32\adnl.exe upload -f fts.bin  -z 0x100000 -m mem -p 0x1080000
+```
+
+```sh
+/ # cat /proc/mtd 
+dev:    size   erasesize  name
+mtd0: 00200000 00020000 "bootloader"
+mtd1: 00800000 00020000 "tpl"
+mtd2: 00100000 00020000 "fts"
+mtd3: 00400000 00020000 "factory"
+mtd4: 00c20000 00020000 "recovery"
+mtd5: 00c00000 00020000 "boot"
+mtd6: 01e00000 00020000 "system"
+mtd7: 03220000 00020000 "cache"
+mtd8: 002c0000 00020000 "system_1"
+
+adnl oem "store read 0x1080000 system_1 0 0x2c0000"
+adnl upload -f system_1.bin  -z 0x2c0000 -m mem -p 0x1080000
+
+# 对比 system_1.bin 和 erofs.img
+第一种方法： 将后缀改成一样然后用 compare 工具比较
+第二种方法：
+hexdump -C system_1.bin > system_1.bin.txt 
+hexdump -C erofs.img > erofs.img.txt 
+vim -d erofs.img.txt  system_1.bin.txt 
+
+
+# 挂载
+mount -t erofs /dev/block/mtdblock8  /data/aaa/
+```
+
+
+### 将自己制作的文件系统挂载起来
+
+```sh
+vim chrome/vendor/amlogic/build/tools/releasetools/ota_from_target_files +1059
+
+```
+mksquashfs system /tmp/tmpl5r9cghr -noappend
+            sourcedir    img.name
+
+['mksquashfs', 'system', '/tmp/tmpl5r9cghr', '-noappend', '-context-file', '/tmp/targetfiles-8196l_l5/BOOT/RAMDISK/file_contexts']    
+
+mksquashfs system/tmp/tmpl5r9cghr -noappend -context-file /tmp/targetfiles-8196l_l5/BOOT/RAMDISK/
+
+
+mksquashfs rootfs ./rootfs.squashfs.img -b 64K –comp xz
+
+./mkfs.erofs  erofs.img srcd/
+mount -t erofs /data/erofs.img /data/aaa/ -o loop
+
+  print('Print Message: lsken00 ========>  ' + ' ,File: "'+__file__+'", Line '+str(sys._getframe().f_lineno)+' , in '+sys._getframe().f_code.co_name)
