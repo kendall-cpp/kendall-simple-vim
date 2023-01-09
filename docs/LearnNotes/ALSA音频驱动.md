@@ -112,7 +112,7 @@ p_chipinfo = (struct tdm_chipinfo *) of_device_get_match_data(dev);
 
 of_device_get_match_data 函数主要是通过调用 of_match_device 来实现，通过设备节点，获取设备节点里面的 data 属性。
 
-为了在同一个 driver 中支持多个 soc，可以将 struct pinctrl_desc 变量的指针保存在每个 soc 的 match table 中，并在 probe 中借助 of_device_get_match_data 将其获取出来。
+为了使同一个 driver 中支持多个 soc，可以将 struct pinctrl_desc 变量的指针保存在每个 soc 的 match table 中，并在 probe 中借助 of_device_get_match_data 将其获取出来。
 
 - 接着把从 dev 设备节点中获取到的数据存到 p_tdm 中
 
@@ -120,7 +120,7 @@ of_device_get_match_data 函数主要是通过调用 of_match_device 来实现�
 p_tdm->chipinfo = p_chipinfo;
 p_tdm->id = p_chipinfo->id;
 p_tdm->lane_cnt = p_chipinfo->lane_cnt
-// p_chipinfo->lane_cnt 表示最大 lane 通道技术
+// p_chipinfo->lane_cnt 表示最大 lane 通道数
 ```
 
 ### 2.3.2. 获取设备控制器和控制节点
@@ -137,5 +137,7 @@ platform_get_drvdata(_dev) 是为通过传入 struct platform_device 结构体�
 > [参考：平台总线之platform_get_drvdata(_dev)宏分析](https://blog.csdn.net/qq_16777851/article/details/80834926)
 
 这样做主要是为了驱动数据和驱动操作分离。这样可以尽可能的让一个驱动程序，被多个驱动设备所使用。
+
+
 
 > vim korlan-sdk/kernel/sound/soc/amlogic/auge/tdm.c +1629
