@@ -38,6 +38,8 @@
   - [学习给korlan增加一个分区](#学习给korlan增加一个分区)
   - [读取分区表](#读取分区表)
   - [将自己制作的文件系统挂载起来](#将自己制作的文件系统挂载起来)
+    - [解决分区不足和不支持 lz4 压缩问题](#解决分区不足和不支持-lz4-压缩问题)
+  - [解决 Permission denied 问题](#解决-permission-denied-问题)
 >>>>>>> 4e70d81561321021de26f97724a2502c0abef3a3
 
 
@@ -1044,7 +1046,7 @@ srcd/
 └── README
 ```
 
-制作 img
+打包制作 img
 
 ```sh
 ./mkfs.erofs  erofs.img srcd/
@@ -1182,33 +1184,54 @@ mount -t erofs /dev/block/mtdblock8  /data/aaa/
 
 ### 将自己制作的文件系统挂载起来
 
+#### 解决分区不足和不支持 lz4 压缩问题
+
+erofs 默认支持 lz4 压缩算法，所以需要安装相应的库，不然 .configure 时会关闭 lz4
+
+所以需要去 ubuntu 中编译支持 liblz4-dev 的  mkfs.erofs
+
+```sh
+git clone git://git.kernel.org/pub/scm/linux/kernel/git/xiang/erofs-utils.git
+
+# 需要下载一下插件
+sudo apt-get install autotools-dev 
+sudo apt-get install automake
+
+sudo apt-get install uuid-dev
+sudo apt-get install liblz4-dev
+apt-cache search liblz4-dev  # 服务器上没有
+
+cd erofs-utils
+./autogen.sh
+./configure
+make -j4
+
+cp mkfs.erofs /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/out/host/linux-x86/bin/ -rf
+```
+
+- 修改 ota_from_target_files 支持 erofs
+
 ```sh
 vim chrome/vendor/amlogic/build/tools/releasetools/ota_from_target_files +1059
 cp mkfs.erofs /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/out/host/linux-x86/bin/ -rf
 ```
 
-mksquashfs system /tmp/tmpl5r9cghr -noappend
-            sourcedir    img.name
- 
+- python 打印行号
 
-mksquashfs system/tmp/tmpl5r9cghr -noappend -context-file /tmp/targetfiles-8196l_l5/BOOT/RAMDISK/
-
-
-mksquashfs rootfs ./rootfs.squashfs.img -b 64K –comp xz
-
-./mkfs.erofs  erofs.img srcd/
-mount -t erofs /data/erofs.img /data/aaa/ -o loop
-
-
-
+```py
   print('Print Message: lsken00 ========>  ' + ' ,File: "'+__file__+'", Line '+str(sys._getframe().f_lineno)+' , in '+sys._getframe().f_code.co_name)
+```
 
+- 制作文件系统命令
 
+```sh
+# mksquashfs rootfs ./rootfs.squashfs.img -b 64K –comp xz
+./mkfs.erofs -zlz4 -C65536 ./erofs.img.3 ./srcd/ -E context_file_path  # (linux的参数)
 
-  ./mkfs.erofs -zlz4 -C65536 ./erofs.img.3 ./srcd/ -E context_file_path  (linux的参数)
-  
-  ./mkfs.erofs  -C65536 ./erofs.img.2 ./srcd/
+./mkfs.erofs  -C65536 ./erofs.img.2 ./srcd/
 
-./mkfs.erofs  -C65536 ./erofs.img.2 ./srcd/ 
+sudo apt-get install liblz4-dev
+ ```
 
- sudo apt-get install liblz4-dev
+ ### 解决 Permission denied 问题
+
