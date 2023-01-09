@@ -1,44 +1,43 @@
-- [\<\<\<\<\<\<\< HEAD](#-head)
-  - [TASK：测试 i2s clock](#task测试-i2s-clock)
-    - [在 Ubuntu 下测试](#在-ubuntu-下测试)
-    - [最终提交1](#最终提交1)
-    - [最终提交2](#最终提交2)
-    - [复现 dock-test-tool 测试问题](#复现-dock-test-tool-测试问题)
-  - [添加 fct-korlan 实现联网](#添加-fct-korlan-实现联网)
-    - [kernel 打开个 CONFIG\_USB\_RTL8152](#kernel-打开个-config_usb_rtl8152)
-    - [fct-kolran 设置 IP](#fct-kolran-设置-ip)
-    - [设置开机自动获取 ip](#设置开机自动获取-ip)
-    - [adb调试ipv6](#adb调试ipv6)
-    - [开启 ipv6 和 RTL8152](#开启-ipv6-和-rtl8152)
-    - [重新编译成 ko 文件，并加载到init.rc](#重新编译成-ko-文件并加载到initrc)
-      - [提交](#提交)
-  - [熟悉和测试 korlan5.15](#熟悉和测试-korlan515)
-  - [flush-ubifs\_7\_0(adb push ota.zip) 线程 CPU 过高导致 tdm underrun](#flush-ubifs_7_0adb-push-otazip-线程-cpu-过高导致-tdm-underrun)
-    - [复现问题](#复现问题)
-      - [perf 工具使用](#perf-工具使用)
-    - [工作流程](#工作流程)
-    - [isp 内部优化 usleep](#isp-内部优化-usleep)
-    - [yi-u\_audio-log\_uac\_timing-tdm-cpu](#yi-u_audio-log_uac_timing-tdm-cpu)
-    - [nandread去读卡](#nandread去读卡)
-      - [yuegui 飞书记录](#yuegui-飞书记录)
-    - [测试 nandread](#测试-nandread)
-    - [单独编译 nandread](#单独编译-nandread)
-    - [打印时间](#打印时间)
-      - [4.19](#419)
-      - [5.15 默认](#515-默认)
-      - [5.15 修改](#515-修改)
-    - [总结](#总结)
-      - [总结回复 google](#总结回复-google)
-  - [kernel 裁剪](#kernel-裁剪)
-    - [kernel 裁剪优化记录](#kernel-裁剪优化记录)
-  - [Korlan 开机声卡顿问题](#korlan-开机声卡顿问题)
-  - [tdm\_bridge 优化](#tdm_bridge-优化)
-  - [开启并制作 erofs 文件系统](#开启并制作-erofs-文件系统)
-    - [下载和编译 erofs-utils](#下载和编译-erofs-utils)
-    - [压缩到 image](#压缩到-image)
-    - [学习给korlan增加一个分区](#学习给korlan增加一个分区)
-    - [读取分区表](#读取分区表)
-    - [将自己制作的文件系统挂载起来](#将自己制作的文件系统挂载起来)
+- [TASK：测试 i2s clock](#task测试-i2s-clock)
+  - [在 Ubuntu 下测试](#在-ubuntu-下测试)
+  - [最终提交1](#最终提交1)
+  - [最终提交2](#最终提交2)
+  - [复现 dock-test-tool 测试问题](#复现-dock-test-tool-测试问题)
+- [添加 fct-korlan 实现联网](#添加-fct-korlan-实现联网)
+  - [kernel 打开个 CONFIG\_USB\_RTL8152](#kernel-打开个-config_usb_rtl8152)
+  - [fct-kolran 设置 IP](#fct-kolran-设置-ip)
+  - [设置开机自动获取 ip](#设置开机自动获取-ip)
+  - [adb调试ipv6](#adb调试ipv6)
+  - [开启 ipv6 和 RTL8152](#开启-ipv6-和-rtl8152)
+  - [重新编译成 ko 文件，并加载到init.rc](#重新编译成-ko-文件并加载到initrc)
+    - [提交](#提交)
+- [熟悉和测试 korlan5.15](#熟悉和测试-korlan515)
+- [flush-ubifs\_7\_0(adb push ota.zip) 线程 CPU 过高导致 tdm underrun](#flush-ubifs_7_0adb-push-otazip-线程-cpu-过高导致-tdm-underrun)
+  - [复现问题](#复现问题)
+    - [perf 工具使用](#perf-工具使用)
+  - [工作流程](#工作流程)
+  - [isp 内部优化 usleep](#isp-内部优化-usleep)
+  - [yi-u\_audio-log\_uac\_timing-tdm-cpu](#yi-u_audio-log_uac_timing-tdm-cpu)
+  - [nandread去读卡](#nandread去读卡)
+    - [yuegui 飞书记录](#yuegui-飞书记录)
+  - [测试 nandread](#测试-nandread)
+  - [单独编译 nandread](#单独编译-nandread)
+  - [打印时间](#打印时间)
+    - [4.19](#419)
+    - [5.15 默认](#515-默认)
+    - [5.15 修改](#515-修改)
+  - [总结](#总结)
+    - [总结回复 google](#总结回复-google)
+- [kernel 裁剪](#kernel-裁剪)
+  - [kernel 裁剪优化记录](#kernel-裁剪优化记录)
+- [Korlan 开机声卡顿问题](#korlan-开机声卡顿问题)
+- [tdm\_bridge 优化](#tdm_bridge-优化)
+- [开启并制作 erofs 文件系统](#开启并制作-erofs-文件系统)
+  - [下载和编译 erofs-utils](#下载和编译-erofs-utils)
+  - [压缩到 image](#压缩到-image)
+  - [学习给korlan增加一个分区](#学习给korlan增加一个分区)
+  - [读取分区表](#读取分区表)
+  - [将自己制作的文件系统挂载起来](#将自己制作的文件系统挂载起来)
 >>>>>>> 4e70d81561321021de26f97724a2502c0abef3a3
 
 
@@ -998,10 +997,27 @@ In addition, I tested the following cases,
 
 - https://blog.csdn.net/u014001096/article/details/124831748
 
+- 源码 readme https://android.googlesource.com/platform/external/erofs-utils/+/refs/heads/master/README
+
 ### 下载和编译 erofs-utils
 
 ```sh
 git clone git://git.kernel.org/pub/scm/linux/kernel/git/xiang/erofs-utils.git
+
+# 需要下载一下插件
+sudo apt-get install autotools-dev 
+sudo apt-get install automake
+
+sudo apt-get install uuid-dev
+
+sudo apt-get install liblz4-dev
+
+apt-cache search liblz4-dev
+
+# 24服务器上没有
+sudo apt-get remove liblz4-dev
+# 所以可以在 ubuntu 上编译出  mkfs.erofs
+
  
 cd erofs-utils
 ./autogen.sh
@@ -1010,6 +1026,8 @@ make -j4
 
 # 如果需要更换编译器
 # ./configure --host aarch64-linux-android  & make
+
+cp mkfs.erofs /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/out/host/linux-x86/bin/ -rf
 ```
 
 
@@ -1166,12 +1184,12 @@ mount -t erofs /dev/block/mtdblock8  /data/aaa/
 
 ```sh
 vim chrome/vendor/amlogic/build/tools/releasetools/ota_from_target_files +1059
-
+cp mkfs.erofs /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/out/host/linux-x86/bin/ -rf
 ```
+
 mksquashfs system /tmp/tmpl5r9cghr -noappend
             sourcedir    img.name
-
-['mksquashfs', 'system', '/tmp/tmpl5r9cghr', '-noappend', '-context-file', '/tmp/targetfiles-8196l_l5/BOOT/RAMDISK/file_contexts']    
+ 
 
 mksquashfs system/tmp/tmpl5r9cghr -noappend -context-file /tmp/targetfiles-8196l_l5/BOOT/RAMDISK/
 
@@ -1181,4 +1199,16 @@ mksquashfs rootfs ./rootfs.squashfs.img -b 64K –comp xz
 ./mkfs.erofs  erofs.img srcd/
 mount -t erofs /data/erofs.img /data/aaa/ -o loop
 
+
+
   print('Print Message: lsken00 ========>  ' + ' ,File: "'+__file__+'", Line '+str(sys._getframe().f_lineno)+' , in '+sys._getframe().f_code.co_name)
+
+
+
+  ./mkfs.erofs -zlz4 -C65536 ./erofs.img.3 ./srcd/ -E context_file_path  (linux的参数)
+  
+  ./mkfs.erofs  -C65536 ./erofs.img.2 ./srcd/
+
+./mkfs.erofs  -C65536 ./erofs.img.2 ./srcd/ 
+
+ sudo apt-get install liblz4-dev
