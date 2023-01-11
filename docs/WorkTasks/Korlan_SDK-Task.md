@@ -1219,7 +1219,7 @@ cp mkfs.erofs /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/o
 - python 打印行号
 
 ```py
-  print('Print Message: lsken00 ========>  ' + ' ,File: "'+__file__+'", Line '+str(sys._getframe().f_lineno)+' , in '+sys._getframe().f_code.co_name)
+print('Print Message: lsken00 ========>  ' + ' ,File: "'+__file__+'", Line '+str(sys._getframe().f_lineno)+' , in '+sys._getframe().f_code.co_name)
 ```
 
 - 制作文件系统命令
@@ -1235,3 +1235,15 @@ sudo apt-get install liblz4-dev
 
  ### 解决 Permission denied 问题
 
+https://blog.51cto.com/u_15076212/4373946
+
+
+打开 kernel log
+
+vim vendor/amlogic/korlan/BoardConfigCommon.mk  +81
+
+init log
+
+write /dev/kmsg "TEST : =============222  lsken00"
+
+liblz4-dev 源码: 

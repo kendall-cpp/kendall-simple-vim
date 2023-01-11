@@ -2,15 +2,17 @@
 <!-- TOC -->
 
 - [1. ALSA 声卡驱动](#1-alsa-声卡驱动)
-	- [1.1. ASOC 简介](#11-asoc-简介)
-- [2. 注册 aml\_tdm\_driver](#2-注册-aml_tdm_driver)
-	- [2.1. module\_platform\_driver](#21-module_platform_driver)
-	- [2.2. 通过 module\_platform\_driver 注册 aml\_tdm\_driver](#22-通过-module_platform_driver-注册-aml_tdm_driver)
-		- [2.2.1. platform 驱动之 probe 函数](#221-platform-驱动之-probe-函数)
-		- [2.2.2. aml\_tdm\_driver 的 probe 函数](#222-aml_tdm_driver-的-probe-函数)
-	- [2.3. aml\_tdm\_platform\_probe 函数分析](#23-aml_tdm_platform_probe-函数分析)
-		- [2.3.1. match data 匹配数据](#231-match-data-匹配数据)
-		- [2.3.2. 获取设备控制器和控制节点](#232-获取设备控制器和控制节点)
+        - [1.1. ASOC 简介](#11-asoc-简介)
+- [2. 注册 amltdmdriver](#2-注册-amltdmdriver)
+        - [2.1. moduleplatformdriver](#21-moduleplatformdriver)
+        - [2.2. 通过 moduleplatformdriver 注册 amltdmdriver](#22-通过-moduleplatformdriver-注册-amltdmdriver)
+- [define DRVNAME "sndtdm"](#define-drvname-sndtdm)
+- [define DRVNAME "sndtdm"](#define-drvname-sndtdm)
+                - [2.2.1. platform 驱动之 probe 函数](#221-platform-驱动之-probe-函数)
+                - [2.2.2. amltdmdriver 的 probe 函数](#222-amltdmdriver-的-probe-函数)
+        - [2.3. amltdmplatformprobe 函数分析](#23-amltdmplatformprobe-函数分析)
+                - [2.3.1. match data 匹配数据](#231-match-data-匹配数据)
+                - [2.3.2. 获取设备控制器和控制节点](#232-获取设备控制器和控制节点)
 
 <!-- /TOC -->
 
@@ -128,6 +130,7 @@ p_tdm->lane_cnt = p_chipinfo->lane_cnt
 ```c
 /* get audio controller */
 node_prt = of_get_parent(node);
+
 pdev_parent = of_find_device_by_node(node_prt);
 actrl = (struct aml_audio_controller *) platform_get_drvdata(pdev_parent);
 ```
