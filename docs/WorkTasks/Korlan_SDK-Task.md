@@ -1233,6 +1233,10 @@ print('Print Message: lsken00 ========>  ' + ' ,File: "'+__file__+'", Line '+str
 sudo apt-get install liblz4-dev
  ```
 
+ 測試不用 device mapper 是否能 mount
+
+ exec /sbin/busybox mount -t erofs /dev/block/mtdblock6 /system.ro
+
  ### 解决 Permission denied 问题
 
 https://blog.51cto.com/u_15076212/4373946
@@ -1246,4 +1250,116 @@ init log
 
 write /dev/kmsg "TEST : =============222  lsken00"
 
-liblz4-dev 源码: 
+
+task1:文件性能对比测试(squashfs & erofs)：
+1 IO性能。
+	1) IOZONE.
+	2) nandread & nandwrite.
+2 记录启动时间。
+
+task2: 对比read/write 调用栈 ， 对比两个文件系统的各自的优点缺点。
+	追踪erorf 文件系统read/write，调用栈（read/write），根据调用栈，对比两个文件系统的优缺点。
+
+task3: 研究erfos，的整个文件系统结构，输出关于erofs的 文档。
+
+
+- 下載 iozone3_494.tgz
+
+https://www.iozone.org/src/current/
+
+或者：wget http://www.iozone.org/src/current/iozone3_487.tar
+
+tar zxf iozone3_494.tgz 
+
+```sh
+error : /usr/bin/ld: pit_server.o: relocation R_X86_64_32 against symbol `service_name' can not be used when making a PIE object; recompile with -fPIE
+
+chmod +w makefile 
+vim makefile
+CC  = cc -no-pie 
+
+
+sudo  ./iozone -i 0 -i 1 -i 2 -s 64g -r 16m -f ./iozone.tmpfile -Rb ./iotest.xls
+
+```
+參考：
+
+https://www.freesion.com/article/76691495377/
+
+
+```sh
+iozone.c:1273:9: error: redeclaration of 'pread64' must have the 'overloadable' attribute
+ssize_t pread64(); 
+        ^
+/mnt/fileroot/shengken.lin/workspace/google_source/eureka/korlan-sdk/prebuilt/toolchain/aarch64/usr/aarch64-cros-linux-gnu/usr/include/bits/unistd.h:89:1: note: previous overload of function is here
+pread64 (int __fd, void *const __clang_pass_object_size0 __buf,
+^
+1 error generated.
+make: *** [makefile:1044: iozone_linux-arm.o] Error 1
+
+
+修改： vim /mnt/fileroot/shengken.lin/workspace/google_source/eureka/korlan-sdk/prebuilt/toolchain/aarch64/usr/aarch64-cros-linux-gnu/usr/include/bits/unistd.h +89
+
+89 pread64_iozone_test (int __fd, void *const __clang_pass_object_size0 __buf,
+          size_t __nbytes, __off64_t __offset) 
+```
+
+```sh
+./iozone -a -n 4m -g 17m -i 0 -i 1 -y 4096 -q 4096 -f /system/iozone.tmpfile -Rb ./iotest.xls
+```
+
+- 提交 
+
+- common_drivers
+
+```
+[Don't merge][korlan] Add system partition compatible with erofs.
+
+Bug: None
+Test: build ok & adb work fine
+```
+
+https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/276586
+
+- kernel-5.15
+
+```
+[Don't merge][korlan] Enable erofs.
+
+Bug: None
+Test: build ok & adb work fine
+```
+
+https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/276587
+
+- u-boot
+
+```
+[Don't merge][korlan] Add system partition compatible with erofs.
+
+Bug: None
+Test: build ok & adb work fine
+```
+
+https://eureka-partner-review.googlesource.com/c/amlogic/u-boot/+/276588
+
+- vend/amlogic
+
+git add korlan/init.rc.base
+git add build/tools/releasetools/ota_from_target_files
+
+```
+[Don't merge][korlan] Add erofs support and mount erofs.
+
+Bug: None
+Test:
+/ # mount | grep erofs
+/dev/mapper/system /system.ro erofs ro,nodev,noatime,user_xattr,acl,cache_strategy=readaround 0 0
+```
+
+git push eureka HEAD:refs/for/master
+
+https://eureka-partner-review.googlesource.com/c/vendor/amlogic/+/276589
+
+topic: https://eureka-partner-review.googlesource.com/q/topic:%22Enable+erofs%22
+

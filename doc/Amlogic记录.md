@@ -232,6 +232,10 @@ git config --local user.email shengken.lin@amlogic.corp-partner.google.com
 
 git pull eureka-partner korlan-master 
 git push eureka-partner HEAD:refs/for/korlan-master
+
+git push eureka-partner HEAD:refs/for/korlan-master-5.15 
+git push eureka-partner HEAD:refs/for/korlan-master-5.15-drivers
+
 ```
 
 
