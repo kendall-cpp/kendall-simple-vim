@@ -1394,6 +1394,11 @@ read 3000 pages, 0 empty
 real    0m 1.78s
 user    0m 0.03s
 sys     0m 1.39s
+
+/ # dmesg  | grep lsken00
+[    4.132416] TEST : mount fs start  lsken00
+[    4.171462] TEST : mount fs end lsken00
+[    5.833899] TEST : mount other fs end lsken00
 ```
 
 - squashfs
