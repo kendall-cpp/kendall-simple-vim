@@ -40,6 +40,7 @@
   - [将自己制作的文件系统挂载起来](#将自己制作的文件系统挂载起来)
     - [解决分区不足和不支持 lz4 压缩问题](#解决分区不足和不支持-lz4-压缩问题)
   - [解决 Permission denied 问题](#解决-permission-denied-问题)
+  - [iozone 测试](#iozone-测试)
 >>>>>>> 4e70d81561321021de26f97724a2502c0abef3a3
 
 
@@ -1251,62 +1252,8 @@ init log
 write /dev/kmsg "TEST : =============222  lsken00"
 
 
-task1:文件性能对比测试(squashfs & erofs)：
-1 IO性能。
-	1) IOZONE.
-	2) nandread & nandwrite.
-2 记录启动时间。
+----
 
-task2: 对比read/write 调用栈 ， 对比两个文件系统的各自的优点缺点。
-	追踪erorf 文件系统read/write，调用栈（read/write），根据调用栈，对比两个文件系统的优缺点。
-
-task3: 研究erfos，的整个文件系统结构，输出关于erofs的 文档。
-
-
-- 下載 iozone3_494.tgz
-
-https://www.iozone.org/src/current/
-
-或者：wget http://www.iozone.org/src/current/iozone3_487.tar
-
-tar zxf iozone3_494.tgz 
-
-```sh
-error : /usr/bin/ld: pit_server.o: relocation R_X86_64_32 against symbol `service_name' can not be used when making a PIE object; recompile with -fPIE
-
-chmod +w makefile 
-vim makefile
-CC  = cc -no-pie 
-
-
-sudo  ./iozone -i 0 -i 1 -i 2 -s 64g -r 16m -f ./iozone.tmpfile -Rb ./iotest.xls
-
-```
-參考：
-
-https://www.freesion.com/article/76691495377/
-
-
-```sh
-iozone.c:1273:9: error: redeclaration of 'pread64' must have the 'overloadable' attribute
-ssize_t pread64(); 
-        ^
-/mnt/fileroot/shengken.lin/workspace/google_source/eureka/korlan-sdk/prebuilt/toolchain/aarch64/usr/aarch64-cros-linux-gnu/usr/include/bits/unistd.h:89:1: note: previous overload of function is here
-pread64 (int __fd, void *const __clang_pass_object_size0 __buf,
-^
-1 error generated.
-make: *** [makefile:1044: iozone_linux-arm.o] Error 1
-
-
-修改： vim /mnt/fileroot/shengken.lin/workspace/google_source/eureka/korlan-sdk/prebuilt/toolchain/aarch64/usr/aarch64-cros-linux-gnu/usr/include/bits/unistd.h +89
-
-89 pread64_iozone_test (int __fd, void *const __clang_pass_object_size0 __buf,
-          size_t __nbytes, __off64_t __offset) 
-```
-
-```sh
-./iozone -a -n 4m -g 17m -i 0 -i 1 -y 4096 -q 4096 -f /system/iozone.tmpfile -Rb ./iotest.xls
-```
 
 - 提交 
 
@@ -1364,3 +1311,109 @@ https://eureka-partner-review.googlesource.com/c/vendor/amlogic/+/276589
 
 topic: https://eureka-partner-review.googlesource.com/q/topic:%22Enable+erofs%22
 
+
+
+----
+
+
+task1:文件性能对比测试(squashfs & erofs)：
+1 IO性能。
+	1) IOZONE.
+	2) nandread & nandwrite.
+2 记录启动时间。
+
+task2: 对比read/write 调用栈 ， 对比两个文件系统的各自的优点缺点。
+	追踪erorf 文件系统read/write，调用栈（read/write），根据调用栈，对比两个文件系统的优缺点。
+
+task3: 研究erfos，的整个文件系统结构，输出关于erofs的 文档。
+
+
+- 下載 iozone3_494.tgz
+
+https://www.iozone.org/src/current/
+
+或者：wget http://www.iozone.org/src/current/iozone3_487.tar
+
+tar zxf iozone3_494.tgz 
+
+```sh
+error : /usr/bin/ld: pit_server.o: relocation R_X86_64_32 against symbol `service_name' can not be used when making a PIE object; recompile with -fPIE
+
+chmod +w makefile 
+vim makefile
+CC  = cc -no-pie 
+
+
+sudo  ./iozone -i 0 -i 1 -i 2 -s 64g -r 16m -f ./iozone.tmpfile -Rb ./iotest.xls
+
+```
+參考：
+
+https://www.freesion.com/article/76691495377/
+
+
+```sh
+iozone.c:1273:9: error: redeclaration of 'pread64' must have the 'overloadable' attribute
+ssize_t pread64(); 
+        ^
+/mnt/fileroot/shengken.lin/workspace/google_source/eureka/korlan-sdk/prebuilt/toolchain/aarch64/usr/aarch64-cros-linux-gnu/usr/include/bits/unistd.h:89:1: note: previous overload of function is here
+pread64 (int __fd, void *const __clang_pass_object_size0 __buf,
+^
+1 error generated.
+make: *** [makefile:1044: iozone_linux-arm.o] Error 1
+
+
+修改： vim /mnt/fileroot/shengken.lin/workspace/google_source/eureka/korlan-sdk/prebuilt/toolchain/aarch64/usr/aarch64-cros-linux-gnu/usr/include/bits/unistd.h +89
+
+89 pread64_iozone_test (int __fd, void *const __clang_pass_object_size0 __buf,
+          size_t __nbytes, __off64_t __offset) 
+```
+
+### iozone 测试
+
+
+
+```sh
+./iozone -a -n 4m -g 256m -i 0 -i 1 -y 4096 -q 4096 -f /system/iozone.tmpfile -Rb ./iotest.xls
+
+busybox time nandread -d /dev/mtd/mtd6 -L 6144000 -f /cache/.data/dump-page0.hex
+```
+
+
+
+- erofs
+
+```
+/ # busybox time nandread -d /dev/mtd/mtd6 -L 6144000 -f /cache/.data/dump-page0
+read 3000 pages, 0 empty
+real    0m 2.47s
+user    0m 0.03s
+sys     0m 1.57s
+/ # busybox time nandread -d /dev/mtd/mtd6 -L 6144000 -f /cache/.data/dump-page0
+read 3000 pages, 0 empty
+real    0m 1.78s
+user    0m 0.03s
+sys     0m 1.39s
+```
+
+- squashfs
+
+```
+/ # busybox time nandread -d /dev/mtd/mtd6 -L 6144000 -f /cache/.data/dump-page
+read 3000 pages, 0 empty
+real    0m 2.65s
+user    0m 0.02s
+sys     0m 1.50s
+/ # busybox time nandread -d /dev/mtd/mtd6 -L 6144000 -f /cache/.data/dump-page
+read 3000 pages, 0 empty
+real    0m 1.76s
+user    0m 0.04s
+sys     0m 1.38s
+
+[    4.082059] TEST : mount fs start  lsken00
+[    4.365303] TEST : mount fs end lsken00
+[    5.889858] TEST : mount other fs end lsken00
+```
+
+
+- u-boot 文档： software-dl.ti.com/.../Foundational_Components_U-Boot.html
