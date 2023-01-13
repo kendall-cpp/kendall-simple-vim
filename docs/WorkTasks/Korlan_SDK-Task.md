@@ -1406,7 +1406,7 @@ sys     0m 0.40s
 [    5.792701] TEST : mount other fs end lsken00
 
 
-# 设置 只跟踪 函数 
+# 设置 只跟踪函数 
 echo 0 > /sys/kernel/debug/tracing/tracing_on
 echo function > /sys/kernel/debug/tracing/current_tracer
 

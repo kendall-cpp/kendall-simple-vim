@@ -359,7 +359,6 @@ sudo apt-get install autotools-dev
 sudo apt-get install automake
 
 sudo apt-get install uuid-dev
-
 sudo apt-get install liblz4-dev
 
 apt-cache search liblz4-dev
@@ -398,6 +397,9 @@ mount -t erofs /data/erofs.img  /data/aaa/
 # 如果把 img 烧到自己新增加的分区，就这样挂载
 mount -t erofs /dev/block/mtdblock8  /data/aaa/
 ```
+
+**erofs 默认支持 lz4 压缩算法，所以需要安装相应的库，不然 .configure 时会关闭 lz4**
+
 
 
 ### 修改 ota_from_target_files 支持 erofs
