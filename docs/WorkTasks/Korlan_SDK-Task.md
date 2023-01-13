@@ -648,7 +648,7 @@ echo 0 > /sys/kernel/debug/tracing/events/rcu/enable
 echo 1 > /sys/kernel/debug/tracing/events/sched/sched_switch/enable
 echo 0 > /sys/kernel/debug/tracing/events/workqueue/enable
 
-echo 1 > /sys/kernel/debug/tracing/tracing_on
+echo 1 > /sys/kernel/debug/tracing/tracing_on    # 打开trace
 busybox time nandread -d /dev/mtd/mtd4 -L 6144000 -f /cache/.data/dump-page0.hex
 # sleep 一会
 echo 0 > /sys/kernel/debug/tracing/tracing_on
@@ -1251,7 +1251,6 @@ init log
 
 write /dev/kmsg "TEST : =============222  lsken00"
 
-
 ----
 
 
@@ -1290,7 +1289,7 @@ Test: build ok & adb work fine
 
 https://eureka-partner-review.googlesource.com/c/amlogic/u-boot/+/276588
 
-- vend/amlogic
+- vendor/amlogic
 
 git add korlan/init.rc.base
 git add build/tools/releasetools/ota_from_target_files
@@ -1343,7 +1342,6 @@ chmod +w makefile
 vim makefile
 CC  = cc -no-pie 
 
-
 sudo  ./iozone -i 0 -i 1 -i 2 -s 64g -r 16m -f ./iozone.tmpfile -Rb ./iotest.xls
 
 ```
@@ -1379,26 +1377,47 @@ make: *** [makefile:1044: iozone_linux-arm.o] Error 1
 busybox time nandread -d /dev/mtd/mtd6 -L 6144000 -f /cache/.data/dump-page0.hex
 ```
 
-
-
 - erofs
 
 ```
-/ # busybox time nandread -d /dev/mtd/mtd6 -L 6144000 -f /cache/.data/dump-page0
+/ # busybox time nandread -d /dev/mtd/mtd4 -L 6144000 -f /cache/.data/dump-page0
 read 3000 pages, 0 empty
-real    0m 2.47s
-user    0m 0.03s
-sys     0m 1.57s
-/ # busybox time nandread -d /dev/mtd/mtd6 -L 6144000 -f /cache/.data/dump-page0
+real    0m 2.93s
+user    0m 0.04s
+sys     0m 1.61s
+/ # busybox time nandread -d /dev/mtd/mtd4 -L 6144000 -f /cache/.data/dump-page0
 read 3000 pages, 0 empty
-real    0m 1.78s
-user    0m 0.03s
-sys     0m 1.39s
+real    0m 2.66s
+user    0m 0.05s
+sys     0m 1.51s
+
+/ # busybox time nandwrite /dev/mtd/mtd4 -s -0 -p /data/write_test_file 
+real    0m 4.57s
+user    0m 0.01s
+sys     0m 1.27s
+
+real    0m 0.67s
+user    0m 0.01s
+sys     0m 0.40s
 
 / # dmesg  | grep lsken00
-[    4.132416] TEST : mount fs start  lsken00
-[    4.171462] TEST : mount fs end lsken00
-[    5.833899] TEST : mount other fs end lsken00
+[    4.109511] TEST : mount fs start  lsken00
+[    4.149173] TEST : mount fs end lsken00
+[    5.792701] TEST : mount other fs end lsken00
+
+
+# 设置 只跟踪 函数 
+echo 0 > /sys/kernel/debug/tracing/tracing_on
+echo function > /sys/kernel/debug/tracing/current_tracer
+
+echo 1 > /sys/kernel/debug/tracing/tracing_on
+echo "" > /sys/kernel/debug/tracing/trace
+
+busybox time nandread -d /dev/mtd/mtd4 -L 6144000 -f /cache/.data/dump-page0
+
+
+echo 0 > /sys/kernel/debug/tracing/tracing_on
+cat /sys/kernel/debug/tracing/trace > /data/trace_01.txt
 ```
 
 - squashfs
@@ -1415,10 +1434,13 @@ real    0m 1.76s
 user    0m 0.04s
 sys     0m 1.38s
 
-[    4.082059] TEST : mount fs start  lsken00
-[    4.365303] TEST : mount fs end lsken00
-[    5.889858] TEST : mount other fs end lsken00
+/ # busybox time nandwrite /dev/mtd/mtd4 -s -0 -p /data/write_test_file 
+real    0m 4.10s
+user    0m 0.01s
+sys     0m 1.28s
+
+/ # dmesg | grep lsken00
+[    4.090602] TEST : mount fs start  lsken00
+[    4.374924] TEST : mount fs end lsken00
+[    5.910525] TEST : mount other fs end lsken00
 ```
-
-
-- u-boot 文档： software-dl.ti.com/.../Foundational_Components_U-Boot.html

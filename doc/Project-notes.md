@@ -105,7 +105,7 @@ make  # 打包成大的 img
 make show-targets # 查看所有package
 ```
 
-### buildroot-output目录
+### buildroot-output 目录
 
 - build 包含所有的源文件，包括 Buildroot 所需主机工具和选择的包，这个目录包含所有 模块源码。
 
@@ -1720,15 +1720,7 @@ find . |cpio -ov -H newc | lzop -9 > ../ramdisk.img
 cp ramdisk.img /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/out/target/product/gq/boot_unpack/
 ```
 
-# 其他事项
-
-## 在 Ubuntu/PC 下进入开发板
-
-连接串口和 USB
-
-> adb shell
-
-## 芯片代称对应
+# 芯片代称对应
 
 - spencer/venus -- C2
 
@@ -1739,64 +1731,4 @@ cp ramdisk.img /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/
 - newman -- G12B
 
 - elaine -- SM1
-
-## 查看kernel编译的版本
-
-```sh
-getprop | grep elaine
-```
-
-## 打印函数调用栈
-
-打印函数追踪 追踪函数调用
-
-```sh
-dump_stack();
-```
-
-## 关于寄存器一些操作
-
-```c
-printk("reg:0x%02x", addr);   // u16 addr 
-```
-
-### __iomem
-
-__iomem是linux2.6.9内核中加入的特性。是用来个表示指针是指向一个I/O的内存空间。主要是为了驱动程序的通用性考虑。由于不同的CPU体系结构对I/O空间的表示可能不同。
-
-当使用__iomem时，编译器会忽略对变量的检查（因为用的是void __iomem）。若要对它进行检查，当__iomem的指针和正常的指针混用时，就会发出一些警告。
-
-## 修改 u-boot BOOTDELAY 时间
-
-```sh
-vim spencer-sdk/u-boot/board/amlogic/defconfigs/c2_venus_p2_defconfig
-
-CONFIG_SCHUMACHER_SSR=y
-CONFIG_BOOTDELAY=5  
-CONFIG_ENABLE_UBOOT_CLI=y
-```
-
-## 查看二进制依赖和编译器
-
-```
- # 查看依赖的库
- readelf -d libOpenVX.so | grep NEEDED
- 
- # 看GLIB版本信息
- strings libOpenVX.so | grep GLI
-  # 看GCC版本信息
- strings libOpenVX.so | grep GCC
-```
-
-### 查看二进制文件
-
-```
-hexdump system_1.bin | head
-# 导出十六进制
-hexdump -C system_1.bin > system_1.bin.txt
-```
-
-
-
-
 

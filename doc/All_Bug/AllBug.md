@@ -6,7 +6,7 @@
 
 > https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/247301
 
-## fix fct-korlan 无法找到 ip 【Done】
+## fix fct-korlan 无法找到 ip 
 
 > issue: https://partnerissuetracker.corp.google.com/issues/247080714
 
@@ -57,7 +57,7 @@ https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/260551
 commit id: 7ef11940e2f980a3e10243fce1cdb87cd80cf1d6
 ```
 
-## fix adb connect 被拒绝问题 【Done】
+## fix adb connect 被拒绝问题 
 
 adb connect 默认是使用 IPV6 进行连接的，所以需要在 kernel 中开启 IPV6，开启方式需要在 make menuconfig 中开启。
 
@@ -99,7 +99,7 @@ cd abd
 mma PARTNER_BUILD=true
 ```
 
-## flush-ubifs_7_0(adb push ota.zip) 线程 CPU 过高导致 tdm underrun 
+## flush-ubifs_7_0 线程 CPU 过高导致 tdm underrun 
 
 > https://partnerissuetracker.corp.google.com/issues/241159916
 
@@ -131,7 +131,25 @@ https://partnerissuetracker.corp.google.com/issues/262352934
 
  修复的 cl: https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/275167
 
+## koraln 增加 erofs 支持
 
+chrome 文件系统制作脚本 Vota_from_target_files
+
+topic: https://eureka-partner-review.googlesource.com/q/topic:%22Enable+erofs%22
+
+```sh
+# common_drivers
+https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/276586
+
+# kernel-5.15
+https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/276587
+
+# u-boot
+https://eureka-partner-review.googlesource.com/c/amlogic/u-boot/+/276588
+
+# vendor/amlogic
+https://eureka-partner-review.googlesource.com/c/vendor/amlogic/+/276589
+```
 
 -----
 
@@ -203,7 +221,7 @@ issue: https://partnerissuetracker.corp.google.com/issues/246404063#comment2
 
 > https://jira.amlogic.com/browse/GH-3038 Wrong lcd panel power setting
 
---- 
+---
 
 # AV400 NN 模型测试
 
@@ -220,7 +238,7 @@ aml_buildroot.sh makefile.linux
 
 ### 对应 buildroot 配置文件
 
-```
+```sh
 在这里去找 /mnt/fileroot/shengken.lin/workspace/a5_buildroot/buildroot/configs/amlogic/arch_a6432_10.3_7.3.1.config  应用所用的编译器 和 kernel 的编译器
 vim package/amlogic/npu/npu.mk  找编译 npu 的编译脚本
 
@@ -241,7 +259,7 @@ cd verisilicon
 
 - error log
 
-```sh
+
 - 编译报错
 
 ```sh
@@ -265,6 +283,7 @@ export FIXED_ARCH_TYPE=aarch64-gnu
 > 具体参考
 
 - 另外 build/sdk/driver 下的 so 是直接 compiler 下复制的过去的，见如下代码调试
+
 
 ```sh
 # verisilicon/compiler/libVSC/makefile.linux  
@@ -364,6 +383,9 @@ verisilicon-6.4.11.2/build/sdk/drivers
 ```
 
 **总结文档**：https://docs.google.com/document/d/12e76aVCW-EFLc9Bgydmmnozzui3B4dJ2Pbe0UqcomLk/edit?usp=sharing
+
+- 所有的 topic cls : https://eureka-partner-review.googlesource.com/q/topic:%22verisilicon-6.4.11.2%22
+- 给 google 的文档：https://docs.google.com/document/d/1JTUCzPwTrY9xw1cA3fbS8vDJmZ5PMTw6JBZGAIk51Ts/edit#
 
 ---
 
