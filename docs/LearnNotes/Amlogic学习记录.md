@@ -1,50 +1,50 @@
 
 <!-- TOC -->
 
-- [1. kernel Kconfig defconfig .config](#1-kernel-kconfig-defconfig-config)
-  - [1.1. 以添加一个具体驱动为例](#11-以添加一个具体驱动为例)
-  - [1.2. Amlogic config](#12-amlogic-config)
-- [2. 设备树](#2-设备树)
-  - [2.1. 设备树中 DTS、DTC 和 DTB 的关系](#21-设备树中-dtsdtc-和-dtb-的关系)
-    - [2.1.1. compatible 属性](#211-compatible-属性)
-    - [2.1.2. model 属性](#212-model-属性)
-    - [2.1.3. `#address-cells` 和 `#size-cells` 属性](#213-address-cells-和-size-cells-属性)
-      - [2.1.3.1. reg 属性](#2131-reg-属性)
-- [3. kernel 源码结构体里的元素前面有一点“.”](#3-kernel-源码结构体里的元素前面有一点)
-- [4. makefile 中符号](#4-makefile-中符号)
-  - [4.1. makefile 打印调试](#41-makefile-打印调试)
-- [5. Buildroot记录](#5-buildroot记录)
-  - [5.1. buildroot-output目录](#51-buildroot-output目录)
-    - [5.1.1. output一些配置文件](#511-output一些配置文件)
-  - [5.2. config 和 mk 文件](#52-config-和-mk-文件)
-- [6. freertos](#6-freertos)
-  - [6.1. xTaskCreat相关函数的使用](#61-xtaskcreat相关函数的使用)
-  - [6.2. vTaskStartScheduler](#62-vtaskstartscheduler)
-- [7. proc文件系统](#7-proc文件系统)
-  - [7.1. 什么是proc文件系统](#71-什么是proc文件系统)
-  - [7.2. 常见的proc文件介绍](#72-常见的proc文件介绍)
-  - [7.3. 和sys文件系统的比较](#73-和sys文件系统的比较)
-- [8. GPIO 子系统的作用](#8-gpio-子系统的作用)
-  - [8.1. 通用功能](#81-通用功能)
-- [9. pinctrl 子系统概念](#9-pinctrl-子系统概念)
-- [10. top 命令详解](#10-top-命令详解)
-  - [10.1. 输出参数说明](#101-输出参数说明)
-    - [10.1.1. 系统的总的统计信息说明](#1011-系统的总的统计信息说明)
-    - [10.1.2. 每个进程的描述说明](#1012-每个进程的描述说明)
-  - [10.2. 命令格式](#102-命令格式)
-- [11. 系统性能分析工具：perf](#11-系统性能分析工具perf)
-  - [11.1. perf 的使用](#111-perf-的使用)
-    - [11.1.1. stat](#1111-stat)
-    - [11.1.2. perf record 的其他参数](#1112-perf-record-的其他参数)
-    - [11.1.3. cpu-clock](#1113-cpu-clock)
-    - [11.1.4. perf script](#1114-perf-script)
-    - [11.1.5. 生成火焰图](#1115-生成火焰图)
+- [kernel Kconfig defconfig .config](#kernel-kconfig-defconfig-config)
+  - [以添加一个具体驱动为例](#以添加一个具体驱动为例)
+  - [Amlogic config](#amlogic-config)
+- [设备树](#设备树)
+  - [设备树中 DTS、DTC 和 DTB 的关系](#设备树中-dtsdtc-和-dtb-的关系)
+    - [compatible 属性](#compatible-属性)
+    - [model 属性](#model-属性)
+    - [`#address-cells` 和 `#size-cells` 属性](#address-cells-和-size-cells-属性)
+      - [reg 属性](#reg-属性)
+- [kernel 源码结构体里的元素前面有一点“.”](#kernel-源码结构体里的元素前面有一点)
+- [makefile 中符号](#makefile-中符号)
+  - [makefile 打印调试](#makefile-打印调试)
+- [Buildroot记录](#buildroot记录)
+  - [buildroot-output目录](#buildroot-output目录)
+    - [output一些配置文件](#output一些配置文件)
+  - [config 和 mk 文件](#config-和-mk-文件)
+- [freertos](#freertos)
+  - [xTaskCreat相关函数的使用](#xtaskcreat相关函数的使用)
+  - [vTaskStartScheduler](#vtaskstartscheduler)
+- [proc文件系统](#proc文件系统)
+  - [什么是proc文件系统](#什么是proc文件系统)
+  - [常见的proc文件介绍](#常见的proc文件介绍)
+  - [和sys文件系统的比较](#和sys文件系统的比较)
+- [GPIO 子系统的作用](#gpio-子系统的作用)
+  - [通用功能](#通用功能)
+- [pinctrl 子系统概念](#pinctrl-子系统概念)
+- [top 命令详解](#top-命令详解)
+  - [输出参数说明](#输出参数说明)
+    - [系统的总的统计信息说明](#系统的总的统计信息说明)
+    - [每个进程的描述说明](#每个进程的描述说明)
+  - [命令格式](#命令格式)
+- [系统性能分析工具：perf](#系统性能分析工具perf)
+  - [perf 的使用](#perf-的使用)
+    - [stat](#stat)
+    - [perf record 的其他参数](#perf-record-的其他参数)
+    - [cpu-clock](#cpu-clock)
+    - [perf script](#perf-script)
+    - [生成火焰图](#生成火焰图)
 
 <!-- /TOC -->
 
 -------
 
-# 1. kernel Kconfig defconfig .config
+# kernel Kconfig defconfig .config
 
 **一般情况：**
 
@@ -64,7 +64,7 @@
 
 > make menuconfig ---- 从Kconfig中读出配置菜单 保存到 `.config`
 
-## 1.1. 以添加一个具体驱动为例
+## 以添加一个具体驱动为例
 
 - 找到 arch/arm64/configs/aplex_cmi_aa158_defconfig（这个可以从芯片官网下载）
 - 修改配置
@@ -84,7 +84,7 @@ make aplex_cmi_aa158_defconfig ARCH=arm64
 
 cp  defconfig  arch/arm64/configs/aplex_cmi_aa158_defconfig -rf 
 
-## 1.2. Amlogic config
+## Amlogic config
 
 和普通的defconfig不同，Amlogic 的 defconfig 是没有隐藏依赖的，直接 make menuconfig 生成 .config , 然后和 defconfig 对比，然后拷贝即可，使用 build_kernel 编译的时候会去 diff defconfig 和 `.config` 。
 
@@ -95,11 +95,11 @@ cp  defconfig  arch/arm64/configs/aplex_cmi_aa158_defconfig -rf
 
 ---
 
-# 2. 设备树
+# 设备树
 
 在Linux 2.6中， ARM架构的板极硬件细节过多地被硬编码在 `arch/arm/plat-xxx和arch/arm/mach-xxx` 中，采用**设备树**后，许多硬件的细节可以直接通过设备树传递给 Linux，而不再需要在内核中进行大量的冗余编码。
 
-## 2.1. 设备树中 DTS、DTC 和 DTB 的关系
+## 设备树中 DTS、DTC 和 DTB 的关系
 
 - DTS：.dts 文件是设备树的源文件。由于一个SoC可能对应多个设备，这些 .dst 文件可能包含很多共同的部分，共同的部分一般被提炼为一个 .dtsi 文件，这个文件相当于C语言的头文件。
 - DTC：DTC是将.dts 编译为 .dtb 的工具，相当于 gcc。
@@ -107,7 +107,7 @@ cp  defconfig  arch/arm64/configs/aplex_cmi_aa158_defconfig -rf
 
 设备节点的标准属性
 
-### 2.1.1. compatible 属性
+### compatible 属性
 
 compatible 属性也叫做“兼容性”属性，compatible 属性用于将设备和驱动绑定起来。字符串列表用于选择设备所要使用的驱动程序。
 
@@ -151,7 +151,7 @@ module_platform_driver(imx_wm8960_driver);
 
 一般驱动程序文件都会有一个 OF 匹配表，此 OF 匹配表保存着一些 compatible 值，如果设备节点的 compatible 属性值和 OF 匹配表中的任何一个值相等，那么就表示设备可以使用这个驱动。数组 imx_wm8960_dt_ids 就是 `imx-wm8960.c` 这个驱动文件的匹配表，此匹配表只有一个匹配值“fsl,imx-audio-wm8960”。如果在设备树中有哪个节点的 compatible 属性值与此相等，那么这个节点就会使用此驱动文件。此行设置 `.of_match_table` 为 `imx_wm8960_dt_ids` ，也就是设置这个 platform_driver 所使用的 OF 匹配表。
 
-### 2.1.2. model 属性
+### model 属性
 
 一般 model 属性描述设备模块信息，比如名字什么的 ,
 
@@ -160,7 +160,7 @@ model = "Samsung S3C2416 SoC";
 ```
 
 
-### 2.1.3. `#address-cells` 和 `#size-cells` 属性
+### `#address-cells` 和 `#size-cells` 属性
 
 这两个属性的值都是无符号 32 位整形，`#address-cells` 和 `#size-cells` 这两个属性可以用在任何拥有子节点的设备中，用于**描述子节点的地址信息**。
 
@@ -189,7 +189,7 @@ soc {
 };
 ```
 
-#### 2.1.3.1. reg 属性
+#### reg 属性
 
 reg 属性的值一般是(address，length)对。reg 属性一般用于描述设备地址空间资源信息，一般都是某个外设的寄存器地址范围信息。比如 
 
@@ -209,7 +209,7 @@ uart1: serial@02020000 {
 
 ----
 
-# 3. kernel 源码结构体里的元素前面有一点“.”
+# kernel 源码结构体里的元素前面有一点“.”
 
 > 参考：http://blog.chinaunix.net/uid-29033331-id-3811134.html
 
@@ -261,7 +261,7 @@ struct book gift = {
 
 ---
 
-# 4. makefile 中符号
+# makefile 中符号
 
 
 - "="
@@ -309,7 +309,7 @@ VIR ?= new_value
 
 “+=”和平时写代码的理解是一样的，表示将等号后面的值添加到前面的变量上
 
-## 4.1. makefile 打印调试
+## makefile 打印调试
 
 ```sh
 # info 是不带行号的
@@ -324,9 +324,9 @@ $(error “here is debug")
 
 ---
 
-# 5. Buildroot记录
+# Buildroot记录
 
-## 5.1. buildroot-output目录
+## buildroot-output目录
 
 - build 包含所有的源文件，包括 Buildroot 所需主机工具和选择的包，这个目录包含所有 模块源码。
 
@@ -344,7 +344,7 @@ $(error “here is debug")
 
 如果要修改软件包的源码，可以通过打补丁的方式进行修改，补丁集中放在 `package/` 目录，Buildroot 会在解压软件包时为其打上相应的补丁
 
-### 5.1.1. output一些配置文件
+### output一些配置文件
 
 1. 直接删除源码包，例如我们要重新编译 openssh，那么可以直接删除 `output/build/openssh-vesion` 文件夹，那么当你 make 的时候，他就会自动从 dl 文件夹下，解压缩源码包，并重新安装
 
@@ -365,7 +365,7 @@ $(error “here is debug")
 
 注意：修改代码后（不是修改 output 目录下的），不用运行 linux-dirclean，只用 linux-rebuild 即可。Buildroot 会 rsync 将你外部的源码同步到 output/build 并且编译，并且不会删掉上次编译的缓存文件，自动只编译你修改的部分。
 
-## 5.2. config 和 mk 文件
+## config 和 mk 文件
 
 比如
 
@@ -382,9 +382,9 @@ $(error “here is debug")
 
 ---
 
-# 6. freertos
+# freertos
 
-## 6.1. xTaskCreat相关函数的使用
+## xTaskCreat相关函数的使用
 
 ```c
  BaseType_t xTaskCreate(    TaskFunction_t pvTaskCode,  //指向任务函数，一般是个死循环
@@ -409,7 +409,7 @@ xTaskCreate(vStart_AudioTask, "audio_task", configMINIMAL_STACK_SIZE * 2, NULL, 
 
 > https://www.w3cschool.cn/freertoschm/freertoschm-strb2u7m.html
 
-## 6.2. vTaskStartScheduler
+## vTaskStartScheduler
 
 **FreeRTOS是通过vTaskStartScheduler()函数来启动运行的**
 
@@ -421,15 +421,15 @@ xTaskCreate(vStart_AudioTask, "audio_task", configMINIMAL_STACK_SIZE * 2, NULL, 
 
 ----
 
-# 7. proc文件系统
+# proc文件系统
 
-## 7.1. 什么是proc文件系统
+## 什么是proc文件系统
 
 - proc是虚拟文件系统，虚拟的意思就是 proc 文件系统里的文件不对应硬盘上任何文件，我们用去查看 proc 目录下的文件大小都是零；
 - proc 文件系统是开放给上层了解内核运行状态的窗口，通过读取 proc 系统里的文件，可以知道内核中一些重要数据结构的数值，从而知道内核的运行情况，也可以方便调试内核和应用程序；
 - proc 文件系统的思路：在内核中构建一个 虚拟文件系统/proc，内核运行时将内核中一些关键的数据结构以文件的方式呈现在`/proc`目录中的一些特定文件中，这样相当于将不可见的内核中的数据结构以可视化的方式呈现给内核的开发者.
 
-## 7.2. 常见的proc文件介绍
+## 常见的proc文件介绍
 
 | 文件名  | Describe |
 | :---: | :------------------------------- |
@@ -470,7 +470,7 @@ xTaskCreate(vStart_AudioTask, "audio_task", configMINIMAL_STACK_SIZE * 2, NULL, 
 [<0>] 0xffffffffffffffff
 ```
 
-## 7.3. 和sys文件系统的比较
+## 和sys文件系统的比较
 
 - (1) proc 文件系统主要是用来调试内核，在内核运行时可以知道内核中一些重要的数据结构的值，一般都是读，很少写；
 - (2) proc 文件系统出现的比 sys 文件系统早，proc 文件系统的目录结构比较乱，在 proc 文件系统下面有很多文件夹，比如一个进程就有一个文件夹，现在内核越来越复杂，支持的设备类型也越来越多，显得很混乱；于是又开发出了 sys 系统，sys 系统可以说是 proc 的升级，将来用 sys 系统会是主流；
@@ -478,13 +478,13 @@ xTaskCreate(vStart_AudioTask, "audio_task", configMINIMAL_STACK_SIZE * 2, NULL, 
 
 ---
 
-# 8. GPIO 子系统的作用
+# GPIO 子系统的作用
 
 芯片内部有很多引脚，这些引脚可以接到 GPIO 模块，也可以接到 I2C 模块，通过 Pinctrl 子系统来选择引脚的功能（mux function），配置引脚。当一个引脚被复用为 GPIO 功能时，我们可以去设置它的方向（输入或者输出），设置/读取 它的值。GPIO 可能是芯片自带的，也可能是通过 I2C、SPI 接口扩展。
 
 ![](https://img-blog.csdnimg.cn/1aa6ca3fb83a40e1a59aaa51aa5223f9.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBA5Lmg5oOv5bCx5aW9eno=,size_20,color_FFFFFF,t_70,g_se,x_16)
 
-## 8.1. 通用功能
+## 通用功能
 
 - 可以设为输出，让它输出高低电平
 - 可以设为输入，读取引脚当前电平
@@ -497,7 +497,7 @@ linux 内核中提供了 GPIO 子系统，我们在驱动代码中使用 GPIO �
 
 > 深入理解 gpio: http://www.wowotech.net/sort/gpio_subsystem
 
-# 9. pinctrl 子系统概念
+# pinctrl 子系统概念
 
 一个设备（URAT)有两个状态，默认和休眠状态，默认状态时将对应引脚设置为 这个 URAT 功能，休眠状态时将引脚设置为普通的 GPIO 功能。
 
@@ -558,7 +558,7 @@ https://www.cnblogs.com/zhuangquan/p/12750736.html
 
 ---
 
-# 10. top 命令详解
+# top 命令详解
 
 top命令经常用来监控linux的系统状况，是常用的性能分析工具，能够实时显示系统中各个进程的资源占用情况。
 
@@ -577,9 +577,9 @@ User 231 + Nice 2 + Sys 157 + Idle 222 + IOW 3 + IRQ 0 + SIRQ 0 = 615
  7922  0   1% S     5  17260K    728K  fg shell    /sbin/adbd
 ```
 
-## 10.1. 输出参数说明
+## 输出参数说明
 
-### 10.1.1. 系统的总的统计信息说明
+### 系统的总的统计信息说明
 
 - User : 用户进程的使用率
 - System : 系统进程的使用率
@@ -589,7 +589,7 @@ User 231 + Nice 2 + Sys 157 + Idle 222 + IOW 3 + IRQ 0 + SIRQ 0 = 615
 - SIRQ : 软中断的含义
 - Idle : 除IOW以外的系统闲置时间
 
-### 10.1.2. 每个进程的描述说明
+### 每个进程的描述说明
 
 - PID : 进程ID
 - USER(UID) : 进程所有者的ID
@@ -602,7 +602,7 @@ User 231 + Nice 2 + Sys 157 + Idle 222 + IOW 3 + IRQ 0 + SIRQ 0 = 615
 - PCY : 线程调度策略
 - Name : 进程名字
 
-## 10.2. 命令格式
+## 命令格式
 
 ```
 top [-d number] 或者 top [-bnp]
@@ -652,7 +652,7 @@ top -p `ps aux | grep "xxx" | grep -v grep | cut -c 9-15`
 - grep -v：反向查找
 - cut -c 9-15：选择每行指定列的字符
 
-# 11. 系统性能分析工具：perf
+# 系统性能分析工具：perf
 
 > 更详细的讲解参考：https://zhuanlan.zhihu.com/p/498100484
 
@@ -665,7 +665,7 @@ perf 是Linux的一款性能分析工具，能够进行函数级和指令级的�
 
 Linux性能计数器是一个基于内核的子系统，它提供一个性能分析框架，比如硬件（CPU、PMU（Performance Monitoring Unit））功能和软件（软件计数器、tracepoint）功能。
 
-## 11.1. perf 的使用
+## perf 的使用
 
 使用 perf 进行性能分析，主要使用下面两个命令：
 
@@ -688,7 +688,7 @@ perf record -a --call-graph dwarf -p `ps aux | grep "xxx" | grep -v grep | cut -
 perf report -i perf.data > perf.txt
 ```
 
-### 11.1.1. stat
+### stat
 
 ```
 /data # ./perf stat -p 1467
@@ -714,7 +714,7 @@ perf report -i perf.data > perf.txt
 - Instructions: 机器指令数目。
 - 其他可以监控的譬如分支预测、cache命中,page-faults 是指程序发生了 xx 次页错误等
 
-### 11.1.2. perf record 的其他参数
+### perf record 的其他参数
 
 - -f：强制覆盖产生的.data数据
 - -c：事件每发生count次采样一次
@@ -739,7 +739,7 @@ perf report的相关参数：
 - -k：指定未经压缩的内核镜像文件，从而获得内核相关信息
 - --report：cpu 按照 cpu 列出负载
 
-### 11.1.3. cpu-clock
+### cpu-clock
 
 perf record -e cpu-clock -g -p pid
 
@@ -753,7 +753,7 @@ perf record -e cpu-clock -g -p pid
 ./perf record -e cpu-clock -F 500 -a -g sleep 60  # 采样时间为 60 秒，每秒采样 500 个事件
 ```
 
-### 11.1.4. perf script
+### perf script
 
 将 perf.data 输出可读性文本 
 
@@ -761,7 +761,7 @@ perf record -e cpu-clock -g -p pid
 ./perf script > out.perf
 ```
 
-### 11.1.5. 生成火焰图
+### 生成火焰图
 
 > 需要 git clone https://github.com/brendangregg/FlameGraph
 

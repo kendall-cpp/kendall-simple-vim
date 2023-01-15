@@ -1,4 +1,6 @@
 
+
+
 ## init.rc
 
 init进程是Android系统中用户空间的第一个进程，进程ID为1，源代码位于 `​​system/core/init` ​​目录。作为 Android 系统的第一个进程，Init 进程承担这很多重要的初始化任务，一般 Init 进程的初始化可以分为两部分，前半部分挂载文件系统，初始化属性系统和 Klog， selinux 的初始化等，后半部分重要通过解析 `init.rc` 来初始化系统​​daemon​​ 服务进程，然后以 epoll 的监控属性文件，系统信号等。
