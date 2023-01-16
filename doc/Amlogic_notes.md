@@ -185,9 +185,20 @@ top -m 5 -t
 
 ### korlan 编译 perf
 
+kernel 使用 perf 需要打开 ftrace， 可以参考这个 patch 进行打开
+
+```
+https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/239808
+```
+
+- 编译 perf
+
 ```sh
-# 编译
+# 编译， kernel-5.15 也类似
 /mnt/fileroot/shengken.lin/workspace/google_source/eureka/korlan-sdk/kernel$ ./build_perf.sh korlan ../../chrome
+# 编译出来的 perf 在 ./tools/perf
+
+# make CROSS_COMPILE=./prebuilt/toolchain/aarch64/bin/aarch64-cros-linux-gnu- ARCH=arm64 LDFLAGS=-static -C tools/perf
 ```
 
 如果想在板子上能使用 perf ,可以直接打上这个  patch  开启相应的 config 即可
@@ -213,6 +224,13 @@ adb pull /data/out.perf ./out
 
 ./stackcollapse-perf.pl ./out/out.perf > ./out/out.folded
 ./flamegraph.pl ./out/out.folded > ./out/kernel.svg
+```
+
+- 查看 追踪 工具
+
+```sh
+https://ui.perfetto.dev/
+# 要chrome打开
 ```
 
 ## nandread
@@ -267,12 +285,7 @@ busybox time nandwrite /dev/mtd/mtd4 -s -0 -p /data/write_test_file
 https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/239808
 ```
 
-- 查看 trace.txt 工具
 
-```sh
-https://ui.perfetto.dev/
-# 要chrome打开
-```
 
 ## iozone IO 性能测试
 
@@ -562,3 +575,28 @@ wpa_cli -iwlan0 status
 wpa_cli -iwlan0 save
 ```
 
+---
+
+# chrome 中打开 kernel log
+
+```sh
+vim vendor/amlogic/korlan/BoardConfigCommon.mk  +81
+
+# loglevel=7
+```
+
+
+@ken@:/mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic$ git log
+commit c0ffe047fced044fdd9c818329a281c02fb12ade (HEAD, m/master, eureka/master)
+Author: kenkangxgwe <kenkangxgwe@google.com>
+Date:   Tue Nov 8 02:20:01 2022 -0800
+
+    [korlan] Add audio buffer uevent path to start script
+    
+    Bug: b/257163271
+    Test: None
+    Change-Id: I01065c1dd4bf82672474bfd625f8167ef5c094dc
+    Reviewed-on: https://eureka-internal-review.git.corp.google.com/c/vendor/amlogic/+/817751
+    Reviewed-by: Yi Fan <yfa@google.com>
+    Reviewed-by: Anoush Khazeni <akhazeni@google.com>
+    Tested-by: Cast CQ <no-reply-cast-cq@google.com>

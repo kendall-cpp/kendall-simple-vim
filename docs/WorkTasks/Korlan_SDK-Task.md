@@ -1343,8 +1343,8 @@ vim makefile
 CC  = cc -no-pie 
 
 sudo  ./iozone -i 0 -i 1 -i 2 -s 64g -r 16m -f ./iozone.tmpfile -Rb ./iotest.xls
-
 ```
+
 參考：
 
 https://www.freesion.com/article/76691495377/

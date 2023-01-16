@@ -365,6 +365,12 @@ mkdir -p ./korlan/korlan-b1
 
 # 签名 uboot
 ./sign-uboot.sh ../../chrome ./korlan/korlan-b1 b1
+./sign-uboot.sh ../../chrome ./korlan/korlan-p2 p2
+
+# 可能报错
+#/chrome/vendor/amlogic/common/tools/signing/create-bl-a113l.sh: line 116: /mnt/fileroot/shengken.lin/workspace/google_source/eureka-v2/chrome/vendor/amlogic/common/tools/signing/../../../..//vendor/amlogic/common/tools/signing/signing-tool-g12a/sign-boot-g12a.sh: No such file or directory
+vim vendor/amlogic/common/tools/signing/create-bl-a113l.sh
+readonly andrtop="${script_dir}/../../../../../" 
 
 # 签名kernel
 # 打包 ramdisk
@@ -390,15 +396,15 @@ adnl.exe oem "store boot_erase bootloader"
 adnl.exe oem "store erase boot 0 0"
 adnl.exe oem "store erase system 0 0"
 adnl.exe Partition -P bootloader  -F  u-boot.bin
-adnl.exe Partition -P boot  -F boot.img    # boot-sign.img 
+adnl.exe Partition -P boot  -F boot.img
 adnl.exe Partition -P system  -F system.img
+adnl.exe oem "reset"
 
 # 定义自己的分区和烧录
 adnl.exe oem "store erase system_1 0 0"
 adnl.exe Partition -P system_1  -F erofs.img
 # 关闭工厂模式 如果之前设置了工厂模式
 # adnl.exe oem "store erase fts  0 0"
-adnl.exe oem "reset"
 
 # 烧录工厂模式
 adnl.exe  Download u-boot.bin 0x10000  
