@@ -15,6 +15,7 @@
 - [vim 命令记录](#vim-命令记录)
   - [vim 查找替换](#vim-查找替换)
 - [vscode 设置 markdown 字体](#vscode-设置-markdown-字体)
+  - [vscode 快速阅读 kernel 源码](#vscode-快速阅读-kernel-源码)
 
 
 ------
@@ -337,3 +338,23 @@ ag --ignore-dir /etc/ "kendall"  	忽略某些文件目录进行搜索。
   font-family: '微软雅黑';
 }
 ```
+
+### vscode 快速阅读 kernel 源码
+
+- 先将 PC 的公钥拷贝到 服务器上
+  - 然后在 vscode 安装 GNU Global 插件
+
+```sh
+# 指定路径安装
+sudo dpkg -i --instdir=/to/your/customer/path global_6.6.4-1_amd64.deb
+```
+
+- 服务器上安装： sudo apt install global
+
+- 在 vscode 使用快捷键 Ctrl + Shift + P，执行 Show GNU Global Version，在 vscode 界面右下角显示 global 版本号，表示 global 配置生效。
+
+- 在 vscode 使用快捷键 Ctrl + Shift + P，执行 Rebuild Gtags Database，等待数分钟，在 vscode 右下角显示 Build tag files successfully，表示索引建立成功。
+
+参考： https://blog.csdn.net/lyndon_li/article/details/127955889
+
+

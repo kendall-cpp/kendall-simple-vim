@@ -224,7 +224,13 @@ adb pull /data/out.perf ./out
 
 ./stackcollapse-perf.pl ./out/out.perf > ./out/out.folded
 ./flamegraph.pl ./out/out.folded > ./out/kernel.svg
+
+# 浏览器打开 kernel.svg
 ```
+
+- get anaysis perf data tools
+
+https://github.com/brendangregg/FlameGraph
 
 - 查看 追踪 工具
 
