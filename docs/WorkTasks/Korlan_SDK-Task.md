@@ -41,6 +41,7 @@
     - [解决分区不足和不支持 lz4 压缩问题](#解决分区不足和不支持-lz4-压缩问题)
   - [解决 Permission denied 问题](#解决-permission-denied-问题)
   - [iozone 测试](#iozone-测试)
+- [kernel5.15 声音卡顿问题](#kernel515-声音卡顿问题)
 >>>>>>> 4e70d81561321021de26f97724a2502c0abef3a3
 
 
@@ -1444,3 +1445,17 @@ sys     0m 1.28s
 [    4.374924] TEST : mount fs end lsken00
 [    5.910525] TEST : mount other fs end lsken00
 ```
+
+
+## kernel5.15 声音卡顿问题
+
+> https://partnerissuetracker.corp.google.com/issues/235426120#comment45
+
+
+
+Hi Yi,
+
+I tested the korlan connection on linux today, and the problem of "There are also occasional audio underruns and noises" did not appear. What is your test environment, tablet or Linux ?
+
+And Could you provide ota of your test?
+

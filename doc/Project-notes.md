@@ -621,7 +621,9 @@ aplay -Dhw:0,0 /data/the-stars-48k-60s.wav   # 播放音频
 ```sh
 dmesg  -n 8   # 开 log
 amixer cget numid=2       # 查看音量
-amixer cset numid=2 130   # 修改音量
+amixer cset numid=2 150   # 修改音量
+amixer cset numid=3  on
+amixer cset numid=5 on 
 # 或者
 amixer cset numid=2,iface=MIXER,name='tas5805 Digital Volume' 150
 
@@ -629,7 +631,7 @@ aplay -Dhw:0,0 /data/the-stars-48k-60s.wav
 
 # 强制启动和关闭tdm_bridge
 echo 0 > /sys/module/u_audio/parameters/free_run   
-echo 1 > /sys/module/u_audio/parameters/free_run  
+echo 1 > /sys/module/u_audio/parameters/free_run     #启动
 
 echo 0xfe0501c0 10 > /sys/kernel/debug/aml_reg/dump
 echo  0xfe050540 28 > /sys/kernel/debug/aml_reg/dump

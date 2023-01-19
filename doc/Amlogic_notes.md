@@ -45,7 +45,9 @@ aplay -Dhw:0,0 /data/the-stars-48k-60s.wav   # 播放音频
 ```sh
 dmesg  -n 8   # 开 log
 amixer cget numid=2       # 查看音量
-amixer cset numid=2 130   # 修改音量
+amixer cset numid=2 150   # 修改音量
+amixer cset numid=3  on
+amixer cset numid=5 on 
 # 或者
 amixer cset numid=2,iface=MIXER,name='tas5805 Digital Volume' 150
 
@@ -355,6 +357,43 @@ make: *** [makefile:1044: iozone_linux-arm.o] Error 1
 ```
 write /dev/kmsg "TEST : =============222  lsken00"
 ```
+
+dmesg 打印内核启动过程的所有信息，/proc/kmsg 也是打印内核的信息， 但是与dmesg 有不同， 第一次执行 /proc/kmsg 打印到目前位置的所有内核信息，再次执行 /proc/kmsg ,
+
+不打印打印过了的信息，打印第一次执行之后的信息，下面举个例子：
+
+第一次执行dmesg打印：
+
+```
+A
+B 
+C
+```
+
+第一次执行/proc/kmsg打印：
+
+```
+A
+B 
+C
+```
+
+第二次执行dmesg打印：
+
+```
+A
+B 
+C
+D
+```
+
+第2次执行/proc/kmsg打印：
+
+```
+D
+```
+
+依次类推。
 
 
 # erofs 文件系统
