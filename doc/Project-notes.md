@@ -1545,8 +1545,6 @@ mma PARTNER_BUILD=true
 vendor/amlogic/korlan/
 ```
 
-
-
 # VSI-NN module测试
 
 总结文档：https://docs.google.com/document/d/1JcOd5uLQAqdS8EtGSqvew1or_HZnDBiNP2-DE3C9zQ0/edit
@@ -1691,6 +1689,59 @@ export VNN_LOOP_TIME=10000
 # 声明环境变量 打印更多信息
 export VIV_VX_DEBUG_LEVEL=1
 export VIV_NN_LOGLEVEL=5
+```
+
+## 修改公版代码支持 NN
+
+> 这里以 a5_av400 为例
+
+```shell
+# 需要修改的代码文件
+vim hardware/aml-5.4/npu/nanoq/hal/os/linux/kernel/platform/amlogic/gc_hal_kernel_platform_amlogic.c 
+vim spencer-sdk/verisilicon/hal/os/linux/kernel/platform/amlogic/gc_hal_kernel_platform_amlogic.c 
+```
+
+从 dts 中找到 NN 对应的 nn_power_version ，然后在代码  `spencer-sdk/verisilicon/hal/os/linux/kernel/platform/amlogic/gc_hal_kernel_platform_amlogic.c`  添加 
+
+> 可以参考 NN-av400-arm64-verisilicon-6.4.11.2-gc_hal_kernel_platform_amlogic.patch 这个 patch
+
+```c
+// hardware/aml-5.4/npu/nanoq/hal/os/linux/kernel/platform/amlogic/gc_hal_kernel_platform_amlogic.c 
+static const struct of_device_id galcore_dev_match[] = {
+  {
+    .compatible = "amlogic, galcore"  // 去 arm64/boot/dts/amlogic/a5_a113x2_av400_1g.dts 这里找到对应节点下的 compatible 值
+  },
+    { },
+};
+int gckPLATFORM_Init(struct platform_driver *pdrv, gcsPLATFORM **platform)
+{       
+    pdrv->driver.of_match_table = galcore_dev_match; //从上面复制下来
+    *platform = &default_platform; 
+    return 0; 
+} 
+
+//找到 dts kernel/aml-5.4/arch/arm64/boot/dts/amlogic/meson-a5.dtsi
+	galcore {
+		compatible = "amlogic, galcore";
+		dev_name = "galcore";
+		status = "okay";
+		clocks = <&clkc CLKID_CTS_NNA_AXI_CLK>,
+		      <&clkc CLKID_CTS_NNA_CORE_CLK>;
+		clock-names = "cts_vipnanoq_axi_clk_composite",
+		      "cts_vipnanoq_core_clk_composite";
+		interrupts = <0 128 4>;
+		interrupt-names = "galcore";
+		power-domains = <&pwrdm PDID_A5_NNA>;
+		reg = <0x0 0xfdb00000 0x0 0x40000
+		      0x0 0xf7000000 0x0 0x200000
+		      0x0 0xfe00c040 0x0 0x4
+		      0x0 0xfe00c044 0x0 0x4
+		      0x0 0xfe00c034 0x0 0x4
+		      0X0 0xfe000220 0X0 0x4>;
+		reg-names = "NN_REG","NN_SRAM","NN_MEM0",
+		      "NN_MEM1","NN_RESET","NN_CLK";
+		nn_power_version = <6>;   // 这个是最重要的
+	};
 ```
 
 # ramdisk.img 解包

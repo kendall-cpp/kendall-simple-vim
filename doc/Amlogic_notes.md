@@ -319,6 +319,8 @@ chmod +w makefile
 vim makefile
 CC  = cc -no-pie 
 
+# CC  = /mnt/fileroot/shengken.lin/workspace/google_source/eureka/korlan-sdk/prebuilt/toolchain/aarch64/bin/aarch64-cros-linux-gnu-clang  
+
 
 ./iozone -i 0 -i 1 -i 2 -s 64g -r 16m -f ./iozone.tmpfile -Rb ./iotest.xls
 ```
@@ -349,6 +351,48 @@ make: *** [makefile:1044: iozone_linux-arm.o] Error 1
 ```
 ./iozone -a -n 4m -g 256m -i 0 -i 1 -y 4096 -q 4096 -f /system/iozone.tmpfile -Rb ./iotest.xls
 ```
+
+
+
+## CPU 占有率
+
+```sh
+git clone https://github.com/sysstat/sysstat.git
+cd sysstat
+./configure
+
+vim makefile
+CC  = /mnt/fileroot/shengken.lin/workspace/google_source/eureka/korlan-sdk/prebuilt/toolchain/aarch64/bin/aarch64-cros-linux-gnu-clang  
+make 
+
+
+# 测试
+./mpstat -P ALL 10
+
+
+busybox mpstat -P ALL 10
+```
+
+```
+第一部分：输出首先显示了所有 CPU 的合计指标，然后显示了每个 CPU 各项的指标。
+
+第二部分：在结尾处显示所有 CPU 的平均值。
+
+各列的含义：
+
+%user: 表示用户态所使用 CPU 的百分比。
+%nice: 表示使用 nice 命令对进程进行降级时 CPU 的百分比。
+%sys: 表示内核进程使用的 CPU 百分比。
+%iowait: 表示等待进行 I/O 所使用的 CPU 时间百分比。
+%irq: 表示用于处理系统中断的 CPU 百分比。
+%soft: 表示用于软件中断的 CPU 百分比。
+%steal:虚拟机强制CPU等待的时间百分比。
+%guest: 虚拟机占用CPU时间的百分比。
+%idle: CPU 的空闲时间的百分比。
+```
+
+
+
 
 -------
 
