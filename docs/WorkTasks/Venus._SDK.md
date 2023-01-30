@@ -296,7 +296,7 @@ dsp_util --dsp=hifi4a -r
 dsp_util --dsp=hifi4a --firmware=dspboot.bin -l
 dsp_util --dsp=hifi4a -S
 
-# 进入休眠
+# 进入休眠 ARM
 echo mem > /sys/power/state
 ```
 

@@ -1740,3 +1740,11 @@ cp ramdisk.img /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/
 
 - elaine -- SM1
 
+# Sonos
+
+```
+cd sonos-sdk
+repo init -u ssh://android@source2.amlogic.com/sonos/platform/manifest -b buildroot-openlinux-202207-a113x2-av400-sbr -m buildroot-openlinux-202207-a113x2-av400-sbr.xml
+repo sync
+```
+

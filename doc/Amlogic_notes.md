@@ -645,3 +645,32 @@ Date:   Tue Nov 8 02:20:01 2022 -0800
     Reviewed-by: Yi Fan <yfa@google.com>
     Reviewed-by: Anoush Khazeni <akhazeni@google.com>
     Tested-by: Cast CQ <no-reply-cast-cq@google.com>
+# 运行 dsp
+
+> 基于 venus-p2 测试
+
+```sh
+cd freertos
+./build_rtos.sh venus-p2 ./../../chrome release --skip-dsp-build
+# 输出目录：out_dsp/dspboot.bin
+
+# 运行dsp
+adb.exe push ./dspboot.bin  /system/lib/firmware/
+adb.exe push ./dspboot.bin  /lib/firmware/
+
+# Run the test
+# 1. -s                 : stop dsp
+# 2. -r                 : reset dsp
+# 3. -l --firmware=XXXX : reload dsp
+# 4. -S                 : start dsp
+dsp_util --dsp=hifi4a -s
+dsp_util --dsp=hifi4a -r
+dsp_util --dsp=hifi4a --firmware=dspboot.bin -l
+dsp_util --dsp=hifi4a -S
+
+# ARM 进入休眠; 休眠 ARM
+echo mem > /sys/power/state
+```
+
+
+

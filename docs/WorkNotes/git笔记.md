@@ -3,6 +3,7 @@
 - [git 三个分区](#git-三个分区)
 	- [提交到暂存区](#提交到暂存区)
 	- [提交到对象区](#提交到对象区)
+		- [删除 commit](#删除-commit)
 	- [总结提交步骤](#总结提交步骤)
 	- [后悔还原](#后悔还原)
 		- [误删/改了某个文件还原](#误删改了某个文件还原)
@@ -46,7 +47,7 @@
 git add hello.txt  			添加文件到暂存区
 
 
-git ls-files    查看暂存区文件
+git ls-files    查看暂存区所有的文件
 
 git rm --cached hello.txt   从暂存区退回到工作区  # 从暂存区删除该文件
 
@@ -54,21 +55,16 @@ git rm --cached hello.txt   从暂存区退回到工作区  # 从暂存区删除
 
 	git restore --staged fileName
 
-git reset --soft HEAD^		 撤销commit 保留add
 
-git reset HEAD~数字		按照输入的数字撤销输入数字条commit记录
-
-git commit -m update        将上面删除操作提交到git仓库
 
 git status        			查看目前工作区状态
 
-git commit -a -s --no-verify   忽略掉代码不规范错误 -s 加签名 -a 是上了 add 步骤
 
 ### 提交到对象区
 
 git commit  或者 git commit -a   #省略add步骤
 
-填写信息，shift+zz 可以保存退出
+填写信息，
 
 如果暂存区已经全部 commit 了，执行的时候就会出现
 
@@ -76,9 +72,21 @@ git commit  或者 git commit -a   #省略add步骤
 nothing to commit, working tree clean
 ```
 
-git rm hello.txt  从对象区中删除一个数据（会删除本地文件），会回到暂存区，可以用 git reset head 退回到 工作区，但是也可以再执行 git commit hello.txt 彻底删除
+git rm hello.txt  从对象区中删除一个数据（会删除本地文件），会回到暂存区，可以用 git reset HEAD file-name 退回到 工作区，但是也可以再执行 git commit hello.txt 彻底删除
 
 > 所以彻底删除：git rm file_name ; git commit file_name
+
+git commit -a -s --no-verify   忽略掉代码不规范错误 -s 加签名 -a 是上了 add 步骤
+
+
+#### 删除 commit 
+ 
+git reset --soft HEAD^		 撤销commit 保留add
+
+git reset HEAD~数字		按照输入的数字撤销输入数字条commit记录
+
+git commit -m update        将上面删除操作提交到git仓库
+
 
 ### 总结提交步骤
 
@@ -88,7 +96,10 @@ git add
 git commit 
 # 填写注释
 
-# git commit --amend -s --no-verify     # 第二次 commit 加 changeID  --no-verify 忽略代码检查，-s 是添加签名,会出现Signed-off-by：
+git commit --amend -s --no-verify     
+	--amend  修改上一次的注释 
+	--no-verify 忽略代码检查，
+	-s 是添加签名
 
 # 如果没有 changeID 需要拷贝 .git/hooks$ cp [other_path]]/.git/hooks/commit-msg  .
 # 然后再执行 git commit --amend 就有 Change-Id 了
@@ -350,9 +361,19 @@ git diff   查看文件差异
 
  git config --loacl (给当前项目一次性设置)
 
-```
+```sh
 git config --local user.name ""
 git config --local user.email ""
+
+git config --global user.name "shengken.lin"
+git config --global user.email "shengken.lin@amlogic.com"
+
+git config --global user.name "Shengken Lin"
+git config --global user.email "shengken.lin@amlogic.corp-partner.google.com"
+
+# 修改当前repo的用户名和邮箱
+git config user.name "shengken.lin"
+git config user.email "shengken.lin@amlogic.com"
 ```
 
 > 如果是当前用户 --system 设置，存在 ~/.gitconfig 文件下
