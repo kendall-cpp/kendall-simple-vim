@@ -524,7 +524,7 @@ rm  ./chromium/src/out_chromecast_korlan/release/gen/chromecast/internal/build/o
 
 ```sh
 #进入板子
-# 设置
+# 设置 usb 为 host 模式
 fts -s usb_controller_type  host
 # 查看
 fts -g usb_controller_type
@@ -533,7 +533,7 @@ fts -g usb_controller_type
 cat /proc/fts 
 # 清空
 #fts -i
-# 或者
+# 或者 （设置 usb 为 host 模式）
 echo 1 > /sys/kernel/debug/usb_mode/mode  
 
 # 查看模式
@@ -1416,13 +1416,14 @@ cp ./elaine-out_unpack/ramdisk.img.xz /mnt/fileroot/shengken.lin/workspace/googl
 ## 签名elaine
 
 ```sh
+# /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/pdk
 # 签名 u-boot
 ./create-uboot.sh -b  elaine-b3
 
 # kernel
 ## /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/pdk
 ./build-bootimg.sh -b elaine-b3
-# 输出：/mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/out/target/product/spencer/upgrade
+# 输出：/mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/out/target/product/elaine/upgrade
 ```
 
 
@@ -1792,6 +1793,12 @@ cp ramdisk.img /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/
 - elaine -- SM1
 
 # Sonos
+
+## 拉代码
+
+- 修改 git 邮箱：使用 amlogic 
+
+- 关掉 depot_tools
 
 ```
 cd sonos-sdk

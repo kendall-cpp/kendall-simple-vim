@@ -906,8 +906,10 @@ https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/268826
 # Device Drivers  ---> --- Network device support  <*>   USB Network Adapters  --->  ？？？
 # ASIX AX88xxx Based USB 2.0 Ethernet Adapters  使用 AX88772B 模块进行扩展百兆网口
 # <*>     ASIX AX88179/178A USB 3.0/2.0 to Gigabit Ethernet
+# 但是如果需要支持 host 模糊下的 usb disk, 需要开启 （再选择 USB support，按回车进入USB support 菜单,找到并选中“ USB Mass Storage support”）
+# 参考 https://blog.csdn.net/weixin_42280315/article/details/116606455
 
-# 直接全部关闭 Multi-purpose USB Networking Framework
+# 直接全部关闭 USB Network Adapters     --   Multi-purpose USB Networking Framework
 -rw-r--r--  1 shengken.lin szsoftware  5096888 Dec  8 16:37 kernel.korlan.gz-dtb.korlan-p2
 
 ```

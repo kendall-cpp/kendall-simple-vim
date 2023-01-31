@@ -291,3 +291,47 @@ checkout https://eureka-partner-review.googlesource.com/c/amlogic/mali-driver/+/
 ```sh
  ./build_mali.sh elaine-b1
 ```
+
+# 在摄像头参数数据的时候 dump 数据
+
+> https://partnerissuetracker.corp.google.com/issues/250974390#comment33
+
+```sh
+vim drivers/amlogic/media_modules/amvdec_ports/aml_vcodec_adapt.c
+vdec_vframe_write
+dump_write(buf, count);
+
+
+注意跳转是到 drivers/amlogic/media_modules/amvdec_ports/decoder/vdec_h264_if.c  这里
+```
+
+git add drivers/amlogic/media_modules/amvdec_ports/aml_vcodec_adapt.c
+git add drivers/amlogic/media_modules/amvdec_ports/decoder/vdec_h264_if.c
+git add drivers/amlogic/media_modules/amvdec_ports/decoder/vdec_vp9_if.c
+
+```
+[Elaine][Don't Merge] Enable DATA_DEBUG to capture dump stream
+
+Bug:b/250974390
+```
+
+
+
+Hi yuchen,
+
+Pls check this cl, it is able to capture dump stream
+
+```
+https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/280506
+```
+
+- dump stream data path: `/data/dump.h264`
+
+And If the dump stream you captured is too big, you have to modify the DUMP_FILE_NAME path, like this patch,
+
+```
+--- a/drivers/amlogic/media_modules/amvdec_ports/aml_vcodec_adapt.c
++++ b/drivers/amlogic/media_modules/amvdec_ports/aml_vcodec_adapt.c
+
++#define DUMP_FILE_NAME "/data/dump.h264"
+```
