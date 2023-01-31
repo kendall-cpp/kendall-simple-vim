@@ -1806,3 +1806,12 @@ repo init -u ssh://android@source2.amlogic.com/sonos/platform/manifest -b buildr
 repo sync
 ```
 
+## 编译Sonos
+
+```sh
+source setenv.sh 
+# 选择板子 10
+make
+
+```
+
