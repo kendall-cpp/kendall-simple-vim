@@ -716,5 +716,41 @@ dsp_util --dsp=hifi4a -S
 echo mem > /sys/power/state
 ```
 
+---
+
+# JTAG 接口和 SWD 接口
+
+https://support.amlogic.com/issues/18561
+
+参考：https://support.amlogic.com/issues/12564#change-89466
+
+电脑路径： `\\walle01-sz\fileroot\shengken.lin\workspace\Sonos-file\RISC-V_JTAG`
+
+## OpenOCD安装与使用（JTAG调试）
+
+- 硬件连接
+
+![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/图片1.2vnzyxuro7o0.webp)
+
+- 在 ubuntu 中下载和编译 openOcd
+
+第一步： git clone https://github.com/openocd-org/openocd
+
+git reset --hard 4c364b453488fb5d30c32dfb4f294c30d255d7bf
+
+第二部编译
+
+
+```sh
+# 需要下载的 package
+sudo apt-get install build-essential pkg-config autoconf automake libtool libusb-dev libusb-1.0-0-dev libhidapi-dev
+
+cd openocd/
+sudo ./bootstrap # 可以不使用 sudo
+# ./configure --prefix=[specify the install directory] --enable- maintainer-mode --enable-jlink 
+#  ./configure --prefix=/home/amlogic/Desktop/lsken00/github/openocd/output --enable-maintainer-mode --enable-jlink
+
+ ./configure --prefix=/home/amlogic/Desktop/lsken00/github/openocd/output --enable-jlink
+```
 
 

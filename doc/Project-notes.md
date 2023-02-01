@@ -107,7 +107,7 @@ make show-targets # 查看所有package
 
 ### buildroot-output 目录
 
-- build 包含所有的源文件，包括 Buildroot 所需主机工具和选择的包，这个目录包含所有 模块源码。
+- build 包含所有的源文件，包括 Buildroot 所需主机工具和选择的包，这个目录包含所有 模块源码。**也就是每个 package 都会拷贝到这里进行编译**
 
 - host 主机端编译需要的工具包括交叉编译工具
 
@@ -588,6 +588,19 @@ board/amlogic/defconfigs/a1_korlan_b1_defconfig
 +CONFIG_SPL_LOGLEVEL=7
 +CONFIG_TPL_LOGLEVEL=7
  CONFIG_CMD_USB_MODE=y
+```
+
+## korlan 出现 cache 分区挂载不起来
+
+```sh
+ busybox cat /sbin/check_and_mount_ubifs.sh 
+
+/sbin/ubiattach /dev/ubi_ctrl -m 7 -d 7 -b 20
+
+/sbin/ubimkvol /dev/ubi7 -m -N cache
+
+
+mount -t ubifs ubi7:cache /data/ -o noexec,rw,nosuid,nodev,noatime;
 ```
 
 ## audio工具
@@ -1813,5 +1826,26 @@ source setenv.sh
 # 选择板子 10
 make
 
+make show-targets | grep aml-hifi-rtos-sdk
+# 编译aml-hifi-rtos-sdk
+# make aml-hifi-rtos-sdk-dirclean # 如果修改了 package 在output 下不生效就执行这个
+make aml-hifi-rtos-sdk-rebuild
+
+#编译 kernel
+make linux-rebuild
+
+# 编译 uboot
+make uboot-rebuild
+```
+
+## Sonos 加载 dsp 的脚本
+
+```sh
+vim buildroot/package/amlogic/aml-hifi-rtos-sdk/S71_load_dspa
+# output/a5_av400_a6432_release/target$ cat etc/init.d/S71_load_dspa
+dsp_util --load --dsp hifi4a -f dspbootA.bin
+
+# 默认 dspbootA.bin 存放的路径
+/lib/firmware/dspbootA.bin
 ```
 
