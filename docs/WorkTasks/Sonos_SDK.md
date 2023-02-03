@@ -77,21 +77,10 @@ xTaskCreateStatic适用于项目开发中内存比较紧张的项目，事先定
 > kernel/aml-5.4/drivers/amlogic/hifi4dsp/hifi4dsp_module.c 
 
 
-### rsic-v rtos 流程
 
-首先创建一个 str 任务
 
-hw_business_process  -  create_str_task
+Hi artie,
 
-# JTAG 接口和 SWD 接口
+一个A55内核能够支持RTOS，但是audio产品目前没有这个需求，所以没有计划在arm上跑rtos，如果你有这方面的需求，我们可以进一步讨论这个计划。
 
-https://support.amlogic.com/issues/18561
-
-参考：https://support.amlogic.com/issues/12564#change-89466
-
-## OpenOCD安装与使用（JTAG调试）
-
-在 ubuntu 中
-
-第一步： git clone https://github.com/openocd-org/openocd
-
+One of the A55 cores can support RTOS, but audio products do not currently have this requirement, so there is no plan to run RTOS on arm, if you have this requirement, we can discuss this plan further.

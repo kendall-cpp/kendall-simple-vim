@@ -16,6 +16,14 @@ echo 0xfe050540 28 > /sys/kernel/debug/aml_reg/dump
 cat /sys/kernel/debug/aml_reg/dump 
 ```
 
+如果没有 /sys/kernel/debug/aml_reg/dump 这文件夹，是因为 debugfs 没有 mount 起来
+
+```sh
+/ # mount -t debugfs none /sys/kernel/debug
+/ # mount | grep debug 
+none on /sys/kernel/debug type debugfs (rw,relatime)
+```
+
 # audio 工具使用
 
 > 上传音频数据 adb push .\the-stars-48k-60s.wav /data/
@@ -148,7 +156,7 @@ CONFIG_ENABLE_UBOOT_CLI=y
 
 ## 查看二进制文件
 
-### 查看依赖和编译器
+### 查看依赖和编译器 readelf strings
 
 ```
  # 查看依赖的库
@@ -160,7 +168,7 @@ CONFIG_ENABLE_UBOOT_CLI=y
  strings libOpenVX.so | grep GCC
 ```
 
-### 对比二进制文件
+### 对比二进制文件 hexdump
 
 
 - 第一种方法： 将后缀改成一样然后用 compare 工具比较
@@ -182,6 +190,101 @@ vim -d erofs.img.txt  system_1.bin.txt
 # 在某个程序运行期间执行，比如：在push期间执行下面命令检测
 top -m 5 -t
 ```
+
+
+### top 命令详解
+
+top命令经常用来监控linux的系统状况，是常用的性能分析工具，能够实时显示系统中各个进程的资源占用情况。
+
+```c
+//总的统计
+User 37%, System 25%, IOW 0%, IRQ 0%
+User 231 + Nice 2 + Sys 157 + Idle 222 + IOW 3 + IRQ 0 + SIRQ 0 = 615
+
+
+//每个进程
+  PID PR CPU% S  #THR     VSS     RSS PCY UID      Name
+18170  0  34% S   155 1906448K 246152K  fg u0_a369  com.icongtai.zebra.car
+  310  1   8% S    31 651920K  12884K  fg system   /system/bin/surfaceflinger
+21024  1   4% S     1      0K      0K  fg root     kworker/u17:1
+22231  1   3% S     1      0K      0K  fg root     kworker/u17:2
+ 7922  0   1% S     5  17260K    728K  fg shell    /sbin/adbd
+```
+
+### 输出参数说明
+
+#### 系统的总的统计信息说明
+
+- User : 用户进程的使用率
+- System : 系统进程的使用率
+- Nice : 优先值为负的进程所占用的CPU时间
+- IOW : IO wait的等待时间
+- IRQ : 硬中断时间
+- SIRQ : 软中断的含义
+- Idle : 除IOW以外的系统闲置时间
+
+#### 每个进程的描述说明
+
+- PID : 进程ID
+- USER(UID) : 进程所有者的ID
+- PR : 进程优先级
+- CPU% : CPU占用率。
+- S : 进程状态 D=不可中断的睡眠状态 R=运行 S=睡眠 T=跟踪/停止 Z=僵尸进程
+- #THR : 程序当前所用的线程数
+- VSS : Virtual Set Size 虚拟内存
+- RSS : Resident Set Size 实际使用的物理内存
+- PCY : 线程调度策略
+- Name : 进程名字
+
+### 命令格式
+
+```
+top [-d number] 或者 top [-bnp]
+```
+
+选项说明
+
+> 注意嵌入式系统可能一些参数被去掉，无法使用
+
+```sh
+top -d 10  # number代表秒数，表示top命令显示的页面更新一次的间隔，默认是 3 秒。
+
+top -c     # 每隔3秒显示进程的资源占用情况，并显示进行的命令行参数
+
+top -p 8080 -p 8081    # 每隔3秒显示pid是8080 和 pid 是 8081 这两个进程的资源占用情况
+
+top -d 2 -c -p 8080    # 每隔2秒显示pid是 8080 的进程资源使用情况，并显示该进程启动的命令行参数
+
+top -m  -d 10 -b > top.log  # -d 是间隔秒数 -b 写入文件 -m 参数可以很好的观察各个进程在压力测试过程中的变化
+
+top -m 5 -t   # 在压力测试时，top5 进程的 线程信息
+```
+
+
+ top -m 5 -d 10 -n 1 -s cpu
+
+
+| 列名   |         含义 | 实例 |
+| ---  | ---  | --- |
+| -m   | max_procs最多显示多少个进程 | -m 1 显示1个进程  |
+| -n   | iterations 刷新次数 | -n 10 只输出10次 |
+| -d   | delay 刷新的间隔时间，单位是秒 默认是5秒 | -d 10 每隔10秒刷新一次 |
+| -s   | 输出的数据按照那一列排序 | -s cpu 标识按照CPU排序。  |
+| -t   | 显示线程信息，而不是进程 | |
+| -h   | 显示帮助文档。 | |
+
+
+```
+top -p `ps aux | grep "xxx" | grep -v grep | cut -c 9-15`
+```
+
+- top -p：指定进程
+- top -d 1：指定屏幕刷新时间，1s刷新一次
+- top -b：表示以批处理模式操作
+- ps aux：列出所有进程
+- grep：查找指定进程
+- grep -v：反向查找
+- cut -c 9-15：选择每行指定列的字符
 
 ## perf
 
@@ -240,6 +343,129 @@ https://github.com/brendangregg/FlameGraph
 https://ui.perfetto.dev/
 # 要chrome打开
 ```
+
+
+### 系统性能分析工具：perf
+
+> 更详细的讲解参考：https://zhuanlan.zhihu.com/p/498100484
+
+perf 是Linux的一款性能分析工具，能够进行函数级和指令级的热点查找，可以用来分析程序中热点函数的CPU占用率，从而定位性能瓶颈。
+
+系统性能优化通常可以分为两个阶段：性能分析和性能优化。
+
+- 性能分析的目的是查找性能瓶颈、热点代码，分析引发性能问题的原因；
+- 基于性能分析，可以进行性能优化，包括：算法优化（空间复杂度和时间复杂度的权衡）和代码优化（提高执行速度、减少内存占用）。
+
+Linux性能计数器是一个基于内核的子系统，它提供一个性能分析框架，比如硬件（CPU、PMU（Performance Monitoring Unit））功能和软件（软件计数器、tracepoint）功能。
+
+### perf 的使用
+
+使用 perf 进行性能分析，主要使用下面两个命令：
+
+- perf record：保存 perf 追踪的内容，文件名为 perf.data
+- perf report：解析 perf.data 的内容
+
+比如要分析进程 xxx，启动该进程后，首先启动使用下面命令：
+
+```sh
+perf record -a --call-graph dwarf -p `ps aux | grep "xxx" | grep -v grep | cut -c 9-15` -d 1 -b 
+```
+
+- -a：表示对所有CPU采样
+- --call-graph dward：表示分析调用栈的关系
+- -p：表示分析指定的进程
+
+运行结束或者通过 Ctrl + C 结束后，会生成 perf.data 文件，然后通过 report 导出报告，即可以查看 main 函数和子函数的CPU平均占用率。
+
+```
+perf report -i perf.data > perf.txt
+```
+
+#### stat 参数
+
+```
+/data # ./perf stat -p 1467
+^C
+ Performance counter stats for process id '1467':
+
+            293.67 msec task-clock                #    0.042 CPUs utilized          
+               146      context-switches          #    0.497 K/sec                  
+                 7      cpu-migrations            #    0.024 K/sec                  
+                 0      page-faults               #    0.000 K/sec                  
+         123267078      cycles                    #    0.420 GHz                    
+          38987062      instructions              #    0.32  insn per cycle         
+           6286641      branches                  #   21.407 M/sec                  
+            861473      branch-misses             #   13.70% of all branches        
+
+       7.073559503 seconds time elapsed
+```
+
+- task-clock 是指程序运行期间占用了xx的任务时钟周期，该值高，说明程序的多数时间花费在 CPU 计算上而非 IO
+- context-switches 是指程序运行期间发生了 xx 次上下文切换，记录了程序运行过程中发生了多少次进程切换，频繁的进程切换是应该避免的。（有进程进程间频繁切换，或者内核态与用户态频繁切换）
+- cpu-migrations 是指程序运行期间发生了 xx 次 CPU 迁移，即用户程序原本在一个 CPU 上运行，后来迁移到另一个CPU
+- cycles：处理器时钟，一条机器指令可能需要多个 cycles
+- Instructions: 机器指令数目。
+- 其他可以监控的譬如分支预测、cache命中,page-faults 是指程序发生了 xx 次页错误等
+
+#### perf record 的其他参数
+
+- -f：强制覆盖产生的.data数据
+- -c：事件每发生count次采样一次
+- -p：指定进程
+- -t：指定线程
+
+可以使用 ctrl+c 中断 perf 进程，或者在命令最后加上参数 --sleep n (n秒后停止) 
+
+sudo perf report -n 可以生成报告的预览。
+sudo perf report -n --stdio 可以生成一个详细的报告。
+sudo perf script 可以 dump 出 perf.data 的内容。
+
+获得这个 perf.data 文件之后，我们其实还不能直接查看，下面就需要 perf report 工具进行查看
+
+perf report 输出 record 的结果
+
+如果record之后想直接输出结果，使用perf report即可
+
+perf report的相关参数：
+
+- -i : 指定文件输出
+- -k：指定未经压缩的内核镜像文件，从而获得内核相关信息
+- --report：cpu 按照 cpu 列出负载
+
+#### cpu-clock
+
+perf record -e cpu-clock -g -p pid
+
+-e 选项允许您在 perf list 命令中列出的多个类别中选择一个事件类别。
+
+例如，在这里，我们使用 -e cpu-clock 是指 perf record 监控的指标为 cpu 周期程序运行完之后，perf record会生成一个名为 perf.data 的文件（缺省值），如果之前已有，那么之前的 perf.data 文件会变为 perf.data.old 文件 
+
+-g 选项是告诉perf record额外记录函数的调用关系，因为原本perf record记录大都是库函数，直接看库函数，大多数情况下，你的代码肯定没有标准库的性能好对吧？除非是针对产品进行特定优化，所以就需要知道是哪些函数频繁调用这些库函数，通过减少不必要的调用次数来提升性能
+
+```sh
+./perf record -e cpu-clock -F 500 -a -g sleep 60  # 采样时间为 60 秒，每秒采样 500 个事件
+```
+
+#### perf script
+
+将 perf.data 输出可读性文本 
+
+```sh
+./perf script > out.perf
+```
+
+#### 生成火焰图
+
+> 需要 git clone https://github.com/brendangregg/FlameGraph
+
+```
+# 将 out.perf pull 到 /{yourpatch}/github/FlameGraph
+adb pull /data/out.perf ./out
+
+ ./stackcollapse-perf.pl ./out/out.perf > ./out/out.folded
+ ./flamegraph.pl ./out/out.folded > ./out/kernel.svg
+ ```
+
 
 ## nandread
 
@@ -722,23 +948,24 @@ echo mem > /sys/power/state
 
 https://support.amlogic.com/issues/18561
 
-参考：https://support.amlogic.com/issues/12564#change-89466
+- 参考Sonos issues : https://support.amlogic.com/issues/12564#change-89466
+- 使用手册：`\\walle01-sz\fileroot\shengken.lin\workspace\Sonos-file\RISC-V_JTAG\OpenOCD\jtag user guide - OpenOCD.pdf`
 
 电脑路径： `\\walle01-sz\fileroot\shengken.lin\workspace\Sonos-file\RISC-V_JTAG`
 
 ## OpenOCD安装与使用（JTAG调试）
 
-- 硬件连接
-
-![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/图片1.2vnzyxuro7o0.webp)
+> 以 A5-Av400 为例
 
 - 在 ubuntu 中下载和编译 openOcd
 
-第一步： git clone https://github.com/openocd-org/openocd
+**第一步**： git clone https://github.com/openocd-org/openocd
+
+> Note1:The version v0.10.0 of OpenOCD(commit:4c364b453488fb5d30c32dfb4f294c30d255d7bf) is work fine, and we recommend using this version.
 
 git reset --hard 4c364b453488fb5d30c32dfb4f294c30d255d7bf
 
-第二部编译
+**第二步 编译**
 
 
 ```sh
@@ -748,9 +975,144 @@ sudo apt-get install build-essential pkg-config autoconf automake libtool libusb
 cd openocd/
 sudo ./bootstrap # 可以不使用 sudo
 # ./configure --prefix=[specify the install directory] --enable- maintainer-mode --enable-jlink 
-#  ./configure --prefix=/home/amlogic/Desktop/lsken00/github/openocd/output --enable-maintainer-mode --enable-jlink
+mkdir output
+sudo  ./configure --prefix=/home/amlogic/Desktop/lsken00/github/Jtag-Jlink/openocd/output/ --enable-jlink
+sudo make
 
- ./configure --prefix=/home/amlogic/Desktop/lsken00/github/openocd/output --enable-jlink
+sudo make install
 ```
+
+**第三步 连接和测试 JTAG**
+
+- 找 Zelong Dong（SZ 5楼） 借到 Jlink (ARM 仿真器)
+
+![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/图片1.2vnzyxuro7o0.webp)
+
+```sh
+
+cd ~/Desktop/lsken00/github/openocd
+mkdir config; cd config
+# 从linux中拷贝 OpenOCD 到 ubuntu （\\walle01-sz\fileroot\shengken.lin\workspace\Sonos-file\RISC-V_JTAG\OpenOCD）
+7z x OpenOCD_cfg.7z
+cp /media/amlogic/RECOVERYUSB/lsken00/Jtag-Jlink-a5-av400/OpenOCD_cfg . -rf
+```
+
+> Note1: OpenOCD_cfg.7z is amlogic config file, pls check attachment file.
+> Note2: openocd binary under 1.2.2 (--prefix=[specify the install directory]) dirctory.
+
+- 连接 ubuntu 和 av400
+
+- 板子进入 uboot
+
+```sh
+a5_av400# jtagon aocpu jtag_a 
+bl31: jtag: enable jtag_a (GPIOD) <---> aocpu
+a5_av400# 
+```
+
+- 在 ubuntu 上测试
+
+```sh
+# ~/Desktop/lsken00/github/Jtag-Jlink/openocd
+sudo ./output/bin/openocd -f config/OpenOCD_cfg/meson_a5.cf
+```
+
+![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/jtag2.3rlguhipplc0.webp)
+
+- 不要停止，在 ubuntu 重新开启另一个窗口执行
+
+```sh
+telnet localhost 4444
+
+> targets
+
+# enable a5.aocpu
+> jtag tapenable a5.aocpu
+JTAG tap: a5.aocpu enabled
+Unsupported DTM version: 15
+1
+
+> targets 0
+
+> halt
+
+> targets
+
+> resume
+
+> targets
+
+# 如果需要 disable 目标板
+> jtag tapdisable a5.aocpu
+JTAG tap: a5.aocpu disabled
+0
+```
+
+![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/jtag3.25tiil7ey5nk.webp)
+
+### OpenOCD常用命令
+
+```
+halt	-暂停CPU
+reset	-复位目标板
+resume 	-恢复运行
+resume 0x123456   -从0x123456地址恢复运行
+reg <register>    -打印register寄存器的值
+
+load_image <File Name> <Addr>		    -烧写二进制文件到指定地址
+例: load_image image.bin 0x4000000  	-烧写image.bin到0x4000000
+
+dump_image <File Name> <Addr> <Size>    -将内存从地址Addr开始的Size字节数据读出，保存到文件File Name中
+
+verify_image <File Name> <Addr> [bin|ihex|elf] 	-将文件File Name与内存Addr开始的数据进行比较，格式可选，bin、ihex、elf
+
+step [Addr]		-不加地址：从当前位置单步执行; 加地址：从Addr处单步执行
+poll		    -查询目标板当前状态
+bp <Addr> <Length> [hw] 	-在Addr地址设置断点，指令长度为Length，hw代表硬件断点
+rbp <Addr>		 -删除Addr处的断点
+
+mdw <Addr> [Count]	 -显示从物理地址Addr开始的Count(缺省则默认为1)个字（4Bytes）
+mdh <Addr> [Count]	 -显示从物理地址Addr开始的Count(缺省则默认为1)个半字（2Bytes）
+mdb <Addr> [Count]	 -显示从物理地址Addr开始的Count(缺省则默认为1)个字节（1Byte）
+mww <Addr> <Value>   -向物理地址Addr写入Value，大小：一个字（4Bytes）
+mwh <Addr> <Value>   -向物理地址Addr写入Value，大小：一个半字（2Bytes）
+mwb <Addr> <Value>   -向物理地址Addr写入Value，大小：一个字节（1Bytes）
+
+```
+
+# 通过原理图查看 pinmux 功能
+
+> 以 a5-av400 为例
+
+av400 板子资料下载地址：https://confluence.amlogic.com/pages/viewpage.action?pageId=148280604
+
+- av400 原理图：A113X2_AV400_DEV_LPDDR4_V1.0_R0.5_20211130.pdf
+
+- pinmux 功能表格： A5_core_pinmux_v07_20211229.xlsx
+
+- 某个寄存器，对应的位，默认是 0 ，就是作为普通的 GPIO ， 如果是 1 ，就用 func1 ......
+
+- 查找
+
+  - 如果知道寄存器的地址，比如 fe004040
+
+    - 一般会有偏移，所以可以去 X113x2 中搜索 fe004000
+
+  找到： PADCTRL_PIN_MUX_REG0 0xfe004000
+
+  - 去 /mnt/fileroot/shengken.lin/workspace/sonos-sdk/bootloader/uboot-repo 下面 grep 找到： PADCTRL_PIN_MUX_REG
+
+- 查找 PADCTRL_PIN_MUX_REG 这种寄存器描述文档： A5_system_Registers.docx
+
+> D:\KendallFile\AllDoc\Meson\A5\appNote
+
+  - 同样在 datasheet 中找 fe004000 对应的功能是： pad_ctrl
+
+
+
+
+
+
+
 
 

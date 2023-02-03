@@ -2,43 +2,33 @@
 <!-- TOC -->
 
 - [kernel Kconfig defconfig .config](#kernel-kconfig-defconfig-config)
-  - [以添加一个具体驱动为例](#以添加一个具体驱动为例)
-  - [Amlogic config](#amlogic-config)
-- [设备树](#设备树)
-  - [设备树中 DTS、DTC 和 DTB 的关系](#设备树中-dtsdtc-和-dtb-的关系)
-    - [compatible 属性](#compatible-属性)
-    - [model 属性](#model-属性)
-    - [`#address-cells` 和 `#size-cells` 属性](#address-cells-和-size-cells-属性)
-      - [reg 属性](#reg-属性)
-- [kernel 源码结构体里的元素前面有一点“.”](#kernel-源码结构体里的元素前面有一点)
-- [makefile 中符号](#makefile-中符号)
-  - [makefile 打印调试](#makefile-打印调试)
-- [Buildroot记录](#buildroot记录)
-  - [buildroot-output目录](#buildroot-output目录)
-    - [output一些配置文件](#output一些配置文件)
-  - [config 和 mk 文件](#config-和-mk-文件)
+        - [以添加一个具体驱动为例](#%E4%BB%A5%E6%B7%BB%E5%8A%A0%E4%B8%80%E4%B8%AA%E5%85%B7%E4%BD%93%E9%A9%B1%E5%8A%A8%E4%B8%BA%E4%BE%8B)
+        - [Amlogic config](#amlogic-config)
+- [设备树](#%E8%AE%BE%E5%A4%87%E6%A0%91)
+        - [设备树中 DTS、DTC 和 DTB 的关系](#%E8%AE%BE%E5%A4%87%E6%A0%91%E4%B8%AD-dtsdtc-%E5%92%8C-dtb-%E7%9A%84%E5%85%B3%E7%B3%BB)
+                - [compatible 属性](#compatible-%E5%B1%9E%E6%80%A7)
+                - [model 属性](#model-%E5%B1%9E%E6%80%A7)
+                - [#address-cells 和 #size-cells 属性](#address-cells-%E5%92%8C-size-cells-%E5%B1%9E%E6%80%A7)
+                        - [reg 属性](#reg-%E5%B1%9E%E6%80%A7)
+- [kernel 源码结构体里的元素前面有一点“.”](#kernel-%E6%BA%90%E7%A0%81%E7%BB%93%E6%9E%84%E4%BD%93%E9%87%8C%E7%9A%84%E5%85%83%E7%B4%A0%E5%89%8D%E9%9D%A2%E6%9C%89%E4%B8%80%E7%82%B9)
+- [makefile 中符号](#makefile-%E4%B8%AD%E7%AC%A6%E5%8F%B7)
+        - [makefile 打印调试](#makefile-%E6%89%93%E5%8D%B0%E8%B0%83%E8%AF%95)
+- [Buildroot记录](#buildroot%E8%AE%B0%E5%BD%95)
+        - [buildroot-output目录](#buildroot-output%E7%9B%AE%E5%BD%95)
+                - [output一些配置文件](#output%E4%B8%80%E4%BA%9B%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6)
+        - [config 和 mk 文件](#config-%E5%92%8C-mk-%E6%96%87%E4%BB%B6)
 - [freertos](#freertos)
-  - [xTaskCreat相关函数的使用](#xtaskcreat相关函数的使用)
-  - [vTaskStartScheduler](#vtaskstartscheduler)
-- [proc文件系统](#proc文件系统)
-  - [什么是proc文件系统](#什么是proc文件系统)
-  - [常见的proc文件介绍](#常见的proc文件介绍)
-  - [和sys文件系统的比较](#和sys文件系统的比较)
-- [GPIO 子系统的作用](#gpio-子系统的作用)
-  - [通用功能](#通用功能)
-- [pinctrl 子系统概念](#pinctrl-子系统概念)
-- [top 命令详解](#top-命令详解)
-  - [输出参数说明](#输出参数说明)
-    - [系统的总的统计信息说明](#系统的总的统计信息说明)
-    - [每个进程的描述说明](#每个进程的描述说明)
-  - [命令格式](#命令格式)
-- [系统性能分析工具：perf](#系统性能分析工具perf)
-  - [perf 的使用](#perf-的使用)
-    - [stat](#stat)
-    - [perf record 的其他参数](#perf-record-的其他参数)
-    - [cpu-clock](#cpu-clock)
-    - [perf script](#perf-script)
-    - [生成火焰图](#生成火焰图)
+        - [xTaskCreat相关函数的使用](#xtaskcreat%E7%9B%B8%E5%85%B3%E5%87%BD%E6%95%B0%E7%9A%84%E4%BD%BF%E7%94%A8)
+        - [vTaskStartScheduler](#vtaskstartscheduler)
+- [proc文件系统](#proc%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F)
+        - [什么是proc文件系统](#%E4%BB%80%E4%B9%88%E6%98%AFproc%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F)
+        - [常见的proc文件介绍](#%E5%B8%B8%E8%A7%81%E7%9A%84proc%E6%96%87%E4%BB%B6%E4%BB%8B%E7%BB%8D)
+        - [和sys文件系统的比较](#%E5%92%8Csys%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%AF%94%E8%BE%83)
+- [GPIO 子系统的作用](#gpio-%E5%AD%90%E7%B3%BB%E7%BB%9F%E7%9A%84%E4%BD%9C%E7%94%A8)
+        - [通用功能](#%E9%80%9A%E7%94%A8%E5%8A%9F%E8%83%BD)
+- [pinctrl 子系统概念](#pinctrl-%E5%AD%90%E7%B3%BB%E7%BB%9F%E6%A6%82%E5%BF%B5)
+- [研究a5-av400 supend 过程](#%E7%A0%94%E7%A9%B6a5-av400-supend-%E8%BF%87%E7%A8%8B)
+        - [流程](#%E6%B5%81%E7%A8%8B)
 
 <!-- /TOC -->
 
@@ -558,217 +548,80 @@ https://www.cnblogs.com/zhuangquan/p/12750736.html
 
 ---
 
-# top 命令详解
 
-top命令经常用来监控linux的系统状况，是常用的性能分析工具，能够实时显示系统中各个进程的资源占用情况。
+
+# 研究a5-av400 supend 过程
+
+使用 echo "mem" > /sys/power/state 记性测试，就会走整个流程
+
+bootloader/uboot-repo/bl30/rtos_sdk/soc/riscv/a5/clk.c  
+
+- vCLK_suspend 断电，rics-v rtos 进入休眠模式
+
+- vCLK_resume
+
+
+kernel/aml-5.4/kernel/power/main.c
+
+- state_store
+
+kernel/aml-5.4/kernel/power/suspend.c 
+
+- pm_suspend
+
+vendor/amlogic/rtos/HiFiDSP_rtos_sdk/arch/xtensa/hificommon.c      
+
+- vSuspendTask
+
+
+## 流程
+
+linux 中， pm_suspend 通过读取 state，
+
+然后走到 kernel/aml-5.4/drivers/amlogic/hifi4dsp/hifi4dsp_module.c 
 
 ```c
-//总的统计
-User 37%, System 25%, IOW 0%, IRQ 0%
-User 231 + Nice 2 + Sys 157 + Idle 222 + IOW 3 + IRQ 0 + SIRQ 0 = 615
-
-
-//每个进程
-  PID PR CPU% S  #THR     VSS     RSS PCY UID      Name
-18170  0  34% S   155 1906448K 246152K  fg u0_a369  com.icongtai.zebra.car
-  310  1   8% S    31 651920K  12884K  fg system   /system/bin/surfaceflinger
-21024  1   4% S     1      0K      0K  fg root     kworker/u17:1
-22231  1   3% S     1      0K      0K  fg root     kworker/u17:2
- 7922  0   1% S     5  17260K    728K  fg shell    /sbin/adbd
+[   22.687782@3]  [ffffffc02019f8f0+  96][<ffffffdb10095370>] dump_backtrace+0x0/0x148
+[   22.688728@3]  [ffffffc02019f950+  32][<ffffffdb100954dc>] show_stack+0x24/0x30
+[   22.689640@3]  [ffffffc02019f970+  64][<ffffffdb10d11d60>] dump_stack+0xc8/0xf0
+[   22.690550@3]  [ffffffc02019f9b0+ 112][<ffffffdb10945c18>] dsp_suspend+0x40/0x118
+[   22.691482@3]  [ffffffc02019fa20+  80][<ffffffdb106209dc>] dpm_run_callback+0x54/0x248
+[   22.692465@3]  [ffffffc02019fa70+ 160][<ffffffdb10621140>] __device_suspend+0x120/0x610
+[   22.693461@3]  [ffffffc02019fb10+ 112][<ffffffdb10623b1c>] dpm_suspend+0x134/0x3b8
+[   22.694404@3]  [ffffffc02019fb80+  48][<ffffffdb10624488>] dpm_suspend_start+0xa0/0xa8
+[   22.695392@3]  [ffffffc02019fbb0+ 128][<ffffffdb10128c7c>] suspend_devices_and_enter+0x114/0xa90
+[   22.696484@3]  [ffffffc02019fc30+ 112][<ffffffdb10129960>] pm_suspend+0x368/0x3d8
+[   22.697416@3]  [ffffffc02019fca0+  80][<ffffffdb101279ac>] state_store+0xb4/0x138
 ```
 
-## 输出参数说明
+- kernel 通过 psci 和 BootLoader 通信。
 
-### 系统的总的统计信息说明
+kernel/aml-5.4/drivers/firmware/psci/psci.c 
 
-- User : 用户进程的使用率
-- System : 系统进程的使用率
-- Nice : 优先值为负的进程所占用的CPU时间
-- IOW : IO wait的等待时间
-- IRQ : 硬中断时间
-- SIRQ : 软中断的含义
-- Idle : 除IOW以外的系统闲置时间
+看看这个函数从哪里调过来的，psci_system_suspend
 
-### 每个进程的描述说明
-
-- PID : 进程ID
-- USER(UID) : 进程所有者的ID
-- PR : 进程优先级
-- CPU% : CPU占用率。
-- S : 进程状态 D=不可中断的睡眠状态 R=运行 S=睡眠 T=跟踪/停止 Z=僵尸进程
-- #THR : 程序当前所用的线程数
-- VSS : Virtual Set Size 虚拟内存
-- RSS : Resident Set Size 实际使用的物理内存
-- PCY : 线程调度策略
-- Name : 进程名字
-
-## 命令格式
-
-```
-top [-d number] 或者 top [-bnp]
+```c
+[   25.993739@0]  [ffffffc0201a7a80+  16][<ffffffe51087bc90>] psci_system_suspend+0x30/0x68
+[   25.993739@0]  [ffffffc0201a7a90+ 272][<ffffffe5100a83c0>] cpu_suspend+0x58/0xc0
+[   25.993739@0]  [ffffffc0201a7ba0+  16][<ffffffe51087bc58>] psci_system_suspend_enter+0x20/0x28
+[   25.993739@0]  [ffffffc0201a7bb0+ 128][<ffffffe5101293dc>] suspend_devices_and_enter+0x874/0xa90
+[   25.993739@0]  [ffffffc0201a7c30+ 112][<ffffffe510129960>] pm_suspend+0x368/0x3d8
+[   25.993739@0]  [ffffffc0201a7ca0+  80][<ffffffe5101279ac>] state_store+0xb4/0x138
 ```
 
-选项说明
+kernel/aml-5.4/arch/arm64/kernel/psci.c 
 
-> 注意嵌入式系统可能一些参数被去掉，无法使用
 
-```sh
-top -d 10  # number代表秒数，表示top命令显示的页面更新一次的间隔，默认是 3 秒。
+- 对于 riscv
 
-top -c     # 每隔3秒显示进程的资源占用情况，并显示进行的命令行参数
+bootloader/uboot-repo/bl30/rtos_sdk/soc/riscv/a5/clk.c  
 
-top -p 8080 -p 8081    # 每隔3秒显示pid是8080 和 pid 是 8081 这两个进程的资源占用情况
+ricsv/rtos 中 通过 mailbox 和 hifi5DSP rtos 通信
 
-top -d 2 -c -p 8080    # 每隔2秒显示pid是 8080 的进程资源使用情况，并显示该进程启动的命令行参数
-
-top -m  -d 10 -b > top.log  # -d 是间隔秒数 -b 写入文件 -m 参数可以很好的观察各个进程在压力测试过程中的变化
-
-top -m 5 -t   # 在压力测试时，top5 进程的 线程信息
+```c
+void vCLK_suspend(uint32_t st_f) 
+xTransferMessageAsync(AODSPA_CHANNEL, MBX_CMD_SUSPEND_WITH_DSP, &xIdx, 4);
 ```
 
+vCLK_suspend 是提供给 TFLPM 的接口。TFLPM 和 linux 之间建立联系
 
- top -m 5 -d 10 -n 1 -s cpu
-
-
-| 列名   |         含义 | 实例 |
-| ---  | ---  | --- |
-| -m   | max_procs最多显示多少个进程 | -m 1 显示1个进程  |
-| -n   | iterations 刷新次数 | -n 10 只输出10次 |
-| -d   | delay 刷新的间隔时间，单位是秒 默认是5秒 | -d 10 每隔10秒刷新一次 |
-| -s   | 输出的数据按照那一列排序 | -s cpu 标识按照CPU排序。  |
-| -t   | 显示线程信息，而不是进程 | |
-| -h   | 显示帮助文档。 | |
-
-
-```
-top -p `ps aux | grep "xxx" | grep -v grep | cut -c 9-15`
-```
-
-- top -p：指定进程
-- top -d 1：指定屏幕刷新时间，1s刷新一次
-- top -b：表示以批处理模式操作
-- ps aux：列出所有进程
-- grep：查找指定进程
-- grep -v：反向查找
-- cut -c 9-15：选择每行指定列的字符
-
-# 系统性能分析工具：perf
-
-> 更详细的讲解参考：https://zhuanlan.zhihu.com/p/498100484
-
-perf 是Linux的一款性能分析工具，能够进行函数级和指令级的热点查找，可以用来分析程序中热点函数的CPU占用率，从而定位性能瓶颈。
-
-系统性能优化通常可以分为两个阶段：性能分析和性能优化。
-
-- 性能分析的目的是查找性能瓶颈、热点代码，分析引发性能问题的原因；
-- 基于性能分析，可以进行性能优化，包括：算法优化（空间复杂度和时间复杂度的权衡）和代码优化（提高执行速度、减少内存占用）。
-
-Linux性能计数器是一个基于内核的子系统，它提供一个性能分析框架，比如硬件（CPU、PMU（Performance Monitoring Unit））功能和软件（软件计数器、tracepoint）功能。
-
-## perf 的使用
-
-使用 perf 进行性能分析，主要使用下面两个命令：
-
-- perf record：保存 perf 追踪的内容，文件名为 perf.data
-- perf report：解析 perf.data 的内容
-
-比如要分析进程 xxx，启动该进程后，首先启动使用下面命令：
-
-```sh
-perf record -a --call-graph dwarf -p `ps aux | grep "xxx" | grep -v grep | cut -c 9-15` -d 1 -b 
-```
-
-- -a：表示对所有CPU采样
-- --call-graph dward：表示分析调用栈的关系
-- -p：表示分析指定的进程
-
-运行结束或者通过 Ctrl + C 结束后，会生成 perf.data 文件，然后通过 report 导出报告，即可以查看 main 函数和子函数的CPU平均占用率。
-
-```
-perf report -i perf.data > perf.txt
-```
-
-### stat
-
-```
-/data # ./perf stat -p 1467
-^C
- Performance counter stats for process id '1467':
-
-            293.67 msec task-clock                #    0.042 CPUs utilized          
-               146      context-switches          #    0.497 K/sec                  
-                 7      cpu-migrations            #    0.024 K/sec                  
-                 0      page-faults               #    0.000 K/sec                  
-         123267078      cycles                    #    0.420 GHz                    
-          38987062      instructions              #    0.32  insn per cycle         
-           6286641      branches                  #   21.407 M/sec                  
-            861473      branch-misses             #   13.70% of all branches        
-
-       7.073559503 seconds time elapsed
-```
-
-- task-clock 是指程序运行期间占用了xx的任务时钟周期，该值高，说明程序的多数时间花费在 CPU 计算上而非 IO
-- context-switches 是指程序运行期间发生了 xx 次上下文切换，记录了程序运行过程中发生了多少次进程切换，频繁的进程切换是应该避免的。（有进程进程间频繁切换，或者内核态与用户态频繁切换）
-- cpu-migrations 是指程序运行期间发生了 xx 次 CPU 迁移，即用户程序原本在一个 CPU 上运行，后来迁移到另一个CPU
-- cycles：处理器时钟，一条机器指令可能需要多个 cycles
-- Instructions: 机器指令数目。
-- 其他可以监控的譬如分支预测、cache命中,page-faults 是指程序发生了 xx 次页错误等
-
-### perf record 的其他参数
-
-- -f：强制覆盖产生的.data数据
-- -c：事件每发生count次采样一次
-- -p：指定进程
-- -t：指定线程
-
-可以使用 ctrl+c 中断 perf 进程，或者在命令最后加上参数 --sleep n (n秒后停止) 
-
-sudo perf report -n 可以生成报告的预览。
-sudo perf report -n --stdio 可以生成一个详细的报告。
-sudo perf script 可以 dump 出 perf.data 的内容。
-
-获得这个 perf.data 文件之后，我们其实还不能直接查看，下面就需要 perf report 工具进行查看
-
-perf report 输出 record 的结果
-
-如果record之后想直接输出结果，使用perf report即可
-
-perf report的相关参数：
-
-- -i : 指定文件输出
-- -k：指定未经压缩的内核镜像文件，从而获得内核相关信息
-- --report：cpu 按照 cpu 列出负载
-
-### cpu-clock
-
-perf record -e cpu-clock -g -p pid
-
--e 选项允许您在 perf list 命令中列出的多个类别中选择一个事件类别。
-
-例如，在这里，我们使用 -e cpu-clock 是指 perf record 监控的指标为 cpu 周期程序运行完之后，perf record会生成一个名为 perf.data 的文件（缺省值），如果之前已有，那么之前的 perf.data 文件会变为 perf.data.old 文件 
-
--g 选项是告诉perf record额外记录函数的调用关系，因为原本perf record记录大都是库函数，直接看库函数，大多数情况下，你的代码肯定没有标准库的性能好对吧？除非是针对产品进行特定优化，所以就需要知道是哪些函数频繁调用这些库函数，通过减少不必要的调用次数来提升性能
-
-```sh
-./perf record -e cpu-clock -F 500 -a -g sleep 60  # 采样时间为 60 秒，每秒采样 500 个事件
-```
-
-### perf script
-
-将 perf.data 输出可读性文本 
-
-```sh
-./perf script > out.perf
-```
-
-### 生成火焰图
-
-> 需要 git clone https://github.com/brendangregg/FlameGraph
-
-```
-# 将 out.perf pull 到 /{yourpatch}/github/FlameGraph
-adb pull /data/out.perf ./out
-
- ./stackcollapse-perf.pl ./out/out.perf > ./out/out.folded
- ./flamegraph.pl ./out/out.folded > ./out/kernel.svg
- ```
