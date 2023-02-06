@@ -454,11 +454,8 @@ git format-patch <commit1_hash>..<commit2_hash>
 生成单个commit的patch
 git format-patch -1 <commit_hash>
 
-将某个commit（不包括）之后的提交，打成patch
+某次提交以后的所有patch，不包括 commit_hash 这个
 git format-patch <commit_hash>
-
-将某个commit（包括）之前的所有提交，打成patch
-git format-patch --root <commit_hash>
 ```
 
 ### 检查 patch

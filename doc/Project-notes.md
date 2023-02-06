@@ -1807,19 +1807,19 @@ cp ramdisk.img /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/
 
 # Sonos
 
-## 拉代码
+## 拉代码 openlinux
 
 - 修改 git 邮箱：使用 amlogic 
 
 - 关掉 depot_tools
 
 ```
-cd sonos-sdk
+cd sonos-openlinux
 repo init -u ssh://android@source2.amlogic.com/sonos/platform/manifest -b buildroot-openlinux-202207-a113x2-av400-sbr -m buildroot-openlinux-202207-a113x2-av400-sbr.xml
 repo sync
 ```
 
-## 编译Sonos
+## 编译Sonos-A113x2
 
 ```sh
 source setenv.sh 
@@ -1847,5 +1847,27 @@ dsp_util --load --dsp hifi4a -f dspbootA.bin
 
 # 默认 dspbootA.bin 存放的路径
 /lib/firmware/dspbootA.bin
+```
+
+## 拉代码 A113D 
+
+> 参考： https://confluence.amlogic.com/display/SW/Sonos+project+summary
+
+```sh
+git config --global user.name "shengken.lin"
+git config --global user.email "shengken.lin@amlogic.com"
+
+cd sonos-sdk
+repo init -u ssh://android@source2.amlogic.com/sonos/platform/manifest
+repo sync
+
+Kernel：
+     ssh://android@source2.amlogic.com/sonos/kernel/common   branch：20180608-v4.9.99
+uboot：
+     ssh://android@source2.amlogic.com/sonos/uboot    branch： master
+BL2：
+     ssh://android@source2.amlogic.com/sonos/bl2    branch： master
+signing tool:
+     ssh://android@source2.amlogic.com/sonos/tools/signing
 ```
 
