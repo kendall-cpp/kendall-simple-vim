@@ -165,5 +165,6 @@ vCLK_suspend 是提供给 TFLPM 的接口。TFLPM 和 linux 之间建立联系
 
 参考jira https://jira.amlogic.com/browse/SWPL-84796
 
+https://confluence.amlogic.com/pages/viewpage.action?pageId=225027291#Test&Tools-Xtest
 
 https://optee.readthedocs.io/en/latest/building/gits/optee_test.html

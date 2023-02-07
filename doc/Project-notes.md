@@ -103,6 +103,10 @@ buildRoot_C3$ make uboot-rebuild
 
 make  # 打包成大的 img
 make show-targets # 查看所有package
+
+make linux-menuconfig # kernel menuconfig
+# make linux-update-config # 以保存完整的配置文件
+# make linux-update-defconfig # 以保存最小的defconfig，如果指定了内核的配置方式则用上面的命令
 ```
 
 ### buildroot-output 目录
@@ -1807,7 +1811,9 @@ cp ramdisk.img /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/
 
 # Sonos
 
-## 拉代码 openlinux
+## buildroot-openlinux
+
+### 拉代码 openlinux
 
 - 修改 git 邮箱：使用 amlogic 
 
@@ -1819,11 +1825,11 @@ repo init -u ssh://android@source2.amlogic.com/sonos/platform/manifest -b buildr
 repo sync
 ```
 
-## 编译Sonos-A113x2
+### 编译Sonos-A113x2
 
 ```sh
 source setenv.sh 
-# 选择板子 10
+# 选择板子 10. a5_av400_a6432_releas
 make
 
 make show-targets | grep aml-hifi-rtos-sdk
@@ -1838,7 +1844,7 @@ make linux-rebuild
 make uboot-rebuild
 ```
 
-## Sonos 加载 dsp 的脚本
+### Sonos 加载 dsp 的脚本
 
 ```sh
 vim buildroot/package/amlogic/aml-hifi-rtos-sdk/S71_load_dspa
@@ -1849,7 +1855,9 @@ dsp_util --load --dsp hifi4a -f dspbootA.bin
 /lib/firmware/dspbootA.bin
 ```
 
-## 拉代码 A113D 
+## A113D
+
+### 拉代码 A113D 
 
 > 参考： https://confluence.amlogic.com/display/SW/Sonos+project+summary
 
@@ -1871,3 +1879,23 @@ signing tool:
      ssh://android@source2.amlogic.com/sonos/tools/signing
 ```
 
+### 编译A113D 
+
+```sh
+# 拷贝 dl
+cp ../sonos-openlinux/buildroot/dl/ ./buildroot/ -r
+cp ../sonos-openlinux/multimedia/libplayer/ ./multimedia/ -r
+
+source buildroot/build/setenv.sh
+# 选择 1. mesonaxg_s400_32_release
+make
+
+# error， ubuntu 20 之后会报这个错
+92 |  #error "Please port gnulib freadahead.c to your platform! Look at the definition of fflush, fread, ungetc on your system, then report this to bug-gnulib
+# 解决
+cd /mnt/fileroot/shengken.lin/workspace/sonos-sdk/output/mesonaxg_s400_32_release/build/host-m4-1.4.18
+sed -i 's/IO_ftrylockfile/IO_EOF_SEEN/' lib/*.c
+echo "#define _IO_IN_BACKUP 0x100" >> lib/stdio-impl.h
+```
+
+- 其他 error 解决：[参考这里](https://blog.csdn.net/qq_34207992/article/details/128917876?csdn_share_tail=%7B%22type%22%3A%22blog%22%2C%22rType%22%3A%22article%22%2C%22rId%22%3A%22128917876%22%2C%22source%22%3A%22qq_34207992%22%7D)
