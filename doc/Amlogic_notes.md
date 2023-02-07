@@ -1109,7 +1109,16 @@ av400 板子资料下载地址：https://confluence.amlogic.com/pages/viewpage.a
   - 同样在 datasheet 中找 fe004000 对应的功能是： pad_ctrl
 
 
+# 修改 buildroot dl 下载路径
 
+```sh
+vim buildroot/Config.in
+
+# 找到BR2_DL_DIR变量的设置
+# 改变路径的方法：
+# default  "$(TOPDIR)/dl"
+default "../../buildroot_dl" 
+```
 
 
 
