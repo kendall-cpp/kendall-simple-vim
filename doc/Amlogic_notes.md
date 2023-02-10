@@ -1117,11 +1117,158 @@ vim buildroot/Config.in
 # 找到BR2_DL_DIR变量的设置
 # 改变路径的方法：
 # default  "$(TOPDIR)/dl"
-default "../../buildroot_dl" 
+string "Download dir"  
+-default "$(TOPDIR)/dl"
++default "../../buildroot_dl" 
+```
+
+# 解决 adb 无法使用问题
+
+> 打开 adb
+ 
+ 进入 kernel
+
+```sh
+mount -t configfs configfs /sys/kernel/config
+mkdir /sys/kernel/config/usb_gadget/amlogic
+echo 0x18D1 > /sys/kernel/config/usb_gadget/amlogic/idVendor
+echo 0x4e26 > /sys/kernel/config/usb_gadget/amlogic/idProduct
+mkdir /sys/kernel/config/usb_gadget/amlogic/strings/0x409
+echo '0123456789ABCDEF' > /sys/kernel/config/usb_gadget/amlogic/strings/0x409/serialnumber
+echo amlogic > /sys/kernel/config/usb_gadget/amlogic/strings/0x409/manufacturer
+echo newman > /sys/kernel/config/usb_gadget/amlogic/strings/0x409/product
+mkdir /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1
+mkdir /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/strings/0x409
+echo adb > /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/strings/0x409/configuration
+mkdir /sys/kernel/config/usb_gadget/amlogic/functions/ffs.adb
+mkdir /dev/usb-ffs
+mkdir /dev/usb-ffs/adb
+mount -t functionfs adb /dev/usb-ffs/adb
+stop adbd
+ln -s /sys/kernel/config/usb_gadget/amlogic/functions/ffs.adb /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/ffs.adb
+start adbd
+/bin/sleep 2
+echo ff400000.dwc2_a > /sys/kernel/config/usb_gadget/amlogic/UDC
+```
+
+## 板子挂载 U 盘
+
+```sh
+mkdir /mnt/usb
+mount -t vfat /dev/sda1 /mnt/usb
+
+umount /mnt/usb/
+```
+
+## av400 audio 工具
+
+- 硬件连接
+
+> D622  如果要使用 D603 功放需要更改
+
+![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/av400.5pr61x0fmdc0.webp)
+
+### 修改 功放板 patch
+
+https://scgit.amlogic.com/#/c/292999/
+
+Change power amplifier driver board from D622 to D613
+
+- 以 av400 为例修改提交
+
+https://scgit.amlogic.com/#/c/292999/
+
+
+### aspaly 常用命令
+
+```
+asplay  查看帮助信息
+aspaly list  查看当前的输入源
+asplay set-volume 60 设置音量
+asplay get-volume 获取音量
+asplay enable-input xx   切换输入源， xx 为实际的输入模式，比如 HDMI1
+```
+
+### 设置音量
+
+```sh
+set-ad82128-volume.sh 150
+
+# 或者
+amixer controls
+amixer cget numid=1
+amixer cset numid=1 150
+
+# 测试音频
+speaker-test -t sine -D hw:0,1
+```
+
+### aplay 播放
+
+```sh
+# 查看声卡设备
+arecord -l
+
+aplay -Dhw:0,1 /data/the-stars-48k-60s.wav
+
+# 录音
+arecord -Dhw:1,0 -c 1 -r 48000 -f S32_LE -t wav -d 20 /data/kernel54_20s.wav 
 ```
 
 
+### av400 测试 uac 脚本
+
+```sh
+rmmod sdio_bt
+rmmod vlsicomm
 
 
+#1 config adb & uac2,
+
+mount -t configfs configfs /sys/kernel/config
+mkdir /sys/kernel/config/usb_gadget/amlogic
+echo 0x18D1 > /sys/kernel/config/usb_gadget/amlogic/idVendor
+echo 0x4e26 > /sys/kernel/config/usb_gadget/amlogic/idProduct
+mkdir /sys/kernel/config/usb_gadget/amlogic/strings/0x409
+echo '0123456789ABCDEF' > /sys/kernel/config/usb_gadget/amlogic/strings/0x409/serialnumber
+echo amlogic > /sys/kernel/config/usb_gadget/amlogic/strings/0x409/manufacturer
+echo korlan > /sys/kernel/config/usb_gadget/amlogic/strings/0x409/product
+mkdir -p  /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/strings/0x409
+
+mkdir /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/strings/0x401
+echo "uac2" > /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/strings/0x401/configuration
+mkdir /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0
+echo 0x3 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/c_chmask
+echo 48000 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/c_srate
+echo 4 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/c_ssize
+echo 0x3  > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/p_chmask
+echo 48000 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/p_srate
+echo 4 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/p_ssize
+ln -s /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0 /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/uac2.0
+
+
+echo "config ADB"
+echo adb > /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/strings/0x409/configuration
+mkdir /sys/kernel/config/usb_gadget/amlogic/functions/ffs.adb
+mkdir -p /dev/usb-ffs/adb
+mount -t functionfs adb /dev/usb-ffs/adb
+killall adbd  
+ln -s /sys/kernel/config/usb_gadget/amlogic/functions/ffs.adb /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/ffs.adb
+/usr/bin/adbd &
+
+
+sleep 5
+
+echo "" > /sys/kernel/config/usb_gadget/amlogic/UDC  
+echo "fdd00000.crgudc2" > /sys/kernel/config/usb_gadget/amlogic/UDC 
+
+
+#2 arecord from uac sound card,
+arecord -Dhw:1,0 -c 2 -r 48000 -f S32_LE -t wav -d 15 /data/test.wav 
+
+# 播放
+amixer cset numid=1 180
+aplay -Dhw:0,1 /data/test.wav 
+```
 
 

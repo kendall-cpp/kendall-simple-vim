@@ -24,8 +24,35 @@ mkdir a5_buildroot
 cd a5_buildroot
 repo init -u git://git.myamlogic.com/linux/manifest.git -b master -m default.xml --repo-url=git://git.myamlogic.com/tools/repo.git
 repo sync
+
+
+git remote add review ssh://shengken.lin@scgit.amlogic.com:29418/kernel/common.git
+git remote add review ssh://shengken.lin@scgit.amlogic.com:29418/linux/buildroot.git
+git remote add review ssh://shengken.lin@scgit.amlogic.com:29418/uboot.git
+git add xxx
+git commit -s --no-verify
+git push review HEAD:refs/for/amlogic-5.4-dev
+
+git pull amlogic HEAD:refs/for/amlogic-5.4-dev
 ```
 
+### build A5
+
+```sh
+source setenv.sh 
+select 11. a5_av400_a6432_release
+make
+```
+
+### 修改功放 D602 成 D613
+
+- 以 av400 为例修改提交
+
+https://scgit.amlogic.com/#/c/292999/
+
+参考： https://support.amlogic.com/issues/18559
+
+**注意： 修改后 select 11. a5_av400_spk_a6432_release**
 
 ## C3-sync
 
@@ -62,6 +89,7 @@ make pmz-rebuild
 
 make mbi-rebuild
 make ipc-reference-rebuild
+
 
 make
 
@@ -105,8 +133,8 @@ make  # 打包成大的 img
 make show-targets # 查看所有package
 
 make linux-menuconfig # kernel menuconfig
-# make linux-update-config # 以保存完整的配置文件
-# make linux-update-defconfig # 以保存最小的defconfig，如果指定了内核的配置方式则用上面的命令
+make linux-update-config # 以保存完整的配置文件
+make linux-update-defconfig # 以保存最小的defconfig，如果指定了内核的配置方式则用上面的命令
 ```
 
 ### buildroot-output 目录
@@ -1497,7 +1525,7 @@ update.exe partition system_a system.img
 update bulkcmd "reset"
 ```
 
-## adb无法使用?
+## adb无法使用
 
 ```sh
 vim kernel/arch/arm64/boot/dts/amlogic/elaine-b3.dts 
@@ -1898,4 +1926,12 @@ sed -i 's/IO_ftrylockfile/IO_EOF_SEEN/' lib/*.c
 echo "#define _IO_IN_BACKUP 0x100" >> lib/stdio-impl.h
 ```
 
-- 其他 error 解决：[参考这里](https://blog.csdn.net/qq_34207992/article/details/128917876?csdn_share_tail=%7B%22type%22%3A%22blog%22%2C%22rType%22%3A%22article%22%2C%22rId%22%3A%22128917876%22%2C%22source%22%3A%22qq_34207992%22%7D)
+- 其他 error 解决：[参考这里](https://confluence.amlogic.com/pages/viewpage.action?pageId=231134131)
+
+### 烧录s400
+
+```
+# 进入 uboot
+up
+```
+

@@ -168,3 +168,52 @@ vCLK_suspend 是提供给 TFLPM 的接口。TFLPM 和 linux 之间建立联系
 https://confluence.amlogic.com/pages/viewpage.action?pageId=225027291#Test&Tools-Xtest
 
 https://optee.readthedocs.io/en/latest/building/gits/optee_test.html
+
+
+## 烧录完成后编译进不去kernel
+
+- 进入 uboot
+
+```sh
+axg_s400_v1#imgread kernel boot 0x1080000
+
+Error: malloc in  android_image_need_move failed!
+ERROR: can't get kernel image!
+```
+
+- fix
+
+改成比 boot.img 大才可以
+
+```sh
+@ken@:/mnt/fileroot/shengken.lin/workspace/sonos-axg/bootloader/uboot-2015-dev$ git diff
+diff --git a/arch/arm/include/asm/arch-axg/cpu.h b/arch/arm/include/asm/arch-axg/cpu.h
+index 4dc5c06911..3c4e0e3d43 100644
+--- a/arch/arm/include/asm/arch-axg/cpu.h
++++ b/arch/arm/include/asm/arch-axg/cpu.h
+@@ -30,7 +30,7 @@
+ #define CONFIG_AML_MESON_AXG 1
+ 
+ /* Size of malloc() pool */
+-#define CONFIG_SYS_MALLOC_LEN          (11*1024*1024) /* 128M ddr support max 11M malloc */
++#define CONFIG_SYS_MALLOC_LEN          (13*1024*1024) /* 128M ddr support max 11M malloc */
+```
+
+## as400 修改分区大小
+
+uboot-2015-dev/board/amlogic/axg_s400_v1/axg_s400_v1.c 
+
+aml-4.9/arch/arm64/boot/dts/amlogic/axg_s400.dts  
+
+```sh
+--- a/board/amlogic/axg_s400_v1/axg_s400_v1.c
++++ b/board/amlogic/axg_s400_v1/axg_s400_v1.c
+@@ -477,7 +477,7 @@ static struct mtd_partition normal_partition_info[] = {
+     {
+         .name = "boot",
+         .offset = 0,
+-        .size = 12*SZ_1M,
++        .size = 15*SZ_1M,
+     },
+```
+

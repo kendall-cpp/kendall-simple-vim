@@ -41,7 +41,9 @@
     - [解决分区不足和不支持 lz4 压缩问题](#解决分区不足和不支持-lz4-压缩问题)
   - [解决 Permission denied 问题](#解决-permission-denied-问题)
   - [iozone 测试](#iozone-测试)
-- [kernel5.15 声音卡顿问题](#kernel515-声音卡顿问题)
+- [kernel 4.19 功能迁移到 kernel 5.4](#kernel-419-功能迁移到-kernel-54)
+  - [修改 功放板 patch](#修改-功放板-patch)
+  - [打开 UAC](#打开-uac)
 >>>>>>> 4e70d81561321021de26f97724a2502c0abef3a3
 
 
@@ -972,6 +974,8 @@ Thanks for Mingyu update, please let us if it still our assistance.
 > https://partnerissuetracker.corp.google.com/issues/262352934  
 
 
+- 增加一个状态值
+
 -----
 
 Hi Mingyu,
@@ -1448,16 +1452,86 @@ sys     0m 1.28s
 [    5.910525] TEST : mount other fs end lsken00
 ```
 
+## kernel 4.19 功能迁移到 kernel 5.4
 
-## kernel5.15 声音卡顿问题
+使用 A5 的板子验证
 
-> https://partnerissuetracker.corp.google.com/issues/235426120#comment45
+target: google audio brige -> kernel5.4
+-> usb & uac & tdmoutb & HIFI
+
+
+1 Repo sync a5 buildroot code (kernel5.4)
+2 buildroot & run  & usb(adbd) & uac
+3 google kernel4.9 --> kernel kernel5.4  
+   usb controller.
+
+
+### 修改 功放板 patch
+
+Change power amplifier driver board from D622 to D613
+
+d6e9202cf8d66f4ef616eee66a7d4c3363653a74
+
+https://scgit.amlogic.com/#/c/292999/
+
+### 打开 UAC
+
+参考 korlan 打开 A4 的 https://eureka-partner-review.googlesource.com/c/vendor/amlogic/+/248628
+
+
+- 打开 kernel uac
+
+首先找到 kernel 的 defconfig 文件
+
+```sh
+a5_av400_spk_a6432_release_defconfig 
+  -- #include "a5_av400_spk.config"
+
+vim configs/amlogic/a5_av400_spk.config 
+
+#include "a5_speaker.config"
+
+#include "a5_base.config"  
+
+# 找到
+BR2_LINUX_KERNEL_DEFCONFIG="meson64_a64_smarthome"  
+```
+
+所以 kernel 使用的配置文件是 ./arch/arm64/configs/meson64_a64_smarthome_defconfig
+
+
+通过 make menuconfig 生成的配置文件在 output/a5_av400_spk_a6432_release/build/linux-amlogic-5.4-dev/.config
+
+linux-amlogic-5.4-dev/.config 可以找到 BR2_LINUX_KERNEL_DEFCONFIG
+
+linux-amlogic-5.4-dev/.config    可以找到 UAC2
+
+- 开启 uac  声卡
+
+make linux-menuconfig
+
+```sh
+Device Drivers  --->
+
+[*] USB support  --->
+
+<*>   USB Gadget Support  ---> 
+
+[*]     Audio Class 2.0 
+
+CONFIG_USB_CONFIGFS_F_UAC2=y
+```
+
+make linux-savedefconfig
+
+保存到  ./output/a5_av400_spk_a6432_release/build/linux-amlogic-5.4-dev/defconfig
+
+
+----
 
 
 
-Hi Yi,
 
-I tested the korlan connection on linux today, and the problem of "There are also occasional audio underruns and noises" did not appear. What is your test environment, tablet or Linux ?
 
-And Could you provide ota of your test?
+
 

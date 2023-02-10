@@ -24,6 +24,7 @@
 - [push pull](#push-pull)
 	- [和远程发生冲突](#和远程发生冲突)
 	- [pull出现commit失败](#pull出现commit失败)
+	- [推送别人已经推送过的 commit](#推送别人已经推送过的-commit)
 - [git patch](#git-patch)
 	- [git format-patch：生成commit的内容](#git-format-patch生成commit的内容)
 	- [检查 patch](#检查-patch)
@@ -428,6 +429,24 @@ git reset --hard FETCH_HEAD
 
 git pull
 
+
+### 推送别人已经推送过的 commit 
+
+- 会报错
+
+```sh
+fatal: Unpack error, check server log
+error: remote unpack failed: error Missing tree f5a548203954ecfbe7ebeaa435b7bf48b71cf225
+To ssh://scgit.amlogic.com:29418/kernel/common.git
+ ! [remote rejected]             HEAD -> refs/for/amlogic-5.4-dev (n/a (unpacker error))
+error: failed to push some refs to 'ssh://shengken.lin@scgit.amlogic.com:29418/kernel/common.git'
+```
+
+- 解决
+
+```sh
+git push --no-thin  review HEAD:refs/for/amlogic-5.4-dev
+```
 
 ---
 
