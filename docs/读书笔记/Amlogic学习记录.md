@@ -1,39 +1,3 @@
-
-<!-- TOC -->
-
-- [kernel Kconfig defconfig .config](#kernel-kconfig-defconfig-config)
-        - [以添加一个具体驱动为例](#%E4%BB%A5%E6%B7%BB%E5%8A%A0%E4%B8%80%E4%B8%AA%E5%85%B7%E4%BD%93%E9%A9%B1%E5%8A%A8%E4%B8%BA%E4%BE%8B)
-        - [Amlogic config](#amlogic-config)
-- [设备树](#%E8%AE%BE%E5%A4%87%E6%A0%91)
-        - [设备树中 DTS、DTC 和 DTB 的关系](#%E8%AE%BE%E5%A4%87%E6%A0%91%E4%B8%AD-dtsdtc-%E5%92%8C-dtb-%E7%9A%84%E5%85%B3%E7%B3%BB)
-                - [compatible 属性](#compatible-%E5%B1%9E%E6%80%A7)
-                - [model 属性](#model-%E5%B1%9E%E6%80%A7)
-                - [#address-cells 和 #size-cells 属性](#address-cells-%E5%92%8C-size-cells-%E5%B1%9E%E6%80%A7)
-                        - [reg 属性](#reg-%E5%B1%9E%E6%80%A7)
-- [kernel 源码结构体里的元素前面有一点“.”](#kernel-%E6%BA%90%E7%A0%81%E7%BB%93%E6%9E%84%E4%BD%93%E9%87%8C%E7%9A%84%E5%85%83%E7%B4%A0%E5%89%8D%E9%9D%A2%E6%9C%89%E4%B8%80%E7%82%B9)
-- [makefile 中符号](#makefile-%E4%B8%AD%E7%AC%A6%E5%8F%B7)
-        - [makefile 打印调试](#makefile-%E6%89%93%E5%8D%B0%E8%B0%83%E8%AF%95)
-- [Buildroot记录](#buildroot%E8%AE%B0%E5%BD%95)
-        - [buildroot-output目录](#buildroot-output%E7%9B%AE%E5%BD%95)
-                - [output一些配置文件](#output%E4%B8%80%E4%BA%9B%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6)
-        - [config 和 mk 文件](#config-%E5%92%8C-mk-%E6%96%87%E4%BB%B6)
-- [freertos](#freertos)
-        - [xTaskCreat相关函数的使用](#xtaskcreat%E7%9B%B8%E5%85%B3%E5%87%BD%E6%95%B0%E7%9A%84%E4%BD%BF%E7%94%A8)
-        - [vTaskStartScheduler](#vtaskstartscheduler)
-- [proc文件系统](#proc%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F)
-        - [什么是proc文件系统](#%E4%BB%80%E4%B9%88%E6%98%AFproc%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F)
-        - [常见的proc文件介绍](#%E5%B8%B8%E8%A7%81%E7%9A%84proc%E6%96%87%E4%BB%B6%E4%BB%8B%E7%BB%8D)
-        - [和sys文件系统的比较](#%E5%92%8Csys%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%AF%94%E8%BE%83)
-- [GPIO 子系统的作用](#gpio-%E5%AD%90%E7%B3%BB%E7%BB%9F%E7%9A%84%E4%BD%9C%E7%94%A8)
-        - [通用功能](#%E9%80%9A%E7%94%A8%E5%8A%9F%E8%83%BD)
-- [pinctrl 子系统概念](#pinctrl-%E5%AD%90%E7%B3%BB%E7%BB%9F%E6%A6%82%E5%BF%B5)
-- [研究a5-av400 supend 过程](#%E7%A0%94%E7%A9%B6a5-av400-supend-%E8%BF%87%E7%A8%8B)
-        - [流程](#%E6%B5%81%E7%A8%8B)
-
-<!-- /TOC -->
-
--------
-
 # kernel Kconfig defconfig .config
 
 **一般情况：**
@@ -74,7 +38,7 @@ make aplex_cmi_aa158_defconfig ARCH=arm64
 
 cp  defconfig  arch/arm64/configs/aplex_cmi_aa158_defconfig -rf 
 
-## Amlogic config
+## Amlogic google config
 
 和普通的defconfig不同，Amlogic 的 defconfig 是没有隐藏依赖的，直接 make menuconfig 生成 .config , 然后和 defconfig 对比，然后拷贝即可，使用 build_kernel 编译的时候会去 diff defconfig 和 `.config` 。
 
@@ -316,6 +280,77 @@ $(error “here is debug")
 
 # Buildroot记录
 
+
+## 编译BuildRoot
+
+### 整体编译
+
+```sh
+source setenv.sh 
+# 选择板子
+make
+```
+
+### 单独编译
+
+```sh
+# 编译uboot
+# 比如用409的bootloader
+ls bl33/v2019/board/amlogic/defconfigs/c3_aw409_defconfig 
+# 编译
+uboot-repo$ ./mk c3_aw409_av400
+
+# 编译kernel
+# buildRoot_C3$ make linux-dirclean 一般不用清理
+buildRoot_C3$ make linux-rebuild  
+
+# 编译uboot
+# buildRoot_C3$ make uboot-dirclean 一般不用清理
+buildRoot_C3$ make uboot-rebuild 
+
+make  # 打包成大的 img
+make show-targets # 查看所有package
+
+make menuconfig    # 整个工程 menuconfig
+make linux-menuconfig # kernel menuconfig
+make linux-savedefconfig # 保存到 output/linux-kernel/defconfig
+```
+
+
+## buildroot 找到配置文件
+
+比如找到 av400 kernel使用的是哪个配置文件
+
+在 buildroot 下找到 sourse select 对应文件名的配置文件
+
+```sh
+a5_av400_spk_a6432_release_defconfig 
+  -- #include "a5_av400_spk.config"
+
+vim configs/amlogic/a5_av400_spk.config 
+
+#include "a5_speaker.config"
+
+#include "a5_base.config"  
+
+# 找到
+BR2_LINUX_KERNEL_DEFCONFIG="meson64_a64_smarthome"  
+```
+
+所以 kernel 使用的配置文件是 ./arch/arm64/configs/meson64_a64_smarthome_defconfig
+
+
+通过 make linux-menuconfig 生成的配置文件在 output/a5_av400_spk_a6432_release/build/linux-amlogic-5.4-dev/.config
+
+
+make linux-savedefconfig
+
+保存到  ./output/a5_av400_spk_a6432_release/build/linux-amlogic-5.4-dev/defconfig
+
+找到对应修改的配置(比如 UAC )复制到 kernel/aml-5.4/arch/arm64/configs/meson64_a64_smarthome_defconfig
+
+
+
 ## buildroot-output目录
 
 - build 包含所有的源文件，包括 Buildroot 所需主机工具和选择的包，这个目录包含所有 模块源码。
@@ -355,6 +390,20 @@ $(error “here is debug")
 
 注意：修改代码后（不是修改 output 目录下的），不用运行 linux-dirclean，只用 linux-rebuild 即可。Buildroot 会 rsync 将你外部的源码同步到 output/build 并且编译，并且不会删掉上次编译的缓存文件，自动只编译你修改的部分。
 
+
+## 修改 buildroot dl 下载路径
+
+```sh
+vim buildroot/Config.in
+
+# 找到BR2_DL_DIR变量的设置
+# 改变路径的方法：
+# default  "$(TOPDIR)/dl"
+string "Download dir"  
+-default "$(TOPDIR)/dl"
++default "../../buildroot_dl" 
+```
+
 ## config 和 mk 文件
 
 比如
@@ -370,44 +419,6 @@ $(error “here is debug")
 #  cd /mnt/fileroot/shengken.lin/workspace/a5_buildroot/output/a5_av400_a6432_release/build/npu-1.0;./aml_buildroot.sh arm64 /mnt/fileroot/shengken.lin/workspace/a5_buildroot/output/a5_av400_a6432_release/build/linux-amlogic-5.4-dev /mnt/fileroot/shengken.lin/workspace/a5_buildroot/buildroot/../toolchain/gcc/linux-x86/aarch64/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-
 ```
 
----
-
-# freertos
-
-## xTaskCreat相关函数的使用
-
-```c
- BaseType_t xTaskCreate(    TaskFunction_t pvTaskCode,  //指向任务函数，一般是个死循环
-                            const char * const pcName,  //任务函数的别名
-                            configSTACK_DEPTH_TYPE usStackDepth, //任务栈大小
-                            void *pvParameters,					// 任务函数的参数，不需要传参设为NULL即可
-                            UBaseType_t uxPriority, 			// 任务优先级
-                            TaskHandle_t *pxCreatedTask			//实际是一个指针，也是任务的任务堆栈
-                          );
-
-
-```
-
-示例：
-
-```c
-xTaskCreate(vStart_AudioTask, "audio_task", configMINIMAL_STACK_SIZE * 2, NULL, 3, NULL);
-```
-
-
-- 其他函数参考
-
-> https://www.w3cschool.cn/freertoschm/freertoschm-strb2u7m.html
-
-## vTaskStartScheduler
-
-**FreeRTOS是通过vTaskStartScheduler()函数来启动运行的**
-
-1. xTaskCreate() 创建空闲任务，其优先级为最低：0；
-2. 关闭中断功能，使能任务调度功能；
-3. 宏定义portCONFIGURE_TIMER_FOR_RUN_TIME_STATS：系统运行时间统计初始化；
-4. 设置系统节拍定时器，并启动第1个任务；
-5. 返回空闲任务句柄。
 
 ----
 
@@ -543,8 +554,198 @@ picontroller {
 这类节点成为 pin configuration node 。
 
 
-https://www.cnblogs.com/zhuangquan/p/12750736.html
-
+> **更多参考**： https://www.cnblogs.com/zhuangquan/p/12750736.html
 
 ---
 
+
+# 嵌入式系统的分区
+
+> sonos-openlinux A5-av400
+
+分区是磁盘划分区域的手段，比如我们平时用的 window 系统，通过起始地址和 size 等信息保存至分区表，可以将磁盘分层若干的区域，用于存储不同的内容。嵌入式系统也一样有分区。
+
+## 分区表
+
+> 注意 bootloader的分区表要和 kernel 中的一一对应，否则会导致系统无法启动。
+
+- uboot 中的分区表一般是在 board 文件下先对应板子信号的 `.c` 文件，比如 `a5_av400.c` 。
+- kernel 中的分区表一般是在 a`rch/arm64/boot/dts` 文件夹下对应板子型号的 dts ，比如： a5_a113x2_av400_1g.dts
+
+`a5_av400.c` 
+
+```c
+static struct mtd_partition normal_partition_info[] = {
+	{
+	 .name = BOOT_BL2E,
+	 .offset = 0,
+	 .size = 0,
+	  },
+	{
+	 .name = BOOT_BL2X,
+	 .offset = 0,
+	 .size = 0,
+	  },
+	{
+	 .name = BOOT_DDRFIP,
+	 .offset = 0,
+	 .size = 0,
+	  },
+	{
+	 .name = BOOT_DEVFIP,
+	 .offset = 0,
+	 .size = 0,
+	  },  // 签名几个分区 size = 0 表示系统没给对应的分区分配空间
+	{
+	 .name = "logo",
+	 .offset = 0,
+	 .size = 2 * SZ_1M,   //表示 logo 分区的大小为 2M
+	  },
+	{
+	 .name = "recovery",
+	 .offset = 0,
+	 .size = 16 * SZ_1M, 
+	  },
+	{
+	 .name = "boot",
+	 .offset = 0,
+	 .size = 16 * SZ_1M,  //表示 boot 分区的大小为 16M， boot.img 对应的分区
+	  },
+	{
+	 .name = "system",     // system.img 对应的分区
+	 .offset = 0,
+	 .size = 64 * SZ_1M,
+	  },
+/* last partition get the rest capacity */   //最后一个分区将分配剩余全部内存空间
+	{
+	 .name = "data",
+	 .offset = MTDPART_OFS_APPEND,
+	 .size = MTDPART_SIZ_FULL,
+	  },
+};
+```
+
+- a5_a113x2_av400_1g.dts
+
+```c
+
+	partitions: partitions{
+		parts = <5>;
+		part-0 = <&recovery>;
+		part-1 = <&misc>;
+		part-2 = <&boot>;
+		part-3 = <&system>;
+		part-4 = <&data>;
+
+		recovery:recovery{
+			pname = "recovery";
+			size = <0x0 0x2000000>;
+			mask = <1>;
+		};
+		misc:misc{
+			pname = "misc";
+			size = <0x0 0x800000>;
+			mask = <1>;
+		};
+		boot:boot
+		{
+			pname = "boot";
+			size = <0x0 0x4000000>;
+			mask = <1>;
+		};
+		system:system
+		{
+			pname = "system";
+			size = <0x0 0x40000000>;
+			mask = <1>;
+		};
+		data:data
+		{
+			pname = "data";
+			size = <0xffffffff 0xffffffff>;
+			mask = <4>;
+		};
+	};
+```
+
+从上面代码可以看出，系统被分层是个分区，分别是 recovery ，misc，boot，system，data 。
+
+
+
+|          | uboot | kernel     |
+| -------- | :---: | ---------- |
+| recovery |  16M  | 0x2000000  |
+| misc     |  2M   | 0x800000   |
+| boot     |  16M  | 0x4000000  |
+| system   |  64M  | 0x40000000 |
+| data     |       |            |
+
+> 对不上？？
+
+## 代码追踪分析
+
+### 获取分区的函数调用栈
+
+```
+meson_nfc_probe
+
+  m3_nand_probe
+
+    aml_nand_init
+
+      aml_nand_add_partition
+
+        get_aml_mtd_partition
+```
+
+-  U_BOOT_DRIVER
+
+新版的 uboot 和 linux 一样，都支持设备树， uboot  就是通过 U_BOOT_DRIVER 建立一个驱动模型，of_match 来匹配， prebe 函数来识别等。
+
+```c
+static const struct udevice_id aml_nfc_ids[] = {
+	{ .compatible = "amlogic,meson-nfc" }, // compatible 属性也叫做“兼容性”属性，compatible 属性用于将设备和驱动绑定起来。字符串列表用于选择设备所要使用的驱动程序。
+	{}
+};
+
+U_BOOT_DRIVER(meson_nfc) = {
+	.name	= "meson-nfc",
+	.id	= UCLASS_MTD,
+	.of_match = aml_nfc_ids,
+	.probe = meson_nfc_probe,
+};
+
+```
+
+- 通过 of_match 函数找到 "amlogic,meson-nfc" 并绑定驱动和设备
+
+- 然后执行 meson_nfc_probe 函数
+
+- 选择相应的板子（a5_av400_a6432_release）并进行初始化，然后进入 m3_nand_probe 函数
+
+- malloc 并初始化相关结构体
+
+- 走进 aml_nand_init
+
+在这个函数中初始化的时候会通过 aml_nand_add_partition 去添加分区表
+
+  - get_aml_mtd_partition ： 找到并添加分区表
+  - get_aml_partition_count ： 计算分区表大小
+
+---
+
+# UAC功能迁移（kernel 4.9-kernel 5.4）
+
+
+-----
+
+# 文件系统mount流程
+
+
+
+
+
+
+# rtos-linuix-rtos 架构
+
+## suspend 流程

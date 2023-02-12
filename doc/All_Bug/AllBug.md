@@ -99,9 +99,6 @@ cd abd
 mma PARTNER_BUILD=true
 ```
 
-## flush-ubifs_7_0 线程 CPU 过高导致 tdm underrun 
-
-> https://partnerissuetracker.corp.google.com/issues/241159916
 
 ## kernel 裁剪
 
@@ -217,9 +214,6 @@ issue: https://partnerissuetracker.corp.google.com/issues/246404063#comment2
 
 ---
 
-## 显示屏功率 GPIO bug 【None】
-
-> https://jira.amlogic.com/browse/GH-3038 Wrong lcd panel power setting
 
 ---
 
