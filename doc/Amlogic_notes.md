@@ -1111,7 +1111,7 @@ av400 板子资料下载地址：https://confluence.amlogic.com/pages/viewpage.a
 
 
 
-# 早起板子解决 adb 无法使用问题
+# 早期板子解决 adb 无法使用问题
 
 > 打开 adb
  
@@ -1141,7 +1141,7 @@ echo ff400000.dwc2_a > /sys/kernel/config/usb_gadget/amlogic/UDC
 ```
 
 
-## 板子挂载 U 盘
+# 板子挂载 U 盘
 
 ```sh
 mkdir /mnt/usb
@@ -1150,7 +1150,7 @@ mount -t vfat /dev/sda1 /mnt/usb
 umount /mnt/usb/
 ```
 
-## av400 audio 工具
+# av400 audio 工具
 
 - 硬件连接
 
@@ -1158,7 +1158,7 @@ umount /mnt/usb/
 
 ![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/av400.5pr61x0fmdc0.webp)
 
-### 修改 功放板 patch
+## 修改 功放板 patch
 
 https://scgit.amlogic.com/#/c/292999/
 
@@ -1169,7 +1169,7 @@ Change power amplifier driver board from D622 to D613
 https://scgit.amlogic.com/#/c/292999/
 
 
-### aspaly 常用命令
+## aspaly 常用命令
 
 ```
 asplay  查看帮助信息
@@ -1179,7 +1179,7 @@ asplay get-volume 获取音量
 asplay enable-input xx   切换输入源， xx 为实际的输入模式，比如 HDMI1
 ```
 
-### 设置音量
+## 设置音量
 
 ```sh
 set-ad82128-volume.sh 150
@@ -1193,7 +1193,7 @@ amixer cset numid=1 150
 speaker-test -t sine -D hw:0,1
 ```
 
-### aplay 播放
+## aplay 播放
 
 ```sh
 # 查看声卡设备
@@ -1206,12 +1206,11 @@ arecord -Dhw:1,0 -c 1 -r 48000 -f S32_LE -t wav -d 20 /data/kernel54_20s.wav
 ```
 
 
-### av400 测试 uac 脚本
+## av400 测试 uac 脚本
 
 ```sh
 rmmod sdio_bt
 rmmod vlsicomm
-
 
 #1 config adb & uac2,
 
@@ -1236,7 +1235,6 @@ echo 48000 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/p_srate
 echo 4 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/p_ssize
 ln -s /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0 /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/uac2.0
 
-
 echo "config ADB"
 echo adb > /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/strings/0x409/configuration
 mkdir /sys/kernel/config/usb_gadget/amlogic/functions/ffs.adb
@@ -1246,19 +1244,77 @@ killall adbd
 ln -s /sys/kernel/config/usb_gadget/amlogic/functions/ffs.adb /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/ffs.adb
 /usr/bin/adbd &
 
-
-sleep 5
+sleep 3
 
 echo "" > /sys/kernel/config/usb_gadget/amlogic/UDC  
 echo "fdd00000.crgudc2" > /sys/kernel/config/usb_gadget/amlogic/UDC 
 
-
+arecord -l 
 #2 arecord from uac sound card,
 arecord -Dhw:1,0 -c 2 -r 48000 -f S32_LE -t wav -d 15 /data/test.wav 
 
-# 播放
+# aplay
 amixer cset numid=1 180
 aplay -Dhw:0,1 /data/test.wav 
 ```
 
+# buildroot 修改 defconfig
 
+> 以 a5_av400 为例
+
+首先找到 kernel 的 defconfig 文件
+
+```sh
+# 在buildroot 中
+a5_av400_spk_a6432_release_defconfig 
+  -- #include "a5_av400_spk.config"
+
+vim configs/amlogic/a5_av400_spk.config 
+
+#include "a5_speaker.config"
+
+#include "a5_base.config"  
+
+# 找到
+BR2_LINUX_KERNEL_DEFCONFIG="meson64_a64_smarthome"  
+```
+
+所以 kernel 使用的配置文件是 ./arch/arm64/configs/meson64_a64_smarthome_defconfig
+
+
+通过 make menuconfig 生成的配置文件在 output/a5_av400_spk_a6432_release/build/linux-amlogic-5.4-dev/.config
+
+linux-amlogic-5.4-dev/.config 可以找到 BR2_LINUX_KERNEL_DEFCONFIG
+
+linux-amlogic-5.4-dev/.config    可以找到 UAC2
+
+- 开启 uac  声卡
+
+make linux-menuconfig
+
+```sh
+Device Drivers  --->
+
+[*] USB support  --->
+
+<*>   USB Gadget Support  ---> 
+
+[*]     Audio Class 2.0 
+
+CONFIG_USB_CONFIGFS_F_UAC2=y
+```
+
+make linux-savedefconfig
+
+- 保存到  ./output/a5_av400_spk_a6432_release/build/linux-amlogic-5.4-dev/defconfig
+
+- 然后将 defconfig 的修改添加到 aml-5.4/arch/arm64/configs/meson64_a64_smarthome_defconfig
+
+
+## AV400 buildroot 测试 UAC
+
+https://scgit.amlogic.com/293851
+
+## AV400 kernel-5.4 打开 UAC
+
+https://scgit.amlogic.com/#/c/293855/

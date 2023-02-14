@@ -42,8 +42,11 @@
   - [解决 Permission denied 问题](#解决-permission-denied-问题)
   - [iozone 测试](#iozone-测试)
 - [kernel 4.19 功能迁移到 kernel 5.4](#kernel-419-功能迁移到-kernel-54)
-  - [修改 功放板 patch](#修改-功放板-patch)
   - [打开 UAC](#打开-uac)
+    - [AV400 buildroot 测试 UAC](#av400-buildroot-测试-uac)
+    - [AV400 kernel-5.4 打开 UAC](#av400-kernel-54-打开-uac)
+    - [修改 功放板 patch](#修改-功放板-patch)
+  - [迁移测试 patch](#迁移测试-patch)
 >>>>>>> 4e70d81561321021de26f97724a2502c0abef3a3
 
 
@@ -1466,14 +1469,6 @@ target: google audio brige -> kernel5.4
    usb controller.
 
 
-### 修改 功放板 patch
-
-Change power amplifier driver board from D622 to D613
-
-d6e9202cf8d66f4ef616eee66a7d4c3363653a74
-
-https://scgit.amlogic.com/#/c/292999/
-
 ### 打开 UAC
 
 参考 korlan 打开 A4 的 https://eureka-partner-review.googlesource.com/c/vendor/amlogic/+/248628
@@ -1504,7 +1499,7 @@ BR2_LINUX_KERNEL_DEFCONFIG="meson64_a64_smarthome"
 
 linux-amlogic-5.4-dev/.config 可以找到 BR2_LINUX_KERNEL_DEFCONFIG
 
-linux-amlogic-5.4-dev/.config    可以找到 UAC2
+linux-amlogic-5.4-dev/.config  可以找到 UAC2
 
 - 开启 uac  声卡
 
@@ -1527,10 +1522,43 @@ make linux-savedefconfig
 保存到  ./output/a5_av400_spk_a6432_release/build/linux-amlogic-5.4-dev/defconfig
 
 
+#### AV400 buildroot 测试 UAC
+
+https://scgit.amlogic.com/293851
+
+#### AV400 kernel-5.4 打开 UAC
+
+https://scgit.amlogic.com/#/c/293855/
+
+#### 修改 功放板 patch
+
+Change power amplifier driver board from D622 to D613
+
+d6e9202cf8d66f4ef616eee66a7d4c3363653a74
+
+https://scgit.amlogic.com/#/c/292999/
+
 ----
 
+### 迁移测试 patch
 
+git add drivers/usb/gadget/function/u_audio.c
+git add sound/soc/amlogic/Makefile
+git add sound/soc/amlogic/auge/Makefile
+git add sound/soc/amlogic/auge/card.c
+git add sound/soc/amlogic/auge/card.h
+git add sound/soc/amlogic/auge/tdm.c
+git add sound/soc/amlogic/auge/tdm.h
+git add sound/soc/amlogic/auge/tdm_hw.c
 
+```
+[Dont't Merge][AV400] copy tdm_bridge function form kernel 4.19 to kernel 5.15
+
+```
+
+commit-id: 6688d9246708fa847fae5bdfe03ec20bb368f630
+
+> a5_buildroot/tmp_patch/copy_tdn_fun_to_kernel-5.4.patch
 
 
 

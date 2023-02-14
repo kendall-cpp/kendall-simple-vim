@@ -25,13 +25,15 @@ cd a5_buildroot
 repo init -u git://git.myamlogic.com/linux/manifest.git -b master -m default.xml --repo-url=git://git.myamlogic.com/tools/repo.git
 repo sync
 
+#push buildroot
+git push review HEAD:refs/for/master
 
 git remote add review ssh://shengken.lin@scgit.amlogic.com:29418/kernel/common.git
 git remote add review ssh://shengken.lin@scgit.amlogic.com:29418/linux/buildroot.git
 git remote add review ssh://shengken.lin@scgit.amlogic.com:29418/uboot.git
 git add xxx
 git commit -s --no-verify
-git push review HEAD:refs/for/amlogic-5.4-dev
+git push review HEAD:refs/for/amlogic-5.4-dev  # kernel
 
 git pull amlogic HEAD:refs/for/amlogic-5.4-dev
 ```
