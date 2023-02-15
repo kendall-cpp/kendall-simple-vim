@@ -198,3 +198,6 @@ aml-4.9/arch/arm64/boot/dts/amlogic/axg_s400.dts
      },
 ```
 
+## 最终测试 xtest 
+
+https://jira.amlogic.com/browse/SWPL-110748
