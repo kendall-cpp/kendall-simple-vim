@@ -1563,3 +1563,89 @@ commit-id: 6688d9246708fa847fae5bdfe03ec20bb368f630
 
 
 
+-----
+
+这下测试
+
+```sh
+ag -w "Not init audio effects"
+vim sound/soc/amlogic/auge/effects_v2.c +74
+
+get_audioeffects  <-- is_aed_reserve_frddr
+
+# 想要找出为什么 s_effect 为空
+s_effect 是在 effect_platform_probe 中被赋值，s_effect 为空，说明 probe 函数没走到这，加 log 调试找原因
+
+# 另外加入找到原因之后
+也就是 s_effect 不为空
+get_audioeffects 就会 return s_effect; is_aed_reserve_frddr 就不返回 false
+所以 tdm_bridge.c  的 aml_tdm_br_frddr_prepare 中就会 ed_dst_status = true
+aml_audio_register_frddr 就不会返回 NULL，就能通过 aml_frddr_get_fifo_id 函数找到 fifo 。从而可以 aml_tdm_br_frddr_prepare 完成工作
+
+
+
+arch/arm64/boot/dts/amlogic/a5_a113x2_av400_1g_spk.dts:713:             compatible = "amlogic, snd-effect-v4";
+```
+
+```sh
+g_audio_setup   # 在 f_uac2.c  afunc_bind 就应该调用
+        snd_pcm_set_ops(pcm, SNDRV_PCM_STREAM_PLAYBACK, &uac_pcm_ops); 
+                uac_pcm_open
+                        aml_tdm_br_pre_start(c_ssize, c_srate);  //这里就应该打开了
+                                aml_tdm_br_work_func
+                                        aml_tdm_br_prepare
+                                                aml_tdm_br_frddr_prepare  # 接上面
+                                                tdm_bridge_state = TDM_BR_PRE_START;
+                                        aml_tdm_br_codec_prepare  # 找到 codec
+        g_uac = uac;
+```
+
+播放的时候 lsken00 u_audio_start_capture--453 tdm_bridge_state = 0   说明是 aml_tdm_br_frddr_prepare 没完成的原因 ， 所以要找到 “找出为什么 s_effect 为空”？
+
+
+所以 u_audio_iso_complete 124  aml_tdm_br_pre_start 播放的时候就不应该走这里了，
+
+送数据到 tdm_bridge 
+
+第一次写走到 aml_tdm_br_tdm_start 时候就会因为 if (tdm_bridge_state == TDM_BR_WORKING)  为假 ，走到 playing  ，并 tdm_bridge_state = TDM_BR_WORKING
+
+第二次送数据，走到 aml_tdm_br_tdm_start if (tdm_bridge_state == TDM_BR_WORKING)  为真， 直接 return， 不会到 playing, tdm_cached_data
+
+------------
+
+**结束时**
+
+f_uac2.c  中会掉用
+
+```c
+if (intf == uac2->as_out_intf) {
+        uac2->as_out_alt = alt; 
+
+        if (alt)
+                ret = u_audio_start_capture(&uac2->g_audio);
+        else 
+                u_audio_stop_capture(&uac2->g_audio);
+```
+
+此外 uac_pcm_close 的时候一样会检查 tdm_ready 状态，并停止
+
+```sh
+aml_tdm_br_stop
+        aml_tdm_br_stop_func
+                aml_tdm_br_codec_stop
+                aml_tdm_br_tdm_stop
+                        aml_tdm_br_frddr_prepare 重新初始化 frddr 
+                        tdm_bridge_state = TDM_BR_STOP;
+
+
+
+# 这里可以注释掉，因为在有 remote 函数了
+if (codec_dai->driver->ops && codec_dai->driver->ops->mute_stream)
+        codec_dai->driver->ops->mute_stream(codec_dai, 1, my_stream);
+else if (codec_dai->driver->ops && codec_dai->driver->ops->digital_mute)                                                                                                                                 
+        codec_dai->driver->ops->digital_mute(codec_dai, 1); 
+```
+
+
+
+
