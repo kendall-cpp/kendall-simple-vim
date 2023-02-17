@@ -1,11 +1,13 @@
 * [Kendall Memory](/README.md)
 
+* AmlogicDoc
+  * [Project-notes](/doc/Project-notes.md)
+  * [Amlogic_notes](/doc/Amlogic_notes.md)
+  * [Amlogic笔记记录](/doc/Amlogic笔记记录.md)
 
-* LearnNotes
-  * [ForAmlogicLearn](/LearnNotes/ForAmlogicLearn.md)
-  * [chromium开发工具-gclient](/LearnNotes/chromium开发工具-gclient.md)
-  * [init.rc文件](/LearnNotes/init.rc文件.md)
-  
-  * usb
-    * [Linux-USB驱动架构](/LearnNotes/USB/Linux-USB驱动架构.md)
+* WorkTasks
+  * [Korlan_SDK-Task](/WorkTasks/Korlan_SDK-Task.md)
+
+* All_bug
+  * [AllBug](/doc/All_Bug/AllBug.md)
 

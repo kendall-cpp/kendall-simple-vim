@@ -41,13 +41,17 @@
     - [解决分区不足和不支持 lz4 压缩问题](#解决分区不足和不支持-lz4-压缩问题)
   - [解决 Permission denied 问题](#解决-permission-denied-问题)
   - [iozone 测试](#iozone-测试)
-- [kernel 4.19 功能迁移到 kernel 5.4](#kernel-419-功能迁移到-kernel-54)
+- [kernel-4.19 功能迁移到 5.4](#kernel-419-功能迁移到-54)
   - [打开 UAC](#打开-uac)
     - [AV400 buildroot 测试 UAC](#av400-buildroot-测试-uac)
     - [AV400 kernel-5.4 打开 UAC](#av400-kernel-54-打开-uac)
     - [修改 功放板 patch](#修改-功放板-patch)
-  - [迁移 error 修复记录](#迁移-error-修复记录)
-  - [迁移测试 patch](#迁移测试-patch)
+  - [error\_找不到 tas5707](#error_找不到-tas5707)
+  - [解决声音播放缓慢问题](#解决声音播放缓慢问题)
+    - [Fix aml\_tdm\_br\_frddr\_prepare 未执行](#fix-aml_tdm_br_frddr_prepare-未执行)
+    - [Fix is\_aed\_reserve\_frddr 返回 false](#fix-is_aed_reserve_frddr-返回-false)
+    - [播放声音延迟](#播放声音延迟)
+  - [提交](#提交-1)
 >>>>>>> 4e70d81561321021de26f97724a2502c0abef3a3
 
 
@@ -1380,8 +1384,6 @@ make: *** [makefile:1044: iozone_linux-arm.o] Error 1
 
 ### iozone 测试
 
-
-
 ```sh
 ./iozone -a -n 4m -g 256m -i 0 -i 1 -y 4096 -q 4096 -f /system/iozone.tmpfile -Rb ./iotest.xls
 
@@ -1456,7 +1458,7 @@ sys     0m 1.28s
 [    5.910525] TEST : mount other fs end lsken00
 ```
 
-## kernel 4.19 功能迁移到 kernel 5.4
+## kernel-4.19 功能迁移到 5.4
 
 使用 A5 的板子验证
 
@@ -1541,7 +1543,7 @@ https://scgit.amlogic.com/#/c/292999/
 
 ----
 
-### 迁移 error 修复记录
+### error_找不到 tas5707
 
 ```sh
   static int soc_bind_dai_link(struct snd_soc_card *card,
@@ -1620,19 +1622,15 @@ FIx: error: aml_gpio_mute_spk (aml_card_priv) in aml_tdm_br_tdm_start
  
 ```
 
-### 迁移测试 patch
 
-
-commit-id: 6688d9246708fa847fae5bdfe03ec20bb368f630
-
-> a5_buildroot/tmp_patch/copy_tdn_fun_to_kernel-5.4.patch
 
 
 
 
 -----
 
-在家测试
+### 解决声音播放缓慢问题
+
 
 ```sh
 ag -w "Not init audio effects"
@@ -1706,13 +1704,67 @@ aml_tdm_br_stop
 
 
 
-# 这里可以注释掉，因为在有 remote 函数了
+# aml_tdm_br_codec_stop 中 这里可以注释掉，因为在有 remote 函数了
 if (codec_dai->driver->ops && codec_dai->driver->ops->mute_stream)
         codec_dai->driver->ops->mute_stream(codec_dai, 1, my_stream);
 else if (codec_dai->driver->ops && codec_dai->driver->ops->digital_mute)                                                                                                                                 
         codec_dai->driver->ops->digital_mute(codec_dai, 1); 
 ```
 
+
+#### Fix aml_tdm_br_frddr_prepare 未执行
+
+> Not init audio effects
+
+```sh
+--- a/arch/arm64/boot/dts/amlogic/a5_a113x2_av400_1g_spk.dts
++++ b/arch/arm64/boot/dts/amlogic/a5_a113x2_av400_1g_spk.dts
+@@ -728,7 +728,7 @@
+                lane_mask = <0x1>;
+                /* max 0xff, each bit for one channel */
+                channel_mask = <0x3>;
+-               status = "disabled";
++               status = "okay";
+        };
+ }; /* end of audiobus */
+```
+
+
+#### Fix is_aed_reserve_frddr 返回 false 
+
+```c
+  /* tm2_revb afterward */
+  static struct effect_chipinfo tm2_revb_effect_chipinfo = { 
+          .version = VERSION4,
+          .reserved_frddr = true,  // 修改 false 为 true
+  };
+```
+
+
+#### 播放声音延迟
+
+因为 tdm_bridge underrun 导致调用了 aml_tdm_br_tdm_stop ， 使得 tdm_bridge_state 为 1 了，所以 aml_tdm_br_work_func 函数中就会走进 aml_tdm_br_prepare -- aml_tdm_br_frddr_prepare -- aml_tdm_br_dmabuf_clear_info 把 last_wr_addr 和 last_rd_addr 初始化了。
+
+
+问题出现在 USB 读写不同步问题，A5 使用的是 high-speed ，korlan 使用的 flow-speed
+
+```sh
+# dmesg | grep high
+[    5.580895] mmc1: new high speed SDIO card at address 0000
+[   10.452439] configfs-gadget gadget: high-speed config #1: amlogic
+```
+
+- 到目前所有修改的 patch : 
+
+commit-id: 69a5864417b03bad2fd013c80012982b6e400b22
+
+
+
+
+
+### 提交
+
+https://scgit.amlogic.com/295257
 
 
 

@@ -1242,6 +1242,20 @@ amixer cset numid=1 180
 aplay -Dhw:0,1 /data/test.wav 
 ```
 
+
+### 修改 f_uac2 模式支持 window 播放
+
+> 以 a5-av400 为例
+
+```sh
+#上面脚本只需要修改 0x18D2 即可
+echo 0x18D2 > /sys/kernel/config/usb_gadget/amlogic/idVendor
+```
+
+[Dont't Merge][AV400]Change USB_DT_ENDPOINT and USB_DIR_IN for window uac
+
+patch: https://scgit.amlogic.com/295197
+
 # buildroot 修改 defconfig
 
 > 以 a5_av400 为例
