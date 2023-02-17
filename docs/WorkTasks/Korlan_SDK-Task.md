@@ -46,6 +46,7 @@
     - [AV400 buildroot 测试 UAC](#av400-buildroot-测试-uac)
     - [AV400 kernel-5.4 打开 UAC](#av400-kernel-54-打开-uac)
     - [修改 功放板 patch](#修改-功放板-patch)
+  - [迁移 error 修复记录](#迁移-error-修复记录)
   - [迁移测试 patch](#迁移测试-patch)
 >>>>>>> 4e70d81561321021de26f97724a2502c0abef3a3
 
@@ -1540,21 +1541,87 @@ https://scgit.amlogic.com/#/c/292999/
 
 ----
 
+### 迁移 error 修复记录
+
+```sh
+  static int soc_bind_dai_link(struct snd_soc_card *card,
+          struct snd_soc_dai_link *dai_link)
+		  
+ for_each_link_codecs(dai_link, i, codec) {
+		  rtd->codec_dais[i] = snd_soc_find_dai(codec);
+		  if (!rtd->codec_dais[i]) {
+				  dev_info(card->dev, "ASoC: CODEC DAI %s not registered\n",
+						   codec->dai_name);
+				  goto _err_defer;		  
+  } else {                                                                                                                                                                                                                                    
+		  if (!strcmp(codec->dai_name, "tas5707")) {
+				  printk("lsken00 %s, codec_dainame:%s\n", __func__, codec->dai_name);
+				  printk("lsken00 ------- 0x%p", card);
+		  }    
+  }    
+
+############## 参考上面
+#tem_bridge
+#if 0
+static bool soc_is_dai_link_bound(struct snd_soc_card *card,
+		struct snd_soc_dai_link *dai_link)
+{
+	struct snd_soc_pcm_runtime *rtd;
+	for_each_card_rtds(card, rtd) {
+		if (rtd->dai_link == dai_link)
+			return true;
+	}
+
+	return false;
+}
+#endif
+
+static struct snd_soc_dai * get_cardName_from_link(struct snd_soc_card *card,
+		struct snd_soc_dai_link *dai_link, const char *cardName)
+{
+	struct snd_soc_dai_link_component *codec;
+	struct snd_soc_dai *card_dai;
+	int i;
+
+	for_each_link_codecs(dai_link, i, codec) {
+		card_dai =  snd_soc_find_dai(codec);
+		if(card_dai && !(strcmp(codec->dai_name, cardName))) {
+			printk(" %s, codec_dainame:%s\n", __func__, codec->dai_name);
+			return card_dai;
+		}
+	}
+	return NULL;
+}
+static struct snd_soc_dai *soc_card_get_dai(struct snd_soc_card *card, const char *cardName)
+{
+	int i;
+	struct snd_soc_dai *ret_dai;
+	struct snd_soc_dai_link *dai_link;
+	for_each_card_prelinks(card, i, dai_link) {
+		ret_dai = get_cardName_from_link(card, dai_link, cardName);
+		if (ret_dai)
+			return ret_dai;
+	}
+	return NULL;
+}
+
+
+FIx: error: aml_gpio_mute_spk (aml_card_priv) in aml_tdm_br_tdm_start
+
+--- a/sound/soc/amlogic/auge/card.c
++++ b/sound/soc/amlogic/auge/card.c
+@@ -1180,6 +1182,7 @@ static int aml_card_parse_of(struct device_node *node,
+                goto card_parse_end;
+ 
+        ret = aml_card_parse_aux_devs(node, priv);
++       aml_card_priv = priv;
+ 
+ card_parse_end:
+ 
+```
+
 ### 迁移测试 patch
 
-git add drivers/usb/gadget/function/u_audio.c
-git add sound/soc/amlogic/Makefile
-git add sound/soc/amlogic/auge/Makefile
-git add sound/soc/amlogic/auge/card.c
-git add sound/soc/amlogic/auge/card.h
-git add sound/soc/amlogic/auge/tdm.c
-git add sound/soc/amlogic/auge/tdm.h
-git add sound/soc/amlogic/auge/tdm_hw.c
-
-```
-[Dont't Merge][AV400] copy tdm_bridge function form kernel 4.19 to kernel 5.15
-
-```
 
 commit-id: 6688d9246708fa847fae5bdfe03ec20bb368f630
 

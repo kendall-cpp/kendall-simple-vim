@@ -749,3 +749,5 @@ U_BOOT_DRIVER(meson_nfc) = {
 # rtos-linuix-rtos 架构
 
 ## suspend 流程
+
+## sysfs学习

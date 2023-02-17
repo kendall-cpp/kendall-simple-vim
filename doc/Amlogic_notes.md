@@ -900,22 +900,7 @@ vim vendor/amlogic/korlan/BoardConfigCommon.mk  +81
 # loglevel=7
 ```
 
-
-@ken@:/mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic$ git log
-commit c0ffe047fced044fdd9c818329a281c02fb12ade (HEAD, m/master, eureka/master)
-Author: kenkangxgwe <kenkangxgwe@google.com>
-Date:   Tue Nov 8 02:20:01 2022 -0800
-
-    [korlan] Add audio buffer uevent path to start script
-    
-    Bug: b/257163271
-    Test: None
-    Change-Id: I01065c1dd4bf82672474bfd625f8167ef5c094dc
-    Reviewed-on: https://eureka-internal-review.git.corp.google.com/c/vendor/amlogic/+/817751
-    Reviewed-by: Yi Fan <yfa@google.com>
-    Reviewed-by: Anoush Khazeni <akhazeni@google.com>
-    Tested-by: Cast CQ <no-reply-cast-cq@google.com>
-# 运行 dsp
+# 休眠 ARM 运行 dsp
 
 > 基于 venus-p2 测试
 
@@ -966,7 +951,6 @@ https://support.amlogic.com/issues/18561
 git reset --hard 4c364b453488fb5d30c32dfb4f294c30d255d7bf
 
 **第二步 编译**
-
 
 ```sh
 # 需要下载的 package
@@ -1318,3 +1302,4 @@ https://scgit.amlogic.com/293851
 ## AV400 kernel-5.4 打开 UAC
 
 https://scgit.amlogic.com/#/c/293855/
+
