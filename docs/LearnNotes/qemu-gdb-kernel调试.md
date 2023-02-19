@@ -230,3 +230,16 @@ sudo cp filesystem/rootfs ./kernel/linux-5.4/root -r
 make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- menuconfig 
 
 make ARCH=arm Image -j8  CROSS_COMPILE=arm-linux-gnueabihf-
+
+
+
+- error
+
+
+gzip: stdout: No space left on device
+E: mkinitramfs failure cpio 141 gzip 1
+
+
+sudo mount /dev/sda1 /boot/
+
+https://www.jianshu.com/p/3a61071ee578
