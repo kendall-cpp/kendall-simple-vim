@@ -1622,11 +1622,6 @@ FIx: error: aml_gpio_mute_spk (aml_card_priv) in aml_tdm_br_tdm_start
  
 ```
 
-
-
-
-
-
 -----
 
 ### 解决声音播放缓慢问题
@@ -1758,13 +1753,46 @@ else if (codec_dai->driver->ops && codec_dai->driver->ops->digital_mute)
 
 commit-id: 69a5864417b03bad2fd013c80012982b6e400b22
 
+- 分析
 
+uac 播放之后，占用了 frddrs[0] ，导致 tdm 无法正常播放。
 
 
 
 ### 提交
 
 https://scgit.amlogic.com/295257
+
+
+
+- 开始播放流程
+
+u_audio_start_capture
+  没有数据来，aml_tdm_br_state = stop
+  走到 aml_tdm_br_pre_start 
+    这里会获取到 gp_tdm
+    然后进入 aml_tdm_br_work_func
+      aml_tdm_br_prepare  
+      aml_tdm_br_codec_prepare  准备 codec
+
+      主要的工作在 aml_tdm_br_prepare 
+        aml_tdm_br_frddr_prepare
+          一开始没有 frddr ，通过 aml_audio_register_frddr 获取，这时 is_aed_reserve_frddr = false
+          这里如果出现 underrun 就会执行 aml_tdm_br_tdm_stop
+          最后对调用 aml_tdm_br_dmabuf_clear_info
+        enable tdm
+        tdm_bridge_state = TDM_BR_PRE_START;  
+
+- 关闭流程
+
+u_audio_stop_capture
+  aml_tdm_br_stop
+    aml_tdm_br_stop_func
+      aml_tdm_br_codec_stop
+        需要注销 aml_audio_unregister_frddr 和 停止 codec
+      aml_tdm_br_tdm_stop
+        disable tdm
+        aml_tdm_br_frddr_prepare
 
 
 

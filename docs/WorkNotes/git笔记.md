@@ -34,6 +34,7 @@
 	- [patch 例子](#patch-例子)
 - [cherry-pick](#cherry-pick)
 - [repo 命令](#repo-命令)
+- [设置 git commit 模式使用 vim](#设置-git-commit-模式使用-vim)
 
 -----
 
@@ -603,6 +604,6 @@ repo sync -c
 repo forall -c “git clean -df” && repo forall -c “git checkout .”
 ```
 
+## 设置 git commit 模式使用 vim
 
-
-
+git config --global core.editor "vim"
