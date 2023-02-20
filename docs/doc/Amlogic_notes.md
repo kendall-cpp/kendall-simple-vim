@@ -1236,6 +1236,7 @@ echo "fdd00000.crgudc2" > /sys/kernel/config/usb_gadget/amlogic/UDC
 arecord -l 
 #2 arecord from uac sound card,
 arecord -Dhw:1,0 -c 2 -r 48000 -f S32_LE -t wav -d 15 /data/test.wav 
+arecord -Dhw:1,0 -c 2 -r 48000 -f S32_LE -t wav   | aplay  -Dhw:0,1
 
 # aplay
 amixer cset numid=1 180

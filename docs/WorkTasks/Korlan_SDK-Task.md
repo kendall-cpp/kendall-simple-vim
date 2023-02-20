@@ -52,6 +52,15 @@
     - [Fix is\_aed\_reserve\_frddr 返回 false](#fix-is_aed_reserve_frddr-返回-false)
     - [播放声音延迟](#播放声音延迟)
   - [提交](#提交-1)
+  - [dam 寄存器](#dam-寄存器)
+    - [EE\_AUDIO\_CLK\_TDMOUT\_A\_CTRL 0xfe330090](#ee_audio_clk_tdmout_a_ctrl-0xfe330090)
+    - [EE\_AUDIO\_CLK\_TDMOUT\_D\_CTRL 0xfe3300ec](#ee_audio_clk_tdmout_d_ctrl-0xfe3300ec)
+    - [EE\_AUDIO\_FRDDR\_A\_CTRL0 0xfe3301c0](#ee_audio_frddr_a_ctrl0-0xfe3301c0)
+    - [EE\_AUDIO\_FRDDR\_C\_CTRL2 0xfe330268](#ee_audio_frddr_c_ctrl2-0xfe330268)
+    - [EE\_AUDIO\_TDMOUT\_A\_CTRL0 0xfe330500](#ee_audio_tdmout_a_ctrl0-0xfe330500)
+    - [EE\_AUDIO\_TDMOUT\_C\_MASK\_VAL 0xfe3305bc](#ee_audio_tdmout_c_mask_val-0xfe3305bc)
+    - [EE\_AUDIO\_MST\_A\_SCLK\_CTRL0 0xfe330040](#ee_audio_mst_a_sclk_ctrl0-0xfe330040)
+    - [EE\_AUDIO\_MST\_DLY\_CTRL1 0xfe330074](#ee_audio_mst_dly_ctrl1-0xfe330074)
 >>>>>>> 4e70d81561321021de26f97724a2502c0abef3a3
 
 
@@ -1795,4 +1804,38 @@ u_audio_stop_capture
         aml_tdm_br_frddr_prepare
 
 
+### dam 寄存器
+
+
+c3795ba76cb1c270cbdde74ce0ccd2b9cb9ae322
+
+```
+mount -t debugfs none /sys/kernel/debug
+```
+
+
+
+#### EE_AUDIO_CLK_TDMOUT_A_CTRL 0xfe330090
+#### EE_AUDIO_CLK_TDMOUT_D_CTRL 0xfe3300ec
+
+echo 0xfe330090 23 > /sys/kernel/debug/aml_reg/dump
+cat /sys/kernel/debug/aml_reg/dump > /data/EE_AUDIO_CLK_TDMOUT.txt
+
+#### EE_AUDIO_FRDDR_A_CTRL0 0xfe3301c0
+#### EE_AUDIO_FRDDR_C_CTRL2 0xfe330268
+
+echo 0xfe3301c0 42 > /sys/kernel/debug/aml_reg/dump
+cat /sys/kernel/debug/aml_reg/dump > /data/EE_AUDIO_FRDDR.txt
+
+#### EE_AUDIO_TDMOUT_A_CTRL0 0xfe330500
+#### EE_AUDIO_TDMOUT_C_MASK_VAL 0xfe3305bc
+
+echo 0xfe330500 47 > /sys/kernel/debug/aml_reg/dump
+cat /sys/kernel/debug/aml_reg/dump > /data/EE_AUDIO_TDMOUT.txt
+
+#### EE_AUDIO_MST_A_SCLK_CTRL0 0xfe330040
+#### EE_AUDIO_MST_DLY_CTRL1 0xfe330074
+
+echo 0xfe330040 13 > /sys/kernel/debug/aml_reg/dump
+cat /sys/kernel/debug/aml_reg/dump > /data/EE_AUDIO_MST.txt
 
