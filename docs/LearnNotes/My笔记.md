@@ -1,6 +1,8 @@
-> 参考：https://blog.csdn.net/sinat_32705609/article/details/128306446
+
 
 # 使用 qemu+GDB 调试kernel源码
+
+> 参考：https://blog.csdn.net/sinat_32705609/article/details/128306446
 
 ## 安装编译工具链
 
@@ -243,3 +245,75 @@ E: mkinitramfs failure cpio 141 gzip 1
 sudo mount /dev/sda1 /boot/
 
 https://www.jianshu.com/p/3a61071ee578
+
+
+# UAC音频驱动
+
+## tdm_bridge
+
+uac  -- | aplay 应用截取音频 -- tdm  -- 声卡
+
+uac -- tdm_bridge --tdm -- 声卡 
+
+- 普通的 UAC 流程
+
+音频数据从 USB 传递进来，通过 u_audio_start_capture 不停地抓取请求的数，然后由 u_audio_iso_complete 进行处理和送至 dam_buf 中。请求的数据包存在 `usb_request *req` 结构体中，
+
+```c
+struct usb_request {
+        void *buf;                                  //数据缓存区
+        unsigned length;                          //数据长度
+        dma_addr_t dma;                        //与buf关联的DMA地址，DMA传输时使用
+        unsigned no_interrupt:1;              //当为true时，表示没有完成函数，则通过中断通知传输完成，这个由DMA控制器直接控制
+        unsigned zero:1;                          //当输出的最后的数据包不够长度是是否填充0
+        unsigned short_not_ok:1;             //当接收的数据不够指定长度时，是否报错
+        void (*complete)(struct usb_ep *ep, struct usb_request *req);//请求完成函数
+        void *context;                             //被completion回调函数使用
+        struct list_head list;                      //被Gadget Driver使用，插入队列
+        int status;                                    //返回完成结果，0表示成功
+        unsigned actual;                          //实际传输的数据长度
+};
+```
+
+音频数据主要存在 reg->bug 中，写送到 dam_buf 后，有应用程序比如 aplay 截取音频送到 tdm 中，然后送至声卡。
+
+- tdm_bridge
+
+音频数据从 USB 创建来，在 u_audio_iso_complete 函数中通过 aml_tdm_br_write_data 将 reg->bug 送入 tdm_bridge 中，由 tdm_bridge 送入 tdm 中。接着送到声卡播放。
+
+### 播放流程
+
+- 首先通过 aml_tdm_br_pre_start 打开 tdm_bridge , 调用流程如下
+
+```c
+aml_tdm_br_pre_start  // 设置 size 和 rate，保存到 tb_c 结构体中， 后面的 dma_buf.size 就是 size * rate
+  aml_tdm_br_work_func  // 如果 tdm_bridge_state != TDM_BR_WORKING
+    aml_tdm_br_prepare
+    aml_tdm_br_codec_prepare
+
+```
+
+![](https://img-blog.csdnimg.cn/20200309224201427.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2x1Y2t5ZGFyY3k=,size_16,color_FFFFFF,t_70#pic_center)
+
+
+- aml_tdm_br_dmabuf_avail_space
+
+如果上一次写的地址就是从 ddr 中获取的地址，那就直接给申请到的 dmabuf_size （48000*4），上次写的地址比获取的地址还大，那么 addr + danbuf_size - last_wr_addr ,这种情况就可能出现 buf 不足了，否则如果上次写的地址小于读取的地址，那么就直接返回当前获取的地址 - 上次读取的地址，这种情况很可能出现 space 不足。
+
+```c
+if (last_wr_addr > last_rd_addr) {  // 上次写的超过了上次读的，因为是个环形
+        if ((dmabuf_end - last_wr_addr) >= len) {
+                offset = last_wr_addr - dmabuf_addr;
+                memcpy(buf + offset, data, len);
+                last_wr_addr = last_wr_addr + len; 
+        } else {
+                ret = len - dmabuf_end + last_wr_addr;
+                offset = last_wr_addr - dmabuf_addr;
+                /*copy first part*/
+                memcpy(buf + offset, data, len - ret);  // 重头开始写
+                /*copy second part*/
+                memcpy(buf, data + ret, ret);
+                last_wr_addr = dmabuf_addr + ret;   // 从头开始移
+        }
+}
+```
