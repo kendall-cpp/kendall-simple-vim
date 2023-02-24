@@ -61,6 +61,9 @@
     - [EE\_AUDIO\_TDMOUT\_C\_MASK\_VAL 0xfe3305bc](#ee_audio_tdmout_c_mask_val-0xfe3305bc)
     - [EE\_AUDIO\_MST\_A\_SCLK\_CTRL0 0xfe330040](#ee_audio_mst_a_sclk_ctrl0-0xfe330040)
     - [EE\_AUDIO\_MST\_DLY\_CTRL1 0xfe330074](#ee_audio_mst_dly_ctrl1-0xfe330074)
+    - [SAR\_ADC\_REG0 0xfe026000](#sar_adc_reg0-0xfe026000)
+    - [SAR\_ADC\_CHNL7 0xfe0260ec](#sar_adc_chnl7-0xfe0260ec)
+- [usb\_request 结构体](#usb_request-结构体)
 >>>>>>> 4e70d81561321021de26f97724a2502c0abef3a3
 
 
@@ -1839,3 +1842,28 @@ cat /sys/kernel/debug/aml_reg/dump > /data/EE_AUDIO_TDMOUT.txt
 echo 0xfe330040 13 > /sys/kernel/debug/aml_reg/dump
 cat /sys/kernel/debug/aml_reg/dump > /data/EE_AUDIO_MST.txt
 
+#### SAR_ADC_REG0 0xfe026000
+#### SAR_ADC_CHNL7 0xfe0260ec
+
+echo 0xfe026000 59 > /sys/kernel/debug/aml_reg/dump
+cat /sys/kernel/debug/aml_reg/dump > /data/ESAR_ADC.txt
+
+
+## usb_request 结构体
+
+```c
+
+struct usb_request {
+void *buf;                                  //数据缓存区
+unsigned length;                          //数据长度
+dma_addr_t dma;                        //与buf关联的DMA地址，DMA传输时使用
+unsigned no_interrupt:1;              //当为true时，表示没有完成函数，则通过中断通知传输完成，这个由DMA控制器直接控制
+unsigned zero:1;                          //当输出的最后的数据包不够长度是是否填充0
+unsigned short_not_ok:1;             //当接收的数据不够指定长度时，是否报错
+void (*complete)(struct usb_ep *ep, struct usb_request *req);//请求完成函数
+void *context;                             //被completion回调函数使用
+struct list_head list;                      //被Gadget Driver使用，插入队列
+int status;                                    //返回完成结果，0表示成功
+unsigned actual;                          //实际传输的数据长度
+};
+```

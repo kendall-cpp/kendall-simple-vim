@@ -1309,6 +1309,59 @@ make linux-savedefconfig
 
 - 然后将 defconfig 的修改添加到 aml-5.4/arch/arm64/configs/meson64_a64_smarthome_defconfig
 
+# 查看音频 clk
+
+measure-clk
+
+- 挂载 debugfs
+
+mount -t debugfs none /sys/kernel/debug
+
+cat /sys/kernel/debug/clk/clk_summary | grep a5
+
+- amlogic
+
+cat   sys/kernel/debug/meson-clk-msr/measure_summary  | grep hifi_pll
+
+- korlan
+
+cat /sys/kernel/debug/aml_clkmsr/clkmsr | grep tdm*
+
+# 查看 uboot 传递给 kernel 的参数
+
+vim bootloader/uboot-repo/bl33/v2019$ ls include/env_default.h 
+
+bootargs
+
+对应的 config 在 bootloader/uboot-repo/bl33/v2019/board/amlogic/  
+
+比如 bootloader/uboot-repo/bl33/v2019/board/amlogic/configs/a5_av400.h 
+
+```sh
+"storeargs="\
+        "get_bootloaderversion;" \
+        "setenv bootargs ${initargs} ${fs_type} otg_device=${otg_device} "\
+                "logo=${display_layer},loaded,${fb_addr} vout=${outputmode},enable panel_type=${panel_type} "\
+                "hdmitx=${cecconfig},${colorattribute} hdmimode=${hdmimode} "\
+                "hdmichecksum=${hdmichecksum} dolby_vision_on=${dolby_vision_on} " \
+                "hdr_policy=${hdr_policy} hdr_priority=${hdr_priority} "\
+                "frac_rate_policy=${frac_rate_policy} hdmi_read_edid=${hdmi_read_edid} cvbsmode=${cvbsmode} "\
+                "osd_reverse=${osd_reverse} video_reverse=${video_reverse} irq_check_en=${Irq_check_en} isr_check_en=${Irq_check_en} "\
+                "androidboot.selinux=${EnableSelinux} androidboot.firstboot=${firstboot} jtag=${jtag}; "\                                                                                                                                           
+        "setenv bootargs ${bootargs} androidboot.bootloader=${bootloader_version} androidboot.hardware=amlogic;"\
+        "run cmdline_keys;"\
+        "\0"\
+```
+
+# 应用层通过驱动给 kernel 传递参数
+
+```c
+static unsigned int uac_irq_cnt; 
+module_param(uac_irq_cnt, uint, 0444); 
+MODULE_PARM_DESC(uac_irq_cnt, "uac irq cnt");
+```
+
+cat /sys/module/u_audio/parameters/uac_irq_cnt
 
 ## AV400 buildroot 测试 UAC
 
