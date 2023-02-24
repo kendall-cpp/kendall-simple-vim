@@ -361,7 +361,7 @@ make linux-savedefconfig
 
 - staging 这个目录类似根文件系统的目录结构，包含编译生成的所有头文件和库，以及其他开发文件，不过他们没有裁剪，比较庞大，不适用于目标文件系统。
 
-- target 包含完整的根文件系统，对比 `staging/`，它没有开发文件，不包含头文件，二进制文件也经过 strip 处理。
+- target 包含完整的根文件系统，相比 `staging/`，它没有开发文件，不包含头文件，二进制文件也经过 strip 处理。
 
 进行编译时，Buildroot 根据配置，会自动从网络获取相关的软件包，包括一些第三方库，插件，实用工具等，放在`dl/`目录。
 
@@ -403,6 +403,60 @@ string "Download dir"
 -default "$(TOPDIR)/dl"
 +default "../../buildroot_dl" 
 ```
+
+
+## buildroot 修改 defconfig
+
+> 以 a5_av400 为例
+
+首先找到 kernel 的 defconfig 文件
+
+```sh
+# 在buildroot 中
+# ./configs/a5_av400_spk_a6432_release_defconfig
+a5_av400_spk_a6432_release_defconfig 
+  -- #include "a5_av400_spk.config"
+
+vim configs/amlogic/a5_av400_spk.config 
+
+#include "a5_speaker.config"
+
+#include "a5_base.config"  
+
+# 找到
+BR2_LINUX_KERNEL_DEFCONFIG="meson64_a64_smarthome"  
+```
+
+所以 kernel 使用的配置文件是 ./arch/arm64/configs/meson64_a64_smarthome_defconfig
+
+
+通过 make menuconfig 生成的配置文件在 output/a5_av400_spk_a6432_release/build/linux-amlogic-5.4-dev/.config
+
+linux-amlogic-5.4-dev/.config 可以找到 BR2_LINUX_KERNEL_DEFCONFIG
+
+linux-amlogic-5.4-dev/.config    可以找到 UAC2
+
+- 开启 uac  声卡
+
+make linux-menuconfig
+
+```sh
+Device Drivers  --->
+
+[*] USB support  --->
+
+<*>   USB Gadget Support  ---> 
+
+[*]     Audio Class 2.0 
+
+CONFIG_USB_CONFIGFS_F_UAC2=y
+```
+
+make linux-savedefconfig
+
+- 保存到  ./output/a5_av400_spk_a6432_release/build/linux-amlogic-5.4-dev/defconfig
+
+- 然后将 defconfig 的修改添加到 aml-5.4/arch/arm64/configs/meson64_a64_smarthome_defconfig
 
 ## config 和 mk 文件
 

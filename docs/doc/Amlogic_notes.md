@@ -1265,6 +1265,7 @@ patch: https://scgit.amlogic.com/295197
 
 ```sh
 # 在buildroot 中
+# ./configs/a5_av400_spk_a6432_release_defconfig
 a5_av400_spk_a6432_release_defconfig 
   -- #include "a5_av400_spk.config"
 
@@ -1322,10 +1323,37 @@ cat /sys/kernel/debug/clk/clk_summary | grep a5
 - amlogic
 
 cat   sys/kernel/debug/meson-clk-msr/measure_summary  | grep hifi_pll
+cat   sys/kernel/debug/meson-clk-msr/measure_summary  | grep audio_
 
 - korlan
 
 cat /sys/kernel/debug/aml_clkmsr/clkmsr | grep tdm*
+
+- AV400 播放音频查看 clk
+
+将 dump_pcm_setting 中的 pr_debug 改成 pr_info
+
+```c
+static void dump_pcm_setting(struct pcm_setting *setting)
+{
+      if (!setting)
+          return;
+      pr_info("%s...(%pK)\n", __func__, setting); 
+      pr_info("\tpcm_mode(%d)\n", setting->pcm_mode);
+      pr_info("\tsysclk(%d)\n", setting->sysclk);
+      pr_info("\tsysclk_bclk_ratio(%d)\n", setting->sysclk_bclk_ratio);
+      pr_info("\tbclk(%d)\n", setting->bclk);
+      pr_info("\tbclk_lrclk_ratio(%d)\n", setting->bclk_lrclk_ratio);
+      pr_info("\tlrclk(%d)\n", setting->lrclk);
+      pr_info("\ttx_mask(%#x)\n", setting->tx_mask);
+      pr_info("\trx_mask(%#x)\n", setting->rx_mask);
+      pr_info("\tslots(%d)\n", setting->slots);
+      pr_info("\tslot_width(%d)\n", setting->slot_width);
+      pr_info("\tlane_mask_in(%#x)\n", setting->lane_mask_in);
+      pr_info("\tlane_mask_out(%#x)\n", setting->lane_mask_out);
+}
+```
+
 
 # 查看 uboot 传递给 kernel 的参数
 

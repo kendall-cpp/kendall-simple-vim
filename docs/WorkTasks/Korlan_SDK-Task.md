@@ -64,6 +64,7 @@
     - [SAR\_ADC\_REG0 0xfe026000](#sar_adc_reg0-0xfe026000)
     - [SAR\_ADC\_CHNL7 0xfe0260ec](#sar_adc_chnl7-0xfe0260ec)
 - [usb\_request 结构体](#usb_request-结构体)
+  - [错误 sched: RT throttling activated](#错误-sched-rt-throttling-activated)
 >>>>>>> 4e70d81561321021de26f97724a2502c0abef3a3
 
 
@@ -1867,3 +1868,44 @@ int status;                                    //返回完成结果，0表示成
 unsigned actual;                          //实际传输的数据长度
 };
 ```
+
+
+aml_frddr_set_intrpt(fddr, 48);
+接着 aml_tdm_br_dmabuf_clear_info();  
+
+addr = aml_frddr_get_position(tb_c.fddr);  
+atomic_set(&cur_rd_addr, addr); 
+
+但是 aml_tdm_br_dmabuf_clear_info   atomic_set(&cur_rd_addr, last_rd_addr); 
+
+
+write_data   aml_tdm_br_dmabuf_avail_space
+addr = atomic_read(&cur_rd_addr);
+
+```c
+
+aml_tdm_br_frddr_prepare {
+        aml_tdm_bridge_frddr_isr {  // 消息队列，串口中断回调函数ISR同步线程
+                addr = aml_frddr_get_position(tb_c.fddr); 
+                atomic_set(&cur_rd_addr, addr);  
+        }
+        aml_frddr_set_intrpt(fddr, 48);
+
+        aml_tdm_br_dmabuf_clear_info() {
+                // 设置为 tdm_br_dmabuf 开始
+                last_wr_addr = tdm_br_dmabuf.addr;
+                last_rd_addr = tdm_br_dmabuf.addr; 
+                atomic_set(&cur_rd_addr, last_rd_addr); 
+        }
+}
+
+aml_tdm_br_write_data {
+        aml_tdm_br_dmabuf_avail_space {
+                addr = atomic_read(&cur_rd_addr);
+        }
+}
+```
+
+
+### 错误 sched: RT throttling activated
+
