@@ -1322,6 +1322,7 @@ cat /sys/kernel/debug/clk/clk_summary | grep a5
 - amlogic
 
 cat   sys/kernel/debug/meson-clk-msr/measure_summary  | grep hifi_pll
+cat   sys/kernel/debug/meson-clk-msr/measure_summary  |  grep pll
 
 - korlan
 
@@ -1371,3 +1372,9 @@ https://scgit.amlogic.com/293851
 
 https://scgit.amlogic.com/#/c/293855/
 
+
+
+git add arch/arm64/boot/dts/amlogic/a5_a113x2_av400_1g_spk.dts
+git add drivers/usb/gadget/function/u_audio.c
+git add sound/soc/amlogic/auge/tdm.c
+git add sound/soc/amlogic/auge/tdm_bridge.c
