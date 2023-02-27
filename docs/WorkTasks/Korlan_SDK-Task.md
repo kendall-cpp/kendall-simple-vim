@@ -64,7 +64,11 @@
     - [SAR\_ADC\_REG0 0xfe026000](#sar_adc_reg0-0xfe026000)
     - [SAR\_ADC\_CHNL7 0xfe0260ec](#sar_adc_chnl7-0xfe0260ec)
 - [usb\_request 结构体](#usb_request-结构体)
+<<<<<<< HEAD
   - [错误 sched: RT throttling activated](#错误-sched-rt-throttling-activated)
+=======
+- [解决开启 HIFI\_PULl 错误重启问题](#解决开启-hifi_pull-错误重启问题)
+>>>>>>> 7415349f40fe679ff38a0399cba99618d532bf2c
 >>>>>>> 4e70d81561321021de26f97724a2502c0abef3a3
 
 
@@ -1850,25 +1854,28 @@ echo 0xfe026000 59 > /sys/kernel/debug/aml_reg/dump
 cat /sys/kernel/debug/aml_reg/dump > /data/ESAR_ADC.txt
 
 
+
+
 ## usb_request 结构体
 
 ```c
 
 struct usb_request {
-void *buf;                                  //数据缓存区
-unsigned length;                          //数据长度
-dma_addr_t dma;                        //与buf关联的DMA地址，DMA传输时使用
-unsigned no_interrupt:1;              //当为true时，表示没有完成函数，则通过中断通知传输完成，这个由DMA控制器直接控制
-unsigned zero:1;                          //当输出的最后的数据包不够长度是是否填充0
-unsigned short_not_ok:1;             //当接收的数据不够指定长度时，是否报错
-void (*complete)(struct usb_ep *ep, struct usb_request *req);//请求完成函数
-void *context;                             //被completion回调函数使用
-struct list_head list;                      //被Gadget Driver使用，插入队列
-int status;                                    //返回完成结果，0表示成功
-unsigned actual;                          //实际传输的数据长度
+        void *buf;                                  //数据缓存区
+        unsigned length;                          //数据长度
+        dma_addr_t dma;                        //与buf关联的DMA地址，DMA传输时使用
+        unsigned no_interrupt:1;              //当为true时，表示没有完成函数，则通过中断通知传输完成，这个由DMA控制器直接控制
+        unsigned zero:1;                          //当输出的最后的数据包不够长度是是否填充0
+        unsigned short_not_ok:1;             //当接收的数据不够指定长度时，是否报错
+        void (*complete)(struct usb_ep *ep, struct usb_request *req);//请求完成函数
+        void *context;                             //被completion回调函数使用
+        struct list_head list;                      //被Gadget Driver使用，插入队列
+        int status;                                    //返回完成结果，0表示成功
+        unsigned actual;                          //实际传输的数据长度
 };
 ```
 
+<<<<<<< HEAD
 
 aml_frddr_set_intrpt(fddr, 48);
 接着 aml_tdm_br_dmabuf_clear_info();  
@@ -1909,3 +1916,22 @@ aml_tdm_br_write_data {
 
 ### 错误 sched: RT throttling activated
 
+=======
+## 解决开启 HIFI_PULl 错误重启问题
+
+```c
+res = platform_get_resource(pdev, IORESOURCE_MEM, 0); 
+```
+
+这里返回 空 的原因。
+
+在 arch/arm64/boot/dts/amlogic/a5_a113x2_av400_1g_spk.dts  中
+
+```c
+audio_tdm_bridge: tdm_bridge {
+        compatible = "amlogic, snd-tdm-bridge";
+        reg = <0x0 0xfe008100 0x0 0x10>;   // ANACTRL_HIFIPLL_CTRL0
+}
+```
+
+>>>>>>> 7415349f40fe679ff38a0399cba99618d532bf2c

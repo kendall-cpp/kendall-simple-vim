@@ -390,6 +390,66 @@ make linux-savedefconfig
 
 注意：修改代码后（不是修改 output 目录下的），不用运行 linux-dirclean，只用 linux-rebuild 即可。Buildroot 会 rsync 将你外部的源码同步到 output/build 并且编译，并且不会删掉上次编译的缓存文件，自动只编译你修改的部分。
 
+## buildroot 根文件系统设置启动命令
+
+busybox 根文件系统是在/etc/init.d/rcS 里面添加自启动相关命令的
+
+```sh
+for i in /etc/init.d/S??* ;do
+
+     # Ignore dangling symlinks (if any).
+     [ ! -f "$i" ] && continue
+
+     case "$i" in
+    *S02overlayfs)
+        continue
+        ;;
+      *S40network|*S41dhcpcd)
+        # skip network and dhcpcd if netplugd enabled
+        killall -0 netplugd 2> /dev/null
+        if [ ! $? -eq 0 ]; then
+          $i start
+        fi
+        ;;
+    *.sh)
+        # Source shell script for speed.
+        (
+        trap - INT QUIT TSTP
+        set start
+        . $i
+        )
+        ;;
+    *)
+        # No sh extension, so fork subprocess.
+        $i start
+        ;;
+    esac
+done
+```
+
+从上面可以看出，rcS 默认会在 /etc/init.d 目录下查找所有以‘S’开头的脚本，然后依次执行这些脚本。s所以我们可以自己创建一个以‘S’开头的自启动脚本文件，比如我创建一个名为 S90start_adb.sh 的自启动文件，**一般以数字命名决定执行顺序**， 命令如下：
+
+```sh
+touch S90start_adb.sh
+vim S90start_adb.sh
+chmod 777 S90start_adb.sh
+```
+
+然后在 S90start_adb.sh 中天添加需要执行的命令，比例
+
+```sh
+mkdir /lsken00/
+touch /lsken00/test.txt
+echo "lsken00 --- --- test"
+```
+
+最后重新 make 编译烧录启动板子，观察
+
+```sh
+# ls lsken00/
+test.txt
+```
+
 
 ## 修改 buildroot dl 下载路径
 
