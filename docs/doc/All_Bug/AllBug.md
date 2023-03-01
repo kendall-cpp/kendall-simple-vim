@@ -120,13 +120,14 @@ https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/268826
 https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/270868
 ```
 
-## 优化 tdm_bridge
+## 实现 aplay 和 uac 同时播放冲突问题
 
 https://partnerissuetracker.corp.google.com/issues/262352934
 
  给 tdm 增加一个 busy 状态，当 aplay 播放时， uac 等待 aplay 播放结束
 
  修复的 cl: https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/275167
+
 
 ## koraln 增加 erofs 支持
 
@@ -147,6 +148,24 @@ https://eureka-partner-review.googlesource.com/c/amlogic/u-boot/+/276588
 # vendor/amlogic
 https://eureka-partner-review.googlesource.com/c/vendor/amlogic/+/276589
 ```
+
+
+## 迁移 tdm_bridge 功能到 kernel 5.4
+
+### AV400 buildroot 测试 UAC
+
+https://scgit.amlogic.com/293851
+
+### AV400 kernel-5.4 打开 UAC
+
+https://scgit.amlogic.com/#/c/293855/
+
+### 修改 功放板 patch
+
+Change power amplifier driver board from D622 to D613
+
+https://scgit.amlogic.com/#/c/292999/
+
 
 -----
 

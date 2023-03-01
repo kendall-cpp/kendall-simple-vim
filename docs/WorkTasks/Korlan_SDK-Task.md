@@ -63,10 +63,6 @@
     - [EE\_AUDIO\_MST\_DLY\_CTRL1 0xfe330074](#ee_audio_mst_dly_ctrl1-0xfe330074)
     - [SAR\_ADC\_REG0 0xfe026000](#sar_adc_reg0-0xfe026000)
     - [SAR\_ADC\_CHNL7 0xfe0260ec](#sar_adc_chnl7-0xfe0260ec)
-- [usb\_request 结构体](#usb_request-结构体)
-<<<<<<< HEAD
-  - [错误 sched: RT throttling activated](#错误-sched-rt-throttling-activated)
-=======
 - [解决开启 HIFI\_PULl 错误重启问题](#解决开启-hifi_pull-错误重启问题)
 >>>>>>> 7415349f40fe679ff38a0399cba99618d532bf2c
 >>>>>>> 4e70d81561321021de26f97724a2502c0abef3a3
@@ -1854,69 +1850,6 @@ echo 0xfe026000 59 > /sys/kernel/debug/aml_reg/dump
 cat /sys/kernel/debug/aml_reg/dump > /data/ESAR_ADC.txt
 
 
-
-
-## usb_request 结构体
-
-```c
-
-struct usb_request {
-        void *buf;                                  //数据缓存区
-        unsigned length;                          //数据长度
-        dma_addr_t dma;                        //与buf关联的DMA地址，DMA传输时使用
-        unsigned no_interrupt:1;              //当为true时，表示没有完成函数，则通过中断通知传输完成，这个由DMA控制器直接控制
-        unsigned zero:1;                          //当输出的最后的数据包不够长度是是否填充0
-        unsigned short_not_ok:1;             //当接收的数据不够指定长度时，是否报错
-        void (*complete)(struct usb_ep *ep, struct usb_request *req);//请求完成函数
-        void *context;                             //被completion回调函数使用
-        struct list_head list;                      //被Gadget Driver使用，插入队列
-        int status;                                    //返回完成结果，0表示成功
-        unsigned actual;                          //实际传输的数据长度
-};
-```
-
-<<<<<<< HEAD
-
-aml_frddr_set_intrpt(fddr, 48);
-接着 aml_tdm_br_dmabuf_clear_info();  
-
-addr = aml_frddr_get_position(tb_c.fddr);  
-atomic_set(&cur_rd_addr, addr); 
-
-但是 aml_tdm_br_dmabuf_clear_info   atomic_set(&cur_rd_addr, last_rd_addr); 
-
-
-write_data   aml_tdm_br_dmabuf_avail_space
-addr = atomic_read(&cur_rd_addr);
-
-```c
-
-aml_tdm_br_frddr_prepare {
-        aml_tdm_bridge_frddr_isr {  // 消息队列，串口中断回调函数ISR同步线程
-                addr = aml_frddr_get_position(tb_c.fddr); 
-                atomic_set(&cur_rd_addr, addr);  
-        }
-        aml_frddr_set_intrpt(fddr, 48);
-
-        aml_tdm_br_dmabuf_clear_info() {
-                // 设置为 tdm_br_dmabuf 开始
-                last_wr_addr = tdm_br_dmabuf.addr;
-                last_rd_addr = tdm_br_dmabuf.addr; 
-                atomic_set(&cur_rd_addr, last_rd_addr); 
-        }
-}
-
-aml_tdm_br_write_data {
-        aml_tdm_br_dmabuf_avail_space {
-                addr = atomic_read(&cur_rd_addr);
-        }
-}
-```
-
-
-### 错误 sched: RT throttling activated
-
-=======
 ## 解决开启 HIFI_PULl 错误重启问题
 
 ```c
@@ -1934,4 +1867,61 @@ audio_tdm_bridge: tdm_bridge {
 }
 ```
 
->>>>>>> 7415349f40fe679ff38a0399cba99618d532bf2c
+
+echo 0xfe330090 23 > /sys/kernel/debug/aml_reg/dump
+cat /sys/kernel/debug/aml_reg/dump > /data/EE_AUDIO_CLK_TDMOUT1.txt
+echo 0xfe3301c0 42 > /sys/kernel/debug/aml_reg/dump
+cat /sys/kernel/debug/aml_reg/dump > /data/EE_AUDIO_FRDDR1.txt
+echo 0xfe330500 47 > /sys/kernel/debug/aml_reg/dump
+cat /sys/kernel/debug/aml_reg/dump > /data/EE_AUDIO_TDMOUT1.txt
+echo 0xfe330040 13 > /sys/kernel/debug/aml_reg/dump
+cat /sys/kernel/debug/aml_reg/dump > /data/EE_AUDIO_MST1.txt
+echo 0xfe026000 59 > /sys/kernel/debug/aml_reg/dump
+cat /sys/kernel/debug/aml_reg/dump > /data/ESAR_ADC1.txt
+
+echo 0xfe330090 23 > /sys/kernel/debug/aml_reg/dump
+cat /sys/kernel/debug/aml_reg/dump > /data/EE_AUDIO_CLK_TDMOUT2.txt
+echo 0xfe3301c0 42 > /sys/kernel/debug/aml_reg/dump
+cat /sys/kernel/debug/aml_reg/dump > /data/EE_AUDIO_FRDDR2.txt
+echo 0xfe330500 47 > /sys/kernel/debug/aml_reg/dump
+cat /sys/kernel/debug/aml_reg/dump > /data/EE_AUDIO_TDMOUT2.txt
+echo 0xfe330040 13 > /sys/kernel/debug/aml_reg/dump
+cat /sys/kernel/debug/aml_reg/dump > /data/EE_AUDIO_MST2.txt
+echo 0xfe026000 59 > /sys/kernel/debug/aml_reg/dump
+cat /sys/kernel/debug/aml_reg/dump > /data/ESAR_ADC2.txt
+
+
+
+
+adb pull /data/EE_AUDIO_CLK_TDMOUT1.txt .
+adb pull /data/EE_AUDIO_FRDDR1.txt .
+adb pull /data/EE_AUDIO_TDMOUT1.tx .
+adb pull /data/EE_AUDIO_MST1.txt .
+adb pull /data/ESAR_ADC1.txt .
+adb pull /data/EE_AUDIO_CLK_TDMOUT2.txt .
+adb pull /sys/kernel/debug/aml_reg/dump .
+adb pull /data/EE_AUDIO_FRDDR2.txt .
+adb pull /sys/kernel/debug/aml_reg/dump .
+adb pull /data/EE_AUDIO_TDMOUT2.txt .
+adb pull /sys/kernel/debug/aml_reg/dump .
+adb pull /data/EE_AUDIO_MST2.txt .
+adb pull /sys/kernel/debug/aml_reg/dump .
+adb pull /data/ESAR_ADC2.txt .
+
+
+echo 0xfe330090 23 > /sys/kernel/debug/aml_reg/dump
+cat /sys/kernel/debug/aml_reg/dump > /data/EE_AUDIO_CLK_TDMOUT3.txt
+echo 0xfe3301c0 42 > /sys/kernel/debug/aml_reg/dump
+cat /sys/kernel/debug/aml_reg/dump > /data/EE_AUDIO_FRDDR3.txt
+echo 0xfe330500 47 > /sys/kernel/debug/aml_reg/dump
+cat /sys/kernel/debug/aml_reg/dump > /data/EE_AUDIO_TDMOUT3.txt
+echo 0xfe330040 13 > /sys/kernel/debug/aml_reg/dump
+cat /sys/kernel/debug/aml_reg/dump > /data/EE_AUDIO_MST3.txt
+echo 0xfe026000 59 > /sys/kernel/debug/aml_reg/dump
+cat /sys/kernel/debug/aml_reg/dump > /data/ESAR_ADC3.txt
+
+adb  pull /data/EE_AUDIO_CLK_TDMOUT3.txt .
+adb  pull /data/EE_AUDIO_FRDDR3.txt .
+adb  pull /data/EE_AUDIO_TDMOUT3.txt .
+adb  pull /data/EE_AUDIO_MST3.txt .
+adb  pull /data/ESAR_ADC3.txt .

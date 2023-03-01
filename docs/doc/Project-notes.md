@@ -33,7 +33,7 @@ git remote add review ssh://shengken.lin@scgit.amlogic.com:29418/linux/buildroot
 git remote add review ssh://shengken.lin@scgit.amlogic.com:29418/uboot.git
 git add xxx
 git commit -s --no-verify
-git push review HEAD:refs/for/amlogic-5.4-dev  # kernel
+git push review HEAD:refs/for/amlogic-5.4-dev --no-thin  # kernel
 
 git pull amlogic HEAD:refs/for/amlogic-5.4-dev
 ```

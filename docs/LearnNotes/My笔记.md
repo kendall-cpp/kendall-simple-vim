@@ -249,6 +249,14 @@ https://www.jianshu.com/p/3a61071ee578
 
 # UAC音频驱动
 
+- Linux ALSA驱动之Platform源码分析： https://blog.csdn.net/code_lyb/article/details/126583717
+
+
+u_audio_start_capture  -- afunc_set_alt -- afunc_alloc -- afunc_alloc_inst -- config_group_init_type_name -- config_group -- configfs 【https://www.cnblogs.com/sctb/p/13901054.html】
+
+
+- UDC
+
 ## tdm_bridge
 
 uac  -- | aplay 应用截取音频 -- tdm  -- 声卡
