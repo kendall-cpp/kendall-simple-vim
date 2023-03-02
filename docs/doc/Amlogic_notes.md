@@ -64,7 +64,7 @@ aplay -Dhw:0,0 /data/the-stars-48k-60s.wav
 echo 0 > /sys/module/u_audio/parameters/free_run  & aplay -Dhw:0,0 /data/the-stars-48k-60s.wav & echo 1 > /sys/module/u_audio/parameters/free_run 
 ```
 
-# Enable usb 以太网
+# 打开 usb 以太网
 
 - 需要打开配置
 
@@ -82,6 +82,25 @@ on post-fd
 
 # start dhcpcd                           
 start dhcpcd
+```
+
+```
+/ # ifconfig -a
+eth0      Link encap:Ethernet  HWaddr 00:E0:4C:68:02:9B  
+          inet addr:10.28.39.205  Bcast:10.28.39.255  Mask:255.255.255.0
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:30 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:2 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000 
+          RX bytes:3102 (3.0 KiB)  TX bytes:684 (684.0 B)
+
+lo        Link encap:Local Loopback  
+          inet addr:127.0.0.1  Mask:255.0.0.0
+          UP LOOPBACK RUNNING  MTU:65536  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000 
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
 ```
 
 ## adb connect
@@ -606,8 +625,6 @@ busybox mpstat -P ALL 10
 %guest: 虚拟机占用CPU时间的百分比。
 %idle: CPU 的空闲时间的百分比。
 ```
-
-
 
 
 -------
@@ -1391,8 +1408,3 @@ https://scgit.amlogic.com/293851
 https://scgit.amlogic.com/#/c/293855/
 
 
-
-git add arch/arm64/boot/dts/amlogic/a5_a113x2_av400_1g_spk.dts
-git add drivers/usb/gadget/function/u_audio.c
-git add sound/soc/amlogic/auge/tdm.c
-git add sound/soc/amlogic/auge/tdm_bridge.c

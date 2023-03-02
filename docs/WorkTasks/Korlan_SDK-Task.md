@@ -1,78 +1,3 @@
-- [TASK：测试 i2s clock](#task测试-i2s-clock)
-  - [在 Ubuntu 下测试](#在-ubuntu-下测试)
-  - [最终提交1](#最终提交1)
-  - [最终提交2](#最终提交2)
-  - [复现 dock-test-tool 测试问题](#复现-dock-test-tool-测试问题)
-- [添加 fct-korlan 实现联网](#添加-fct-korlan-实现联网)
-  - [kernel 打开个 CONFIG\_USB\_RTL8152](#kernel-打开个-config_usb_rtl8152)
-  - [fct-kolran 设置 IP](#fct-kolran-设置-ip)
-  - [设置开机自动获取 ip](#设置开机自动获取-ip)
-  - [adb调试ipv6](#adb调试ipv6)
-  - [开启 ipv6 和 RTL8152](#开启-ipv6-和-rtl8152)
-  - [重新编译成 ko 文件，并加载到init.rc](#重新编译成-ko-文件并加载到initrc)
-    - [提交](#提交)
-- [熟悉和测试 korlan5.15](#熟悉和测试-korlan515)
-- [flush-ubifs\_7\_0(adb push ota.zip) 线程 CPU 过高导致 tdm underrun](#flush-ubifs_7_0adb-push-otazip-线程-cpu-过高导致-tdm-underrun)
-  - [复现问题](#复现问题)
-    - [perf 工具使用](#perf-工具使用)
-  - [工作流程](#工作流程)
-  - [isp 内部优化 usleep](#isp-内部优化-usleep)
-  - [yi-u\_audio-log\_uac\_timing-tdm-cpu](#yi-u_audio-log_uac_timing-tdm-cpu)
-  - [nandread去读卡](#nandread去读卡)
-    - [yuegui 飞书记录](#yuegui-飞书记录)
-  - [测试 nandread](#测试-nandread)
-  - [单独编译 nandread](#单独编译-nandread)
-  - [打印时间](#打印时间)
-    - [4.19](#419)
-    - [5.15 默认](#515-默认)
-    - [5.15 修改](#515-修改)
-  - [总结](#总结)
-    - [总结回复 google](#总结回复-google)
-- [kernel 裁剪](#kernel-裁剪)
-  - [kernel 裁剪优化记录](#kernel-裁剪优化记录)
-- [Korlan 开机声卡顿问题](#korlan-开机声卡顿问题)
-- [tdm\_bridge 优化](#tdm_bridge-优化)
-- [开启并制作 erofs 文件系统](#开启并制作-erofs-文件系统)
-  - [下载和编译 erofs-utils](#下载和编译-erofs-utils)
-  - [压缩到 image](#压缩到-image)
-  - [学习给korlan增加一个分区](#学习给korlan增加一个分区)
-  - [读取分区表](#读取分区表)
-  - [将自己制作的文件系统挂载起来](#将自己制作的文件系统挂载起来)
-    - [解决分区不足和不支持 lz4 压缩问题](#解决分区不足和不支持-lz4-压缩问题)
-  - [解决 Permission denied 问题](#解决-permission-denied-问题)
-  - [iozone 测试](#iozone-测试)
-- [kernel-4.19 功能迁移到 5.4](#kernel-419-功能迁移到-54)
-  - [打开 UAC](#打开-uac)
-    - [AV400 buildroot 测试 UAC](#av400-buildroot-测试-uac)
-    - [AV400 kernel-5.4 打开 UAC](#av400-kernel-54-打开-uac)
-    - [修改 功放板 patch](#修改-功放板-patch)
-    - [修改 UAC 模式支持 window](#修改-uac-模式支持-window)
-  - [error\_找不到 tas5707](#error_找不到-tas5707)
-  - [解决声音播放缓慢问题](#解决声音播放缓慢问题)
-    - [Fix aml\_tdm\_br\_frddr\_prepare 未执行](#fix-aml_tdm_br_frddr_prepare-未执行)
-    - [Fix is\_aed\_reserve\_frddr 返回 false](#fix-is_aed_reserve_frddr-返回-false)
-  - [dam 寄存器](#dam-寄存器)
-    - [EE\_AUDIO\_CLK\_TDMOUT\_A\_CTRL 0xfe330090](#ee_audio_clk_tdmout_a_ctrl-0xfe330090)
-    - [EE\_AUDIO\_CLK\_TDMOUT\_D\_CTRL 0xfe3300ec](#ee_audio_clk_tdmout_d_ctrl-0xfe3300ec)
-    - [EE\_AUDIO\_FRDDR\_A\_CTRL0 0xfe3301c0](#ee_audio_frddr_a_ctrl0-0xfe3301c0)
-    - [EE\_AUDIO\_FRDDR\_C\_CTRL2 0xfe330268](#ee_audio_frddr_c_ctrl2-0xfe330268)
-    - [EE\_AUDIO\_TDMOUT\_A\_CTRL0 0xfe330500](#ee_audio_tdmout_a_ctrl0-0xfe330500)
-    - [EE\_AUDIO\_TDMOUT\_C\_MASK\_VAL 0xfe3305bc](#ee_audio_tdmout_c_mask_val-0xfe3305bc)
-    - [EE\_AUDIO\_MST\_A\_SCLK\_CTRL0 0xfe330040](#ee_audio_mst_a_sclk_ctrl0-0xfe330040)
-    - [EE\_AUDIO\_MST\_DLY\_CTRL1 0xfe330074](#ee_audio_mst_dly_ctrl1-0xfe330074)
-    - [SAR\_ADC\_REG0 0xfe026000](#sar_adc_reg0-0xfe026000)
-    - [SAR\_ADC\_CHNL7 0xfe0260ec](#sar_adc_chnl7-0xfe0260ec)
-- [解决开启 HIFI\_PULl 错误重启问题](#解决开启-hifi_pull-错误重启问题)
-- [解决 src-clk-freq 不对导致偶尔会出现 underrun 问题](#解决-src-clk-freq-不对导致偶尔会出现-underrun-问题)
->>>>>>> 7415349f40fe679ff38a0399cba99618d532bf2c
->>>>>>> 4e70d81561321021de26f97724a2502c0abef3a3
-
-
--------------
-
-
-
-
 ## TASK：测试 i2s clock
 
 > https://partnerissuetracker.corp.google.com/issues/243087651
@@ -106,12 +31,6 @@ aplay -Dhw:0,0 /data/the-stars-48k-60s.wav
 ```
 i2cdump -f -y 0x01 0x2d
 ```
-
-### 在 Ubuntu 下测试
-
-进入 codecs
-
-adb shell
 
 
 ### 最终提交1
@@ -429,25 +348,7 @@ cherry-pick kernel5.15 all cl  直接 git  checkout
 ```
 
 
-----
-
-## flush-ubifs_7_0(adb push ota.zip) 线程 CPU 过高导致 tdm underrun 
-
-> 用 kernel 4.19 来解决
-
-> https://partnerissuetracker.corp.google.com/issues/241159916
-
-
-### 复现问题
-
-```sh
-Z:\workspace\google_source\eureka-v2\chrome\out\target\product\korlan> adb push .\korlan-ota-eng.shengken.lin.zip /data
-
-# 在push期间执行下面命令检测
-top -m 5 -t
-```
-
-#### perf 工具使用
+## perf 工具使用
 
 ```sh
 # 编译
@@ -488,55 +389,14 @@ adb pull /data/out.perf ./out
 
 打完 patch 的 commit id： d7c8eae34cdc182639dd6101f5eadbcbb787ff10
 
-### 工作流程
-
-往 tdm 中写数据时，出现了 underrun ，就是写 太慢了，读快了，通过轮训的方式去读取会出现卡顿问题
-
-USB 写数据 （先写到 ddr，再 sync 到 falsh，在 sync 的时候会占用 CPU ） --> tdm_bridge --> codec -- > Speaker  播放
-
-
-```sh
-vim sound/soc/amlogic/auge/tdm_bridge.c 
-
-# 往 tdm_bridge 写数据函数
-int aml_tdm_br_write_data(void *data, unsigned int len)
-
-# 调用
-drivers/usb/gadget/function/u_audio.c
-```
-
-
-### isp 内部优化 usleep
-
-```sh
-https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/244846
-# git fetch https://eureka-partner.googlesource.com/amlogic/kernel refs/changes/46/244846/3 && git cherry-pick FETCH_HEAD
-# 26da25f44a02588c0525d3b1e6d1dc8f5cb72856
-```
-
-### yi-u_audio-log_uac_timing-tdm-cpu
-
-```sh
-# 第一个patch comment #8
-https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/246965
-commit ID: 182c1d24317734067caa440efd0df4f879c5ea2f
-
- 
-# 第二个patch   comment #21
-https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/250805
-git fetch https://eureka-partner.googlesource.com/amlogic/kernel refs/changes/05/250805/4 && git cherry-pick FETCH_HEAD
-commit ID: c108b9c0c97bb5af5dfcaa5ab994a9b1d9ac2a00
-```
-
-测试 patch： tmp_patch/u_audio_stash_google_underrun.patch
 
 ---
 
-### nandread去读卡
+## nandread去读卡
 
 > https://jira.amlogic.com/browse/GH-3176
 
-####  yuegui 飞书记录
+###  yuegui 飞书记录
 
 ```
 抓trace 命令：
@@ -691,7 +551,7 @@ strace -e read -o /data/a5.15.txt -T nandread -d /dev/mtd/mtd4 -L 6144000 -f /ca
 busybox time nandread -d /dev/mtd/mtd4 -L 6144000 -f /cache/.data/dump-page0.hex
 
 
-### 单独编译 nandread
+#### 单独编译 nandread
 
 ```sh
 source build/envsetup.sh 
@@ -707,8 +567,6 @@ lrwxrwxrwx 1 shengken.lin szsoftware 7 Dec  5 19:11 ./out/target/product/korlan/
 
 ./out/target/product/korlan/recovery/root/bin/nandread
 ```
-
-
 
 ### 打印时间
 
@@ -763,7 +621,7 @@ index 2f3c6a0350a8..39569c215bab 100644
         kfree(options);
 ```
 
-#### 4.19
+### 4.19
 
 - spi start :        1.898291
 - rootfs mount end:   5.305296
@@ -777,7 +635,7 @@ user    0m 0.02s
 sys     0m 2.06s
 ```
 
-#### 5.15 默认
+### 5.15 默认
 
 - spi start :         2.511331
 - rootfs mount end:   6.075754
@@ -791,7 +649,7 @@ user    0m 0.03s
 sys     0m 2.59s
 ```
 
-#### 5.15 修改
+### 5.15 修改
 
 - spi start :         2.346131
 - rootfs mount end:   6.015829
@@ -883,7 +741,6 @@ https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/268826
 https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/268825
 https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/270868
 ```
-
 
 
 ## kernel 裁剪
@@ -1271,18 +1128,13 @@ sudo apt-get install liblz4-dev
 https://blog.51cto.com/u_15076212/4373946
 
 
-打开 kernel log
+### 打开 kernel log
 
 vim vendor/amlogic/korlan/BoardConfigCommon.mk  +81
 
-init log
-
-write /dev/kmsg "TEST : =============222  lsken00"
-
 ----
 
-
-- 提交 
+### 提交 
 
 - common_drivers
 
@@ -1342,18 +1194,7 @@ topic: https://eureka-partner-review.googlesource.com/q/topic:%22Enable+erofs%22
 
 ----
 
-
-task1:文件性能对比测试(squashfs & erofs)：
-1 IO性能。
-	1) IOZONE.
-	2) nandread & nandwrite.
-2 记录启动时间。
-
-task2: 对比read/write 调用栈 ， 对比两个文件系统的各自的优点缺点。
-	追踪erorf 文件系统read/write，调用栈（read/write），根据调用栈，对比两个文件系统的优缺点。
-
-task3: 研究erfos，的整个文件系统结构，输出关于erofs的 文档。
-
+## 使用 iozone
 
 - 下載 iozone3_494.tgz
 
@@ -1472,17 +1313,6 @@ sys     0m 1.28s
 ```
 
 ## kernel-4.19 功能迁移到 5.4
-
-使用 A5 的板子验证
-
-target: google audio brige -> kernel5.4
--> usb & uac & tdmoutb & HIFI
-
-
-1 Repo sync a5 buildroot code (kernel5.4)
-2 buildroot & run  & usb(adbd) & uac
-3 google kernel4.9 --> kernel kernel5.4  
-   usb controller.
 
 
 ### 打开 UAC
@@ -1641,123 +1471,9 @@ FIx: error: aml_gpio_mute_spk (aml_card_priv) in aml_tdm_br_tdm_start
 
 -----
 
-### 解决声音播放缓慢问题
-
-
-```sh
-ag -w "Not init audio effects"
-vim sound/soc/amlogic/auge/effects_v2.c +74
-
-get_audioeffects  <-- is_aed_reserve_frddr
-
-# 想要找出为什么 s_effect 为空
-s_effect 是在 effect_platform_probe 中被赋值，s_effect 为空，说明 probe 函数没走到这，加 log 调试找原因
-
-# 另外加入找到原因之后
-也就是 s_effect 不为空
-get_audioeffects 就会 return s_effect; is_aed_reserve_frddr 就不返回 false
-所以 tdm_bridge.c  的 aml_tdm_br_frddr_prepare 中就会 ed_dst_status = true
-aml_audio_register_frddr 就不会返回 NULL，就能通过 aml_frddr_get_fifo_id 函数找到 fifo 。从而可以 aml_tdm_br_frddr_prepare 完成工作
-
-
-
-arch/arm64/boot/dts/amlogic/a5_a113x2_av400_1g_spk.dts:713:             compatible = "amlogic, snd-effect-v4";
-```
-
-```sh
-g_audio_setup   # 在 f_uac2.c  afunc_bind 就应该调用
-        snd_pcm_set_ops(pcm, SNDRV_PCM_STREAM_PLAYBACK, &uac_pcm_ops); 
-                uac_pcm_open
-                        aml_tdm_br_pre_start(c_ssize, c_srate);  //这里就应该打开了
-                                aml_tdm_br_work_func
-                                        aml_tdm_br_prepare
-                                                aml_tdm_br_frddr_prepare  # 接上面
-                                                tdm_bridge_state = TDM_BR_PRE_START;
-                                        aml_tdm_br_codec_prepare  # 找到 codec
-        g_uac = uac;
-```
-
-播放的时候 lsken00 u_audio_start_capture--453 tdm_bridge_state = 0   说明是 aml_tdm_br_frddr_prepare 没完成的原因 ， 所以要找到 “找出为什么 s_effect 为空”？
-
-
-所以 u_audio_iso_complete 124  aml_tdm_br_pre_start 播放的时候就不应该走这里了，
-
-送数据到 tdm_bridge 
-
-第一次写走到 aml_tdm_br_tdm_start 时候就会因为 if (tdm_bridge_state == TDM_BR_WORKING)  为假 ，走到 playing  ，并 tdm_bridge_state = TDM_BR_WORKING
-
-第二次送数据，走到 aml_tdm_br_tdm_start if (tdm_bridge_state == TDM_BR_WORKING)  为真， 直接 return， 不会到 playing, tdm_cached_data
-
-------------
-
-**结束时**
-
-f_uac2.c  中会掉用
-
-```c
-if (intf == uac2->as_out_intf) {
-        uac2->as_out_alt = alt; 
-
-        if (alt)
-                ret = u_audio_start_capture(&uac2->g_audio);
-        else 
-                u_audio_stop_capture(&uac2->g_audio);
-```
-
-此外 uac_pcm_close 的时候一样会检查 tdm_ready 状态，并停止
-
-```sh
-aml_tdm_br_stop
-        aml_tdm_br_stop_func
-                aml_tdm_br_codec_stop
-                aml_tdm_br_tdm_stop
-                        aml_tdm_br_frddr_prepare 重新初始化 frddr 
-                        tdm_bridge_state = TDM_BR_STOP;
-
-
-
-# aml_tdm_br_codec_stop 中 这里可以注释掉，因为在有 remote 函数了
-if (codec_dai->driver->ops && codec_dai->driver->ops->mute_stream)
-        codec_dai->driver->ops->mute_stream(codec_dai, 1, my_stream);
-else if (codec_dai->driver->ops && codec_dai->driver->ops->digital_mute)                                                                                                                                 
-        codec_dai->driver->ops->digital_mute(codec_dai, 1); 
-```
-
-
-#### Fix aml_tdm_br_frddr_prepare 未执行
-
-> Not init audio effects
-
-```sh
---- a/arch/arm64/boot/dts/amlogic/a5_a113x2_av400_1g_spk.dts
-+++ b/arch/arm64/boot/dts/amlogic/a5_a113x2_av400_1g_spk.dts
-@@ -728,7 +728,7 @@
-                lane_mask = <0x1>;
-                /* max 0xff, each bit for one channel */
-                channel_mask = <0x3>;
--               status = "disabled";
-+               status = "okay";
-        };
- }; /* end of audiobus */
-```
-
-
-#### Fix is_aed_reserve_frddr 返回 false 
-
-```c
-  /* tm2_revb afterward */
-  static struct effect_chipinfo tm2_revb_effect_chipinfo = { 
-          .version = VERSION4,
-          .reserved_frddr = true,  // 修改 false 为 true
-  };
-```
-
-
 
 ### dam 寄存器
 
-
-c3795ba76cb1c270cbdde74ce0ccd2b9cb9ae322
 
 ```
 mount -t debugfs none /sys/kernel/debug
@@ -1829,29 +1545,9 @@ clk_set_rate(tdm->clk, mpll_freq);  //从 seeting->sysclk 中过来
 ```
 
 
-git add arch/arm64/boot/dts/amlogic/a5_a113x2_av400_1g_spk.dts
-git add drivers/usb/gadget/function/f_uac2.c
-git add drivers/usb/gadget/function/u_audio.c
-git add sound/soc/amlogic/auge/tdm.c
-git add sound/soc/amlogic/auge/tdm_bridge.c
-
-```
-[A5-AV400] Add tdm_bridge function for UAC
-change list:
-1. Add tdm_bridge module
-2. Fix can't find codec (tas5707)
-3. Add timestamp module
-
-Test:
-build ok, window PC UAC play ok, aplay ok
-```
-
-e7357867137396171a9fda050663adfdebe50482
 
 
-https://scgit.amlogic.com/295257
 
-1. Change mode for window uac enable
 
 
 

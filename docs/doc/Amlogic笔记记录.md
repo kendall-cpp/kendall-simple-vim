@@ -435,7 +435,7 @@ vim S90start_adb.sh
 chmod 777 S90start_adb.sh
 ```
 
-然后在 S90start_adb.sh 中天添加需要执行的命令，比例
+然后在 S90start_adb.sh 中天添加需要执行的命令，比如
 
 ```sh
 mkdir /lsken00/

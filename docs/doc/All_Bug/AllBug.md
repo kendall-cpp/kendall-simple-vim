@@ -14,9 +14,17 @@
 
 - 打开 CONFIG_USB_RTL8152=y
 
+
+
 ```sh
+# kernel 4.19
+make  CLANG_TRIPLE=../prebuilt/toolchain/aarch64/bin/aarch64-cros-linux-gnu- CC=../prebuilt/toolchain/aarch64/bin/aarch64-cros-linux-gnu-clang CROSS_COMPILE=../prebuilt/toolchain/aarch64/bin/aarch64-cros-linux-gnu- ARCH=arm64 korlan-bx_defconfig CONFIG_DEBUG_SECTION_MISMATCH=y menuconfig
+
 # vim arch/arm64/configs/korlan-p2_defconfig
 CONFIG_USB_RTL8152=y
+
+# patch
+https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/258568/2/arch/arm64/configs/korlan-p2_defconfig
 ```
 
 - 动态获取需要启动 hdcpcd 服务
@@ -26,7 +34,7 @@ CONFIG_USB_RTL8152=y
 USB 需要设置成 host 模式
 
 ```sh
-# 第一种返回时
+# 第一种方式
 echo 1 > /sys/kernel/debug/usb_mode/mode  
 
 # 第二种方式
@@ -170,6 +178,10 @@ https://scgit.amlogic.com/#/c/292999/
 
 https://scgit.amlogic.com/29845
 
+### 最终迁移完成 patch
+
+https://scgit.amlogic.com/295257
+
 
 ### 解决 tdm_bridge underrun 问题
 
@@ -281,6 +293,72 @@ index 000000000000..488faae454a2
 ```
 
 - 从 kernel 5.15 拷贝 drivers/amlogic/timestamp
+
+### 在 buildroot 中添加启动 UAC 声卡的脚本
+
+```sh
+touch S90start_adb.sh
+vim S90start_adb.sh
+chmod 777 S90start_adb.sh
+```
+
+然后在 S90start_adb.sh 中天添加需要执行的命令，比如
+
+```sh
+# AV400
+rmmod sdio_bt
+rmmod vlsicomm
+
+mount -t configfs configfs /sys/kernel/config
+mkdir /sys/kernel/config/usb_gadget/amlogic
+echo 0x18D1 > /sys/kernel/config/usb_gadget/amlogic/idVendor  # window 0x18D12
+echo 0x4e26 > /sys/kernel/config/usb_gadget/amlogic/idProduct
+mkdir /sys/kernel/config/usb_gadget/amlogic/strings/0x409
+echo '0123456789ABCDEF' > /sys/kernel/config/usb_gadget/amlogic/strings/0x409/serialnumber
+echo amlogic > /sys/kernel/config/usb_gadget/amlogic/strings/0x409/manufacturer
+echo korlan > /sys/kernel/config/usb_gadget/amlogic/strings/0x409/product
+mkdir -p  /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/strings/0x409
+
+mkdir /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/strings/0x401
+echo "uac2" > /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/strings/0x401/configuration
+mkdir /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0
+echo 0x3 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/c_chmask
+echo 48000 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/c_srate
+echo 4 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/c_ssize
+echo 0x3  > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/p_chmask
+echo 48000 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/p_srate
+echo 4 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/p_ssize
+ln -s /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0 /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/uac2.0
+
+
+echo "config ADB"
+echo adb > /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/strings/0x409/configuration
+mkdir /sys/kernel/config/usb_gadget/amlogic/functions/ffs.adb
+mkdir -p /dev/usb-ffs/adb
+mount -t functionfs adb /dev/usb-ffs/adb
+killall adbd  
+ln -s /sys/kernel/config/usb_gadget/amlogic/functions/ffs.adb /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/ffs.adb
+/usr/bin/adbd &
+
+sleep 3
+
+echo "" > /sys/kernel/config/usb_gadget/amlogic/UDC  
+echo "fdd00000.crgudc2" > /sys/kernel/config/usb_gadget/amlogic/UDC 
+
+arecord -l 
+```
+
+
+### 解决  ubuntu 播放不行问题
+
+window uac 测试没问题，但是 linux PC uac 不行
+
+### dam 音频数据
+
+查看 USB 传到 tdm_bridge 的数据是否有问题
+
+
+
 
 -----
 
