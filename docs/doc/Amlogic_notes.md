@@ -1313,11 +1313,8 @@ cat /sys/kernel/debug/clk/clk_summary | grep a5
 - amlogic
 
 cat   sys/kernel/debug/meson-clk-msr/measure_summary  | grep hifi_pll
-<<<<<<< HEAD
 cat   sys/kernel/debug/meson-clk-msr/measure_summary  | grep audio_
-=======
 cat   sys/kernel/debug/meson-clk-msr/measure_summary  |  grep pll
->>>>>>> 7415349f40fe679ff38a0399cba99618d532bf2c
 
 - korlan
 
