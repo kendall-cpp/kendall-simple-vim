@@ -46,12 +46,11 @@
     - [AV400 buildroot 测试 UAC](#av400-buildroot-测试-uac)
     - [AV400 kernel-5.4 打开 UAC](#av400-kernel-54-打开-uac)
     - [修改 功放板 patch](#修改-功放板-patch)
+    - [修改 UAC 模式支持 window](#修改-uac-模式支持-window)
   - [error\_找不到 tas5707](#error_找不到-tas5707)
   - [解决声音播放缓慢问题](#解决声音播放缓慢问题)
     - [Fix aml\_tdm\_br\_frddr\_prepare 未执行](#fix-aml_tdm_br_frddr_prepare-未执行)
     - [Fix is\_aed\_reserve\_frddr 返回 false](#fix-is_aed_reserve_frddr-返回-false)
-    - [播放声音延迟](#播放声音延迟)
-  - [提交](#提交-1)
   - [dam 寄存器](#dam-寄存器)
     - [EE\_AUDIO\_CLK\_TDMOUT\_A\_CTRL 0xfe330090](#ee_audio_clk_tdmout_a_ctrl-0xfe330090)
     - [EE\_AUDIO\_CLK\_TDMOUT\_D\_CTRL 0xfe3300ec](#ee_audio_clk_tdmout_d_ctrl-0xfe3300ec)
@@ -64,6 +63,7 @@
     - [SAR\_ADC\_REG0 0xfe026000](#sar_adc_reg0-0xfe026000)
     - [SAR\_ADC\_CHNL7 0xfe0260ec](#sar_adc_chnl7-0xfe0260ec)
 - [解决开启 HIFI\_PULl 错误重启问题](#解决开启-hifi_pull-错误重启问题)
+- [解决 src-clk-freq 不对导致偶尔会出现 underrun 问题](#解决-src-clk-freq-不对导致偶尔会出现-underrun-问题)
 >>>>>>> 7415349f40fe679ff38a0399cba99618d532bf2c
 >>>>>>> 4e70d81561321021de26f97724a2502c0abef3a3
 
@@ -1554,6 +1554,10 @@ d6e9202cf8d66f4ef616eee66a7d4c3363653a74
 
 https://scgit.amlogic.com/#/c/292999/
 
+#### 修改 UAC 模式支持 window
+
+https://scgit.amlogic.com/29845
+
 ----
 
 ### error_找不到 tas5707
@@ -1749,64 +1753,6 @@ else if (codec_dai->driver->ops && codec_dai->driver->ops->digital_mute)
 ```
 
 
-#### 播放声音延迟
-
-因为 tdm_bridge underrun 导致调用了 aml_tdm_br_tdm_stop ， 使得 tdm_bridge_state 为 1 了，所以 aml_tdm_br_work_func 函数中就会走进 aml_tdm_br_prepare -- aml_tdm_br_frddr_prepare -- aml_tdm_br_dmabuf_clear_info 把 last_wr_addr 和 last_rd_addr 初始化了。
-
-
-问题出现在 USB 读写不同步问题，A5 使用的是 high-speed ，korlan 使用的 flow-speed
-
-```sh
-# dmesg | grep high
-[    5.580895] mmc1: new high speed SDIO card at address 0000
-[   10.452439] configfs-gadget gadget: high-speed config #1: amlogic
-```
-
-- 到目前所有修改的 patch : 
-
-commit-id: 69a5864417b03bad2fd013c80012982b6e400b22
-
-- 分析
-
-uac 播放之后，占用了 frddrs[0] ，导致 tdm 无法正常播放。
-
-
-
-### 提交
-
-https://scgit.amlogic.com/295257
-
-
-
-- 开始播放流程
-
-u_audio_start_capture
-  没有数据来，aml_tdm_br_state = stop
-  走到 aml_tdm_br_pre_start 
-    这里会获取到 gp_tdm
-    然后进入 aml_tdm_br_work_func
-      aml_tdm_br_prepare  
-      aml_tdm_br_codec_prepare  准备 codec
-
-      主要的工作在 aml_tdm_br_prepare 
-        aml_tdm_br_frddr_prepare
-          一开始没有 frddr ，通过 aml_audio_register_frddr 获取，这时 is_aed_reserve_frddr = false
-          这里如果出现 underrun 就会执行 aml_tdm_br_tdm_stop
-          最后对调用 aml_tdm_br_dmabuf_clear_info
-        enable tdm
-        tdm_bridge_state = TDM_BR_PRE_START;  
-
-- 关闭流程
-
-u_audio_stop_capture
-  aml_tdm_br_stop
-    aml_tdm_br_stop_func
-      aml_tdm_br_codec_stop
-        需要注销 aml_audio_unregister_frddr 和 停止 codec
-      aml_tdm_br_tdm_stop
-        disable tdm
-        aml_tdm_br_frddr_prepare
-
 
 ### dam 寄存器
 
@@ -1867,61 +1813,45 @@ audio_tdm_bridge: tdm_bridge {
 }
 ```
 
+## 解决 src-clk-freq 不对导致偶尔会出现 underrun 问题
 
-echo 0xfe330090 23 > /sys/kernel/debug/aml_reg/dump
-cat /sys/kernel/debug/aml_reg/dump > /data/EE_AUDIO_CLK_TDMOUT1.txt
-echo 0xfe3301c0 42 > /sys/kernel/debug/aml_reg/dump
-cat /sys/kernel/debug/aml_reg/dump > /data/EE_AUDIO_FRDDR1.txt
-echo 0xfe330500 47 > /sys/kernel/debug/aml_reg/dump
-cat /sys/kernel/debug/aml_reg/dump > /data/EE_AUDIO_TDMOUT1.txt
-echo 0xfe330040 13 > /sys/kernel/debug/aml_reg/dump
-cat /sys/kernel/debug/aml_reg/dump > /data/EE_AUDIO_MST1.txt
-echo 0xfe026000 59 > /sys/kernel/debug/aml_reg/dump
-cat /sys/kernel/debug/aml_reg/dump > /data/ESAR_ADC1.txt
+tdm_bridge 偶尔会出现 underrun 问题，肯定是和 clk 有关，对应低吗
 
-echo 0xfe330090 23 > /sys/kernel/debug/aml_reg/dump
-cat /sys/kernel/debug/aml_reg/dump > /data/EE_AUDIO_CLK_TDMOUT2.txt
-echo 0xfe3301c0 42 > /sys/kernel/debug/aml_reg/dump
-cat /sys/kernel/debug/aml_reg/dump > /data/EE_AUDIO_FRDDR2.txt
-echo 0xfe330500 47 > /sys/kernel/debug/aml_reg/dump
-cat /sys/kernel/debug/aml_reg/dump > /data/EE_AUDIO_TDMOUT2.txt
-echo 0xfe330040 13 > /sys/kernel/debug/aml_reg/dump
-cat /sys/kernel/debug/aml_reg/dump > /data/EE_AUDIO_MST2.txt
-echo 0xfe026000 59 > /sys/kernel/debug/aml_reg/dump
-cat /sys/kernel/debug/aml_reg/dump > /data/ESAR_ADC2.txt
+```c
+//aml_tdm_platform_probe
+ret = of_property_read_u32(dev->of_node, "src-clk-freq", &p_tdm->syssrc_clk_rate);
+
+//mclk 和 clk 的值不同芯片不一样
+clk_set_rate(tdm->mclk, mclk);  // 对应设备树种的 src-clk-freq，
+// a5 491520000 a1 614400000
+
+clk_set_rate(tdm->clk, mpll_freq);  //从 seeting->sysclk 中过来
+```
 
 
+git add arch/arm64/boot/dts/amlogic/a5_a113x2_av400_1g_spk.dts
+git add drivers/usb/gadget/function/f_uac2.c
+git add drivers/usb/gadget/function/u_audio.c
+git add sound/soc/amlogic/auge/tdm.c
+git add sound/soc/amlogic/auge/tdm_bridge.c
+
+```
+[A5-AV400] Add tdm_bridge function for UAC
+change list:
+1. Add tdm_bridge module
+2. Fix can't find codec (tas5707)
+3. Add timestamp module
+
+Test:
+build ok, window PC UAC play ok, aplay ok
+```
+
+e7357867137396171a9fda050663adfdebe50482
 
 
-adb pull /data/EE_AUDIO_CLK_TDMOUT1.txt .
-adb pull /data/EE_AUDIO_FRDDR1.txt .
-adb pull /data/EE_AUDIO_TDMOUT1.tx .
-adb pull /data/EE_AUDIO_MST1.txt .
-adb pull /data/ESAR_ADC1.txt .
-adb pull /data/EE_AUDIO_CLK_TDMOUT2.txt .
-adb pull /sys/kernel/debug/aml_reg/dump .
-adb pull /data/EE_AUDIO_FRDDR2.txt .
-adb pull /sys/kernel/debug/aml_reg/dump .
-adb pull /data/EE_AUDIO_TDMOUT2.txt .
-adb pull /sys/kernel/debug/aml_reg/dump .
-adb pull /data/EE_AUDIO_MST2.txt .
-adb pull /sys/kernel/debug/aml_reg/dump .
-adb pull /data/ESAR_ADC2.txt .
+https://scgit.amlogic.com/295257
+
+1. Change mode for window uac enable
 
 
-echo 0xfe330090 23 > /sys/kernel/debug/aml_reg/dump
-cat /sys/kernel/debug/aml_reg/dump > /data/EE_AUDIO_CLK_TDMOUT3.txt
-echo 0xfe3301c0 42 > /sys/kernel/debug/aml_reg/dump
-cat /sys/kernel/debug/aml_reg/dump > /data/EE_AUDIO_FRDDR3.txt
-echo 0xfe330500 47 > /sys/kernel/debug/aml_reg/dump
-cat /sys/kernel/debug/aml_reg/dump > /data/EE_AUDIO_TDMOUT3.txt
-echo 0xfe330040 13 > /sys/kernel/debug/aml_reg/dump
-cat /sys/kernel/debug/aml_reg/dump > /data/EE_AUDIO_MST3.txt
-echo 0xfe026000 59 > /sys/kernel/debug/aml_reg/dump
-cat /sys/kernel/debug/aml_reg/dump > /data/ESAR_ADC3.txt
 
-adb  pull /data/EE_AUDIO_CLK_TDMOUT3.txt .
-adb  pull /data/EE_AUDIO_FRDDR3.txt .
-adb  pull /data/EE_AUDIO_TDMOUT3.txt .
-adb  pull /data/EE_AUDIO_MST3.txt .
-adb  pull /data/ESAR_ADC3.txt .

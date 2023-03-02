@@ -1,5 +1,5 @@
 <!-- TOC -->
-
+2
 - [bus,driver,device 框架](#busdriverdevice-框架)
   - [注册](#注册)
   - [device 和 driver绑定](#device-和-driver绑定)
@@ -305,7 +305,3 @@ usb Function driver 可以细分为 legacy 和 funtions
 - function： 各种 usb 之类设备功能驱动，位于 drivers/usb/gadget/function， 里面给出了对应的 sample , 其作用是配置 usb 之类协议的接口描述符以及其他之类协议，比如 uvc 协议，hid协议等。
 
 > **注意，一个 compsite 设备对应一个或者多个 function ，也就是对应多个 function driver**。
-
-
-
-4

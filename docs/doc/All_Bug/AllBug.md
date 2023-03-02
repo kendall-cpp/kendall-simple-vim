@@ -166,6 +166,121 @@ Change power amplifier driver board from D622 to D613
 
 https://scgit.amlogic.com/#/c/292999/
 
+#### 修改 UAC 模式支持 window
+
+https://scgit.amlogic.com/29845
+
+
+### 解决 tdm_bridge underrun 问题
+
+#### 声音播放延迟问题
+
+这个判断回合 channel 有关，
+
+```c
+a5 tx_mask must be 0x03 aml_tdm_br_hw_setting(tdm, 2);  //a5 ch = 2
+
+korlan ch = 1
+```
+
+####  src-clk-freq 不对导致偶尔会出现 underrun 问题
+
+tdm_bridge 偶尔会出现 underrun 问题，肯定是和 clk 有关，对应的代码
+
+```c
+//aml_tdm_platform_probe
+ret = of_property_read_u32(dev->of_node, "src-clk-freq", &p_tdm->syssrc_clk_rate);
+
+//mclk 和 clk 的值不同芯片不一样
+clk_set_rate(tdm->mclk, mclk);  // 对应设备树种的 src-clk-freq，
+// a5 491520000 a1 614400000
+
+clk_set_rate(tdm->clk, mpll_freq);  //从 seeting->sysclk 中过来
+```
+
+- 修改设备树
+
+```sh
+--- a/arch/arm64/boot/dts/amlogic/a5_a113x2_av400_1g_spk.dts
++++ b/arch/arm64/boot/dts/amlogic/a5_a113x2_av400_1g_spk.dts
+@@ -508,7 +508,7 @@
+                start_clk_enable = <1>;
+                tdm5v-supply = <&vcc5v_reg>;
+                tdm3v3-supply = <&vddio3v3_reg>;
+-               src-clk-freq = <614400000>;
++               src-clk-freq = <491520000>; /*mpll1 mclk is 491520000*/
+                status = "okay";
+        };
+```
+
+#### 如果有一点点杂音
+
+那可能是与 aml_frddr_set_fifos 或者 dma_buf->bytes 设置不对有关。
+
+
+### 添加 timestamp 模块
+
+- 修改dts
+
+```sh
+                channel_mask = <0x3>;
+                status = "disabled";
+        };
++       timestamp {
++               compatible = "amlogic, meson-soc-timestamp";
++               reg = <0x0 0xFE0100EC 0x0 0x8>;
++               status = "okay";
++       };
+ }; /* end of audiobus */
+
+
++CONFIG_AMLOGIC_SOC_TIMESTAMP=y
+```
+
+- 修改 Kconfig 和 Makefile
+
+```sh
+diff --git a/drivers/amlogic/Kconfig b/drivers/amlogic/Kconfig
+index 3208df21ec95..5daaa5be6709 100644
+--- a/drivers/amlogic/Kconfig
++++ b/drivers/amlogic/Kconfig
+@@ -177,6 +177,7 @@ source "drivers/amlogic/freertos/Kconfig"
+ 
+ source "drivers/amlogic/aes_hwkey_gcm/Kconfig"
+ source "drivers/amlogic/gpio/Kconfig"
++source "drivers/amlogic/timestamp/Kconfig"
+ 
+ endmenu
+ endif
+diff --git a/drivers/amlogic/Makefile b/drivers/amlogic/Makefile
+index 6226bc7b43b3..fba5e8d7b264 100644
+--- a/drivers/amlogic/Makefile
++++ b/drivers/amlogic/Makefile
+@@ -39,6 +39,7 @@ obj-$(CONFIG_AMLOGIC_MKL)             += mkl/
+ 
+ #Always build in code/modules
+ obj-$(CONFIG_AMLOGIC_CPUIDLE)          += cpuidle/
++obj-$(CONFIG_AMLOGIC_SOC_TIMESTAMP) += timestamp/
+ obj-$(CONFIG_AMLOGIC_DEFENDKEY)                += defendkey/
+ obj-$(CONFIG_AMLOGIC_AUTO_CAPTURE)     += free_reserved/
+ obj-$(CONFIG_AMLOGIC_GX_SUSPEND)       += pm/
+diff --git a/drivers/amlogic/timestamp/Kconfig b/drivers/amlogic/timestamp/Kconfig
+new file mode 100644
+index 000000000000..488faae454a2
+--- /dev/null
++++ b/drivers/amlogic/timestamp/Kconfig
+@@ -0,0 +1,8 @@
++# SPDX-License-Identifier: GPL-2.0-only
++config AMLOGIC_SOC_TIMESTAMP
++       bool "Amlogic SoC Timestamp"
++       depends on ARCH_MESON || COMPILE_TEST
++       depends on OF
++       default y
++       help
++         Say yes if you want to get soc-level timestamp.
+```
+
+- 从 kernel 5.15 拷贝 drivers/amlogic/timestamp
 
 -----
 

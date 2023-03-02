@@ -64,16 +64,6 @@ aplay -Dhw:0,0 /data/the-stars-48k-60s.wav
 echo 0 > /sys/module/u_audio/parameters/free_run  & aplay -Dhw:0,0 /data/the-stars-48k-60s.wav & echo 1 > /sys/module/u_audio/parameters/free_run 
 ```
 
-# tdm_bridge -korlan
-
-usb_audio 才走 tdm_bridge, aplay 直接 tdm.c
-
-```sh
-# 强制启动和关闭tdm_bridge
-echo 0 > /sys/module/u_audio/parameters/free_run   
-echo 1 > /sys/module/u_audio/parameters/free_run  
-```
-
 # Enable usb 以太网
 
 - 需要打开配置
