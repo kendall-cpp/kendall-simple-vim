@@ -24,6 +24,12 @@ cat /sys/kernel/debug/aml_reg/dump
 none on /sys/kernel/debug type debugfs (rw,relatime)
 ```
 
+## tdm_bridge dump dam 数据
+
+> A5-file\av400\tdm_bridge_dumy_dam_dam_2_wavfile.patch
+
+使用说明见 patch 代码的注释
+
 # audio 工具使用
 
 > 上传音频数据 adb push .\the-stars-48k-60s.wav /data/
@@ -104,6 +110,8 @@ lo        Link encap:Local Loopback
 ```
 
 ## adb connect
+
+- 命令： `adb connect <ip>:5555`
 
 adb coonect 默认使用的是 ipv6，所以需要打开 ipv6 才能使用
 

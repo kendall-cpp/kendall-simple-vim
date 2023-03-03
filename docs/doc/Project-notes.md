@@ -15,6 +15,8 @@ vim a1_buildroot/.repo/repo/.git/config
 [user]
     name = shengken.lin
     email = shengken.lin@amlogic.com
+
+git push review HEAD:refs/for/amlogic-4.19-dev
 ```
 
 ## A5-sync
