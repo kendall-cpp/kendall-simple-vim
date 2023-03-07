@@ -794,9 +794,6 @@ https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/268826
 
 ```
 
-commit id : 2ec287b739a6406664d6a6777109f6464976603e
-
-
 
 Hi Yi,
 
@@ -805,8 +802,6 @@ Based on comment#43, I made more cropping, please review this cl.
 ```
 https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/270868
 ```
-
-eureka-v2 commit Id: 62d8fe0cb22be5de4ce0e00a532cbda8e1edca12
 
 
 ## Korlan 开机声卡顿问题
@@ -855,6 +850,8 @@ Thanks for Mingyu update, please let us if it still our assistance.
 - 增加一个状态值
 
 -----
+
+issue: https://partnerissuetracker.corp.google.com/issues/262352934#comment4
 
 Hi Mingyu,
 
@@ -952,8 +949,6 @@ mount -t erofs /data/erofs.img /data/aaa/ -o loop
 
 
 ### 学习给korlan增加一个分区
-
-
 
 - google_source/eureka/korlan-sdk/u-boot/board/amlogic/a1_korlan_p2/a1_korlan_p2.c
 
@@ -1171,9 +1166,6 @@ https://eureka-partner-review.googlesource.com/c/amlogic/u-boot/+/276588
 
 - vendor/amlogic
 
-git add korlan/init.rc.base
-git add build/tools/releasetools/ota_from_target_files
-
 ```
 [Don't merge][korlan] Add erofs support and mount erofs.
 
@@ -1185,12 +1177,10 @@ Test:
 
 git push eureka HEAD:refs/for/master
 
-commit id: b3a57d7b691db111e027f19e8e58eb7efdc593b5
 https://eureka-partner-review.googlesource.com/c/vendor/amlogic/+/276589
 
+
 topic: https://eureka-partner-review.googlesource.com/q/topic:%22Enable+erofs%22
-
-
 
 ----
 
@@ -1454,9 +1444,14 @@ static struct snd_soc_dai *soc_card_get_dai(struct snd_soc_card *card, const cha
 	return NULL;
 }
 
+```
 
-FIx: error: aml_gpio_mute_spk (aml_card_priv) in aml_tdm_br_tdm_start
 
+###  解决 aml_gpio_mute_spk 问题
+
+> FIx: error: aml_gpio_mute_spk (aml_card_priv) in aml_tdm_br_tdm_start
+
+```sh
 --- a/sound/soc/amlogic/auge/card.c
 +++ b/sound/soc/amlogic/auge/card.c
 @@ -1180,6 +1182,7 @@ static int aml_card_parse_of(struct device_node *node,
@@ -1531,14 +1526,14 @@ audio_tdm_bridge: tdm_bridge {
 
 ## 解决 src-clk-freq 不对导致偶尔会出现 underrun 问题
 
-tdm_bridge 偶尔会出现 underrun 问题，肯定是和 clk 有关，对应低吗
+tdm_bridge 偶尔会出现 underrun 问题，肯定是和 clk 有关，对应代码
 
 ```c
 //aml_tdm_platform_probe
 ret = of_property_read_u32(dev->of_node, "src-clk-freq", &p_tdm->syssrc_clk_rate);
 
 //mclk 和 clk 的值不同芯片不一样
-clk_set_rate(tdm->mclk, mclk);  // 对应设备树种的 src-clk-freq，
+clk_set_rate(tdm->mclk, mclk);  // 对应设备树中的 src-clk-freq，
 // a5 491520000 a1 614400000
 
 clk_set_rate(tdm->clk, mpll_freq);  //从 seeting->sysclk 中过来
@@ -1546,8 +1541,64 @@ clk_set_rate(tdm->clk, mpll_freq);  //从 seeting->sysclk 中过来
 
 
 
+## 解决 tiemrstamp overrun 问题
+
+使用 uac 播放时每一帧有多少个字节
+
+```c
+period   = frames_to_bytes(runtime, runtime->period_size); 
+```
+
+- period = 48000     uac tdm.c
+
+- 这里个值是固定的
+  - runtime->period_siz = 512  # 单声道  period_siz = 6000
+  - runtime->frame_bits = 64   # 单声道 runtime->frame_bits = 32
 
 
+选择帧的长度和 fifo_depth 中最小的，因为不嫩超过 fifo 的长度
+
+```c
+//Contrast minimum of period and fifo depth, and set the value as half.  
+threshold = min(period, fr->chipinfo->fifo_depth);   min(48000, 512)
+```
+
+- fr->chipinfo->fifo_depth = 512
+- threshold = 512
+- threshold /= 2  ==  256
+
+- 设置 fifo 的地址范围
+
+```c
+aml_frddr_set_fifos(fr, fr->chipinfo->fifo_depth, threshold); // 512  256 ===>  0x200 0x100  
+```
+
+- 设置多少组帧就上报一次中断
+
+```c
+int_addr = period / FIFO_BURST;  // FIFO_BURST = 8
+aml_frddr_set_intrpt(fddr, int_addr); //aml_audio_mmio_write  int_addr = 
+`1``
+
+
+
+
+
+
+
+
+A5_audio_spec 中描述到 **FRDDR_A’s FIFO depth is 256x64，B/C/D/E are 128x64** （每个包 64 bit）
+
+```
+3.3Audio FRDDR
+
+T7 has 5 FRDDR(FIFO), FRDDR_A’s FIFO depth is 256x64, B/C/D/E are 128x64;
+        a.All worked at sysclk;
+        b.When enable FRDDR, it will fill FIFO from DDR first;
+        c.When FRDDR receive request, it will read data from fifo and send out;
+        d.FRDDR will fill FIFO automatically by configure;
+Below is the Diagram of Audio FRDDR.
+```
 
 
 

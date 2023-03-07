@@ -130,11 +130,11 @@ https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/270868
 
 ## 实现 aplay 和 uac 同时播放冲突问题
 
-https://partnerissuetracker.corp.google.com/issues/262352934
+- issues：https://partnerissuetracker.corp.google.com/issues/262352934#comment4
 
  给 tdm 增加一个 busy 状态，当 aplay 播放时， uac 等待 aplay 播放结束
 
- 修复的 cl: https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/275167
+ - 修复的 cl: https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/275167
 
 
 ## koraln 增加 erofs 支持
@@ -187,7 +187,9 @@ https://scgit.amlogic.com/295257
 
 #### 声音播放延迟问题
 
-这个判断回合 channel 有关，
+**clock 参数文档可以查看** `Meson\A5\appNote\A5_clk_tree.xlsx`
+
+这个判断回和 channel 有关，
 
 ```c
 a5 tx_mask must be 0x03 aml_tdm_br_hw_setting(tdm, 2);  //a5 ch = 2
@@ -353,12 +355,43 @@ arecord -l
 
 window uac 测试没问题，但是 linux PC uac 不行
 
+f_uac2 的模式有关
+
+#### uac 模式
+
+对应代码路径： drivers/usb/gadget/function/f_uac2.c 
+
+- USB_ENDPOINT_SYNC_ASYNC
+
+- USB_ENDPOINT_SYNC_ADAPTIVE
+
+- USB_ENDPOINT_SYNC_SYNC
+
+![](https://jsd.cdn.zzko.cn/gh/kendall-cpp/blogPic@main/blog-01/usb_enopint_mode.1ln58gbfssv4.webp)
+
+
+添加 ubuntu 和 win uac mode
+
+> https://scgit.amlogic.com/#/c/298458
+
+或者 ： > A5-file\av400\tdm_bridge_dump_dam_2_wavfile.patch 
+
+
 ### dam 音频数据
 
 查看 USB 传到 tdm_bridge 的数据是否有问题
 
+### HIFIPLL
 
+需要在 dts 中配置这个寄存器 ANACTRL_HIFIPLL_CTRL0 0xfe008100
 
+```c
+audio_tdm_bridge: tdm_bridge {
+compatible = "amlogic, snd-tdm-bridge";                                                       
+reg = <0x0 0xfe008100 0x0 0x10>;
+status = "okay";
+}; 
+```
 
 -----
 

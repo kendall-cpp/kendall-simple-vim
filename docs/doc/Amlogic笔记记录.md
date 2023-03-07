@@ -430,7 +430,7 @@ done
 从上面可以看出，rcS 默认会在 /etc/init.d 目录下查找所有以‘S’开头的脚本，然后依次执行这些脚本。s所以我们可以自己创建一个以‘S’开头的自启动脚本文件，比如我创建一个名为 S90start_adb.sh 的自启动文件，**一般以数字命名决定执行顺序**， 命令如下：
 
 ```sh
-touch S90start_adb.sh
+touch S90start_adb_udc.sh
 vim S90start_adb.sh
 chmod 777 S90start_adb.sh
 ```
@@ -450,6 +450,17 @@ echo "lsken00 --- --- test"
 test.txt
 ```
 
+### S 开头文件从哪里来
+
+在 package 有相同 S 开头的文件，并在 mk 文件中进行配置，比如：
+
+```sh
+a5_buildroot/buildroot$ find . -name "S80dnsmasq"
+./package/dnsmasq/S80dnsmasq
+a5_buildroot/buildroot$ grep -nr "S80dnsmasq" ./package/dnsmasq/
+./package/dnsmasq/dnsmasq.mk:102:       $(INSTALL) -m 755 -D package/dnsmasq/S80dnsmasq \
+./package/dnsmasq/dnsmasq.mk:103:               $(TARGET_DIR)/etc/init.d/S80dnsmasq
+```
 
 ## 修改 buildroot dl 下载路径
 
@@ -517,6 +528,64 @@ make linux-savedefconfig
 - 保存到  ./output/a5_av400_spk_a6432_release/build/linux-amlogic-5.4-dev/defconfig
 
 - 然后将 defconfig 的修改添加到 aml-5.4/arch/arm64/configs/meson64_a64_smarthome_defconfig
+
+
+## buildroot 添加一个 config
+
+以添加 timerstamp 为例
+
+- 添加设备树
+
+```c
+//arch/arm64/boot/dts/amlogic/a5_a113x2_av400_1g_spk.dts
+/ {
+	timestamp {
+		compatible = "amlogic, meson-soc-timestamp";
+		reg = <0x0 0xFE0100EC 0x0 0x8>;
+		status = "okay";
+	};
+}
+```
+
+- 修改 defconfig
+
+```sh
+# arch/arm64/configs/meson64_a64_smarthome_defconfig
+CONFIG_AMLOGIC_SOC_TIMESTAMP=y
+```
+
+- 修改 Kconfig
+
+```sh
+# drivers/amlogic/Kconfig
+CONFIG_AMLOGIC_SOC_TIMESTAMP=y
+
+# drivers/amlogic/timestamp/Kconfig
+# SPDX-License-Identifier: GPL-2.0-only
+config AMLOGIC_SOC_TIMESTAMP
+	bool "Amlogic SoC Timestamp"
+	depends on ARCH_MESON || COMPILE_TEST
+	depends on OF
+	default y
+	help
+	  Say yes if you want to get soc-level timestamp.
+```
+
+- 修改 Makefile
+
+```sh
+# drivers/amlogic/Makefile
+obj-$(CONFIG_AMLOGIC_SOC_TIMESTAMP)	+= timestamp/
+```
+
+- 添加 timerstamp 代码
+
+drivers/amlogic/timestamp/
+
+
+- 最后编译，编译的时候可能会出现是否选择开启 timerstamp ,输入 y 即可
+
+
 
 ## config 和 mk 文件
 

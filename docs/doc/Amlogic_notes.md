@@ -26,7 +26,7 @@ none on /sys/kernel/debug type debugfs (rw,relatime)
 
 ## tdm_bridge dump dam 数据
 
-> A5-file\av400\tdm_bridge_dumy_dam_dam_2_wavfile.patch
+> A5-file\av400\tdm_bridge_dump_dam_2_wavfile.patch 
 
 使用说明见 patch 代码的注释
 
@@ -69,6 +69,22 @@ aplay -Dhw:0,0 /data/the-stars-48k-60s.wav
 
 echo 0 > /sys/module/u_audio/parameters/free_run  & aplay -Dhw:0,0 /data/the-stars-48k-60s.wav & echo 1 > /sys/module/u_audio/parameters/free_run 
 ```
+
+# uac 模式
+
+对应代码路径： drivers/usb/gadget/function/f_uac2.c 
+
+- USB_ENDPOINT_SYNC_ASYNC
+
+- USB_ENDPOINT_SYNC_ADAPTIVE
+
+- USB_ENDPOINT_SYNC_SYNC
+
+![](https://jsd.cdn.zzko.cn/gh/kendall-cpp/blogPic@main/blog-01/usb_enopint_mode.1ln58gbfssv4.webp)
+
+- av400 可以使用这个 patch 进行修改
+
+workspace/A5-file/av400/f_uac2-mode-ubuntu-or-win.patch
 
 # 打开 usb 以太网
 
@@ -1205,7 +1221,9 @@ arecord -Dhw:1,0 -c 1 -r 48000 -f S32_LE -t wav -d 20 /data/kernel54_20s.wav
 ```
 
 
-## av400 测试 uac 脚本
+# 配置 UAC
+
+> 以 av400 为例，在启动的时候配置 UAC 和 adb
 
 ```sh
 rmmod sdio_bt
@@ -1215,7 +1233,7 @@ rmmod vlsicomm
 
 mount -t configfs configfs /sys/kernel/config
 mkdir /sys/kernel/config/usb_gadget/amlogic
-echo 0x18D1 > /sys/kernel/config/usb_gadget/amlogic/idVendor
+echo 0x18D1 > /sys/kernel/config/usb_gadget/amlogic/idVendor  # 如果 f_uac2 换成了兼容 window 的模式，就使用 0x18D2
 echo 0x4e26 > /sys/kernel/config/usb_gadget/amlogic/idProduct
 mkdir /sys/kernel/config/usb_gadget/amlogic/strings/0x409
 echo '0123456789ABCDEF' > /sys/kernel/config/usb_gadget/amlogic/strings/0x409/serialnumber
@@ -1226,11 +1244,11 @@ mkdir -p  /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/strings/0x409
 mkdir /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/strings/0x401
 echo "uac2" > /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/strings/0x401/configuration
 mkdir /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0
-echo 0x3 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/c_chmask
+echo 0x3 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/c_chmask  # korlan 使用的是单声道，使用 0x01
 echo 48000 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/c_srate
 echo 4 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/c_ssize
-echo 0x3  > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/p_chmask
-echo 48000 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/p_srate
+echo 0x3  > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/p_chmask  # 单声道 0x01
+echo 48000 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/p_srate  # rate = 48k 或者 96k
 echo 4 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/p_ssize
 ln -s /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0 /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/uac2.0
 
@@ -1245,19 +1263,38 @@ ln -s /sys/kernel/config/usb_gadget/amlogic/functions/ffs.adb /sys/kernel/config
 
 sleep 3
 
-echo "" > /sys/kernel/config/usb_gadget/amlogic/UDC  
-echo "fdd00000.crgudc2" > /sys/kernel/config/usb_gadget/amlogic/UDC 
+udc_dev=$(ls /sys/class/udc)
+#if /bin/exists /sys/class/udc/$udc_dev; then #udc name is found here if enabled in kernel
+    echo "" > /sys/kernel/config/usb_gadget/amlogic/UDC  
+    echo "$udc_dev" > /sys/kernel/config/usb_gadget/amlogic/UDC 
+    echo "USB gadget enabled"
+#else
+#   echo "Warning: can't start USB gadget mode, adb will not work"
+#   return 1
+#fi
 
-arecord -l 
+# rmmod wifi ko
+rmmod sdio_bt
+rmmod vlsicomm
+
+# mount debugfs
+mount -t debugfs none /sys/kernel/debug           
+
+arecord -l
+```
+
+### 音频测试脚本
+
+```sh
 #2 arecord from uac sound card,
 arecord -Dhw:1,0 -c 2 -r 48000 -f S32_LE -t wav -d 15 /data/test.wav 
-arecord -Dhw:1,0 -c 2 -r 48000 -f S32_LE -t wav   | aplay  -Dhw:0,1
+# -c 2 是两个通道
+arecord -Dhw:1,0 -c 2 -r 48000 -f S32_LE -t wav  | aplay  -Dhw:0,1
 
 # aplay
 amixer cset numid=1 180
 aplay -Dhw:0,1 /data/test.wav 
 ```
-
 
 ### 修改 f_uac2 模式支持 window 播放
 
@@ -1271,6 +1308,16 @@ echo 0x18D2 > /sys/kernel/config/usb_gadget/amlogic/idVendor
 [Dont't Merge][AV400]Change USB_DT_ENDPOINT and USB_DIR_IN for window uac
 
 patch: https://scgit.amlogic.com/295197
+
+## AV400 buildroot 测试 UAC
+
+https://scgit.amlogic.com/293851
+
+## AV400 kernel-5.4 打开 UAC
+
+https://scgit.amlogic.com/#/c/293855/
+
+
 
 # buildroot 修改 defconfig
 
@@ -1324,6 +1371,62 @@ make linux-savedefconfig
 - 保存到  ./output/a5_av400_spk_a6432_release/build/linux-amlogic-5.4-dev/defconfig
 
 - 然后将 defconfig 的修改添加到 aml-5.4/arch/arm64/configs/meson64_a64_smarthome_defconfig
+
+## buildroot 添加一个 config
+
+以添加 timerstamp 为例
+
+- 添加设备树
+
+```c
+//arch/arm64/boot/dts/amlogic/a5_a113x2_av400_1g_spk.dts
+/ {
+	timestamp {
+		compatible = "amlogic, meson-soc-timestamp";
+		reg = <0x0 0xFE0100EC 0x0 0x8>;
+		status = "okay";
+	};
+}
+```
+
+- 修改 defconfig
+
+```sh
+# arch/arm64/configs/meson64_a64_smarthome_defconfig
+CONFIG_AMLOGIC_SOC_TIMESTAMP=y
+```
+
+- 修改 Kconfig
+
+```sh
+# drivers/amlogic/Kconfig
+CONFIG_AMLOGIC_SOC_TIMESTAMP=y
+
+# drivers/amlogic/timestamp/Kconfig
+# SPDX-License-Identifier: GPL-2.0-only
+config AMLOGIC_SOC_TIMESTAMP
+	bool "Amlogic SoC Timestamp"
+	depends on ARCH_MESON || COMPILE_TEST
+	depends on OF
+	default y
+	help
+	  Say yes if you want to get soc-level timestamp.
+```
+
+- 修改 Makefile
+
+```sh
+# drivers/amlogic/Makefile
+obj-$(CONFIG_AMLOGIC_SOC_TIMESTAMP)	+= timestamp/
+```
+
+- 添加 timerstamp 代码
+
+drivers/amlogic/timestamp/
+
+
+- 最后编译，编译的时候可能会出现是否选择开启 timerstamp ,输入 y 即可
+
 
 # 查看音频 clk
 
@@ -1406,13 +1509,5 @@ MODULE_PARM_DESC(uac_irq_cnt, "uac irq cnt");
 ```
 
 cat /sys/module/u_audio/parameters/uac_irq_cnt
-
-## AV400 buildroot 测试 UAC
-
-https://scgit.amlogic.com/293851
-
-## AV400 kernel-5.4 打开 UAC
-
-https://scgit.amlogic.com/#/c/293855/
 
 
