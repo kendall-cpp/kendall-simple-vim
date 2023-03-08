@@ -10,6 +10,7 @@
 - [ctags 使用](#ctags-使用)
   - [安装 ctags](#安装-ctags)
   - [使用 ctags](#使用-ctags)
+  - [在创建ctags的时候排除某些目录](#在创建ctags的时候排除某些目录)
   - [函数变量查找](#函数变量查找)
   - [ubuntu 安装 ag](#ubuntu-安装-ag)
 - [vim 命令记录](#vim-命令记录)
@@ -224,7 +225,17 @@ sudo apt-get install ctags
 不过，ctags -R 有个问题，成员变量没有包含在里面。所以自动完成对象的成员时没有提示。
 解决办法：
 
+```
 ctags -R --fields=+iaS --extra=+q *
+```
+
+### 在创建ctags的时候排除某些目录
+
+ctags -R --exclude=pattern
+
+ctags -R --exclude=hifi4_framework/*
+
+或者将所有需要排除的目录都写在一个文件 exclude_file 里，然后ctags -R --exclude=@exclude_file
 
 ### 函数变量查找
 

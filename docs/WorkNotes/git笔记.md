@@ -449,6 +449,8 @@ error: failed to push some refs to 'ssh://shengken.lin@scgit.amlogic.com:29418/k
 git push --no-thin  review HEAD:refs/for/amlogic-5.4-dev
 ```
 
+- 出现原因： 推送到远程的文件被本地git优化后，发送数据不一致。
+
 ---
 
 ## git patch

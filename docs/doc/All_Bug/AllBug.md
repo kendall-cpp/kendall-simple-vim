@@ -182,6 +182,9 @@ https://scgit.amlogic.com/29845
 
 https://scgit.amlogic.com/295257
 
+### 添加 timestamp 和 usb notify 给 u_audio.c
+
+ https://scgit.amlogic.com/300119
 
 ### 解决 tdm_bridge underrun 问题
 
@@ -324,10 +327,10 @@ mkdir -p  /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/strings/0x409
 mkdir /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/strings/0x401
 echo "uac2" > /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/strings/0x401/configuration
 mkdir /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0
-echo 0x3 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/c_chmask
+echo 0x1 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/c_chmask
 echo 48000 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/c_srate
 echo 4 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/c_ssize
-echo 0x3  > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/p_chmask
+echo 0x1  > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/p_chmask
 echo 48000 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/p_srate
 echo 4 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/p_ssize
 ln -s /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0 /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/uac2.0

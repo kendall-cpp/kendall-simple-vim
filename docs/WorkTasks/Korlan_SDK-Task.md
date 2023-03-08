@@ -1469,7 +1469,6 @@ static struct snd_soc_dai *soc_card_get_dai(struct snd_soc_card *card, const cha
 
 ### dam 寄存器
 
-
 ```
 mount -t debugfs none /sys/kernel/debug
 ```
@@ -1507,7 +1506,7 @@ echo 0xfe026000 59 > /sys/kernel/debug/aml_reg/dump
 cat /sys/kernel/debug/aml_reg/dump > /data/ESAR_ADC.txt
 
 
-## 解决开启 HIFI_PULl 错误重启问题
+### 解决开启 HIFI_PULl 错误重启问题
 
 ```c
 res = platform_get_resource(pdev, IORESOURCE_MEM, 0); 
@@ -1524,7 +1523,7 @@ audio_tdm_bridge: tdm_bridge {
 }
 ```
 
-## 解决 src-clk-freq 不对导致偶尔会出现 underrun 问题
+### 解决 src-clk-freq 不对导致偶尔会出现 underrun 问题
 
 tdm_bridge 偶尔会出现 underrun 问题，肯定是和 clk 有关，对应代码
 
@@ -1539,9 +1538,7 @@ clk_set_rate(tdm->mclk, mclk);  // 对应设备树中的 src-clk-freq，
 clk_set_rate(tdm->clk, mpll_freq);  //从 seeting->sysclk 中过来
 ```
 
-
-
-## 解决 tiemrstamp overrun 问题
+### 解决 tiemrstamp overrun 问题
 
 使用 uac 播放时每一帧有多少个字节
 
@@ -1549,7 +1546,7 @@ clk_set_rate(tdm->clk, mpll_freq);  //从 seeting->sysclk 中过来
 period   = frames_to_bytes(runtime, runtime->period_size); 
 ```
 
-- period = 48000     uac tdm.c
+- period = 48000     uac tdm.c  #一个通道是 24000
 
 - 这里个值是固定的
   - runtime->period_siz = 512  # 单声道  period_siz = 6000
@@ -1578,14 +1575,7 @@ aml_frddr_set_fifos(fr, fr->chipinfo->fifo_depth, threshold); // 512  256 ===>  
 ```c
 int_addr = period / FIFO_BURST;  // FIFO_BURST = 8
 aml_frddr_set_intrpt(fddr, int_addr); //aml_audio_mmio_write  int_addr = 
-`1``
-
-
-
-
-
-
-
+```
 
 A5_audio_spec 中描述到 **FRDDR_A’s FIFO depth is 256x64，B/C/D/E are 128x64** （每个包 64 bit）
 
@@ -1600,5 +1590,114 @@ T7 has 5 FRDDR(FIFO), FRDDR_A’s FIFO depth is 256x64, B/C/D/E are 128x64;
 Below is the Diagram of Audio FRDDR.
 ```
 
+### 添加 timestamp 和 usb notify 给 u_audio.c
+
+ https://scgit.amlogic.com/300119
+
+u_audio.c
+
+aml_usb_sof_register_callback 这个函数
 
 
+上面的函数在  drivers/amlogic/usb/dwc_otg/310/dwc_otg_pcd_linux.c 中实现
+
+```c
+void aml_usb_sof_register_callback(usb_sof_callfun callb)
+{
+	  sof_callfunc = callb;
+}
+```
+
+sof_callfunc 这个全局变量在下面这个函数中赋值
+
+```c
+u32 dwc_pcd_sof_hit(void)
+{
+	  if (sof_callfunc)
+			  sof_callfunc();
+	  return 0;
+}
+```
+
+上面的函数在 `drivers/amlogic/usb/dwc_otg/310/dwc_otg_pcd_intr.c` 中调用
+
+全部实现这个函数
+
+```c
+static void sof_change_hrtimer(int v)
+enum hrtimer_restart aml_hrtimer_check_sof(struct hrtimer *timer) {
+	
+}
+static void sof_work_func(struct work_struct *work)
+```
+
+顶部需要添加这些变量
+
+```c
+static dwc_otg_pcd_t *gp_pcd;
+extern void do_usb_disconn_notifier(unsigned long event);
+extern u32 dwc_pcd_sof_hit(void);
+//static u32 sof_fr_counter;
+extern void dwc_pcd_sof_check_frame_numb(u32 n);
+extern u64 meson_timestamp(void);
+ 
+static void sof_work_func(struct work_struct *work);
+static u64 volatile last_sof_tm;
+static DECLARE_WORK(sof_work, sof_work_func);
+static u8 volatile usb_disconnected;
+static u8 volatile sof_isr_in;
+static DEFINE_SPINLOCK(sof_spinlock);
+static DEFINE_SPINLOCK(sof_hrtimer_spinlock);
+struct hrtimer hrtimer_check_sof;
+#define us2ns(x) ((x) * 1000)
+#define DWC_SOF_INTERVAL_US (800)
+#define FS_SOF_INTERVAL_US (1000)
+#define FS_SOF_INTERVAL_NS (us2ns(1000))
+#define Align_to(x, n) (((x) + (n) - 1) / (n))
+```
+
+### 分析 u_audio.c USB 调用
+
+- korlan 4.19
+
+```c
+int aml_usb_disconn_register_notifier(struct notifier_block *nb) {
+        return blocking_notifier_chain_register(&USB_reset_handler_list, nb); 
+}
+
+static void dwc_disconn_work_func(struct work_struct *work) {
+        blocking_notifier_call_chain(&USB_reset_handler_list, 0, NULL);  // 这里回调
+}
+上面的 work func 在 do_usb_disconn_notifier 中注册
+
+dwc_otg_pcd_handle_early_suspend_intr
+
+int32_t dwc_otg_pcd_handle_intr(dwc_otg_pcd_t *pcd)  {
+        if (gintr_status.b.erlysuspend)
+                retval |= dwc_otg_pcd_handle_early_suspend_intr(pcd);
+}
+/*
+ * This function is the top level PCD interrupt handler.
+*/
+static irqreturn_t dwc_otg_pcd_irq(int irq, void *dev) {
+        retval = dwc_otg_pcd_handle_intr(pcd);
+}
+
+在下面函数中初始化
+int pcd_init(struct platform_device *pdev) {
+        retval = request_irq(irq, dwc_otg_pcd_irq,
+                IRQF_SHARED,
+                gadget_wrapper->gadget.name, otg_dev->pcd);
+}
+```
+
+
+
+commit b47903e044813541ff998c3a2de3ddc7ca8a7eeb (HEAD -> amlogic-5.4-dev)
+Author: shengken.lin <shengken.lin@amlogic.com>
+Date:   Wed Mar 8 15:32:49 2023 +0800
+
+    [Dont't Merge][A4] Add timestamp and usb notify for u_audio
+    
+    Change-Id: If13b30a3f4d3571c365c0b03ee44cccf425307b8
+    Signed-off-by: shengken.lin <shengken.lin@amlogic.com>
