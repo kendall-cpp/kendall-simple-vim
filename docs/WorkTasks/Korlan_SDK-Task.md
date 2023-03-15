@@ -1590,71 +1590,6 @@ T7 has 5 FRDDR(FIFO), FRDDR_A’s FIFO depth is 256x64, B/C/D/E are 128x64;
 Below is the Diagram of Audio FRDDR.
 ```
 
-### 添加 timestamp 和 usb notify 给 u_audio.c
-
- https://scgit.amlogic.com/300119
-
-u_audio.c
-
-aml_usb_sof_register_callback 这个函数
-
-
-上面的函数在  drivers/amlogic/usb/dwc_otg/310/dwc_otg_pcd_linux.c 中实现
-
-```c
-void aml_usb_sof_register_callback(usb_sof_callfun callb)
-{
-	  sof_callfunc = callb;
-}
-```
-
-sof_callfunc 这个全局变量在下面这个函数中赋值
-
-```c
-u32 dwc_pcd_sof_hit(void)
-{
-	  if (sof_callfunc)
-			  sof_callfunc();
-	  return 0;
-}
-```
-
-上面的函数在 `drivers/amlogic/usb/dwc_otg/310/dwc_otg_pcd_intr.c` 中调用
-
-全部实现这个函数
-
-```c
-static void sof_change_hrtimer(int v)
-enum hrtimer_restart aml_hrtimer_check_sof(struct hrtimer *timer) {
-	
-}
-static void sof_work_func(struct work_struct *work)
-```
-
-顶部需要添加这些变量
-
-```c
-static dwc_otg_pcd_t *gp_pcd;
-extern void do_usb_disconn_notifier(unsigned long event);
-extern u32 dwc_pcd_sof_hit(void);
-//static u32 sof_fr_counter;
-extern void dwc_pcd_sof_check_frame_numb(u32 n);
-extern u64 meson_timestamp(void);
- 
-static void sof_work_func(struct work_struct *work);
-static u64 volatile last_sof_tm;
-static DECLARE_WORK(sof_work, sof_work_func);
-static u8 volatile usb_disconnected;
-static u8 volatile sof_isr_in;
-static DEFINE_SPINLOCK(sof_spinlock);
-static DEFINE_SPINLOCK(sof_hrtimer_spinlock);
-struct hrtimer hrtimer_check_sof;
-#define us2ns(x) ((x) * 1000)
-#define DWC_SOF_INTERVAL_US (800)
-#define FS_SOF_INTERVAL_US (1000)
-#define FS_SOF_INTERVAL_NS (us2ns(1000))
-#define Align_to(x, n) (((x) + (n) - 1) / (n))
-```
 
 ### 分析 u_audio.c USB 调用
 
@@ -1670,8 +1605,13 @@ static void dwc_disconn_work_func(struct work_struct *work) {
 }
 上面的 work func 在 do_usb_disconn_notifier 中注册
 
-dwc_otg_pcd_handle_early_suspend_intr
+do_usb_disconn_notifier 在 dwc_otg_pcd_handle_early_suspend_intr 調用
 
+/**
+ * PCD中断句柄
+PCD 处理设备中断。 许多情况都可能导致设备中断。 当中断发生时，设备中断服务例程确定中断的原因并将处理分派给适当的函数。 这些中断处理函数如下所述。
+  所有中断寄存器的处理都是从 LSB 到 MSB。
+ */
 int32_t dwc_otg_pcd_handle_intr(dwc_otg_pcd_t *pcd)  {
         if (gintr_status.b.erlysuspend)
                 retval |= dwc_otg_pcd_handle_early_suspend_intr(pcd);
@@ -1691,13 +1631,53 @@ int pcd_init(struct platform_device *pdev) {
 }
 ```
 
+### av400 添加控制器
+
+[   87.912657@0]  [ffffff80bf25eb80+  96][<ffffffe610095478>] dump_backtrace+0x0/0x188
+[   87.913595@0]  [ffffff80bf25ebe0+  32][<ffffffe610095624>] show_stack+0x24/0x30
+[   87.914511@0]  [ffffff80bf25ec00+  64][<ffffffe610e8f34c>] dump_stack+0xc8/0xf0
+[   87.915421@0]  [ffffff80bf25ec40+ 112][<ffffffe6108598b4>] u_audio_iso_cap_complete+0x47c/0x4c0
+[   87.916503@0]  [ffffff80bf25ecb0+  48][<ffffffe610ae0954>] req_done+0xdc/0x110
+[   87.917400@0]  [ffffff80bf25ece0+  96][<ffffffe610ae4d90>] crg_handle_xfer_event+0x108/0x458
+[   87.918450@0]  [ffffff80bf25ed40+  64][<ffffffe610ae5b28>] crg_udc_handle_event+0x68/0x170
+[   87.919480@0]  [ffffff80bf25ed80+  96][<ffffffe610ae5d84>] process_event_ring+0x154/0x2a8
+[   87.920498@0]  [ffffff80bf25ede0+  80][<ffffffe610ae60ec>] crg_gadget_handle_interrupt+0x214/0x2a8
+[   87.921613@0]  [ffffff80bf25ee30+  32][<ffffffe610ae61a0>] crg_udc_common_irq+0x20/0x30
+[   87.922610@0]  [ffffff80bf25ee50+ 128][<ffffffe610132dc8>] __handle_irq_event_percpu+0x90/0x2e0
+[   87.923690@0]  [ffffff80bf25eed0+  48][<ffffffe610133040>] handle_irq_event_percpu+0x28/0x60
+[   87.924740@0]  [ffffff80bf25ef00+  48][<ffffffe6101330c4>] handle_irq_event+0x4c/0x80
+[   87.925719@0]  [ffffff80bf25ef30+  48][<ffffffe610138674>] handle_fasteoi_irq+0xb4/0x158
+[   87.926729@0]  [ffffff80bf25ef60+  32][<ffffffe610131c0c>] generic_handle_irq+0x34/0x50
+[   87.927719@0]  [ffffff80bf25ef80+  64][<ffffffe610132418>] __handle_domain_irq+0x68/0xc0
+[   87.928728@0]  [ffffff80bf25efc0+   0][<ffffffe610081424>] gic_handle_irq+0xb4/0xd0
+[   87.929682@0]  [ffffffe6118a3e20+  16][<ffffffe610083888>] el1_irq+0x148/0x240
+[   87.930583@0]  [ffffffe6118a3e30+  96][<ffffffe61092da4c>] cpuidle_enter_state+0xac/0x598
+[   87.931597@0]  [ffffffe6118a3e90+  48][<ffffffe61092dfc4>] cpuidle_enter+0x3c/0x50
+[   87.932544@0]  [ffffffe6118a3ec0+  48][<ffffffe610102284>] call_cpuidle+0x44/0x80
+[   87.933473@0]  [ffffffe6118a3ef0+  96][<ffffffe61010260c>] do_idle+0x1f4/0x2b8
+[   87.934373@0]  [ffffffe6118a3f50+  32][<ffffffe610102978>] cpu_startup_entry+0x28/0x30
+[   87.935361@0]  [ffffffe6118a3f70+  32][<ffffffe610e8f620>] rest_init+0xd8/0xe8
+[   87.936263@0]  [ffffffe6118a3f90+  16][<ffffffe611300bb0>] arch_call_rest_init+0x14/0x1c
+[   87.937263@0]  [ffffffe6118a3fa0+   0][<ffffffe611301128>] start_kernel+0x4f8/0x514
 
 
-commit b47903e044813541ff998c3a2de3ddc7ca8a7eeb (HEAD -> amlogic-5.4-dev)
-Author: shengken.lin <shengken.lin@amlogic.com>
-Date:   Wed Mar 8 15:32:49 2023 +0800
+- aml_tdm_open
 
-    [Dont't Merge][A4] Add timestamp and usb notify for u_audio
-    
-    Change-Id: If13b30a3f4d3571c365c0b03ee44cccf425307b8
-    Signed-off-by: shengken.lin <shengken.lin@amlogic.com>
+立体声 = 2通道
+1个样本 16bits = 2bytes
+1个帧 代表 所有通道的一个样本。那么我们现在是双通道，所以 1帧 = （通道数） * （样本大小bytes） = 2 * 2 = 4bytes
+
+为了能支持2 * 44.1k的采样率，系统必须支持如下的速度
+
+bsp_rate = (通道数) * （1个样本长度） * （采样率） = 1帧 * 采样率 = 2 * 2 * 44.1k = 176400bytes/sec
+
+现在 alsa每秒都来中断。那么我们每秒都需要176400byte数据准备好，才能供上一个 双通道 16 位 44.1k的音频流。
+
+- 如果半秒中断一次，那么每次终端就是 176400 / 2 = 88200 bytes
+- 如果100ms中断一次，那么我们就需要 176400 * （0.1 / 1）= 17640 位。
+
+我们可以通过设置 period size 来控制 pcm 中断的产生。
+
+- 如果我们设置一个 16 位双通道 44.1k 的音频流 并且每次都有4410帧数据 -》 4 byte * 4410frams = 17640字节 》一次中断会需要17640 字节的数据 =》 那么他就是100ms中断一次。
+
+alsa会自己觉得实际的buffer_size 和period_size，根据请求的通道数，和他们其他的一些属性。

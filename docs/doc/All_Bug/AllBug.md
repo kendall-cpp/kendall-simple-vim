@@ -358,7 +358,9 @@ arecord -l
 
 window uac 测试没问题，但是 linux PC uac 不行
 
-f_uac2 的模式有关
+这是因为 tdm_bridge_run 没有一开机就设置为 1
+
+还可能和 f_uac2 的模式有关
 
 #### uac 模式
 
