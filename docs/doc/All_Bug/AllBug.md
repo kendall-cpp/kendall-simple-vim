@@ -186,6 +186,8 @@ https://scgit.amlogic.com/295257
 
  https://scgit.amlogic.com/300119
 
+ 由于 crg 没有 sof 数据包，所以暂时只能在连接的时候插入时间戳，无法在 sof 包加时间戳。
+
 ### 解决 tdm_bridge underrun 问题
 
 #### 声音播放延迟问题
@@ -327,7 +329,7 @@ mkdir -p  /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/strings/0x409
 mkdir /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/strings/0x401
 echo "uac2" > /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/strings/0x401/configuration
 mkdir /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0
-echo 0x1 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/c_chmask
+echo 0x1 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/c_chmask  # 0x03 是两个通道
 echo 48000 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/c_srate
 echo 4 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/c_ssize
 echo 0x1  > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/p_chmask
@@ -379,22 +381,23 @@ window uac 测试没问题，但是 linux PC uac 不行
 
 > https://scgit.amlogic.com/#/c/298458
 
-或者 ： > A5-file\av400\tdm_bridge_dump_dam_2_wavfile.patch 
-
 
 ### dam 音频数据
 
 查看 USB 传到 tdm_bridge 的数据是否有问题
 
-### HIFIPLL
+
+或者 ： > A5-file\av400\tdm_bridge_dump_dam_2_wavfile.patch 
+
+### 添加 HIFIPLL
 
 需要在 dts 中配置这个寄存器 ANACTRL_HIFIPLL_CTRL0 0xfe008100
 
 ```c
 audio_tdm_bridge: tdm_bridge {
-compatible = "amlogic, snd-tdm-bridge";                                                       
-reg = <0x0 0xfe008100 0x0 0x10>;
-status = "okay";
+        compatible = "amlogic, snd-tdm-bridge";                                                       
+        reg = <0x0 0xfe008100 0x0 0x10>;
+        status = "okay";
 }; 
 ```
 
@@ -458,7 +461,7 @@ usb_hcd_poll_rh_status(hcd)
 
 ```
 https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/262595
-commit id : 934882f98b37c0485de4850f7f1f7001d6c3c269
+
 issue: https://partnerissuetracker.corp.google.com/issues/246404063#comment2
 ```
 
