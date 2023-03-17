@@ -1540,5 +1540,88 @@ clk_set_rate(tdm->clk, mpll_freq);  //从 seeting->sysclk 中过来
 
 ### 解决 tiemrstamp overrun 问题
 
+使用 uac 播放时每一帧有多少个字节
+
+```c
+period   = frames_to_bytes(runtime, runtime->period_size); 
+```
+
+- period = 48000     uac tdm.c  #一个通道是 24000
+
+- 这里个值是固定的
+  - runtime->period_siz = 512  # 单声道  period_siz = 6000
+  - runtime->frame_bits = 64   # 单声道 runtime->frame_bits = 32
+
+
+选择帧的长度和 fifo_depth 中最小的，因为不嫩超过 fifo 的长度
+
+```c
+//Contrast minimum of period and fifo depth, and set the value as half.  
+threshold = min(period, fr->chipinfo->fifo_depth);   min(48000, 512)
+```
+
+- fr->chipinfo->fifo_depth = 512
+- threshold = 512
+- threshold /= 2  ==  256
+
+- 设置 fifo 的地址范围
+
+```c
+aml_frddr_set_fifos(fr, fr->chipinfo->fifo_depth, threshold); // 512  256 ===>  0x200 0x100  
+```
+
+- 设置多少组帧就上报一次中断
+
+```c
+int_addr = period / FIFO_BURST;  // FIFO_BURST = 8
+aml_frddr_set_intrpt(fddr, int_addr); //aml_audio_mmio_write  int_addr = 
+```
+
+A5_audio_spec 中描述到 **FRDDR_A’s FIFO depth is 256x64，B/C/D/E are 128x64** （每个包 64 bit）
+
+```
+3.3Audio FRDDR
+
+T7 has 5 FRDDR(FIFO), FRDDR_A’s FIFO depth is 256x64, B/C/D/E are 128x64;
+        a.All worked at sysclk;
+        b.When enable FRDDR, it will fill FIFO from DDR first;
+        c.When FRDDR receive request, it will read data from fifo and send out;
+        d.FRDDR will fill FIFO automatically by configure;
+Below is the Diagram of Audio FRDDR.
+```
 
 ### av400 添加控制器
+
+
+- aml_tdm_open
+
+立体声 = 2通道
+1个样本 16bits = 2bytes
+1个帧 代表 所有通道的一个样本。那么我们现在是双通道，所以 1帧 = （通道数） * （样本大小bytes） = 2 * 2 = 4bytes
+
+为了能支持2 * 44.1k的采样率，系统必须支持如下的速度
+
+bsp_rate = (通道数) * （1个样本长度） * （采样率） = 1帧 * 采样率 = 2 * 2 * 44.1k = 176400bytes/sec
+
+现在 alsa每秒都来中断。那么我们每秒都需要176400byte数据准备好，才能供上一个 双通道 16 位 44.1k的音频流。
+
+- 如果半秒中断一次，那么每次终端就是 176400 / 2 = 88200 bytes
+- 如果100ms中断一次，那么我们就需要 176400 * （0.1 / 1）= 17640 位。
+
+我们可以通过设置 period size 来控制 pcm 中断的产生。
+
+- 如果我们设置一个 16 位双通道 44.1k 的音频流 并且每次都有4410帧数据 -》 4 byte * 4410frams = 17640字节 》一次中断会需要17640 字节的数据 =》 那么他就是100ms中断一次。
+
+alsa会自己觉得实际的buffer_size 和period_size，根据请求的通道数，和他们其他的一些属性。
+
+## PCM 数据
+
+- 采样率(Sample rate)：每秒钟采样多少次，以Hz为单位。 此参数测量每秒播放的 样本数/频道数 。频率以 采样/秒（Hz）为单位进行测量。常见频率值包括8000、11025、16000、22050、32000、44100和48000 Hz。
+
+- 位深度(Bit-depth)：表示用多少个二进制位来描述采样数据，一般为16bit。
+
+- 字节序：表示音频PCM数据存储的字节序是大端存储（big-endian）还是小端存储（little-endian），为了数据处理效率的高效，通常为小端存储。
+
+- 声道数（channel number）：当前PCM文件中包含的声道数，是单声道（mono）、双声道（stereo），此外还有5.1声道（常用于影院立体环绕声）等。
+
+- 采样数据是否有符号（Sign）：要表达的就是字面上的意思，需要注意的是，使用有符号的采样数据不能用无符号的方式播放。
