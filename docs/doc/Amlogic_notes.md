@@ -211,6 +211,9 @@ CONFIG_ENABLE_UBOOT_CLI=y
 hexdump -C system_1.bin > system_1.bin.txt 
 hexdump -C erofs.img > erofs.img.txt 
 vim -d erofs.img.txt  system_1.bin.txt 
+
+
+hexdump -C system_1.bin -n 32  # 显示32个字节
 ```
 
 ----

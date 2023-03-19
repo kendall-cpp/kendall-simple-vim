@@ -31,6 +31,7 @@
 	- [git am 对应 git format-patch](#git-am-对应-git-format-patch)
 	- [git apply 与 git am的区别](#git-apply-与-git-am的区别)
 	- [打patch发生冲突](#打patch发生冲突)
+		- [强制打上 patch](#强制打上-patch)
 	- [patch 例子](#patch-例子)
 - [cherry-pick](#cherry-pick)
 - [repo 命令](#repo-命令)
@@ -538,6 +539,13 @@ git am --resolved
 -f：该参数遇到这种情况则继续打补丁，当然一般情况下会报错，毕竟对比不一致了
 -N：忽略该文件
 
+#### 强制打上 patch
+
+- (1) 根据git am失败的信息，找到发生冲突的具体patch文件，然后用命令`git apply --reject <patch_name>`，强行打这个patch，发生冲突的部分会保存为.rej文件（例如发生冲突的文件是a.txt，那么运行完这个命令后，发生conflict的部分会保存为a.txt.rej），未发生冲突的部分会成功打上patch
+- (2) 根据.rej文件，通过编辑该patch文件的方式解决冲突
+- (3) 废弃上一条am命令已经打了的patch：git am --abort
+- (4) 重新打patch：git am ~/patch-set/*.patchpatch
+
 ### patch 例子
 
 ```sh
@@ -562,6 +570,10 @@ git am *.patch
 ```
 
 > 学习参考：https://www.cnblogs.com/lueguo/p/3544114.html
+
+将所有patch输出到一个指定位置的指定文件 git format-patch xxx --stdout > xxx.patch
+
+使用 git am xxx.patch  可以把所有的 commit 保存成一个 patch， 打 patch 的时候会显示所有的 commit
 
 ## cherry-pick
 
