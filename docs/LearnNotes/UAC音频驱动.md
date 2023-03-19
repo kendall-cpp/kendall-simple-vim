@@ -125,7 +125,7 @@ static struct usb_function *afunc_alloc(struct usb_function_instance *fi)
 	uac2->g_audio.func.name = "uac2_func";  // //这里是function的名字
 	uac2->g_audio.func.bind = afunc_bind;	// //用来绑定设备和 function 的函数
 	uac2->g_audio.func.unbind = afunc_unbind;
-	uac2->g_audio.func.set_alt = afunc_set_alt;
+	uac2->g_audio.func.set_alt = afunc_set_alt;  // composite_setup 这里调用
 	uac2->g_audio.func.get_alt = afunc_get_alt;
 	uac2->g_audio.func.disable = afunc_disable;
 	uac2->g_audio.func.setup = afunc_setup;
