@@ -1217,6 +1217,7 @@ speaker-test -t sine -D hw:0,1
 # 查看声卡设备
 arecord -l
 
+# card 0 device 1
 aplay -Dhw:0,1 /data/the-stars-48k-60s.wav
 
 # 录音
