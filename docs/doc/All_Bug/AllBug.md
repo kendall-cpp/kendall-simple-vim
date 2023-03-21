@@ -188,6 +188,75 @@ https://scgit.amlogic.com/295257
 
  由于 crg 没有 sof 数据包，所以暂时只能在连接的时候插入时间戳，无法在 sof 包加时间戳。
 
+### 解决 av400 找不到 tas5707 codec 的问题
+
+```c
+  static int soc_bind_dai_link(struct snd_soc_card *card,
+          struct snd_soc_dai_link *dai_link)
+		  
+ for_each_link_codecs(dai_link, i, codec) {
+		  rtd->codec_dais[i] = snd_soc_find_dai(codec);
+		  if (!rtd->codec_dais[i]) {
+				  dev_info(card->dev, "ASoC: CODEC DAI %s not registered\n",
+						   codec->dai_name);
+				  goto _err_defer;		  
+  } else {                                                                                                                                                                                                                                    
+		  if (!strcmp(codec->dai_name, "tas5707")) {
+				  printk("lsken00 %s, codec_dainame:%s\n", __func__, codec->dai_name);
+				  printk("lsken00 ------- 0x%p", card);
+		  }    
+  }    
+
+//############## 参考上面
+
+static struct snd_soc_dai *aml_get_dai_name_from_link(struct snd_soc_card *card,
+		struct snd_soc_dai_link *dai_link, const char *card_dai_name)
+{
+	struct snd_soc_dai_link_component *codec;
+	struct snd_soc_dai *card_dai;
+	int i;
+
+	for_each_link_codecs(dai_link, i, codec) {
+		card_dai =  snd_soc_find_dai(codec);
+		if(card_dai && !strcmp(codec->dai_name, card_dai_name)) {
+			printk(" %s, codec_dainame:%s\n", __func__, codec->dai_name);
+			return card_dai;
+		}
+	}
+	return NULL;
+}
+
+static struct snd_soc_dai *aml_soc_card_get_dai(struct snd_soc_card *card,
+		const char *card_dai_name)
+{
+	int i;
+	struct snd_soc_dai *ret_dai;
+	struct snd_soc_dai_link *dai_link;
+	for_each_card_prelinks(card, i, dai_link) {
+		ret_dai = aml_get_dai_name_from_link(card, dai_link, card_dai_name);
+		if (ret_dai)
+			return ret_dai;
+	}
+	return NULL;
+}
+```
+
+### 解决 aml_gpio_mute_spk 问题
+
+> FIx: error: aml_gpio_mute_spk (aml_card_priv) in aml_tdm_br_tdm_start
+
+```sh
+--- a/sound/soc/amlogic/auge/card.c
++++ b/sound/soc/amlogic/auge/card.c
+@@ -1180,6 +1182,7 @@ static int aml_card_parse_of(struct device_node *node,
+                goto card_parse_end;
+ 
+        ret = aml_card_parse_aux_devs(node, priv);
++       aml_card_priv = priv;
+ 
+ card_parse_end:
+```
+
 ### 解决 tdm_bridge underrun 问题
 
 #### 声音播放延迟问题
@@ -300,6 +369,20 @@ index 000000000000..488faae454a2
 ```
 
 - 从 kernel 5.15 拷贝 drivers/amlogic/timestamp
+
+### Fix: aml_tdm_bridge_frddr_isr, timestamp buffer overrun
+
+timestamp overrun Fix 总结：需要用户层一直读时间戳，才不会出现读写不同步，否则需要设置 static int save_ts = 0
+
+```sh
+#!/usr/bin/sh
+while true
+do
+        cat /proc/tdm_tsb | tail -1 > /tmp/1.txt
+        sleep 0.1
+done
+```
+
 
 ### 在 buildroot 中添加启动 UAC 声卡的脚本
 

@@ -1220,6 +1220,8 @@ arecord -l
 # card 0 device 1
 aplay -Dhw:0,1 /data/the-stars-48k-60s.wav
 
+ aplay  -Dhw:1,0 -c 2 -r 48000 -f S32_LE sine_2ch.wav
+
 # 录音
 arecord -Dhw:1,0 -c 1 -r 48000 -f S32_LE -t wav -d 20 /data/kernel54_20s.wav 
 ```

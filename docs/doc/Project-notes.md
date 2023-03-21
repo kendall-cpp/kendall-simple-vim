@@ -58,6 +58,17 @@ https://scgit.amlogic.com/#/c/292999/
 
 **注意： 修改后 select 11. a5_av400_spk_a6432_release**
 
+## A4
+
+编译参考：https://confluence.amlogic.com/display/PM/A4+buildroot+compile+guide
+
+```sh
+cd a4_buildroot
+source setenv.sh a4_ba400_spk_a6432_release
+
+make
+```
+
 ## C3-sync
 
 ```sh
