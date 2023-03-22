@@ -319,3 +319,68 @@ if (last_wr_addr > last_rd_addr) {  // 上次写的超过了上次读的，因�
         }
 }
 ```
+
+
+## u_audio_iso_playback_complete 调用栈
+
+```sh
+[   16.778878@0]  [ffffffb27f25e7b0+  96][<ffffffe610095478>] dump_backtrace+0x0/0x188
+[   16.779831@0]  [ffffffb27f25e810+  32][<ffffffe610095624>] show_stack+0x24/0x30
+[   16.780742@0]  [ffffffb27f25e830+  64][<ffffffe610e902cc>] dump_stack+0xc8/0xf0
+[   16.781651@0]  [ffffffb27f25e870+  48][<ffffffe610858c18>] u_audio_iso_playback_complete+0x110/0x158
+[   16.782789@0]  [ffffffb27f25e8a0+  48][<ffffffe610adf544>] req_done+0xdc/0x110
+[   16.783688@0]  [ffffffb27f25e8d0+ 112][<ffffffe610ae2478>] crg_udc_ep_dequeue+0x1c8/0x340
+[   16.784706@0]  [ffffffb27f25e940+  48][<ffffffe610840a7c>] usb_ep_dequeue+0x34/0x110
+[   16.785670@0]  [ffffffb27f25e970+  64][<ffffffe610859c28>] u_audio_stop_playback+0x98/0x110
+[   16.786710@0]  [ffffffb27f25e9b0+  32][<ffffffe61085a724>] afunc_disable+0x2c/0x38
+[   16.787654@0]  [ffffffb27f25e9d0+  48][<ffffffe610839580>] reset_config.isra.12+0x48/0x80
+[   16.788671@0]  [ffffffb27f25ea00+  48][<ffffffe610839608>] composite_disconnect+0x50/0x80
+[   16.789690@0]  [ffffffb27f25ea30+  48][<ffffffe61083d118>] configfs_composite_disconnect+0x88/0x90
+[   16.790806@0]  [ffffffb27f25ea60+  96][<ffffffe610ae43d0>] crg_handle_port_status+0x270/0x550
+[   16.791867@0]  [ffffffb27f25eac0+  64][<ffffffe610ae4774>] crg_udc_handle_event+0xc4/0x170
+[   16.792897@0]  [ffffffb27f25eb00+  96][<ffffffe610ae4974>] process_event_ring+0x154/0x2a8
+[   16.793915@0]  [ffffffb27f25eb60+  80][<ffffffe610ae4cdc>] crg_gadget_handle_interrupt+0x214/0x2a8
+[   16.795031@0]  [ffffffb27f25ebb0+  32][<ffffffe610ae4d90>] crg_udc_common_irq+0x20/0x30
+[   16.796027@0]  [ffffffb27f25ebd0+ 128][<ffffffe610132dc8>] __handle_irq_event_percpu+0x90/0x2e0
+[   16.797110@0]  [ffffffb27f25ec50+  48][<ffffffe610133040>] handle_irq_event_percpu+0x28/0x60
+[   16.798161@0]  [ffffffb27f25ec80+  48][<ffffffe6101330c4>] handle_irq_event+0x4c/0x80
+[   16.799136@0]  [ffffffb27f25ecb0+  48][<ffffffe610138674>] handle_fasteoi_irq+0xb4/0x158
+[   16.800144@0]  [ffffffb27f25ece0+  32][<ffffffe610131c0c>] generic_handle_irq+0x34/0x50
+[   16.801140@0]  [ffffffb27f25ed00+  64][<ffffffe610132418>] __handle_domain_irq+0x68/0xc0
+[   16.802148@0]  [ffffffb27f25ed40+ 368][<ffffffe610081424>] gic_handle_irq+0xb4/0xd0
+[   16.803101@0]  [ffffffb27f25eeb0+  16][<ffffffe610083888>] el1_irq+0x148/0x240
+[   16.804000@0]  [ffffffb27f25eec0+ 160][<ffffffe61008162c>] __do_softirq+0xa4/0x410
+[   16.804943@0]  [ffffffb27f25ef60+  32][<ffffffe6100c7328>] irq_exit+0xd8/0xe0
+```
+
+## afunc_set_alt 调用栈
+
+```sh
+[   10.999955@0]  [ffffff91bf25eb20+  96][<ffffffef10095478>] dump_backtrace+0x0/0x188
+[   11.000904@0]  [ffffff91bf25eb80+  32][<ffffffef10095624>] show_stack+0x24/0x30
+[   11.001815@0]  [ffffff91bf25eba0+  64][<ffffffef10e8f08c>] dump_stack+0xc8/0xf0
+[   11.002725@0]  [ffffff91bf25ebe0+  64][<ffffffef1085a8b4>] afunc_set_alt+0x5c/0x148
+[   11.003679@0]  [ffffff91bf25ec20+ 144][<ffffffef1083a70c>] composite_setup+0x934/0x1708
+[   11.004674@0]  [ffffff91bf25ecb0+  80][<ffffffef1083d1e0>] android_setup+0xc0/0x148
+[   11.005629@0]  [ffffff91bf25ed00+  64][<ffffffef10ae3864>] crg_handle_setup_pkt+0xbc/0x218
+[   11.006656@0]  [ffffff91bf25ed40+  64][<ffffffef10ae4890>] crg_udc_handle_event+0x98/0x170
+[   11.007685@0]  [ffffff91bf25ed80+  96][<ffffffef10ae4abc>] process_event_ring+0x154/0x2a8
+[   11.008704@0]  [ffffff91bf25ede0+  80][<ffffffef10ae4e24>] crg_gadget_handle_interrupt+0x214/0x2a8
+[   11.009819@0]  [ffffff91bf25ee30+  32][<ffffffef10ae4ed8>] crg_udc_common_irq+0x20/0x30
+[   11.010817@0]  [ffffff91bf25ee50+ 128][<ffffffef10132dc8>] __handle_irq_event_percpu+0x90/0x2e0
+[   11.011899@0]  [ffffff91bf25eed0+  48][<ffffffef10133040>] handle_irq_event_percpu+0x28/0x60
+[   11.012950@0]  [ffffff91bf25ef00+  48][<ffffffef101330c4>] handle_irq_event+0x4c/0x80
+[   11.013925@0]  [ffffff91bf25ef30+  48][<ffffffef10138674>] handle_fasteoi_irq+0xb4/0x158
+[   11.014933@0]  [ffffff91bf25ef60+  32][<ffffffef10131c0c>] generic_handle_irq+0x34/0x50
+[   11.015929@0]  [ffffff91bf25ef80+  64][<ffffffef10132418>] __handle_domain_irq+0x68/0xc0
+[   11.016937@0]  [ffffff91bf25efc0+   0][<ffffffef10081424>] gic_handle_irq+0xb4/0xd0
+[   11.017890@0]  [ffffffef118a3e20+  16][<ffffffef10083888>] el1_irq+0x148/0x240
+[   11.018791@0]  [ffffffef118a3e30+  96][<ffffffef1092d784>] cpuidle_enter_state+0xac/0x598
+[   11.019807@0]  [ffffffef118a3e90+  48][<ffffffef1092dcfc>] cpuidle_enter+0x3c/0x50
+[   11.020751@0]  [ffffffef118a3ec0+  48][<ffffffef10102284>] call_cpuidle+0x44/0x80
+[   11.021681@0]  [ffffffef118a3ef0+  96][<ffffffef1010260c>] do_idle+0x1f4/0x2b8
+[   11.022581@0]  [ffffffef118a3f50+  32][<ffffffef1010297c>] cpu_startup_entry+0x2c/0x30
+[   11.023567@0]  [ffffffef118a3f70+  32][<ffffffef10e8f360>] rest_init+0xd8/0xe8
+[   11.024467@0]  [ffffffef118a3f90+  16][<ffffffef11300bb0>] arch_call_rest_init+0x14/0x1c
+[   11.025473@0]  [ffffffef118a3fa0+   0][<ffffffef11301128>] start_kernel+0x4f8/0x514
+```

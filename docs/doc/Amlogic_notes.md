@@ -1230,11 +1230,11 @@ arecord -Dhw:1,0 -c 1 -r 48000 -f S32_LE -t wav -d 20 /data/kernel54_20s.wav
 # 配置 UAC
 
 > 以 av400 为例，在启动的时候配置 UAC 和 adb
+>
+> usb_device_config.sh
+> start_usb_gadget.sh
 
 ```sh
-rmmod sdio_bt
-rmmod vlsicomm
-
 #1 config adb & uac2,
 
 mount -t configfs configfs /sys/kernel/config
@@ -1250,10 +1250,10 @@ mkdir -p  /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/strings/0x409
 mkdir /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/strings/0x401
 echo "uac2" > /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/strings/0x401/configuration
 mkdir /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0
-echo 0x3 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/c_chmask  # korlan 使用的是单声道，使用 0x01
+echo 0x1 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/c_chmask  # korlan 使用的是单声道，使用 0x01
 echo 48000 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/c_srate
 echo 4 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/c_ssize
-echo 0x3  > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/p_chmask  # 单声道 0x01
+echo 0x0  > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/p_chmask  # 单声道 0x01
 echo 48000 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/p_srate  # rate = 48k 或者 96k
 echo 4 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/p_ssize
 ln -s /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0 /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/uac2.0

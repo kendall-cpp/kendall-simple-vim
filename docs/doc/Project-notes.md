@@ -46,6 +46,8 @@ git pull amlogic HEAD:refs/for/amlogic-5.4-dev
 source setenv.sh 
 select 11. a5_av400_a6432_release
 make
+
+后面的测试都选  a5_av400_spk_a6432_release
 ```
 
 ### 修改功放 D602 成 D613
@@ -1467,7 +1469,7 @@ update.exe partition system_a system.img
 update bulkcmd "reset"
 ```
 
-## adb无法使用
+## adb无法使用-修改usb控制器模式
 
 ```sh
 vim kernel/arch/arm64/boot/dts/amlogic/elaine-b3.dts 

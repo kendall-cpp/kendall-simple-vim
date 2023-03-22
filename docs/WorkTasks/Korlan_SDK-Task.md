@@ -1591,3 +1591,99 @@ done
 
 **音频每个包是 192 个字节，48个数据，一个数据 4 个字节。**
 
+---
+
+
+## A4 上跑 tdb_bridge
+
+### 配置和启动 uac2
+
+make linux-menuconfig
+
+```
+Device Drivers  --->
+[*] USB support  --->
+USB Gadget Support 
+[*]     Audio Class 2.0
+```
+
+make linux-savedefconfig
+
+最后将 defconfig 和 kernel 下的 defconfig 对比并修改
+
+```sh
++CONFIG_USB_CONFIGFS_F_UAC2=y
+```
+
+git push review HEAD:refs/for/bringup/amlogic-5.4/A4_2_20230309
+
+https://scgit.amlogic.com/#/c/304063/
+
+### 关闭其他不相关的
+
+修改完 buildroot 之后
+
+```
+make aml-usb-config-rebuild
+make boa-rebuild
+make dhcpcd-rebuild
+make ifupdown-scripts-rebuild
+make
+```
+
+
+#### 代开 UAC 脚本
+
+```sh
+mount -t configfs configfs /sys/kernel/config
+mkdir /sys/kernel/config/usb_gadget/amlogic
+echo 0x18D1 > /sys/kernel/config/usb_gadget/amlogic/idVendor
+echo 0x4e26 > /sys/kernel/config/usb_gadget/amlogic/idProduct
+mkdir /sys/kernel/config/usb_gadget/amlogic/strings/0x409
+echo '0123456789ABCDEF' > /sys/kernel/config/usb_gadget/amlogic/strings/0x409/serialnumber
+echo amlogic > /sys/kernel/config/usb_gadget/amlogic/strings/0x409/manufacturer
+echo korlan > /sys/kernel/config/usb_gadget/amlogic/strings/0x409/product
+mkdir -p  /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/strings/0x409
+
+mkdir /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/strings/0x401
+echo "uac2" > /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/strings/0x401/configuration
+mkdir /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0
+echo 0x1 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/c_chmask
+echo 48000 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/c_srate
+echo 4 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/c_ssize
+# Disable playback capability to host
+echo 0x0  > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/p_chmask
+echo 48000 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/p_srate
+echo 4 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/p_ssize
+ln -s /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0 /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/uac2.0
+
+echo "config ADB"
+echo adb > /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/strings/0x409/configuration
+mkdir /sys/kernel/config/usb_gadget/amlogic/functions/ffs.adb
+mkdir -p /dev/usb-ffs/adb
+mount -t functionfs adb /dev/usb-ffs/adb
+stop adbd
+ln -s /sys/kernel/config/usb_gadget/amlogic/functions/ffs.adb /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/ffs.adb
+/usr/bin/adbd &
+
+sleep 3
+
+udc_dev=$(ls /sys/class/udc)
+#if /bin/exists /sys/class/udc/$udc_dev; then #udc name is found here if enabled in kernel
+	echo "" > /sys/kernel/config/usb_gadget/amlogic/UDC  
+	echo "$udc_dev" > /sys/kernel/config/usb_gadget/amlogic/UDC 
+	echo "USB gadget enabled"
+#else
+#	echo "Warning: can't start USB gadget mode, adb will not work"
+#	return 1
+#fi
+
+sleep 1
+
+# mount debugfs
+mount -t debugfs none /sys/kernel/debug
+arecord -l
+```
+
+
+

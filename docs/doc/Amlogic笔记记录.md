@@ -314,6 +314,7 @@ make show-targets # 查看所有package
 make menuconfig    # 整个工程 menuconfig
 make linux-menuconfig # kernel menuconfig
 make linux-savedefconfig # 保存到 output/linux-kernel/defconfig
+最后将 defconfig 和 kernel 下的 defconfig 对比并修改
 ```
 
 
