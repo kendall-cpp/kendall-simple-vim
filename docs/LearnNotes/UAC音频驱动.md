@@ -53,7 +53,7 @@ struct g_audio {
 
 - afunc_alloc_inst 里面主要是分配一个 usb_function_instance （音频数据） 实例结构体，并赋值一些默认参数。**这里注意两个参数 p_chmask 和 c_chmask** ，如果你从事的是 linux 内核相关的工作，声音播放一段时间后出现 underrun 问题（kernel log), 或者 overrun (应用 log) 问题，可以检查一下这两个参数是否设置正确。
 
-- 另外还有这个函数：afunc_free_inst ，这个函数就不用说了吧，看看函数名字再对比下 afunc_alloc_inst 这个函数名字，很很明显是一个分配一个释放嘛，走进函数内部一看，发现就只有一行核心代码：`opts = container_of(f, struct f_uac2_opts, func_inst);`  。没错，我就是要引出 container_of 这个函数，这个函数啥功能呢？我也不懂~~，后续学习补上【链接】
+- 另外还有这个函数：afunc_free_inst ，这个函数就不用说了吧，看看函数名字再对比下 afunc_alloc_inst 这个函数名字，很明显是一个分配一个释放嘛，走进函数内部一看，发现就只有一行核心代码：`opts = container_of(f, struct f_uac2_opts, func_inst);`  。没错，我就是要引出 container_of 这个函数，这个函数啥功能呢？我也不懂~~，后续学习补上【链接】
 
 
 ```c
@@ -69,17 +69,17 @@ static struct usb_function_instance *afunc_alloc_inst(void)
 		
 		opts->func_inst.free_func_inst = afunc_free_inst;
 
-		//这里是用来给用户空间操作的节点，比如p_srate，播放的采样率
+		//这里是用来给用户空间操作的节点，简单的说就是这个函数的功能是让用户空间可以修改音频的参数
 		config_group_init_type_name(&opts->func_inst.group, "",
 									&f_uac2_func_type);
 
-		//默认参数
-		opts->p_chmask = UAC2_DEF_PCHMASK;  //0x3
+		//默认参数在 u_uac2.h 中设置
+		opts->p_chmask = UAC2_DEF_PCHMASK;  //0x3  默认录音是双声道
 		opts->p_srate = UAC2_DEF_PSRATE;    //48000
 		opts->p_ssize = UAC2_DEF_PSSIZE;	//2
-		opts->c_chmask = UAC2_DEF_CCHMASK;	//0x3
-		opts->c_srate = UAC2_DEF_CSRATE;	//64000
-		opts->c_ssize = UAC2_DEF_CSSIZE;	//2
+		opts->c_chmask = UAC2_DEF_CCHMASK;	//0x3  默认播放是双声道
+		opts->c_srate = UAC2_DEF_CSRATE;	//64000  默认播放采样率是 64000， 一般都会改成 48000
+		opts->c_ssize = UAC2_DEF_CSSIZE;	//2  一般都会改成 4
 		opts->req_number = UAC2_DEF_REQ_NUM;  //2
 		return &opts->func_inst;
 }
