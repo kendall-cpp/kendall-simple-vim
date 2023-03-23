@@ -9,7 +9,7 @@ UVC（USB Audio Class）定义了使用USB协议播放或采集音频数据的�
 
 alloc_inst 被设置为 afunc_alloc_inst，alloc_func 被设置为 afunc_alloc，这两个函数在 Gadget Function API 层被回调。宏 DECLARE_USB_FUNCTION_INIT 将定义一个 usb_function_driver 数据结构，使用 usb_function_register 函数注册到 function API 层。关于 Function 层，后面文章会总结。
 
-```sh
+```c
 drivers/usb/gadget/function/f_uac2.c
 
 DECLARE_USB_FUNCTION_INIT(uac2, afunc_alloc_inst, afunc_alloc); 
@@ -53,7 +53,7 @@ struct g_audio {
 
 - afunc_alloc_inst 里面主要是分配一个 usb_function_instance （音频数据） 实例结构体，并赋值一些默认参数。**这里注意两个参数 p_chmask 和 c_chmask** ，如果你从事的是 linux 内核相关的工作，声音播放一段时间后出现 underrun 问题（kernel log), 或者 overrun (应用 log) 问题，可以检查一下这两个参数是否设置正确。
 
-- 另外还有这个函数：afunc_free_inst ，这个函数就不用说了吧，看看函数名字再对比下 afunc_alloc_inst 这个函数名字，很明显是一个分配一个释放嘛，走进函数内部一看，发现就只有一行核心代码：`opts = container_of(f, struct f_uac2_opts, func_inst);`  。没错，我就是要引出 container_of 这个函数，这个函数啥功能呢？我也不懂~~，后续学习补上【链接】
+- 另外还有这个函数：afunc_free_inst ，这个函数就不用说了吧，看看函数名字再对比下 afunc_alloc_inst 这个函数名字，很明显是一个分配一个释放嘛，走进函数内部一看，发现就只有一行核心代码：`opts = container_of(f, struct f_uac2_opts, func_inst);`  。没错，我就是要引出 container_of 这个函数，这个函数啥功能呢？我也不懂~~，后续学习补上【链接】https://blog.csdn.net/s2603898260/article/details/79371024  https://blog.csdn.net/wzc18743083828/article/details/118730678
 
 
 ```c
@@ -70,6 +70,7 @@ static struct usb_function_instance *afunc_alloc_inst(void)
 		opts->func_inst.free_func_inst = afunc_free_inst;
 
 		//这里是用来给用户空间操作的节点，简单的说就是这个函数的功能是让用户空间可以修改音频的参数
+		//https://blog.csdn.net/u011037593/article/details/123698241?spm=1001.2014.3001.5501
 		config_group_init_type_name(&opts->func_inst.group, "",
 									&f_uac2_func_type);
 
@@ -105,7 +106,7 @@ struct f_uac2_opts {
 
 ### afunc_alloc
 
-主要是设置一些操作函数，初始化接口端点描述符，最后初始化一个虚拟ALSA声卡
+主要是设置一些操作函数，初始化接口端点描述符等。
 
 ```c
 static struct usb_function *afunc_alloc(struct usb_function_instance *fi)
@@ -137,16 +138,46 @@ static struct usb_function *afunc_alloc(struct usb_function_instance *fi)
 }
 ```
 
+接下来对 `uac2->g_audio.func` 各个函数分别分析
+
+### afunc_bind
+
+afunc_bind用于设置描述符、端点、配置、注册声卡，主要的工作内容如下：
+
+- 设置描述符的字符串索引值、初始化描述符中的配置参数。
+- 设置接口描述符的编号，ac_intf=0，as_out_intf=1，as_in_intf=2。设置各个接口的alt值为0。
+- 根据音频设备所需的带宽计算端点的最大包长。
+- 根据端点描述符，匹配要使用的端点，同时再描述符中记录端点的地址。
+- 处理描述符。
+- 调用g_audio_setup函数创建音频设备。
+  - 分配uac请求和USB请求缓冲区，请求默认分配2个，缓冲区长度为端点的最大包长
+  - 创建声卡（包含声卡控制设备），一个声卡只有一个控制设备。
+  - 创建PCM子流和PCM设备。子流包含两类，分别为capture和playback，每个类下面又包含多个子流，子流是PCM设备功能的实现。
+  - 设置子流的操作函数为uac_pcm_ops，应用层要访问音频设备，最终会调用到uac_pcm_ops。
+  - 分配DMA缓冲区，底层最终通过调用__get_free_pages分配。
+  - 注册声卡。声卡中包含很多设备，如控制设备、PCM设备、混音设备等，内核将不同的设备统一抽象成snd_device，最终通过snd_register_device注册。控制设备操作函数集合为snd_ctl_f_ops，PCM设备操作函数集合为snd_pcm_f_ops。
+
+usb_configuration 结构体描述 USB gedgets 配置和功能
+
+```c
+static int afunc_bind(struct usb_configuration *cfg, struct usb_function *fn)
+//alsa 声卡的结构体，包含音频设备和 USB 配置信息
+struct f_uac2 *uac2 = func_to_uac2(fn);
+//音频设备， 包含了音频运行时参数、声卡、PCM设备等信息
+struct g_audio *agdev = func_to_g_audio(fn);
+
+```
+
+### afunc_unbind
+
+### afunc_set_alt
+
+### afunc_get_alt
+
+### afunc_disable
+
+### afunc_setup
+
+### afunc_free
 
 
-
-
-
-https://blog.csdn.net/u011037593/article/details/121458492
-
-https://blog.csdn.net/u011037593/article/details/123698241?spm=1001.2014.3001.5501
-
-
-# 待学习
-
-- container_of ： https://blog.csdn.net/wzc18743083828/article/details/118730678
