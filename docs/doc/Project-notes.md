@@ -64,6 +64,8 @@ https://scgit.amlogic.com/#/c/292999/
 
 编译参考：https://confluence.amlogic.com/display/PM/A4+buildroot+compile+guide
 
+注意： 拉取代码前先： source /opt/old-repo.sh
+
 ```sh
 cd a4_buildroot
 source setenv.sh a4_ba400_spk_a6432_release
