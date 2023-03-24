@@ -142,7 +142,7 @@ static struct usb_function *afunc_alloc(struct usb_function_instance *fi)
 
 ### afunc_bind
 
-afunc_bind用于设置描述符、端点、配置、注册声卡，主要的工作内容如下：
+afunc_bind 用于设置描述符、端点、配置、注册声卡，主要的工作内容如下：
 
 - 设置描述符的字符串索引值、初始化描述符中的配置参数。
 - 设置接口描述符的编号，ac_intf=0，as_out_intf=1，as_in_intf=2。设置各个接口的alt值为0。
@@ -166,6 +166,9 @@ struct f_uac2 *uac2 = func_to_uac2(fn);
 //音频设备， 包含了音频运行时参数、声卡、PCM设备等信息
 struct g_audio *agdev = func_to_g_audio(fn);
 
+ //获取字符串描述符
+us = usb_gstrings_attach(cdev, fn_strings, ARRAY_SIZE(strings_fn));
+https://www.cnblogs.com/wen123456/p/14373706.html
 ```
 
 ### afunc_unbind
