@@ -661,6 +661,55 @@ drivers/amlogic/timestamp/
 - (2) proc 文件系统出现的比 sys 文件系统早，proc 文件系统的目录结构比较乱，在 proc 文件系统下面有很多文件夹，比如一个进程就有一个文件夹，现在内核越来越复杂，支持的设备类型也越来越多，显得很混乱；于是又开发出了 sys 系统，sys 系统可以说是 proc 的升级，将来用 sys 系统会是主流；
 - (3) proc 文件系统和 sys 文件系统都是虚拟系统，并且有对应关系，比如"`/proc/misc`"对应于"`sys/class/misc`"下面的设备，都是描述 misc 类设备的；
 
+
+## 内核 printk 文件
+
+通过 `/proc/sys/kernel/printk` 文件可以调节 printk 的输出等级，该文件有 4 个数字值
+
+```sh
+$ cat /proc/sys/kernel/printk
+4       4       1       7
+
+# 关闭日志
+echo 0 > /proc/sys/kernel/printk
+```
+
+四个数值的含义如下：
+
+- 控制台日志级别：优先级高于该值的消息将被打印至控制台；
+- 默认的消息日志级别：将用该优先级来打印没有优先级的消息；
+- 最低的控制台日志级别：控制台日志级别可被设置的最小值（最高优先级）；
+- 默认的控制台日志级别：控制台日志级别的缺省值。
+
+这四个值是在 kernel/printk/printk.c 中被定义的，如下：
+
+```c
+int console_printk[4] = {
+        CONSOLE_LOGLEVEL_DEFAULT,       /* console_loglevel */
+        MESSAGE_LOGLEVEL_DEFAULT,       /* default_message_loglevel */
+        CONSOLE_LOGLEVEL_MIN,           /* minimum_console_loglevel */
+        CONSOLE_LOGLEVEL_DEFAULT,       /* default_console_loglevel */
+};
+EXPORT_SYMBOL_GPL(console_printk);
+```
+
+也可以调整默认的 log 打印级别
+
+在 menuconfig 中修改
+
+修改 CONFIG_MESSAGE_LOGLEVEL_DEFAULT 的值，然后重新编译，更新内核。menuconfig 配置路径如下：
+
+```sh
+Kernel hacking  --->
+    printk and dmesg options  --->
+        (4) Default message log level (1-7)
+```
+
+当 printk 中的消息日志级别小于当前控制台的日志级别（console_printk[0]）时，printk 的信息就会在控制台上显示。但无论当前控制台日志级别是何值，即使没有在控制台打印出来，都可以通过下面两种方法查看日志：
+
+- 第一种是使用 dmesg 命令打印；
+- 第二种是通过 cat /proc/kmsg 来打印。
+
 ---
 
 # GPIO 子系统的作用
@@ -916,22 +965,3 @@ U_BOOT_DRIVER(meson_nfc) = {
   - get_aml_mtd_partition ： 找到并添加分区表
   - get_aml_partition_count ： 计算分区表大小
 
----
-
-# UAC功能迁移（kernel 4.9-kernel 5.4）
-
-
------
-
-# 文件系统mount流程
-
-
-
-
-
-
-# rtos-linuix-rtos 架构
-
-## suspend 流程
-
-## sysfs学习

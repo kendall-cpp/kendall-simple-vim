@@ -513,7 +513,7 @@ git am --resolved
 
 - git apply 只更新改动内容，打完之后需要自己 git add 和  git commit
 
-少用 git am
+**少用 git am**
 
 - git am 是更新的 commit，会将 commit 的所有信息打上去，author 也是 patch 的 author 而不是打 patch的人。
 

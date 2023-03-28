@@ -484,6 +484,10 @@ audio_tdm_bridge: tdm_bridge {
 }; 
 ```
 
+## A4 上跑 tdb_bridge
+
+- cl topic: https://scgit.amlogic.com/#/q/status:open+project:kernel/common+branch:bringup/amlogic-5.4/A4_2_20230309+topic:SWPL-116372
+
 -----
 
 # Elaine

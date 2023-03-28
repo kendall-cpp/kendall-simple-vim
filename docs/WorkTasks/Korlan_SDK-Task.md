@@ -1596,6 +1596,8 @@ done
 
 ## A4 上跑 tdb_bridge
 
+- cl topic: https://scgit.amlogic.com/#/q/status:open+project:kernel/common+branch:bringup/amlogic-5.4/A4_2_20230309+topic:SWPL-116372
+
 ### 配置和启动 uac2
 
 make linux-menuconfig
@@ -1684,6 +1686,4 @@ sleep 1
 mount -t debugfs none /sys/kernel/debug
 arecord -l
 ```
-
-
 
