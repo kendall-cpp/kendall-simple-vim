@@ -1464,6 +1464,8 @@ mount -t debugfs none /sys/kernel/debug
 #### EE_AUDIO_CLK_TDMOUT_A_CTRL 0xfe330090
 #### EE_AUDIO_CLK_TDMOUT_D_CTRL 0xfe3300ec
 
+> 0xfe3300ec - 0xfe330090 = 92 / 4 = 23
+
 echo 0xfe330090 23 > /sys/kernel/debug/aml_reg/dump
 cat /sys/kernel/debug/aml_reg/dump > /data/EE_AUDIO_CLK_TDMOUT.txt
 

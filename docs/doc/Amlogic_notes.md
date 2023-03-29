@@ -10,10 +10,14 @@ i2cdump -f -y 0x01 0x2d
 ## korlan tdm 寄存器
 
 ```sh
-# 28 表示 dump 出多少个寄存器，后面cat 出来，用计算器查看对应二进制位
-echo 0xfe0501c0 10 > /sys/kernel/debug/aml_reg/dump
-echo 0xfe050540 28 > /sys/kernel/debug/aml_reg/dump
-cat /sys/kernel/debug/aml_reg/dump 
+# 23 表示 dump 出多少个寄存器，后面cat 出来，用计算器查看对应二进制位
+#### EE_AUDIO_CLK_TDMOUT_A_CTRL 0xfe330090
+#### EE_AUDIO_CLK_TDMOUT_D_CTRL 0xfe3300ec
+
+> 0xfe3300ec - 0xfe330090 = 92 / 4 = 23
+
+echo 0xfe330090 23 > /sys/kernel/debug/aml_reg/dump
+cat /sys/kernel/debug/aml_reg/dump > /data/EE_AUDIO_CLK_TDMOUT.txt
 ```
 
 如果没有 /sys/kernel/debug/aml_reg/dump 这文件夹，是因为 debugfs 没有 mount 起来
@@ -1206,6 +1210,11 @@ set-ad82128-volume.sh 150
 amixer controls
 amixer cget numid=1
 amixer cset numid=1 150
+
+amixer cset numid=14 150
+amixer cset numid=15 150
+amixer cset numid=2 150
+amixer cset numid=3 150
 
 # 测试音频
 speaker-test -t sine -D hw:0,1
