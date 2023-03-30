@@ -530,6 +530,7 @@ make linux-savedefconfig
 
 - 然后将 defconfig 的修改添加到 aml-5.4/arch/arm64/configs/meson64_a64_smarthome_defconfig
 
+> **一般改了 deconfig 需要 make linux-dirclean ； make linux-rebuild 之后， `.config` 才会生效**
 
 ## buildroot 添加一个 config
 

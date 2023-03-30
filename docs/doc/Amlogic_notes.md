@@ -1215,6 +1215,7 @@ amixer cset numid=14 150
 amixer cset numid=15 150
 amixer cset numid=2 150
 amixer cset numid=3 150
+amixer cset numid=1 200
 
 # 测试音频
 speaker-test -t sine -D hw:0,1
@@ -1298,13 +1299,23 @@ mount -t debugfs none /sys/kernel/debug
 arecord -l
 ```
 
-### 音频测试脚本
+### 配置uac选用哪个 声卡
+
+- **配置uac选用哪个 声卡**, 修改脚本，output/target/etc
+
+```
+/etc/asound.conf 
+```
+
+### 音频测试
 
 ```sh
 #2 arecord from uac sound card,
 arecord -Dhw:1,0 -c 2 -r 48000 -f S32_LE -t wav -d 15 /data/test.wav 
 # -c 2 是两个通道
 arecord -Dhw:1,0 -c 2 -r 48000 -f S32_LE -t wav  | aplay  -Dhw:0,1
+
+arecord -Dhw:1,0 -c 1 -r 48000 -f S32_LE -t wav  |  aplay  -Dhw:0,0 -c 1 -r 48000 -f S32_LE 
 
 # aplay
 amixer cset numid=1 180
