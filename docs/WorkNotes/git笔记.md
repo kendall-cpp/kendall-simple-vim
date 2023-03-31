@@ -479,6 +479,9 @@ git format-patch -1 <commit_hash>
 
 某次提交以后的所有patch，不包括 commit_hash 这个
 git format-patch <commit_hash>
+
+将所有patch输出到一个指定位置的指定文件
+git format-patch -1 xxx --stdout > xxx.patch
 ```
 
 ### 检查 patch

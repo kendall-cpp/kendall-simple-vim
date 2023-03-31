@@ -383,6 +383,7 @@ do
 done
 ```
 
+**注意**：aml_frddr_set_intrpt 设置不会影响 tdm_bridge underrrun , 只会影响 timestamp overrun 。
 
 ### 在 buildroot 中添加启动 UAC 声卡的脚本
 
