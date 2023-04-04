@@ -1239,6 +1239,10 @@ arecord -Dhw:1,0 -c 1 -r 48000 -f S32_LE -t wav -d 20 /data/kernel54_20s.wav
 
 # 配置 UAC
 
+参考 google korlan
+
+> vendor/amlogic/sprinkles/prebuilt/systemfs_overlay/bin/usb_device_config.sh
+
 > 以 av400 为例，在启动的时候配置 UAC 和 adb
 >
 > usb_device_config.sh
