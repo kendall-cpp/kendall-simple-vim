@@ -1636,7 +1636,7 @@ make
 ```
 
 
-#### 代开 UAC 脚本
+#### 打开 UAC 脚本
 
 ```sh
 mount -t configfs configfs /sys/kernel/config
@@ -1689,3 +1689,75 @@ mount -t debugfs none /sys/kernel/debug
 arecord -l
 ```
 
+
+## 解决 EQDRC 导致 uac 播放结束后 aplay 没声音问题
+
+分析
+
+- EQDRC（aed） 默认提供给 TDMOUT_B  使用， 开启 tdm_bridge 后 aed 绑定了 frddr_B ，这个时候 aplay 通过 tdm 播放，使用的是 frddr_C ，tdm 在进行 aml_aed_enable 时，使用的却是 frddr_B ， 而且 aml_aed_enable 在 aml_frddr_enable 之前，所以 frddr_B 会一直往 TDMOUT_B 中送数据，占用这 TDMOUT_B ，而这时候 frddr_B 是没有数据的（因为 uac 没播放），所以 frddr_c 的数据送不到 TDMOUT_B , 就没有声音。
+
+![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/audio-EQ_DRC_frddr.243vj7g3q97k.webp)
+
+```c
+// dts 设置了 aed 默认提供给 frddr_b 使用
+eqdrc_module = <1>;
+
+// aed 绑定 frddr 的代码
+struct frddr *fr = fetch_frddr_by_src(p_attach_aed->attach_module);
+
+if (frddrs[i].in_use && frddrs[i].dest == frddr_src)
+        return &frddrs[i];
+
+fr->dest = dst;  
+// dest 来自 aml_frddr_select_dst(struct frddr *fr, enum frddr_dest dst)
+//switch (p_tdm->id) --> case 1:dst = TDMOUT_B;
+
+frddr_src;
+//p_attach_aed->attach_module
+//static void aml_aed_enable(struct frddr_attach *p_attach_aed, bool enable)
+void aml_aed_top_enable(struct frddr *fr, bool enable) {
+        if (aml_check_aed_module(fr->dest))
+                aml_aed_enable(&attach_aed, enable);
+}
+void aml_set_aed(bool enable, int aed_module) {
+        attach_aed.attach_module = aed_module;
+}
+static void effect_init(struct platform_device *pdev) {
+        aml_set_aed(1, p_effect->effect_module);
+}
+static int effect_platform_probe(struct platform_device *pdev) {
+        dev_set_drvdata(&pdev->dev, p_effect);  // 实际就是 pdev->dev = p_effect
+        effect_init(pdev);
+}
+
+// aml_aed_enable 中更新 FRDDR bit 的代码、
+aml_audiobus_update_bits(actrl, reg, 0x1 << 3, enable << 3);
+```
+
+Problem：
+当多个 FRDDR FIFO 同时使用时，EQDRC 一直绑定一个 FIFO 导致音频播放没有声音 (A4、A5 都有这个问题)
+
+情况一：
+aplay -Dhw:0,1 xxxx.wav
+FIFO_B(frddr-1) 被使用，EQDRC 绑定的也是 FIFO_B(frddr-1)，tdm 初始化时会去 aml_aed_enable ，声音正常
+
+情况二：
+1.连接 ubunut PC 通过 uac 播放，绑定 FIFO_B（frddr-1），且一直持有
+2. uac 播放结束
+3.aplay -Dhw:0,1 xxxx.wav  没有声音
+aplay 播放使用的是 FIFO_C（frddr-2）, 而 EQDRC 绑定的仍然是 FIFO_B（frddr-1），tdm 初始化时会去 aml_aed_enable(FIFO_B)，由于 EQDRC(FIFO_B) 一直占用 TDMOUT_B ,导致 FIFO_C（frddr-2） 无法往 TDMOUT_B 中送数据，所以没有声音。
+
+Solution：
+增加 fifo_id 作为判断，保证 EQDRC 绑定的 frddr 和当前播放的使用的 frddr 一致，防止 TDMOUT_B 被其他 FIFO 占用。
+
+CL: https://scgit.amlogic.com/#/c/308705/
+
+
+能够复现问题的 img（BA400） 为附件中的 bad-aml_upgrade_package.img
+复现方式：
+1.启动板子并连接 ubunut PC
+2.aplay -Dhw:0,1 xxxx.wav  //没有声音
+
+修复后的 img（BA400） 为 ok-aml_upgrade_package.img
+
+请 audio 同事帮忙 review 。
