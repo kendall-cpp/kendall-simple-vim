@@ -336,7 +336,7 @@ Imxdownlaod 会向 `led.bin` 添加一个头部，生成新的 `load.imx` 文件
 
 ### 将板子连接到 PC
 
-使用 USB 线连接，secureCRE 连接时，注意 Band rate 选择 115200 。
+使用 USB 线连接，secureCRE 连接时，注意波特率 Band rate 选择 115200 。
 
 
 ### makefile 的编写
@@ -464,7 +464,7 @@ make V=1 ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- -j4
 
 > 可以修改 Makefile
 
-```mk
+```sh
  249 ARCH ?= arm
  250 CROSS_COMPILE ?= arm-linux-gnueabihf- 
 ```

@@ -155,7 +155,7 @@ afunc_bind 用于设置描述符、端点、配置、注册声卡，主要的工
   - 创建PCM子流和PCM设备。子流包含两类，分别为capture和playback，每个类下面又包含多个子流，子流是PCM设备功能的实现。
   - 设置子流的操作函数为uac_pcm_ops，应用层要访问音频设备，最终会调用到uac_pcm_ops。
   - 分配DMA缓冲区，底层最终通过调用__get_free_pages分配。
-  - 注册声卡。声卡中包含很多设备，如控制设备、PCM设备、混音设备等，内核将不同的设备统一抽象成snd_device，最终通过snd_register_device注册。控制设备操作函数集合为snd_ctl_f_ops，PCM设备操作函数集合为snd_pcm_f_ops。
+  - 注册声卡。声卡中包含很多设备，如控制设备、PCM设备、混音设备等，内核将不同的设备统一抽象成snd_device，最终通过snd_register_device注册。控制设备操作函数集合为snd_ctl_f_ops，PCM设备操作函数集合为 snd_pcm_f_ops。
 
 usb_configuration 结构体描述 USB gedgets 配置和功能
 
@@ -170,17 +170,4 @@ struct g_audio *agdev = func_to_g_audio(fn);
 us = usb_gstrings_attach(cdev, fn_strings, ARRAY_SIZE(strings_fn));
 https://www.cnblogs.com/wen123456/p/14373706.html
 ```
-
-### afunc_unbind
-
-### afunc_set_alt
-
-### afunc_get_alt
-
-### afunc_disable
-
-### afunc_setup
-
-### afunc_free
-
 

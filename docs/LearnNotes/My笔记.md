@@ -1,386 +1,141 @@
+# USB 笔记
 
+## 什么是端点
 
-# 使用 qemu+GDB 调试kernel源码
-
-> 参考：https://blog.csdn.net/sinat_32705609/article/details/128306446
-
-## 安装编译工具链
-
-由于Ubuntu是X86架构，为了编译arm64的文件，需要安装交叉编译工具链
-
-```sh
-sudo apt-get install gcc-aarch64-linux-gnu
-
-sudo apt-get install libncurses5-dev  build-essential git bison flex libssl-dev
-```
-
-**建议使用源码安装**
-
-去 https://releases.linaro.org/components/toolchain/binaries/ 这里下载各种交叉编译器
-
-将编译器上传到 ubuntu ，然后拷贝到 `/usr/local/arm` 目录中并对其进行解压。
-
-```sh
-wget https://releases.linaro.org/components/toolchain/binaries/7.5-2019.12/aarch64-linux-gnu/gcc-linaro-7.5.0-2019.12-i686_aarch64-linux-gnu.tar.xz
-sudo tar -xf gcc-linaro-4.9.4-2017.01-x86_64_arm-linux-gnueabihf.tar.xz 
-```
-
-然后配置环境变量
-
-```sh
-sudo vim /etc/profile
+所有的总线传输要么是传到设备端点 (device endpoint)，要么是从设备端点传送过来。端点其实就是**多个数据直接的缓冲区** ， 所以端点中存的数据是**待发送的**数据或者是**待接收的**数据，
 
-export PATH=$PATH:/usr/local/arm/gcc-linaro-4.9.4-2017.01-x86_64_arm-linux-gnueabihf/bin
-```
-
-## 制作根文件系统
+另外主机没有端点，但是同样有缓冲区，
 
-使用 busybox 制作根文件系统
+端点的地址由【端点号 (0-15)】和【方向 (in / out)】组成，
 
-可以直接去官网下载 busybox： https://busybox.net/
+device --in--> 主机 --out--> device 
 
-这里使用的是 [BusyBox 1.36.0](https://busybox.net/downloads/busybox-1.36.0.tar.bz2) 版本
+每个设备都必须要有 1 个控制端点【端点 0】 。控制端点包含着一对 IN 和 OUT 端点地址。
 
-```sh
-cd filesystem
-tar -xjf busybox-1.36.0.tar.bz2 
-```
+除了端点 0 外， 全速 和 高速 设备可拥有多达 30 个额外端点地址（1-15的 IN 和 OUT），低速设备最多有两个端点地址，可以是两个 IN 、两个 OUT 或者两个方向各一个。
 
-- 修改 Makefile，添加交叉编译器
+## USB 传输类型
 
-```mk
---- a/Makefile
-+++ b/Makefile
-@@ -188,6 +188,8 @@ SUBARCH := $(shell echo $(SUBARCH) | sed -e s/i.86/i386/ -e s/sun4u/sparc64/ \
-                                         -e s/ppc.*/powerpc/ -e s/mips.*/mips/ )
- 
--ARCH ?= $(SUBARCH)
-+CROSS_COMPILE ?= /usr/local/arm/gcc-linaro-4.9.4-2017.01-x86_64_arm-linux-gnueabihf/bin/arm-linux-gnueabihf-  
-+ARCH ?= arm
- 
-```
+我们知道，传输事务解决了主机、设备之间交互一次数据的问题，但是有些端点是需要进行多次双向传输或者多次单向传输的，同时因为设备的功能不同，所需要的带宽和传输特性也不同，那么就需要一个更上层的机制解决以上问题，也就是 USB 的四大传输。
 
-- busybox 中文字符支持
+控制传输（Control Transfers）、中断传输（Interrupt Transfers）、批量传输（Bulk Transfers）、同步传输（Isochronous Transfers）称之为四大传输。
 
-```c
---- a/libbb/printable_string.c
-+++ b/libbb/printable_string.c
-@@ -28,8 +28,6 @@ const char* FAST_FUNC printable_string2(uni_stat_t *stats, const char *str)
-                }
-                if (c < ' ')
-                        break;
--               if (c >= 0x7f)
--                       break;
-                s++;
-        }
- 
-@@ -42,7 +40,7 @@ const char* FAST_FUNC printable_string2(uni_stat_t *stats, const char *str)
-                        unsigned char c = *d;
-                        if (c == '\0')
-                                break;
--                       if (c < ' ' || c >= 0x7f)
-+                       if (c < ' ')
-                                *d = '?';
-                        d++;
-                }
-diff --git a/libbb/unicode.c b/libbb/unicode.c
-index e98cbbf..677db1f 100644
---- a/libbb/unicode.c
-+++ b/libbb/unicode.c
-@@ -1027,7 +1027,7 @@ static char* FAST_FUNC unicode_conv_to_printable2(uni_stat_t *stats, const char
-                                        while ((int)--width >= 0);
-                                        break;
-                                }
--                               *d++ = (c >= ' ' && c < 0x7f) ? c : '?';
-+                               *d++ = (c >= ' ') ? c : '?';
-                                src++;
-                        }
-                        *d = '\0';
-@@ -1035,7 +1035,7 @@ static char* FAST_FUNC unicode_conv_to_printable2(uni_stat_t *stats, const char
-                        d = dst = xstrndup(src, width);
-                        while (*d) {
-                                unsigned char c = *d;
--                               if (c < ' ' || c >= 0x7f)
-+                               if (c < ' ')
-                                        *d = '?';
-                                d++;
-                        }
-```
+### 控制传输
 
+**一种可靠的双向传输**。 控制传输分为 初始设置阶段--->数据阶段(不必须)--->状态信息 阶段，每个阶段都是由一个或者多个事物组成，每个控制传输必须包含有**设置和状态**阶段，不是所有的传输都有数据阶段。
 
-- 配置 busybox
+该传输一般发生在端点 0 中，用于USB的枚举、配置（也可能进行其他数据传输）等阶段。
 
-make defconfig
+当设备插入主机后，主机通过端点 0 进行控制传输，通过一系列的数据交互，主机就可以知道连接的设备有多少个接口，有多少个可用的端点等设备信息。
 
-出现 .config 说明配置成功，但是这只是默认配置，可以通过图形界面进行配置
 
-```sh
-book@kendall:busybox-1.29.0$ make menuconfig
+#### 设置阶段
 
-Location:
--> Settings
--> Build static binary (no shared libs)   (不要选中)
+主机发送请求信息，开始设置事务。令牌信息包的 SETUP 包标识符 将事务 确定为可以开始控制传输的【设置事务】。
 
-# 继续配置如下路径配置项
+### 批量传输
 
-Location:
--> Settings
--> [*]   vi-style line editing commands
+### 中断传输
 
-# 继续配置如下路径配置项
+### 等时传输
 
-Location:
--> Linux Module Utilities
--> [ ] Simplified modutils 
+---
 
-# 继续配置如下路径配置项
+# USB协议文档
 
-Location:
--> Linux System Utilities
--> mdev (16 kb) //确保下面的全部选中，默认都是选中的
+## Universal Serial Bus Specification
 
-# 最后就是使能 busybox 的 unicode 编码以支持中文
+USB 协议规范
 
-Location:
--> Settings
-->  [*] Support Unicode          # 选中
--> [*]   Check $LC_ALL, $LC_CTYPE and $LANG environment variables   # //选中
-```
+（通用串行总线规范）是由USB Implementers Forum（USB-IF）制定和发布的一系列关于USB协议标准的文件。该规范详细介绍了USB协议的各个方面，包括物理层、数据链路层、传输层、设备和主机通信等各个方面。
 
+该规范的版本包括USB 1.x、USB 2.0、USB 3.x和USB Type-C等，每个版本都有对应的规范文件。其中，USB 1.x规范包括USB 1.0、USB 1.1和USB 2.0低速（1.5 Mbps）和全速（12 Mbps）规范，USB 2.0规范则增加了高速（480 Mbps）规范，USB 3.x则增加了超高速（5 Gbps、10 Gbps）规范，而USB Type-C规范则对连接器和电源传输进行了扩充。
 
-- 现在可以编译 busybox 了
+USB规范涵盖了USB协议栈的每个层次的内容，使厂商能够实现兼容的USB设备、主机和相关系统。同时该规范是为确保全球各地的USB设备能够相互兼容的必要手段，USB-IF官方认证标志和兼容性测试也建立于此规范基础上。
 
-COFIG_PREFIX 指定编译结果的存放目录
 
-```sh
-book@kendall:busybox-1.29.0$ make install CONFIG_PREFIX=/home/book/kenspace/filesystem/rootfs
+## USB Complete: The Developer's Guide
 
-book@kendall:rootfs$ ls
-bin  linuxrc  sbin  usr
-```
+是由Jan Axelson所著的一本关于USB开发的指南书籍，它详细介绍了USB技术的原理、协议及其实现。该书可以帮助读者了解USB技术的基本概念和原理，并且提供了大量的实际案例和示例代码，使得读者能够更好地理解USB开发的技术细节。
 
-编译完成以后会在 busybox 的所有工具和文件就会被安装到 rootfs 目录中，rootfs 目录下有 bin、sbin 和 usr 这三个目录，以及 linuxrc 这个文件。前面说过 Linux 内核 init 进程最后会查找用户空间的 init 程序，找到以后就会运行这个用户空间的 init 程序，从而切换到用户态。如果 bootargs 设置 `init=/linuxrc`，那么 linuxrc 就是可以作为用户空间的 init 程序，所以用户态空间的 init 程序是 busybox 来生成的。
+该书共有26章，内容包括了从USB 1.x到USB 3.x、USB Type-C的各个版本协议的细节和特点，涉及到USB传输、设备和主机通信、USB的电源管理、HID设备和UVC摄像头等。除此之外，该书还介绍了USB的硬件设计、PCB设计、阻抗匹配、背板的设计等，并提供了一些开发工具和测试工具的推荐。
 
-### 向根文件系统添加 lib 库
+该书的读者面向USB开发工程师、硬件工程师、软件工程师以及对USB技术感兴趣的专业人士。读者可以根据自己的工作需要选择相关章节进行阅读，也可以作为USB开发的入门手册。
 
-- 向 rootfs 的“/lib”目录添加库文件
 
-Linux 中的应用程序一般都是需要动态库的，当然你也可以编译成静态的，但是静态的可执行文件会很大。如果编译为动态的话就需要动态库，所以我们需要向根文件系统中添加动态库。在 rootfs 中创建一个名为“`lib`”的文件夹:  `mkdir lib`
+USB-IF官网地址为 https://www.usb.org ，您可以在该网站上注册成为会员并下载最新的USB规范和技术文档。
 
-lib 库文件从交叉编译器中获取，前面我们搭建交叉编译环境的时候将交叉编译器存放到了“`/usr/local/arm/`”目录中。交叉编译器里面有很多的库文件，
+以下是一些常用的USB规范文档和技术文档的下载地址：
 
-```sh
-#动态库
-cp /usr/local/arm/gcc-linaro-4.9.4-2017.01-x86_64_arm-linux-gnueabihf/arm-linux-gnueabihf/libc/lib/*so* /home/book/kenspace/filesystem/rootfs/lib/ -d
+USB 2.0规范文档：https://www.usb.org/document-library/usb-20-specification
+USB 3.2规范文档：https://www.usb.org/document-library/usb-32-specification-released-july-26-2019
+USB Type-C规范文档：https://www.usb.org/document-library/usb-type-ctm-specification-revision-21
+HID规范文档：https://www.usb.org/document-library/hid-111-spec-and-descriptors
+UVC规范文档：https://www.usb.org/document-library/usb-video-class-specification-revision-20
+以上地址仅供参考，如有变动或更新，请以USB-I
 
-# 静态库
-cp /usr/local/arm/gcc-linaro-4.9.4-2017.01-x86_64_arm-linux-gnueabihf/arm-linux-gnueabihf/libc/lib/*.a* /home/book/kenspace/filesystem/rootfs/lib/ -d
-```
 
-需要将 `ld-linux-armhf.so.3 -> ld-2.19-2014.08-1-git.so*` 软连接改成真正的**源文件**
 
-```sh
-rm -rf /home/book/kenspace/filesystem/rootfs/lib/ld-linux-armhf.so.3
+# crg 控制器和 dwc 控制器
 
-cp /usr/local/arm/gcc-linaro-4.9.4-2017.01-x86_64_arm-linux-gnueabihf/arm-linux-gnueabihf/libc/lib/ld-linux-armhf.so.3 /home/book/kenspace/filesystem/rootfs/lib/
-```
+CRG控制器和DWC控制器是常见的USB控制器，它们在USB设备中扮演着非常重要的角色。
 
-还需要拷贝其他 so 和 .a 文件。
+CRG控制器（Clock and Reset Generator）是芯片中负责时钟和复位信号的发生和控制的模块，它可以控制内部时钟的频率、相位和稳定性，保证USB数据传输的精度和可靠性。 CRG控制器通常被用于控制USB PHY、USB OTG、UART、I2C等接口的时钟和复位功能。CRG控制器能够提供时钟生成器、PLL锁相环、时钟分频器、复位发生器等功能，可以满足系统中不同模块的时钟和复位信号需求。
 
-```sh
-cp /usr/local/arm/gcc-linaro-4.9.4-2017.01-x86_64_arm-linux-gnueabihf/arm-linux-gnueabihf/lib/*so* /home/book/kenspace/filesystem/rootfs/lib -d
+DWC控制器（DesignWare® USB IP）是一组开源硬件IP，能够实现USB 2.0和USB 3.0的Host和Device功能；DWC控制器广泛应用于各种芯片，并得到了良好的市场口碑。DWC控制器能够提供高性能、低延迟的数据传输，并针对性能、功耗和面积等方面的要求，在内部集成了高度可定制和可配置的功能单元。DWC控制器能够支持不同的USB Phy和常见的USB应用层协议，例如Mass Storage、Audio、Human Interface Device（HID）等，适用于多种应用场景。
 
-cp /usr/local/arm/gcc-linaro-4.9.4-2017.01-x86_64_arm-linux-gnueabihf/arm-linux-gnueabihf/lib/*.a* /home/book/kenspace/filesystem/rootfs/lib/ -d
-```
+总的来说，CRG控制器是用于控制USB设备内部时钟和复位信号的模块，而DWC控制器是用于实现USB通信协议和数据传输的标准IP。这两种控制器在USB设备的设计和开发中扮演着非常重要的角色。
 
-- 向 rootfs 的“usr/lib”目录添加库文件
+### USB驱动程序、USB控制器、USB DEVICE等的功能和相互作用方式
 
-在 rootfs 的 usr 目录下创建一个名为 lib 的目录
+- USB控制器
 
-```sh
-mkdir usr/lib
 
-cp /usr/local/arm/gcc-linaro-4.9.4-2017.01-x86_64_arm-linux-gnueabihf/arm-linux-gnueabihf/libc/usr/lib/*so* /home/book/kenspace/filesystem/rootfs/usr/lib/ -d
+USB控制器位于主板芯片组中，主要负责控制USB总线上所有的USB设备。USB控制器包括两个主要模块：
 
-cp /usr/local/arm/gcc-linaro-4.9.4-2017.01-x86_64_arm-linux-gnueabihf/arm-linux-gnueabihf/libc/usr/lib/*.a* /home/book/kenspace/filesystem/rootfs/usr/lib/ -d
+（1）主机控制器
 
-# 查看文件夹大小
-$ du lib usr/lib -sh
-57M     lib
-67M     usr/lib
-```
+主机控制器位于主机设备或USB主机控制器中。主机控制器负责与USB总线上的所有设备通信，包括识别和配置新的设备，带宽分配和电源管理等任务。
 
-- 创建其他文件夹
+主机控制器还负责处理USB数据包，并将数据包从USB总线中接收或发送到USB设备。因此，在任何一个USB主机控制器上都会有一个或多个主机控制器，它们负责控制USB总线上的数据传输和管理。
 
-在根文件系统中创建其他文件夹，如 dev、proc、mnt、sys、tmp 和 root 等
+（2）设备控制器
 
-```sh
-book@kendall:rootfs$ mkdir dev proc mnt sys tmp root
-```
+USB设备是指连接到USB总线上的任何外部设备。 USB设备需要遵循USB协议和设备通信规范，这将确保USB设备与其他类型的设备能够兼容和互相操作。
 
+USB设备之间的通信主要依靠USB设备描述符，每个USB设备描述符有一个唯一的地址和类型，用于识别或通信到该设备。
 
-## 编译 kernel
+每个USB设备通常包括一个或多个功能接口，这些功能接口为主机控制器提供了各种服务，例如打印、扫描、存储等。
 
+- USB设备
 
-make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- defconfig
 
+USB设备是指USB总线上连接的外部设备，例如鼠标、键盘、打印机和手机等。每个USB设备通常包括一个设备控制器和一个或多个功能接口，它们向主机控制器提供各种服务。
 
-默认 ./arch/arm/configs/multi_v7_defconfig
+USB设备需要支持标准的USB协议和通信协议，以确保与主机控制器和其他设备之间的兼容性和互操作性。
 
-sudo cp filesystem/rootfs ./kernel/linux-5.4/root -r
+- USB驱动程序
 
-make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- menuconfig 
 
-make ARCH=arm Image -j8  CROSS_COMPILE=arm-linux-gnueabihf-
+USB驱动程序是一种接口软件，允许USB设备与操作系统通信。USB驱动程序通常包括硬件抽象层和驱动程序代码。
 
+USB驱动程序负责：
 
+（1）在USB设备上安装和卸载设备驱动程序。
+（2）实现USB设备的基本功能。
+（3）管理USB设备的电源和带宽使用情况。
+（4）发送和接收数据包。
 
-- error
+## USB phy
 
+PHY（Physical Layer，物理层）是 USB 系统中的一个组成部分，它实现了 USB 总线物理层的功能，负责收发 USB 数据包和控制信号。因此，PHY 中包含了 USB 信号的收发电路和控制电路等。
 
-gzip: stdout: No space left on device
-E: mkinitramfs failure cpio 141 gzip 1
+USB PHY的作用是将高层协议（例如USB设备和主机的通信）、传输数据和电缆之间的物理网络层之间进行转换。它实现了USB总线的电气和物理规范。PHY 主要负责三个方面的功能：
 
+（1）时序控制：确保数据和控制信号在正确定时发送和接收，这包括时钟频率的控制和延迟的补偿等。
 
-sudo mount /dev/sda1 /boot/
+（2）传输编码：转换 USB 数据并将其编码为数据传输模式，使它符合 USB 的标准传输协议。
 
-https://www.jianshu.com/p/3a61071ee578
+（3）信号驱动：把转换后的数字信号驱动到 USB 总线中以进行数据传输。
 
-
-
-# UAC音频驱动
-
-
-## tdm_bridge
-
-uac  -- | aplay 应用截取音频 -- tdm  -- 声卡
-
-uac -- tdm_bridge --tdm -- 声卡 
-
-- 普通的 UAC 流程
-
-音频数据从 USB 传递进来，通过 u_audio_start_capture 不停地抓取请求的数，然后由 u_audio_iso_complete 进行处理和送至 dam_buf 中。请求的数据包存在 `usb_request *req` 结构体中，
-
-```c
-struct usb_request {
-        void *buf;                                  //数据缓存区
-        unsigned length;                          //数据长度
-        dma_addr_t dma;                        //与buf关联的DMA地址，DMA传输时使用
-        unsigned no_interrupt:1;              //当为true时，表示没有完成函数，则通过中断通知传输完成，这个由DMA控制器直接控制
-        unsigned zero:1;                          //当输出的最后的数据包不够长度是是否填充0
-        unsigned short_not_ok:1;             //当接收的数据不够指定长度时，是否报错
-        void (*complete)(struct usb_ep *ep, struct usb_request *req);//请求完成函数
-        void *context;                             //被completion回调函数使用
-        struct list_head list;                      //被Gadget Driver使用，插入队列
-        int status;                                    //返回完成结果，0表示成功
-        unsigned actual;                          //实际传输的数据长度
-};
-```
-
-音频数据主要存在 reg->bug 中，写送到 dam_buf 后，有应用程序比如 aplay 截取音频送到 tdm 中，然后送至声卡。
-
-- tdm_bridge
-
-音频数据从 USB 创建来，在 u_audio_iso_complete 函数中通过 aml_tdm_br_write_data 将 reg->bug 送入 tdm_bridge 中，由 tdm_bridge 送入 tdm 中。接着送到声卡播放。
-
-### 播放流程
-
-- 首先通过 aml_tdm_br_pre_start 打开 tdm_bridge , 调用流程如下
-
-```c
-aml_tdm_br_pre_start  // 设置 size 和 rate，保存到 tb_c 结构体中， 后面的 dma_buf.size 就是 size * rate
-  aml_tdm_br_work_func  // 如果 tdm_bridge_state != TDM_BR_WORKING
-    aml_tdm_br_prepare
-    aml_tdm_br_codec_prepare
-
-```
-
-![](https://img-blog.csdnimg.cn/20200309224201427.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2x1Y2t5ZGFyY3k=,size_16,color_FFFFFF,t_70#pic_center)
-
-
-- aml_tdm_br_dmabuf_avail_space
-
-如果上一次写的地址就是从 ddr 中获取的地址，那就直接给申请到的 dmabuf_size （48000*4），上次写的地址比获取的地址还大，那么 addr + danbuf_size - last_wr_addr ,这种情况就可能出现 buf 不足了，否则如果上次写的地址小于读取的地址，那么就直接返回当前获取的地址 - 上次读取的地址，这种情况很可能出现 space 不足。
-
-```c
-if (last_wr_addr > last_rd_addr) {  // 上次写的超过了上次读的，因为是个环形
-        if ((dmabuf_end - last_wr_addr) >= len) {
-                offset = last_wr_addr - dmabuf_addr;
-                memcpy(buf + offset, data, len);
-                last_wr_addr = last_wr_addr + len; 
-        } else {
-                ret = len - dmabuf_end + last_wr_addr;
-                offset = last_wr_addr - dmabuf_addr;
-                /*copy first part*/
-                memcpy(buf + offset, data, len - ret);  // 重头开始写
-                /*copy second part*/
-                memcpy(buf, data + ret, ret);
-                last_wr_addr = dmabuf_addr + ret;   // 从头开始移
-        }
-}
-```
-
-
-## u_audio_iso_playback_complete 调用栈
-
-```sh
-[   16.778878@0]  [ffffffb27f25e7b0+  96][<ffffffe610095478>] dump_backtrace+0x0/0x188
-[   16.779831@0]  [ffffffb27f25e810+  32][<ffffffe610095624>] show_stack+0x24/0x30
-[   16.780742@0]  [ffffffb27f25e830+  64][<ffffffe610e902cc>] dump_stack+0xc8/0xf0
-[   16.781651@0]  [ffffffb27f25e870+  48][<ffffffe610858c18>] u_audio_iso_playback_complete+0x110/0x158
-[   16.782789@0]  [ffffffb27f25e8a0+  48][<ffffffe610adf544>] req_done+0xdc/0x110
-[   16.783688@0]  [ffffffb27f25e8d0+ 112][<ffffffe610ae2478>] crg_udc_ep_dequeue+0x1c8/0x340
-[   16.784706@0]  [ffffffb27f25e940+  48][<ffffffe610840a7c>] usb_ep_dequeue+0x34/0x110
-[   16.785670@0]  [ffffffb27f25e970+  64][<ffffffe610859c28>] u_audio_stop_playback+0x98/0x110
-[   16.786710@0]  [ffffffb27f25e9b0+  32][<ffffffe61085a724>] afunc_disable+0x2c/0x38
-[   16.787654@0]  [ffffffb27f25e9d0+  48][<ffffffe610839580>] reset_config.isra.12+0x48/0x80
-[   16.788671@0]  [ffffffb27f25ea00+  48][<ffffffe610839608>] composite_disconnect+0x50/0x80
-[   16.789690@0]  [ffffffb27f25ea30+  48][<ffffffe61083d118>] configfs_composite_disconnect+0x88/0x90
-[   16.790806@0]  [ffffffb27f25ea60+  96][<ffffffe610ae43d0>] crg_handle_port_status+0x270/0x550
-[   16.791867@0]  [ffffffb27f25eac0+  64][<ffffffe610ae4774>] crg_udc_handle_event+0xc4/0x170
-[   16.792897@0]  [ffffffb27f25eb00+  96][<ffffffe610ae4974>] process_event_ring+0x154/0x2a8
-[   16.793915@0]  [ffffffb27f25eb60+  80][<ffffffe610ae4cdc>] crg_gadget_handle_interrupt+0x214/0x2a8
-[   16.795031@0]  [ffffffb27f25ebb0+  32][<ffffffe610ae4d90>] crg_udc_common_irq+0x20/0x30
-[   16.796027@0]  [ffffffb27f25ebd0+ 128][<ffffffe610132dc8>] __handle_irq_event_percpu+0x90/0x2e0
-[   16.797110@0]  [ffffffb27f25ec50+  48][<ffffffe610133040>] handle_irq_event_percpu+0x28/0x60
-[   16.798161@0]  [ffffffb27f25ec80+  48][<ffffffe6101330c4>] handle_irq_event+0x4c/0x80
-[   16.799136@0]  [ffffffb27f25ecb0+  48][<ffffffe610138674>] handle_fasteoi_irq+0xb4/0x158
-[   16.800144@0]  [ffffffb27f25ece0+  32][<ffffffe610131c0c>] generic_handle_irq+0x34/0x50
-[   16.801140@0]  [ffffffb27f25ed00+  64][<ffffffe610132418>] __handle_domain_irq+0x68/0xc0
-[   16.802148@0]  [ffffffb27f25ed40+ 368][<ffffffe610081424>] gic_handle_irq+0xb4/0xd0
-[   16.803101@0]  [ffffffb27f25eeb0+  16][<ffffffe610083888>] el1_irq+0x148/0x240
-[   16.804000@0]  [ffffffb27f25eec0+ 160][<ffffffe61008162c>] __do_softirq+0xa4/0x410
-[   16.804943@0]  [ffffffb27f25ef60+  32][<ffffffe6100c7328>] irq_exit+0xd8/0xe0
-```
-
-## afunc_set_alt 调用栈
-
-```sh
-[   10.999955@0]  [ffffff91bf25eb20+  96][<ffffffef10095478>] dump_backtrace+0x0/0x188
-[   11.000904@0]  [ffffff91bf25eb80+  32][<ffffffef10095624>] show_stack+0x24/0x30
-[   11.001815@0]  [ffffff91bf25eba0+  64][<ffffffef10e8f08c>] dump_stack+0xc8/0xf0
-[   11.002725@0]  [ffffff91bf25ebe0+  64][<ffffffef1085a8b4>] afunc_set_alt+0x5c/0x148
-[   11.003679@0]  [ffffff91bf25ec20+ 144][<ffffffef1083a70c>] composite_setup+0x934/0x1708
-[   11.004674@0]  [ffffff91bf25ecb0+  80][<ffffffef1083d1e0>] android_setup+0xc0/0x148
-[   11.005629@0]  [ffffff91bf25ed00+  64][<ffffffef10ae3864>] crg_handle_setup_pkt+0xbc/0x218
-[   11.006656@0]  [ffffff91bf25ed40+  64][<ffffffef10ae4890>] crg_udc_handle_event+0x98/0x170
-[   11.007685@0]  [ffffff91bf25ed80+  96][<ffffffef10ae4abc>] process_event_ring+0x154/0x2a8
-[   11.008704@0]  [ffffff91bf25ede0+  80][<ffffffef10ae4e24>] crg_gadget_handle_interrupt+0x214/0x2a8
-[   11.009819@0]  [ffffff91bf25ee30+  32][<ffffffef10ae4ed8>] crg_udc_common_irq+0x20/0x30
-[   11.010817@0]  [ffffff91bf25ee50+ 128][<ffffffef10132dc8>] __handle_irq_event_percpu+0x90/0x2e0
-[   11.011899@0]  [ffffff91bf25eed0+  48][<ffffffef10133040>] handle_irq_event_percpu+0x28/0x60
-[   11.012950@0]  [ffffff91bf25ef00+  48][<ffffffef101330c4>] handle_irq_event+0x4c/0x80
-[   11.013925@0]  [ffffff91bf25ef30+  48][<ffffffef10138674>] handle_fasteoi_irq+0xb4/0x158
-[   11.014933@0]  [ffffff91bf25ef60+  32][<ffffffef10131c0c>] generic_handle_irq+0x34/0x50
-[   11.015929@0]  [ffffff91bf25ef80+  64][<ffffffef10132418>] __handle_domain_irq+0x68/0xc0
-[   11.016937@0]  [ffffff91bf25efc0+   0][<ffffffef10081424>] gic_handle_irq+0xb4/0xd0
-[   11.017890@0]  [ffffffef118a3e20+  16][<ffffffef10083888>] el1_irq+0x148/0x240
-[   11.018791@0]  [ffffffef118a3e30+  96][<ffffffef1092d784>] cpuidle_enter_state+0xac/0x598
-[   11.019807@0]  [ffffffef118a3e90+  48][<ffffffef1092dcfc>] cpuidle_enter+0x3c/0x50
-[   11.020751@0]  [ffffffef118a3ec0+  48][<ffffffef10102284>] call_cpuidle+0x44/0x80
-[   11.021681@0]  [ffffffef118a3ef0+  96][<ffffffef1010260c>] do_idle+0x1f4/0x2b8
-[   11.022581@0]  [ffffffef118a3f50+  32][<ffffffef1010297c>] cpu_startup_entry+0x2c/0x30
-[   11.023567@0]  [ffffffef118a3f70+  32][<ffffffef10e8f360>] rest_init+0xd8/0xe8
-[   11.024467@0]  [ffffffef118a3f90+  16][<ffffffef11300bb0>] arch_call_rest_init+0x14/0x1c
-[   11.025473@0]  [ffffffef118a3fa0+   0][<ffffffef11301128>] start_kernel+0x4f8/0x514
-```
+需要注意的是，USB PHY 通常与芯片本身整合在一起，但是 USB PHY 并不是 USB 芯片本身的一部分，因为它可以由其他芯片提供支持。在实践中，USB PHY 的实现经常随着制造工艺和应用环境的变化而出现不同的工程挑战，因此，它的性能和设计需要根据具体情况进行优化和调整。
