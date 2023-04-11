@@ -1,5 +1,13 @@
 # BuildRoot
 
+```sh
+git config --local user.name "shengken.lin"
+git config --local user.email shengken.lin@amlogic.com
+
+git config --global user.name "shengken.lin"
+git config --global user.email "shengken.lin@amlogic.com"
+```
+
 ## A1-sync
 
 ```sh
@@ -49,16 +57,6 @@ make
 
 后面的测试都选  a5_av400_spk_a6432_release
 ```
-
-### 修改功放 D602 成 D613
-
-- 以 av400 为例修改提交
-
-https://scgit.amlogic.com/#/c/292999/
-
-参考： https://support.amlogic.com/issues/18559
-
-**注意： 修改后 select 11. a5_av400_spk_a6432_release**
 
 ## A4
 
@@ -249,6 +247,9 @@ echo 0 > /proc/sys/kernel/printk
 ```sh
 git config --local user.name "Shengken Lin"
 git config --local user.email shengken.lin@amlogic.corp-partner.google.com
+
+git config --global user.name "Shengken Lin"
+git config --global user.email "shengken.lin@amlogic.corp-partner.google.com"
 
 git pull eureka-partner korlan-master 
 git push eureka-partner HEAD:refs/for/korlan-master
@@ -686,11 +687,7 @@ scp .\the-stars-48k-60s.wav amlogic@10.28.39.83:~/Desktop/lsken00
 # 在测试中选 korlan 输出
 ```
 
-
-
----
-
-
+----
 
 # Spencer
 

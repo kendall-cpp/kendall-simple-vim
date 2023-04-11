@@ -439,14 +439,70 @@ echo "fdd00000.crgudc2" > /sys/kernel/config/usb_gadget/amlogic/UDC
 arecord -l 
 ```
 
+### 解决 EQDRC 导致 uac 播放结束后 aplay 没声音问题
 
-### 解决  ubuntu 播放不行问题
+jira: https://jira.amlogic.com/browse/SWPL-118631
 
-window uac 测试没问题，但是 linux PC uac 不行
+分析
 
-这是因为 tdm_bridge_run 没有一开机就设置为 1
+- EQDRC（aed） 默认提供给 TDMOUT_B  使用， 开启 tdm_bridge 后 aed 绑定了 frddr_B ，这个时候 aplay 通过 tdm 播放，使用的是 frddr_C ，tdm 在进行 aml_aed_enable 时，使用的却是 frddr_B ， 而且 aml_aed_enable 在 aml_frddr_enable 之前，所以 frddr_B 会一直往 TDMOUT_B 中送数据，占用这 TDMOUT_B ，而这时候 frddr_B 是没有数据的（因为 uac 没播放），所以 frddr_c 的数据送不到 TDMOUT_B , 就没有声音。
 
-还可能和 f_uac2 的模式有关
+![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/audio-EQ_DRC_frddr.243vj7g3q97k.webp)
+
+```c
+// dts 设置了 aed 默认提供给 frddr_b 使用
+eqdrc_module = <1>;
+
+// aed 绑定 frddr 的代码
+struct frddr *fr = fetch_frddr_by_src(p_attach_aed->attach_module);
+
+if (frddrs[i].in_use && frddrs[i].dest == frddr_src)
+        return &frddrs[i];
+
+fr->dest = dst;  
+// dest 来自 aml_frddr_select_dst(struct frddr *fr, enum frddr_dest dst)
+//switch (p_tdm->id) --> case 1:dst = TDMOUT_B;
+
+frddr_src;
+//p_attach_aed->attach_module
+//static void aml_aed_enable(struct frddr_attach *p_attach_aed, bool enable)
+void aml_aed_top_enable(struct frddr *fr, bool enable) {
+        if (aml_check_aed_module(fr->dest))
+                aml_aed_enable(&attach_aed, enable);
+}
+void aml_set_aed(bool enable, int aed_module) {
+        attach_aed.attach_module = aed_module;
+}
+static void effect_init(struct platform_device *pdev) {
+        aml_set_aed(1, p_effect->effect_module);
+}
+static int effect_platform_probe(struct platform_device *pdev) {
+        dev_set_drvdata(&pdev->dev, p_effect);  // 实际就是 pdev->dev = p_effect
+        effect_init(pdev);
+}
+
+// aml_aed_enable 中更新 FRDDR bit 的代码、
+aml_audiobus_update_bits(actrl, reg, 0x1 << 3, enable << 3);
+```
+
+### 解决由于 c_ssize 设置成 2 导致 underrun 问题
+
+- c_ssize = 2 表示 rate 96k
+- c_ssize = 4 表示 rate 48k
+
+从 log 中可以看出
+
+```
+tdm_bridge underrun
+aml_tdm_br_tdm_start playing, tdm_cached_data:960   // 这里应该是 1920
+```
+
+Fix 方案
+
+```sh
+echo 48000 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/c_srate
+echo 4 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/c_ssize
+```
 
 #### uac 模式
 

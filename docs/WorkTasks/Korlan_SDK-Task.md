@@ -1692,6 +1692,8 @@ arecord -l
 
 ## 解决 EQDRC 导致 uac 播放结束后 aplay 没声音问题
 
+jira: https://jira.amlogic.com/browse/SWPL-118631
+
 分析
 
 - EQDRC（aed） 默认提供给 TDMOUT_B  使用， 开启 tdm_bridge 后 aed 绑定了 frddr_B ，这个时候 aplay 通过 tdm 播放，使用的是 frddr_C ，tdm 在进行 aml_aed_enable 时，使用的却是 frddr_B ， 而且 aml_aed_enable 在 aml_frddr_enable 之前，所以 frddr_B 会一直往 TDMOUT_B 中送数据，占用这 TDMOUT_B ，而这时候 frddr_B 是没有数据的（因为 uac 没播放），所以 frddr_c 的数据送不到 TDMOUT_B , 就没有声音。
@@ -1734,30 +1736,3 @@ static int effect_platform_probe(struct platform_device *pdev) {
 aml_audiobus_update_bits(actrl, reg, 0x1 << 3, enable << 3);
 ```
 
-Problem：
-当多个 FRDDR FIFO 同时使用时，EQDRC 一直绑定一个 FIFO 导致音频播放没有声音 (A4、A5 都有这个问题)
-
-情况一：
-aplay -Dhw:0,1 xxxx.wav
-FIFO_B(frddr-1) 被使用，EQDRC 绑定的也是 FIFO_B(frddr-1)，tdm 初始化时会去 aml_aed_enable ，声音正常
-
-情况二：
-1.连接 ubunut PC 通过 uac 播放，绑定 FIFO_B（frddr-1），且一直持有
-2. uac 播放结束
-3.aplay -Dhw:0,1 xxxx.wav  没有声音
-aplay 播放使用的是 FIFO_C（frddr-2）, 而 EQDRC 绑定的仍然是 FIFO_B（frddr-1），tdm 初始化时会去 aml_aed_enable(FIFO_B)，由于 EQDRC(FIFO_B) 一直占用 TDMOUT_B ,导致 FIFO_C（frddr-2） 无法往 TDMOUT_B 中送数据，所以没有声音。
-
-Solution：
-增加 fifo_id 作为判断，保证 EQDRC 绑定的 frddr 和当前播放的使用的 frddr 一致，防止 TDMOUT_B 被其他 FIFO 占用。
-
-CL: https://scgit.amlogic.com/#/c/308705/
-
-
-能够复现问题的 img（BA400） 为附件中的 bad-aml_upgrade_package.img
-复现方式：
-1.启动板子并连接 ubunut PC
-2.aplay -Dhw:0,1 xxxx.wav  //没有声音
-
-修复后的 img（BA400） 为 ok-aml_upgrade_package.img
-
-请 audio 同事帮忙 review 。

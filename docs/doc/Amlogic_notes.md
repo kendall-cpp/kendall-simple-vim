@@ -515,7 +515,8 @@ adb pull /data/out.perf ./out
 
 ## nandread
 
-- korlan 中抓 trace 命令
+korlan 中抓 trace 命令
+
 
 ```sh
 抓trace 命令：
@@ -541,7 +542,7 @@ echo 0 > /sys/kernel/debug/tracing/events/workqueue/enable
 echo 1 > /sys/kernel/debug/tracing/tracing_on
 echo "" > /sys/kernel/debug/tracing/trace
 
-# 测试 nandread 的时间； mtd4 没有使用的的分区
+#测试 nandread 的时间； mtd4 没有使用的的分区
 busybox time nandread -d /dev/mtd/mtd4 -L 6144000 -f /cache/.data/dump-page0.hex 
 
 # 等 5秒 按回车
@@ -550,12 +551,13 @@ echo 0 > /sys/kernel/debug/tracing/tracing_on
 cat /sys/kernel/debug/tracing/trace > /data/trace_01.txt
 ```
 
+
 ## nandwrite
 
-```sh
 需要找一个 write_test_file 文件，往没有使用的分区去写
+
 busybox time nandwrite /dev/mtd/mtd4 -s -0 -p /data/write_test_file 
-```
+
 
 ## ftrace
 
@@ -1546,4 +1548,65 @@ MODULE_PARM_DESC(uac_irq_cnt, "uac irq cnt");
 
 cat /sys/module/u_audio/parameters/uac_irq_cnt
 
+
+# korlan 中 HIFI 调试
+
+TDMB-CLK 计算公式
+
+$$Target \ frequency = 24MHz \times \frac{DPLL\_M + \frac{DIV\_FRAC}{2^{17}}}{DPLL\_M} \times \frac{1}{OD} $$
+
+TDMB-CLK 使用 HIFI PLL 作为 source clock ,因此，DIV_FRAC 为 HIFI寄存器地址。
+
+## 公式递推
+
+默认值如下
+
+- DPLL_M (ppm_con.M): 128
+- DPLL_N : 1
+- OD : 1
+
+$Target \ frequency = 24MHz \times \frac{DPLL\_M + \frac{DIV_FRAC}{2^{17}}}{DPLL\_M} \times \frac{1}{OD} $
+
+$Target \ frequency = 24MHz \times \frac{128 + \frac{DIV\_FRAC}{2^{17}}}{1} \times \frac{1}{1} $
+
+$ppm = \frac{\frac{DIV\_FRAC}{2^{17}}}{M} $
+
+$Target \ frequency = 24MHz \times \frac{M}{N} \times (1 + ppm)$
+
+通过改变 DIV_FRAC 来调整 ppm 的大小
+
+- ppm < 0 时， TDMB-CLK 读的 clk 变慢
+- ppm > 0 时， TDMB-CLK 读的 clk 变快
+
+ppm 取值范围： $-1 < ppm < 1$
+
+## driver 中 cur_centi_ppm 背景
+
+因为内核中不支持 float 类型，google 需要小数点后的两两个粒度的境地，如： 0.00000762939453125（$7.629*{10}^{-6}$), 调节粒度需要精确多到 7.62 ，就需要在 kernel 中放大 $10^2$ 数量级。
+
+```c
+cur_centi_ppm = ppm_con.cur_ppm * 100;  // 用于google的算法调试
+```
+
+### 关注的关键节点
+
+ /sys/module/snd_soc/parameters/tdm_cached_data
+
+
+- cur_centi_ppm： user space 条件的值 （DIV_FRAC）
+- tdm_cached_data： 还在 DMA 中未被 TDMB FIFO 读的 data 长度，app 根据这个值来调节 cur_centi_ppm 。
+
+
+
+cur_centi_ppm：ppm * 100
+
+tdm_cached_data ：TDMB FIFO 已经从 DMA buffer 中读取的 uac 数据
+
+tdm_irq_cnt : TDMB FIFO 读取 DMA buffer 的中断数
+
+man_ppm
+- 1： 应用层可以调节 ppm
+- 0： 自动调节 ppm
+
+start_playing_threshold : 默认值 10，表示刚开始播放时需要判断， tdm_cached_data 的数据 $>=10ms$ 的数据时 （$192 \times 10 \ bytes$）
 
