@@ -1597,7 +1597,6 @@ cur_centi_ppm = ppm_con.cur_ppm * 100;  // 用于google的算法调试
 - tdm_cached_data： 还在 DMA 中未被 TDMB FIFO 读的 data 长度，app 根据这个值来调节 cur_centi_ppm 。
 
 
-
 cur_centi_ppm：ppm * 100
 
 tdm_cached_data ：TDMB FIFO 已经从 DMA buffer 中读取的 uac 数据

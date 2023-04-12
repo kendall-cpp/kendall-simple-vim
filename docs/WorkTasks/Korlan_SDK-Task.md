@@ -276,7 +276,7 @@ cp kernel/net/ipv6/ipv6.ko  /mnt/fileroot/shengken.lin/workspace/google_source/e
 insmod /sbin/ipv6.ko
 ```
 
-#### 提交
+- 提交
 
 ```
 [Korlan] Build IPV6 to ko and enable RTL8152
@@ -621,7 +621,7 @@ index 2f3c6a0350a8..39569c215bab 100644
         kfree(options);
 ```
 
-### 4.19
+- 4.19
 
 - spi start :        1.898291
 - rootfs mount end:   5.305296
@@ -635,7 +635,7 @@ user    0m 0.02s
 sys     0m 2.06s
 ```
 
-### 5.15 默认
+- 5.15 默认
 
 - spi start :         2.511331
 - rootfs mount end:   6.075754
@@ -649,7 +649,7 @@ user    0m 0.03s
 sys     0m 2.59s
 ```
 
-### 5.15 修改
+- 5.15 修改
 
 - spi start :         2.346131
 - rootfs mount end:   6.015829
@@ -663,7 +663,7 @@ user    0m 0.03s
 sys     0m 1.48s
 ```
 
-### 总结
+- 总结
 
 - 调整 ko 加载顺序
 
@@ -1129,7 +1129,7 @@ vim vendor/amlogic/korlan/BoardConfigCommon.mk  +81
 
 ----
 
-### 提交 
+- 提交 
 
 - common_drivers
 
