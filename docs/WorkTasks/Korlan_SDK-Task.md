@@ -1736,3 +1736,15 @@ static int effect_platform_probe(struct platform_device *pdev) {
 aml_audiobus_update_bits(actrl, reg, 0x1 << 3, enable << 3);
 ```
 
+
+Hi Yi,
+
+Sorry, it was my mistake, I just remove these directories,
+
+```
+rm out/target/product/korlan/recovery/root -rf
+rm out/target/product/korlan/root -rf
+rm out/target/product/korlan/obj/PACKAGING -rf
+```
+
+and after remove `out/target/product/korlan` , korlan ota can be able to build, thanks.

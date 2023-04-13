@@ -140,6 +140,21 @@ cd ..
 gclient sync
 ```
 
+#### gclient sync 出错
+
+```sh
+FileNotFoundError: [Errno 2] No such file or directory: '/mnt/fileroot/shengken.lin/workspace/google_source/eureka-v2/chrome-v2/chromium/src/third_party/pdfium' -> '/mnt/fileroot/shengken.lin/workspace/google_source/eureka-v2/chrome-v2/chromium/_bad_scm/src/third_party/pdfiuml_d3f_pq/pdfium'
+```
+
+根据 log 提示 
+
+```
+git" "-c" "core.deltaBaseCacheLimit=2g" "clone" "--no-checkout" "--progress" "https://pdfium.googlesource.com/pdfium.git"
+```
+
+
+
+
 ### Korlan
 
 ```sh
