@@ -13,7 +13,7 @@
 	- [查看日志](#查看日志)
 	- [重命名](#重命名)
 	- [查重提交说明/修改注释](#查重提交说明修改注释)
-		- [更改以前 commit 的注释](#更改以前-commit-的注释)
+		- [修改以前 commit 的注释](#修改以前-commit-的注释)
 	- [branch 分支](#branch-分支)
 	- [保存现场 stash](#保存现场-stash)
 	- [在分支下修改文件](#在分支下修改文件)
@@ -203,7 +203,7 @@ git commit --amend -m "修正最近一次 commit 的提交信息"
 
 git commit --amend -s    `-->` 修正最后一次 commit 提交的注释
 
-#### 更改以前 commit 的注释
+#### 修改以前 commit 的注释
 
 例，修改倒数第三个
 
@@ -214,6 +214,8 @@ git rebase -i HEAD~3  倒数第3个（以1开始）
 接着执行以下命令修改注释： 
 
 git commit --amend   # 修改上一次注释
+
+git push 
 
 最后执行，复原现在的点
 
@@ -506,6 +508,7 @@ git apply --check xx.patch
 合并新来的commit patch
 git am *.patch
 git apply  *.patch
+  ## 或者：patch -p1 < 0001-a5-av400-enable-nand.patch   打 patch
 
 合并时，签上打patch人的名字
 git am --signoff *.patch
@@ -527,19 +530,23 @@ git am --resolved
 
 ### 打patch发生冲突
 
-如果不想打这次 patch 了，直接 git am --abort 。
+- 根据 git am 失败的信息，找到发生冲突的具体 patch 文件
 
-如果还想继续，采用以下方法：
-
-- 根据 git am 失败的信息，找到发生冲突的具体 patch 文件，然后 `git apply --reject <patch_name>`，发生冲突的部分会保存为 patch_name.rej 文件；
+- 然后 git apply --reject xxxx.patch ，发生冲突的部分会保存为 patch_name.rej 文件；
 
 - 根据 patch_name.rej 文件，修改该 patch 文件来解决冲突；
 
-- 执行 git am --abort 命令，取消第一步的操作；
+- 然后删除这些 *.rej 文件。完成这一步骤的操作后，我们就可以继续执行 git am 的过程了。
+  - git clean -f xxx.rej
 
-- 再重新执行 git am *.patch 命令即可
+- 执行命令 git status 查看当前改动过的以及新增的文件，确保没有多添加或少添加文件。
 
-  - 或者：patch -p1 < 0001-a5-av400-enable-nand.patch   打 patch
+- 执行命令 git add . 将所有改动都添加到暂存区（注意，关键字add后有一个小数点 . 作为参数，表示当前路径）。
+
+- 执行命令 git am --resolved 继续 步骤1 中被中断的 patch 合入操作。合入完成后，会有提示信息输出。
+
+- 执行命令 git log 确认合入状态。
+
 
 在遇到打了一次补丁之后继续运行patch命令时，patch会提示 `Reversed (or previously applied) patch detected! Assume -R? [n]`。对此：
 

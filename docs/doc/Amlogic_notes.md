@@ -1275,6 +1275,7 @@ mkdir /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0
 echo 0x1 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/c_chmask  # korlan 使用的是单声道，使用 0x01
 echo 48000 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/c_srate
 echo 4 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/c_ssize
+# Disable playback capability to host
 echo 0x0  > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/p_chmask  # 单声道 0x01
 echo 48000 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/p_srate  # rate = 48k 或者 96k
 echo 4 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/p_ssize
@@ -1609,3 +1610,14 @@ man_ppm
 
 start_playing_threshold : 默认值 10，表示刚开始播放时需要判断， tdm_cached_data 的数据 $>=10ms$ 的数据时 （$192 \times 10 \ bytes$）
 
+# 使用 uac playback
+
+在配置 UAC 时需要打开 playback 
+
+```sh
+# Disable playback capability to host
+echo 0x1  > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/p_chmask
+echo 48000 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/p_srate
+echo 4 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/p_ssize
+ln -s /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0 /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/uac2.0
+```

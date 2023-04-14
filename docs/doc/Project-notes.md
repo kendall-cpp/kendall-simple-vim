@@ -1,4 +1,4 @@
-# BuildRoot
+## BuildRoot
 
 ```sh
 git config --local user.name "shengken.lin"
@@ -60,16 +60,26 @@ make
 
 ## A4
 
-编译参考：https://confluence.amlogic.com/display/PM/A4+buildroot+compile+guide
-
-注意： 拉取代码前先： source /opt/old-repo.sh
+编译参考：https://confluence.amlogic.com/pages/viewpage.action?spaceKey=PM&title=A4+buildroot+compile+guide
 
 ```sh
-git push review HEAD:refs/for/bringup/amlogic-5.4/A4_2_20230309
-
-
+mkdir a4_buildroot
 cd a4_buildroot
+repo init -u git://git.myamlogic.com/linux/manifest.git -b master -m default.xml --repo-url=git://git.myamlogic.com/tools/repo.git
+repo sync
+
+cd a4_buildroot/buildroot
+wget http://walle01-sz.amlogic.com:8080/dl.tgz
+tar -xf ./dl.tgz
+```
+
+### 编译
+
+```sh
+# BA400
 source setenv.sh a4_ba400_spk_a6432_release
+# BA409
+source setenv.sh  a4_ba409_a6432_release
 
 make
 ```
@@ -1928,4 +1938,3 @@ echo "#define _IO_IN_BACKUP 0x100" >> lib/stdio-impl.h
 # 进入 uboot
 up
 ```
-
