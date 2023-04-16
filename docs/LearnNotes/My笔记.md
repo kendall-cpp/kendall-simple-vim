@@ -1,4 +1,6 @@
-# USB 笔记
+# linux 源码学习笔记
+
+# **USB 笔记**
 
 ## 什么是端点
 
@@ -20,7 +22,7 @@ device --in--> 主机 --out--> device
 
 控制传输（Control Transfers）、中断传输（Interrupt Transfers）、批量传输（Bulk Transfers）、同步传输（Isochronous Transfers）称之为四大传输。
 
-### 控制传输
+ 控制传输
 
 **一种可靠的双向传输**。 控制传输分为 初始设置阶段--->数据阶段(不必须)--->状态信息 阶段，每个阶段都是由一个或者多个事物组成，每个控制传输必须包含有**设置和状态**阶段，不是所有的传输都有数据阶段。
 
@@ -29,21 +31,21 @@ device --in--> 主机 --out--> device
 当设备插入主机后，主机通过端点 0 进行控制传输，通过一系列的数据交互，主机就可以知道连接的设备有多少个接口，有多少个可用的端点等设备信息。
 
 
-#### 设置阶段
+ 设置阶段
 
 主机发送请求信息，开始设置事务。令牌信息包的 SETUP 包标识符 将事务 确定为可以开始控制传输的【设置事务】。
 
-### 批量传输
+ 批量传输
 
-### 中断传输
+中断传输
 
-### 等时传输
+等时传输
 
 ---
 
-# USB协议文档
+## USB协议文档
 
-## Universal Serial Bus Specification
+### Universal Serial Bus Specification
 
 USB 协议规范
 
@@ -54,7 +56,7 @@ USB 协议规范
 USB规范涵盖了USB协议栈的每个层次的内容，使厂商能够实现兼容的USB设备、主机和相关系统。同时该规范是为确保全球各地的USB设备能够相互兼容的必要手段，USB-IF官方认证标志和兼容性测试也建立于此规范基础上。
 
 
-## USB Complete: The Developer's Guide
+### USB Complete: The Developer's Guide
 
 是由Jan Axelson所著的一本关于USB开发的指南书籍，它详细介绍了USB技术的原理、协议及其实现。该书可以帮助读者了解USB技术的基本概念和原理，并且提供了大量的实际案例和示例代码，使得读者能够更好地理解USB开发的技术细节。
 
@@ -74,9 +76,9 @@ HID规范文档：https://www.usb.org/document-library/hid-111-spec-and-descript
 UVC规范文档：https://www.usb.org/document-library/usb-video-class-specification-revision-20
 以上地址仅供参考，如有变动或更新，请以USB-I
 
+## USB 控制器
 
-
-# crg 控制器和 dwc 控制器
+## crg 控制器和 dwc 控制器
 
 CRG控制器和DWC控制器是常见的USB控制器，它们在USB设备中扮演着非常重要的角色。
 
@@ -126,7 +128,7 @@ USB驱动程序负责：
 （3）管理USB设备的电源和带宽使用情况。
 （4）发送和接收数据包。
 
-## USB phy
+### USB phy
 
 PHY（Physical Layer，物理层）是 USB 系统中的一个组成部分，它实现了 USB 总线物理层的功能，负责收发 USB 数据包和控制信号。因此，PHY 中包含了 USB 信号的收发电路和控制电路等。
 
@@ -162,4 +164,384 @@ USB PHY的作用是将高层协议（例如USB设备和主机的通信）、传�
   - 《C 编程专家》
 
 - 《设备驱动程序》 这本书也是必看
+
+----
+
+# **安装和编译自己的内核**
+
+> **ARM64 版本**
+
+参考网址：https://www.jianshu.com/p/a0d166bfe21f
+
+## 安装相关支持库
+
+```sh
+apt-get install libpixman-1-dev
+ 
+sudo apt-get install zlib1g-dev
+sudo apt-get install libglib2.0-0
+sudo apt-get install libglib2.0-dev
+```
+
+## 安装qemu 
+
+从qemu官网下载源码文件 qemu-6.2.0.tar.xz
+
+```sh
+tar -xvf qemu-6.2.0.tar.xz
+
+# 编 译
+export PATH="/home/book/kenspace/linux-kernel/toolchain/gcc-linaro-7.5.0-2019.12-x86_64_arm-linux-gnueabihf/bin:${PATH}"
+./configure --prefix=/home/book/kenspace/linux-kernel/qemu   # 指定需要安装的路径
+
+./configure --target-list=x86_64-softmmu,x86_64-linux-user,arm-softmmu,arm-linux-user,aarch64-softmmu,aarch64-linux-user --enable-kvm --prefix=/home/book/kenspace/linux-kernel/qemu  
+```
+
+如果出现编译错误，参考这里解决。 https://blog.csdn.net/birencs/article/details/126666827
+
+
+make 
+
+最后将 `/home/book/kenspace/linux-kernel/qemu/bin` 添加到环境变量中
+
+qemu安装完成。
+
+## 安装交叉编译器
+
+```
+sudo apt-get install gcc-arm-linux-gnueabi
+```
+
+## 配置脚本目录
+
+参考我的目录关系
+
+```sh
+book@kendall:~/kenspace/linux-kernel$ ls
+buildroot-2022.02  build-vexpressa9  qemu  buildroot-dl
+
+book@kendall:~/kenspace/linux-kernel/build-vexpressa9$ ls
+build.sh    output-vexpress-v2p-ca9 
+```
+
+cd build-vexpressa9
+
+在该目录下建立编译建立 build.sh ，输入如下内容
+
+```sh
+#! /bin/bash
+
+TPWD=$(pwd)
+echo $TPWD
+cd $TPWD/../buildroot-2022.02/
+#mkdir -p $TPWD/output-vexpress-v2p-ca9
+make O=$TPWD/output-vexpress-v2p-ca9 ARCH=arm $1
+```
+
+## 配置 buildroot
+
+> 我这里使用的 buildroot 版本是 buildroot-2022.02
+
+- make defconfig
+
+这里的 defconfig 是根据不同型号的板子自行确定的，对应于 buildroot/configs 目录下的配置文件，我们这里仿真的是vexpress，qemu_arm_vexpress_defconfig 。
+
+- 配置
+
+```sh
+cd build-vexpressa9/
+./build.sh qemu_arm_vexpress_defconfig
+```
+
+可以看到 build-vexpressa9/output-vexpress-v2p-ca9 文件夹下生成了 .config 文件
+
+注意： 这一步之后就不要再 ./build.sh qemu_arm_vexpress_defconfig 了，否则会重新初始化 .config 
+
+- 配置 buildroot 相关参数
+
+安装 menuconfig 的依赖库文件
+
+```sh
+sudo apt-get install build-essential 
+sudo apt-get install libncurses5 
+sudo apt-get install libncurses5-dev 
+```
+
+```sh
+cd build-vexpressa9/
+./build.sh menuconfig
+```
+
+- Target options主要是和架构有关的配置，一般我们使用ARCH=arm或者其他架构后，一般不需要做调整
+
+- Build options主要是设置和buildroot相关的参数，比如说下载目录、主机环境的配置地址等等
+
+```sh
+/home/book/kenspace/linux-kernel/buildroot-2022.02/configs/qemu_arm_vexpress_defconfig) Location to save buildroot config
+($(TOPDIR)/../buildroot-dl) Download dir  # 这里我们需要配置Build options，主要是更改Download dir，即buildroot下载文件的存放目录，包括 kernel 源码
+($(BASE_DIR)/host) Host dir 
+# 选择下载的网址
+    Mirrors and Download locations  --->
+()  Primary download site 
+(http://sources.buildroot.net) Backup download site
+(https://cdn.kernel.org/pub) Kernel.org mirror 
+(http://ftpmirror.gnu.org) GNU Software mirror 
+(http://rocks.moonscript.org) LuaRocks mirror
+(http://cpan.metacpan.org) CPAN mirror (Perl packages)
+```
+
+- Toolchain配置工具链相关的参数，可以使用外部自己的，也可以网上下载的，又或者直接使用buildroot帮忙编译的
+
+```sh
+# 我这里选择 buildroot 自己下载 toolchain , 因为选择额外的会出错
+    Toolchain type (Buildroot toolchain)  --->  
+     (X) External toolchain 
+     Toolchain (Custom toolchain)  ---> 
+     Toolchain origin (Pre-installed toolchain)  --->
+   (/home/book/kenspace/linux-kernel/toolchain/gcc-linaro-7.5.0-2019.12-x86_64_arm-linux-gnueabihf) Toolchain path  
+  ($(ARCH)-linux-gnueabihf) Toolchain prefix 
+     External toolchain gcc version (7.x)  --->
+     External toolchain kernel headers series (4.10.x)  ---> 
+     External toolchain C library (glibc/eglibc)  ---> 
+  [*] Toolchain has SSP support? (NEW) 
+  [*]   Toolchain has SSP strong support? (NEW) 
+  [*] Toolchain has RPC support? (NEW) 
+```
+
+- System configuration配置文件系统相关的参数
+
+- Kernel配置内核相关信息，比如源码位置、生成文件、加载地址等等
+
+```
+[*] Linux Kernel 
+   Kernel version (Custom tarball)  --->  
+  (https://mirror.tuna.tsinghua.edu.cn/kernel/v5.x/linux-5.15.tar.xz) URL of custom kernel tarball 
+(vexpress) Defconfig name 
+      Kernel compression format (gzip compression)  --->
+[*]   Build a Device Tree Blob (DTB)
+ (vexpress-v2p-ca9) In-tree Device Tree Source file name
+```
+
+- Target packages是buildroot配置应用包的地方，后面需要用到的很多应用都可以直接配置，包括像opencv这样的库，当然也可以自己添加配置应用包
+
+- Filesystem images主要设置的是文件系统的镜像格式，可以根据需要使用yaffs2、initial RAM等等格式
+
+···
+ [*] ext2/3/4 root filesystem  
+       ext2/3/4 variant (ext2 (rev1))  ---> 
+···
+
+- Bootloaders 主要配置的启动引导方式
+
+## 配置kernel参数
+
+我们可以提前去网上下载 kernel 到 buildroot-dl/linux/linux-5.15.tar.xz  这样编译的时候会方便很多
+
+## 编译 
+
+```sh
+build-vexpressa9$ ./build.sh -j4
+```
+
+- 如果报错： multiple (or no) load addresses: 
+ 
+```sh
+ ./build.sh LOADADDR=0x80008000 -j4
+```
+
+- fakeroot: preload library `libfakeroot.so' not found, aborting.
+
+sudo apt-get install fakeroot
+
+如果还不行，尝试安装：
+
+sudo apt-get install cramfsprogs
+
+之后只需要修改  build-vexpressa9/output-vexpress-v2p-ca9/build/linux-custom 这里的 kernel 源码即可
+
+然后再 ./build.sh linux-rebuild
+
+可能需要移除掉之前安装多余的 gcc ,根据提示操作
+
+```
+sudo apt autoremove cpp-7-aarch64-linux-gnu 
+sudo apt autoremove cpp-aarch64-linux-gnu 
+sudo apt autoremove gcc-7-aarch64-linux-gnu 
+sudo apt autoremove gcc-7-aarch64-linux-gnu-base 
+sudo apt autoremove libasan4-arm64-cross 
+sudo apt autoremove libatomic1-arm64-cross 
+sudo apt autoremove libc6-arm64-cross libc6-dev-arm64-cross
+sudo apt autoremove libgcc-7-dev-arm64-cross 
+sudo apt autoremove libgcc1-arm64-cross 
+sudo apt autoremove libgomp1-arm64-cross 
+sudo apt autoremove libitm1-arm64-cross 
+sudo apt autoremove liblsan0-arm64-cross 
+sudo apt autoremove libstdc++6-arm64-cross 
+sudo apt autoremove libtsan0-arm64-cross 
+sudo apt autoremove libubsan0-arm64-cross 
+sudo apt autoremove linux-hwe-5.4-headers-5.4.0-139
+sudo apt autoremove linux-libc-dev-arm64-cross
+```
+
+
+再不行可能需要删除原来编译的 rootfs 
+
+```
+build-vexpressa9/output-vexpress-v2p-ca9$ mv images images-bak
+```
+
+## 运行 qemu
+
+ cd output-vexpress-v2p-ca9/images
+ vi kernel-qemu.sh
+
+
+```sh
+#!/bin/sh
+IMAGE_DIR="${0%/*}/"
+BUILD_ROOTDIR=`realpath ../`
+echo $BUILD_ROOTDIR
+cp $BUILD_ROOTDIR/build/linux-custom/arch/arm/boot/zImage .
+#cp $BUILD_ROOTDIR/build/linux-custom/arch/arm/boot/uImage .
+cp $BUILD_ROOTDIR/build/linux-custom/arch/arm/boot/dts/vexpress-v2p-ca9.dtb .
+
+if [ "${1}" = "only" ]; then
+    EXTRA_ARGS='-nographic'
+else
+    EXTRA_ARGS='-serial stdio'
+fi
+
+export PATH="/home/vencol/code/vexpressa9/output-vexpress-v2p-ca9/host/bin:${PATH}"
+exec   qemu-system-arm -M vexpress-a9 -smp 1 -m 256 -kernel ${IMA1GE_DIR}/zImage -dtb ${IMAGE_DIR}/vexpress-v2p-ca9.dtb -drive file=${IMAGE_DIR}/rootfs.ext2,if=sd,format=raw -append "console=ttyAMA0,115200 rootwait root=/dev/mmcblk0"  -net nic,model=lan9118 -net user  ${EXTRA_ARGS}
+```
+
+```
+chmod +x kernel-qemu.sh
+
+./kernel-qemu.sh only
+```
+
+
+---
+
+# **进程原理和系统调用**
+
+## 进程概述
+
+> **什么是进程？**
+
+进程: 直观的说，就是保存在硬盘中的程序在运行以后，那么这个运行起来的执行程序就是进程了。另外，操作系统会以进程为单位进行分配资源，比如说CPU时间片，内存等资源。进程是资源分配的最小单位。
+
+> **进程的生命周期**
+
+系统中的每个进程能够分时复用 CPU 的时间片，所以操作系统必须要设计有效的进程调策略实现多任务并行执行。进程在被 CPU 调度运行时有不同的状态。
+
+- 创建状态
+- 就绪状态：获取到了运行资源和运行条件
+- 执行状态：进程正在 CPU 中执行操作
+- 阻塞状态：进程因资源被占用而释放 CPU
+- 终止状态：进程终止
+
+在 linux 内核中提供 API 函数来设置进程的状态
+
+- TASK_RUNNING：可运行状态，进程要么在CPU上执行，要么准备执行。
+- TASK_INTERRUPTIBLE：可中断的等待状态，进程被挂起(睡眠)，直到某个条件为真，产生一个硬中断、释放进程正等待的系统资源、或传递一个信号都是可以唤醒进程的条件。
+- TASK_UNINTERRUPTIBLE：不可中断的等待状态，与可中断等待状态类似，只是不能被信号唤醒。在一些特殊情况下会使用，例如：当进程打开一个设备文件，设备驱动会开始探测相应的硬件时会用到这种状态。
+- TASK_STOPED：暂停状态，当进程接收到SIGSTOP、SIGTSTP、SIGTTIN或SIGTTOU信号后进入。
+- TASK_TRACED：跟踪状态，进程执行由debugger程序暂停，当一个进程被另一个进程监控时，任何信号都可以把这个进程置于TASK_TRACED状态。
+
+还有两个状态是既可以存放在进程描述符的 state 字段中，也可以存放在 exit_state 字段中。从这两个字段可以看出，只有当进程执行被终止时，进程的状态才会为这两种状态中的一种：
+
+- EXIT_ZOMBIE：僵死状态，进程将被终止，但父进程还没有发布 wait4() 或者 waitpid() 系统调用来返回关于死亡进程的信息。发布 wait() 类系统调用之前，内核不能丢弃包含在死进程描述符中的数据，因为父进程可能还需要它。(一般出现这种状态的原因都是父进程没有响应子进程的死亡信号,可能父进程处于 TASK_INTERRUPTIBLE 状态或者 TASK_UNINTERRUPTIBLE 状态)
+- EXIT_DEAD：僵死撤销状态，进程被终止后的最终状态，父进程发布 wait4() 或者 waitpid() 系统调用后，内核删除此进程描述符。
+
+![](https://raw.githubusercontent.com/kendall-cpp/blogPic/main/blog-01/%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81.png)
+
+> 我们使用一个简单地例子说明这种状态的转变，我们有个程序A，它的工作就是做一些计算，然后把计算结构写入磁盘文件中。我们在 shell 中运行它，起初它就是 TASK_RUNNING 状态，也就是运行态，CPU 会不停地分配时间片供我们的进程 A 运行，每次时间片耗尽后，进程 A 都会转变到就绪态(实际上还是 TASK_RUNNING 状态，只是此时在等待 CPU 分配时间片，暂时不在 CPU 上运行)。当进程 A使 用 fwrite 或 write 将数据写入磁盘文件时，就会进入阻塞态( TASK_INTERRUPTIBLE 状态)，而磁盘将数据写入完毕后，会通过一个中断告知内核，内核此时会将进程A的状态由阻塞态( TASK_INTERRUPTIBLE )转变为就绪态( TASK_RUNNING )等待CPU分配时间片运行。而最后当进程 A 需要退出时，内核先会将其设置为僵死状态( EXIT_ZOMBIE )，这时候它所使用的内存已经被释放，只保留了一个进程描述符供父进程使用，最后当父进程(也就是我们起初启动它的 shell )通过 wait() 类系统调用通知内核后，内后会将进程A设置为僵死撤销状态( EXIT_DEAD )，并释放其进程描述符。到这里进程 A 的整个运行周期完整结束。
+
+> **Linux 中进程表示**
+
+为了秒睡控制进程的运行，系统中存放进程的管理和控制信息的数据结构（`task_struct`）成为**进程的控制块** PCB（Process Control Block），它是进程实体的一部分，是操作系统中重要的数据结构。也就是说一个`task_struct`  就是一个 PCB ，我们在调用 `fork()` 的时候，系统就会产生一个 stsk_struct 结构，然后从父进程那你继承一些数据，并把新创建的进程插入到进程数中 。
+
+> task_struct 在文件 include/linux/sched.h 中，成员介绍可以参考：https://www.cnblogs.com/JohnABC/p/9084750.html
+
+
+
+## 进程优先级
+
+通过 ps -le 命令
+
+```sh
+$ ps -le | head
+F S   UID    PID   PPID  C PRI  NI ADDR SZ WCHAN  TTY          TIME CMD
+4 S     0      1      0  0  80   0 - 56554 -      ?        00:00:36 systemd
+1 S     0      2      0  0  80   0 -     0 -      ?        00:00:00 kthreadd
+1 I     0      3      2  0  60 -20 -     0 -      ?        00:00:00 rcu_gp
+1 I     0      4      2  0  60 -20 -     0 -      ?        00:00:00 rcu_par_gp
+1 I     0      6      2  0  60 -20 -     0 -      ?        00:00:00 kworker/0:0H-kb
+1 I     0      9      2  0  60 -20 -     0 -      ?        00:00:00 mm_percpu_wq
+1 S     0     10      2  0  80   0 -     0 -      ?        00:00:04 ksoftirqd/0
+1 I     0     11      2  0  80   0 -     0 -      ?        00:00:21 rcu_sched
+1 S     0     12      2  0 -40   - -     0 -      ?        00:00:00 migration/0
+```
+
+上面的输出中，PRI 表示 Priority ， NI 表示 Nice ， 这两个值表示优先级，数字越小代表这个进程优先级越高，也就是越优先被 CPU 处理，不过 PRI 值是由内核动态调整的，用户不能直接修改，所以用户层只能通过修改 NI 值来影响 PRI 值，间接地调整进程优先级。
+
+PRI 和 NI 的关系如下：
+
+PRI (最终值) = PRI (原始值) + NI
+
+> 其实，大家只需要记得，在y用户态，我们修改 NI 的值就可以改变进程的优先级即可。NI 值越小，进程的 PRI 就会降低，该进程就越优先被 CPU 处理；反之，NI 值越大，进程的 PRI 值就会増加，该进程就越靠后被 CPU 处理。
+
+**修改 NI 值时有几个注意事项：**
+
+- NI 范围是 -20~19 。
+- 普通用户调整 NI 值的范围是 0~19，而且只能调整自己的进程。
+- 普通用户只能**调高** NI 值，而**不能降低**。如原本 NI 值为 0，则只能调整为大于 0。
+- 只有 root 用户才能设定进程 NI 值为负值，而且可以调整任何用户的进程。
+
+
+> **task_struct 中描述进程优先级的成员如下：**
+
+```c
+int                             prio; 
+int                             static_prio;
+int                             normal_prio;
+unsigned int                    rt_priority;
+```
+
+
+<table>
+	<tr>
+	    <th >优先级</th>
+	    <th>限期进程</th>
+	    <th>实时进程</th>  
+      <th>普通进程</th>  
+	</tr >
+	<tr>
+      <th>prio</th>
+      <td colspan="3">大多数情况下， `prio = normal_prio` ，特殊情况下，如果进程 A 占用实时互斥锁，进程 B 正在等待锁，进程 B 的优先级就比进程 A 优先级低，那么把进程 A 的优先级临时提高到 A 进程 的优先级，那么进程 A 的 prio 就等于进程 B 的 prio</td>
+	</tr >
+	<tr>
+	    <th>static_prio</th>
+	    <td>没有意义 0</td>
+	    <td>没有意义 0</td>
+	    <td>120*ni, 数值越小，优先级越高</td>
+	</tr >
+	<tr>
+	    <th>normal_prio</th>
+	    <td>-1</td>
+	    <td>99 - rt_priority</td>
+	    <td>static_prio</td>
+	</tr >
+	<tr>
+	    <th>rt_priority</th>
+	    <td>没有意义 0</td>
+	    <td>实时进程的优先级，范围1-9， 数值越大，优先级越高</td>
+	    <td>没有意义 0</td>
+	</tr >
+</table>
+
+
+## CFS 调度器
 
