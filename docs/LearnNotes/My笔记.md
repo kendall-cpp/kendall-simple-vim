@@ -561,7 +561,7 @@ unsigned int                    rt_priority;
 
 ### 硬中断 和 软中断
 
-中断可分为：**硬件中断（可屏蔽）** 和 **软中断（不可屏蔽）**
+中断可分为：**硬件中断** 和 **软中断**
 
 - **硬件中断**（hardware interrunpt）: 由与系统相连的**外设**(比如网卡、硬盘)自动产生的。主**要是用来通知操作系统系统外设状态的变化**。比如当网卡收到数据包的时候，就会发出一个中断。我们通常所说的中断指的是硬中断(hardirq)。
 
@@ -573,7 +573,7 @@ unsigned int                    rt_priority;
 
 ### 不可屏蔽中断 和 可屏蔽中断
 
-中断可分为 **不可屏蔽中断 NMI** 和 **可屏蔽中断 INTR**，NMI 用于紧急情况的故障处理，如R AM 奇偶校验错等，INTR 则用于外部依靠中断来工作的硬件设备。网卡使用的就是 INTR，
+硬件中断可分为 **不可屏蔽中断 NMI** 和 **可屏蔽中断 INTR**，NMI 用于紧急情况的故障处理，如R AM 奇偶校验错等，INTR 则用于外部依靠中断来工作的硬件设备。网卡使用的就是 INTR，
 
 > 不可屏蔽中断源一旦提出请求，cpu必须无条件响应，而对于可屏蔽中断源的请求，cpu可以响应，也可以不响应。 
 
@@ -598,7 +598,7 @@ CPU 一般会设置 2 根中断请求输入线
 
 答：是的，软中断比硬中断少了一个硬件发送信号的步骤。产生软中断的进程一定是当前正在运行的进程，因此它们不会中断CPU。但是它们会中断调用代码的流程。
 
-### linxu 源码中的软中断和硬中断
+### linux 源码中的软中断和硬中断
 
 https://zhuanlan.zhihu.com/p/85597791
 
@@ -606,9 +606,11 @@ https://zhuanlan.zhihu.com/p/85597791
 
 https://blog.csdn.net/honour2sword/article/details/40213417?spm=a2c6h.12873639.article-detail.5.7ff61d90Ok7ugZ
 
-## 中断控制器是GIC
+## 中断控制器是及中断域
 
 https://blog.csdn.net/u013836909/category_10181523.html
+
+GIC 架构规范， 
 
 ## 中断处理过程
 
@@ -627,7 +629,7 @@ https://blog.csdn.net/u013836909/category_10181523.html
 
 **一个简单的中断处理过程是**：外设发起中断，发送给Distributor ，Distributor并基于它们的中断特性(优先级、是否使能等等)对中断进行分发处理，分发给合适的Redistributor， Redistributor 将中断信息，发送给 CPU interface，CPU interface产生合适的中断异常给处理器，处理器接收该异常，最后软件处理该中断。
 
-##  Linux系统对中断处理的方式
+##  Linux 系统对中断处理的方式
 
 ### softirq（性能好）
 
