@@ -1621,3 +1621,63 @@ echo 48000 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/p_srate
 echo 4 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/p_ssize
 ln -s /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0 /sys/kernel/config/usb_gadget/amlogic/configs/amlogic.1/uac2.0
 ```
+
+# crg 控制器
+
+> 自己分析的
+
+## crg_udc 的连接状态
+
+- crg_udc->connected == 0  断开连接
+- crg_udc->connected == 1  连接上
+
+crg 端口（crg port）发生变化 ，就会调用 crg_handle_port_status 进行端口处理，下面是测试插入和拔出 USB 时的函数调用。
+
+> **插入 USB 时**
+
+```c
+//crg port 状态发生改变 CRG_U3DC_PORTSC_PLC
+lsken00 -- crg_handle_port_status --- 4134
+//控制器停止
+lsken00 crg_gadget_stop -- 3008 crg_udc->connected = 0
+```
+
+> **插入 USB 时**
+
+```c
+//crg port 状态发生改变 CRG_U3DC_PORTSC_PRC
+lsken00 crg_handle_port_status -- 3994 crg_udc->connected = 1
+lsken00 crg_handle_port_status -- 3994 crg_udc->connected = 1
+lsken00 crg_gadget_handle_interrupt -- 4311 crg_udc->connected = 1
+//没接触稳定，重新断开又连接，所以这个流程会出现多次
+lsken00 crg_gadget_stop -- 3008 crg_udc->connected = 0	
+lsken00 crg_handle_port_status -- 3994 crg_udc->connected = 1
+lsken00 crg_handle_port_status -- 3994 crg_udc->connected = 1
+lsken00 crg_gadget_handle_interrupt -- 4311 crg_udc->connected = 1
+```
+
+## crg 处理中断
+
+在连接 USB 之后，只要有中断来就会调用中断处理函数 crg_gadget_handle_interrup , 在中断处理函数中， 会去判断 CRG_U3DC_STATUS_EINT 这个状态寄存器，只要有事件产生就会调用下面的代码，循环处理事件。
+
+> 这时候 `crg_udc->device_state = USB_STATE_POWERED` , 也就是 2 , 代表是有线连接
+
+```c
+	if (tmp_status & CRG_U3DC_STATUS_EINT) {
+		int i;
+
+		reg_write(&uccr->status, CRG_U3DC_STATUS_EINT);
+
+		printk("crg_udc->device_state = %d\n", crg_udc->device_state);
+
+		/*process event rings*/
+		for (i = 0; i < CRG_RING_NUM; i++)
+			process_event_ring(crg_udc, i);
+	}
+```
+
+### 通知 tdm_bridge stop 
+
+通知 tdm_bridge stop 只需要在 中断处理函数 crg_gadget_handle_interrup 中。有事件来时，也就是 CRG_U3DC_STATUS_EINT 这个状态寄存器发生变化，直接判断 crg_udc->connected == 0 ,就可以调用通知函数 do_usb_disconn_notifier。
+
+

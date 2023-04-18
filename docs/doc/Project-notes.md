@@ -468,16 +468,25 @@ export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/
 export JRE_HOME=${JAVA_HOME}/jre
 export CLASSPATH=.:${JAVA_HOME}/lib:${JRE_HOME}/lib
 export PATH=${JAVA_HOME}/bin:$PATH
+ export PATH=/mnt/fileroot/shengken.lin/workspace/google_source/eureka-v2/chrome/build/bin/:$PATH
+ export PATH=/mnt/fileroot/shengken.lin/workspace/google_source/eureka-v2/chrome/prebuilt/toolchain/aarch64/bin/:$PATH 
+ # export depot_path 也需要
 
 cd chrome
 source build/envsetup.sh 
 
 # 全部编译 korlan-eng
 lunch  # 选korlan-eng
+
 rm ./chromium/src/out_chromecast_korlan/release/gen/chromecast/internal/build/ota/iot/iot_dock_add_to_ota_stamp.d
 PARTNER_BUILD=true BOARD_NAME=korlan-b1 make -j30 otapackage  
 # 输出obj路径： /mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/out/target/product/korlan
 # 如果出现 java version 问题，就是 out/host/linux-x86 的 dumpkey.jar  signapk.jar 替换过了，需要替换回repo sync 时候的 linux-x86 就可以了
+
+可以直接使用脚本
+source build-chrome.sh
+lunch 16
+
 
 # 转变 kernel4.19 & 5.15 to build,
     You need do this follow,

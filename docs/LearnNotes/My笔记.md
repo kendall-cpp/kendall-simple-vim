@@ -638,3 +638,38 @@ GIC 架构规范，
 ### workqueue
 
 ### threaded irq
+
+
+# USB 学习
+
+## USB 获取 sof 数据包
+
+要获取 USB SOF（Start of Frame）数据包，可以使用 Linux 内核中的 usbmon 工具。
+
+确认 usbmon 是否已经加载
+首先要确保 usbmon 已经在内核中加载并运行。可以通过以下命令查看：
+
+ls /sys/kernel/debug/usb/usbmon/
+
+如果输出结果类似于 0s  0t  1s  1t，则说明已经加载成功。
+
+启动 usbmon 抓包
+使用以下命令启动 usbmon：
+
+sudo modprobe usbmon
+sudo cat /sys/kernel/debug/usb/usbmon/<bus_number>t<device_address>
+
+其中 <bus_number> 和 <device_address> 分别是设备所连接的总线编号和设备地址。例如，如果设备连接在总线 1，地址为 2，则应该输入以下命令：
+
+sudo cat /sys/kernel/debug/usb/usbmon/1t2
+
+这将在终端上打印出所有的 USB 数据包，其中包括 SOF 数据包。
+
+过滤 SOF 数据包
+如果只想查看 SOF 数据包，可以使用以下命令过滤：
+
+sudo cat /sys/kernel/debug/usb/usbmon/<bus_number>t<device_address> | grep "SOF"
+
+这将只显示包含 SOF 的数据包。
+
+注意：usbmon 工具需要 root 权限才能使用。
