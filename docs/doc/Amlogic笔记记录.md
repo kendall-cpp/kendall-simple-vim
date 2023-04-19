@@ -47,6 +47,30 @@ cp  defconfig  arch/arm64/configs/aplex_cmi_aa158_defconfig -rf
 - vim -d 修改 .config 和 defconfig
 - 再编译
 
+以 korlan 添加一个 config 为例
+
+```sh
+# 修改  Kconfig； 注意对齐
+# 不用修改 korlan-p2_defconfig 
+config LSKEN
+	tristate "aaaaaaaaaaaaaaaaaaa lsken00"  # 这个就是 menuconfig 中菜单的名字
+	#depends on OF_RESERVED_MEM
+	default n
+	help
+		lsken00
+
+# 先根据 korlan-p2_defconfig  生成 .config
+make  CLANG_TRIPLE=../prebuilt/toolchain/aarch64/bin/aarch64-cros-linux-gnu- CC=../prebuilt/toolchain/aarch64/bin/aarch64-cros-linux-gnu-clang CROSS_COMPILE=../prebuilt/toolchain/aarch64/bin/aarch64-cros-linux-gnu- ARCH=arm64 korlan-p2_defconfig CONFIG_DEBUG_SECTION_MISMATCH=y 
+
+# 设置 meconfig ， 也可以直接省略上步， 这里也会直接生成 .config
+make  CLANG_TRIPLE=../prebuilt/toolchain/aarch64/bin/aarch64-cros-linux-gnu- CC=../prebuilt/toolchain/aarch64/bin/aarch64-cros-linux-gnu-clang CROSS_COMPILE=../prebuilt/toolchain/aarch64/bin/aarch64-cros-linux-gnu- ARCH=arm64 korlan-p2_defconfig CONFIG_DEBUG_SECTION_MISMATCH=y menuconfig
+
+vim -d korlan-p2_defconfig .config
+#根据 .config 去修改 korlan-p2_defconfig 即可
+
+# 最后编译
+```
+
 ---
 
 # 设备树
