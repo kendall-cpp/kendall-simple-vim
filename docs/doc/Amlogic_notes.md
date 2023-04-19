@@ -18,11 +18,44 @@ i2cdump -f -y 0x01 0x2d
 
 echo 0xfe330090 23 > /sys/kernel/debug/aml_reg/dump
 cat /sys/kernel/debug/aml_reg/dump > /data/EE_AUDIO_CLK_TDMOUT.txt
+
+# A4 dunp 寄存器
+echo 0xfe008100 5 > /sys/kernel/debug/aml_reg/pdump
+cat /sys/kernel/debug/aml_reg/pdump
+```
+
+可以参考 A4 的代码实现
+
+```c
+// drivers/amlogic/reg_access/reg_access.c
+static int __init aml_debug_init(void)
+{
+        static struct dentry *dir_aml_reg;
+
+        if (IS_ENABLED(CONFIG_DEBUG_FS)) {
+                dir_aml_reg = debugfs_create_dir("aml_reg", NULL);
+                if (IS_ERR_OR_NULL(dir_aml_reg)) {
+                        pr_warn("failed to create debugfs directory\n");
+                        dir_aml_reg = NULL;
+                        return -ENOMEM;
+                }   
+                debugfs_create_file("paddr", S_IFREG | 0440,
+                                    dir_aml_reg, &paddr_dev, &paddr_file_ops);
+                debugfs_create_file("pdump", S_IFREG | 0440, 
+                                     dir_aml_reg, &pdump_dev, &pdump_file_ops);
+                debugfs_create_file("vaddr", S_IFREG | 0440,
+                                    dir_aml_reg, &vaddr_dev, &vaddr_file_ops);
+                debugfs_create_file("vdump", S_IFREG | 0440,
+                                    dir_aml_reg, &vdump_dev, &vdump_file_ops);
+        }
+
+        return 0;
+}
 ```
 
 如果没有 /sys/kernel/debug/aml_reg/dump 这文件夹，是因为 debugfs 没有 mount 起来
 
-```sh
+```
 / # mount -t debugfs none /sys/kernel/debug
 / # mount | grep debug 
 none on /sys/kernel/debug type debugfs (rw,relatime)
@@ -1609,6 +1642,14 @@ man_ppm
 - 0： 自动调节 ppm
 
 start_playing_threshold : 默认值 10，表示刚开始播放时需要判断， tdm_cached_data 的数据 $>=10ms$ 的数据时 （$192 \times 10 \ bytes$）
+
+> **yuegui 提供图片参考**
+
+![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/hifi_pll_1.59g82nsqnec0.webp)
+
+![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/image.482m5ahvino0.webp)
+
+@![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/hifi_pll_3.7bhuayw3e4o0.webp)
 
 # 使用 uac playback
 
