@@ -868,3 +868,37 @@ static struct usb_function *afunc_alloc(struct usb_function_instance *fi)
 - afunc_setup 用于在音频设备初始化时执行一些特定的操作；
 - afunc_free 用于释放音频功能结构体的内存空间。
 
+
+## uac2驱动通过configfs的配置
+
+uac2驱动通过configfs的配置过程如下图所示，创建functions调用uac2驱动的afunc_alloc_inst函数，关联functions和配置时调用uac2驱动的afunc_alloc，使能gadget设备调用uac2驱动的afunc_bind函数，下面分析这三个函数的执行过程。
+
+![](https://img-blog.csdnimg.cn/bbe66e10d68a4c2dae940fb97b77b546.png#pic_center)
+
+USB 设备的枚举实质上是响应 USB 主机发送请求的过程。对于一些标准的 USB 请求，如 USB_REQ_GET_STATUS、USB_REQ_CLEAR_FEATURE 等，USB 设备控制器驱动就可以处理，但有一些标准的USB请求，如 USB_REQ_GET_DESCRIPTOR，需要 USB gadget 驱动参与处理，还有一些 USB 请求，需要 function 驱动参与处理。如下图所示，当主机发送 USB_REQ_GET_CONFIGURATION 或 USB_REQ_SET_INTERFACE 请求时，需要调用 uac2 驱动的 afunc_set_alt 函数处理，当主机发送 USB_REQ_GET_INTERFACE 请求时，需要调用 afunc_get_alt 函数处理，其他USB类请求命令，调用 afunc_setup 处理。
+
+![](https://img-blog.csdnimg.cn/5f5a6db95d1b4a4b9640be663fdd3f2b.png#pic_center)
+
+> **UAC2设备被枚举的过程如下（这里只说明uac2驱动参与处理的部分）：**
+
+- 设置配置
+
+主机发送 USB_REQ_GET_CONFIGURATION 命令设置设备当前使用的配置。uac2 驱动只有一个配置，因此只需要调用 afunc_set_alt 将配置下面所有接口的 alt 值设置为 0。afunc_set_alt 函数的执行流程如下图所示。若是音频控制接口，alt=0 时，直接返回 0，其他值直接报错；若是音频流**输出接口**，alt=0 时，停止录音，alt=1 时，开始录音；若是音频流**输入接口**，alt=0 时，停止播放，alt=1 时，开始播放。
+
+![](https://img-blog.csdnimg.cn/b64cc232240346e28a876f8ec606bb15.png#pic_center)
+
+### 工作过程分析
+
+USB主机发送 USB_REQ_SET_INTERFACE 命令时，uac2 驱动将会调用 afunc_set_alt 函数，若 intf=2，alt=1 ，则开始录音，若 intf=1，alt=1，则开始播放。下图是 USB 音频设备工作时数据流的传输过程。录音（capture）时，USB 主机控制器 (PC) 向 USB 设备控制器 (板子 SOC) 发送音频数据，USB 设备控制器收到以后通过 **【DMA控制器】** 将其写入到 usb_request 的缓冲区中，随后再拷贝到 DMA 缓冲区中，**用户可使用 arecord、tinycap 等工具从 DMA 缓冲区中读取音频数据**，DMA 缓冲区是一个 FIFO ，uac2 驱动往里面填充数据，用户应用程序从里面读取数据。播放（playback）时，用户通过 aplay、tinyplay 等工具将音频数据写道 DMA 缓冲区中，uac2 驱动从 DMA 缓冲区中读取数据，然后**构造成 usb_request** ，送到 USB 设备控制器，USB 设备控制器再将音频数据发送到 USB 主机控制器。可以看出录音和播放的音频数据流方向相反，用户和 uac2 驱动构造了一个生产者和消费者模型，录音时，uac2 驱动是生产者，用户是消费者，播放时则相反。
+
+- Capture : PC  --> SOC
+- Playback: SOC --> PC
+
+![](https://img-blog.csdnimg.cn/378f49e244a94f558fb17b3d5f2be987.png#pic_center)
+
+> **如果使用 tdm_bridge**
+
+- Capture : PC --> USB 控制器 --> usb_request (USB请求包) --> complete --> tdm_bridge 写到 DAM buf --> tdm --> speaker
+
+- Loopback: PC --> USB 控制器 --> usb_request (USB请求包) --> complete --> tdm_bridge 写到 DAM buf --> tdm_bridge 读 DAM buf --> 形成 usb_request --> USB 控制器
+
