@@ -1,4 +1,4 @@
-# linux 源码学习笔记
+# linux 学习笔记
 
 
 ---
@@ -6,28 +6,25 @@
 # 今年的任务
 
 - 零声学院+博客网址，需要认真看完： http://www.wowotech.net/sort/memory_management
+  - 内存管理
+  - 中断子系统
+  - 设备子系统
 
-- PCM EQ DRC 音频处理： https://www.cnblogs.com/yuanqiangfei/p/9896855.html
-
-- 音效知识了解： https://blog.csdn.net/u011764302/article/details/122236564
-
-- 学习音频子系统： lsken00 书签
+- 学习音频子系统： lsken00 书签 -- 完成
 
 - 《USB开发大全》
 
-- 看哈工大的计算机组成原理课程，学习计算机组成原理，芯片一些知识，记笔记
-  - 《计算机组成与设计：硬件 / 软件接口》
-  - 深入理解计算机系统
+- 在 B站 上学习芯片硬件知识
 
 - 研究C语言
   - 《C 陷阱与缺陷》
   - 《C 编程专家》
 
-- 《设备驱动程序》 这本书也是必看
+- 学习 ARM 汇编，整理面试题
 
 ----
 
-# **安装和编译自己的内核**
+# 安装和编译自己的内核 (TODO)
 
 > **ARM64 版本**
 
@@ -284,7 +281,7 @@ chmod +x kernel-qemu.sh
 
 ---
 
-# **进程原理和系统调用**
+# 进程原理和系统调用 (TODO)
 
 ## 进程概述
 
@@ -406,7 +403,7 @@ unsigned int                    rt_priority;
 ## CFS 调度器
 
 
-# ARM 中的中断
+# ARM 中的中断(TODO)
 
 > **什么是中断？**
 
@@ -499,6 +496,7 @@ GIC 架构规范，
 
 ### threaded irq
 
+----
 
 # USB 学习
 
