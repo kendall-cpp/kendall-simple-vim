@@ -1,147 +1,7 @@
 # linux 源码学习笔记
 
-# **USB 笔记**
-
-## 什么是端点
-
-所有的总线传输要么是传到设备端点 (device endpoint)，要么是从设备端点传送过来。端点其实就是**多个数据直接的缓冲区** ， 所以端点中存的数据是**待发送的**数据或者是**待接收的**数据，
-
-另外主机没有端点，但是同样有缓冲区，
-
-端点的地址由【端点号 (0-15)】和【方向 (in / out)】组成，
-
-device --in--> 主机 --out--> device 
-
-每个设备都必须要有 1 个控制端点【端点 0】 。控制端点包含着一对 IN 和 OUT 端点地址。
-
-除了端点 0 外， 全速 和 高速 设备可拥有多达 30 个额外端点地址（1-15的 IN 和 OUT），低速设备最多有两个端点地址，可以是两个 IN 、两个 OUT 或者两个方向各一个。
-
-## USB 传输类型
-
-我们知道，传输事务解决了主机、设备之间交互一次数据的问题，但是有些端点是需要进行多次双向传输或者多次单向传输的，同时因为设备的功能不同，所需要的带宽和传输特性也不同，那么就需要一个更上层的机制解决以上问题，也就是 USB 的四大传输。
-
-控制传输（Control Transfers）、中断传输（Interrupt Transfers）、批量传输（Bulk Transfers）、同步传输（Isochronous Transfers）称之为四大传输。
-
- 控制传输
-
-**一种可靠的双向传输**。 控制传输分为 初始设置阶段--->数据阶段(不必须)--->状态信息 阶段，每个阶段都是由一个或者多个事物组成，每个控制传输必须包含有**设置和状态**阶段，不是所有的传输都有数据阶段。
-
-该传输一般发生在端点 0 中，用于USB的枚举、配置（也可能进行其他数据传输）等阶段。
-
-当设备插入主机后，主机通过端点 0 进行控制传输，通过一系列的数据交互，主机就可以知道连接的设备有多少个接口，有多少个可用的端点等设备信息。
-
-
- 设置阶段
-
-主机发送请求信息，开始设置事务。令牌信息包的 SETUP 包标识符 将事务 确定为可以开始控制传输的【设置事务】。
-
- 批量传输
-
-中断传输
-
-等时传输
 
 ---
-
-## USB协议文档
-
-### Universal Serial Bus Specification
-
-USB 协议规范
-
-（通用串行总线规范）是由USB Implementers Forum（USB-IF）制定和发布的一系列关于USB协议标准的文件。该规范详细介绍了USB协议的各个方面，包括物理层、数据链路层、传输层、设备和主机通信等各个方面。
-
-该规范的版本包括USB 1.x、USB 2.0、USB 3.x和USB Type-C等，每个版本都有对应的规范文件。其中，USB 1.x规范包括USB 1.0、USB 1.1和USB 2.0低速（1.5 Mbps）和全速（12 Mbps）规范，USB 2.0规范则增加了高速（480 Mbps）规范，USB 3.x则增加了超高速（5 Gbps、10 Gbps）规范，而USB Type-C规范则对连接器和电源传输进行了扩充。
-
-USB规范涵盖了USB协议栈的每个层次的内容，使厂商能够实现兼容的USB设备、主机和相关系统。同时该规范是为确保全球各地的USB设备能够相互兼容的必要手段，USB-IF官方认证标志和兼容性测试也建立于此规范基础上。
-
-
-### USB Complete: The Developer's Guide
-
-是由Jan Axelson所著的一本关于USB开发的指南书籍，它详细介绍了USB技术的原理、协议及其实现。该书可以帮助读者了解USB技术的基本概念和原理，并且提供了大量的实际案例和示例代码，使得读者能够更好地理解USB开发的技术细节。
-
-该书共有26章，内容包括了从USB 1.x到USB 3.x、USB Type-C的各个版本协议的细节和特点，涉及到USB传输、设备和主机通信、USB的电源管理、HID设备和UVC摄像头等。除此之外，该书还介绍了USB的硬件设计、PCB设计、阻抗匹配、背板的设计等，并提供了一些开发工具和测试工具的推荐。
-
-该书的读者面向USB开发工程师、硬件工程师、软件工程师以及对USB技术感兴趣的专业人士。读者可以根据自己的工作需要选择相关章节进行阅读，也可以作为USB开发的入门手册。
-
-
-USB-IF官网地址为 https://www.usb.org ，您可以在该网站上注册成为会员并下载最新的USB规范和技术文档。
-
-以下是一些常用的USB规范文档和技术文档的下载地址：
-
-USB 2.0规范文档：https://www.usb.org/document-library/usb-20-specification
-USB 3.2规范文档：https://www.usb.org/document-library/usb-32-specification-released-july-26-2019
-USB Type-C规范文档：https://www.usb.org/document-library/usb-type-ctm-specification-revision-21
-HID规范文档：https://www.usb.org/document-library/hid-111-spec-and-descriptors
-UVC规范文档：https://www.usb.org/document-library/usb-video-class-specification-revision-20
-以上地址仅供参考，如有变动或更新，请以USB-I
-
-## USB 控制器
-
-## crg 控制器和 dwc 控制器
-
-CRG控制器和DWC控制器是常见的USB控制器，它们在USB设备中扮演着非常重要的角色。
-
-CRG控制器（Clock and Reset Generator）是芯片中负责时钟和复位信号的发生和控制的模块，它可以控制内部时钟的频率、相位和稳定性，保证USB数据传输的精度和可靠性。 CRG控制器通常被用于控制USB PHY、USB OTG、UART、I2C等接口的时钟和复位功能。CRG控制器能够提供时钟生成器、PLL锁相环、时钟分频器、复位发生器等功能，可以满足系统中不同模块的时钟和复位信号需求。
-
-DWC控制器（DesignWare® USB IP）是一组开源硬件IP，能够实现USB 2.0和USB 3.0的Host和Device功能；DWC控制器广泛应用于各种芯片，并得到了良好的市场口碑。DWC控制器能够提供高性能、低延迟的数据传输，并针对性能、功耗和面积等方面的要求，在内部集成了高度可定制和可配置的功能单元。DWC控制器能够支持不同的USB Phy和常见的USB应用层协议，例如Mass Storage、Audio、Human Interface Device（HID）等，适用于多种应用场景。
-
-总的来说，CRG控制器是用于控制USB设备内部时钟和复位信号的模块，而DWC控制器是用于实现USB通信协议和数据传输的标准IP。这两种控制器在USB设备的设计和开发中扮演着非常重要的角色。
-
-### USB驱动程序、USB控制器、USB DEVICE等的功能和相互作用方式
-
-- USB控制器
-
-
-USB控制器位于主板芯片组中，主要负责控制USB总线上所有的USB设备。USB控制器包括两个主要模块：
-
-（1）主机控制器
-
-主机控制器位于主机设备或USB主机控制器中。主机控制器负责与USB总线上的所有设备通信，包括识别和配置新的设备，带宽分配和电源管理等任务。
-
-主机控制器还负责处理USB数据包，并将数据包从USB总线中接收或发送到USB设备。因此，在任何一个USB主机控制器上都会有一个或多个主机控制器，它们负责控制USB总线上的数据传输和管理。
-
-（2）设备控制器
-
-USB设备是指连接到USB总线上的任何外部设备。 USB设备需要遵循USB协议和设备通信规范，这将确保USB设备与其他类型的设备能够兼容和互相操作。
-
-USB设备之间的通信主要依靠USB设备描述符，每个USB设备描述符有一个唯一的地址和类型，用于识别或通信到该设备。
-
-每个USB设备通常包括一个或多个功能接口，这些功能接口为主机控制器提供了各种服务，例如打印、扫描、存储等。
-
-- USB设备
-
-
-USB设备是指USB总线上连接的外部设备，例如鼠标、键盘、打印机和手机等。每个USB设备通常包括一个设备控制器和一个或多个功能接口，它们向主机控制器提供各种服务。
-
-USB设备需要支持标准的USB协议和通信协议，以确保与主机控制器和其他设备之间的兼容性和互操作性。
-
-- USB驱动程序
-
-
-USB驱动程序是一种接口软件，允许USB设备与操作系统通信。USB驱动程序通常包括硬件抽象层和驱动程序代码。
-
-USB驱动程序负责：
-
-（1）在USB设备上安装和卸载设备驱动程序。
-（2）实现USB设备的基本功能。
-（3）管理USB设备的电源和带宽使用情况。
-（4）发送和接收数据包。
-
-### USB phy
-
-PHY（Physical Layer，物理层）是 USB 系统中的一个组成部分，它实现了 USB 总线物理层的功能，负责收发 USB 数据包和控制信号。因此，PHY 中包含了 USB 信号的收发电路和控制电路等。
-
-USB PHY的作用是将高层协议（例如USB设备和主机的通信）、传输数据和电缆之间的物理网络层之间进行转换。它实现了USB总线的电气和物理规范。PHY 主要负责三个方面的功能：
-
-（1）时序控制：确保数据和控制信号在正确定时发送和接收，这包括时钟频率的控制和延迟的补偿等。
-
-（2）传输编码：转换 USB 数据并将其编码为数据传输模式，使它符合 USB 的标准传输协议。
-
-（3）信号驱动：把转换后的数字信号驱动到 USB 总线中以进行数据传输。
-
-需要注意的是，USB PHY 通常与芯片本身整合在一起，但是 USB PHY 并不是 USB 芯片本身的一部分，因为它可以由其他芯片提供支持。在实践中，USB PHY 的实现经常随着制造工艺和应用环境的变化而出现不同的工程挑战，因此，它的性能和设计需要根据具体情况进行优化和调整。
-
 
 # 今年的任务
 
@@ -149,7 +9,7 @@ USB PHY的作用是将高层协议（例如USB设备和主机的通信）、传�
 
 - PCM EQ DRC 音频处理： https://www.cnblogs.com/yuanqiangfei/p/9896855.html
 
-- 音效只是了解： https://blog.csdn.net/u011764302/article/details/122236564
+- 音效知识了解： https://blog.csdn.net/u011764302/article/details/122236564
 
 - 学习音频子系统： lsken00 书签
 
@@ -675,7 +535,7 @@ sudo cat /sys/kernel/debug/usb/usbmon/<bus_number>t<device_address> | grep "SOF"
 注意：usbmon 工具需要 root 权限才能使用。
 
 
----
+##  USB 设备和主控制器通信
 
 USB 设备和主控制器之间的通信过程可以分为以下几个步骤：
 
@@ -717,13 +577,14 @@ USB Device                  USB Host Controller
 
 需要注意的是，该示意图只是一个简单的示例，实际的 USB 设备和主控制器之间通信过程中可能会有更多细节和特殊情况。
 
-
-# UAC
+# 音频子系统
 
 ## UAC2
 
+
 UVC（USB Audio Class）定义了使用USB协议播放或采集音频数据的设备应当遵循的规范。目前，UAC协议有UAC1.0和UAC2.0。UAC2.0协议相比UAC1.0协议，提供了更多的功能，支持更高的带宽，拥有更低的延迟。Linux内核中包含了UAC1.0和UAC2.0驱动，分别在f_uac1.c和f_uac2.c文件中实现。这里主要以UAC2驱动为例，具体分析 USB 设备驱动的初始化、描述符配置、数据传输过程等。 
 
+### UAC2 源码分析
 
 alloc_inst 被设置为 afunc_alloc_inst，alloc_func 被设置为 afunc_alloc，这两个函数在 Gadget Function API 层被回调。宏 DECLARE_USB_FUNCTION_INIT 将定义一个 usb_function_driver 数据结构，使用 usb_function_register 函数注册到 function API 层。
 
@@ -767,7 +628,7 @@ struct g_audio {
 };
 ```
 
-### afunc_alloc_inst
+#### afunc_alloc_inst
 
 - afunc_alloc_inst 里面主要是分配一个 usb_function_instance （音频数据） 实例结构体，并赋值一些默认参数。**这里注意两个参数 p_chmask 和 c_chmask** ，如果你从事的是 linux 内核相关的工作，声音播放一段时间后出现 underrun 问题（kernel log), 或者 overrun (应用 log) 问题，可以检查一下这两个参数是否设置正确。
 
@@ -822,12 +683,11 @@ struct f_uac2_opts {
 };	
 ```
 
-### afunc_alloc
+#### afunc_alloc
 
 afunc_alloc 其主要功能是为音频设备分配一个新的音频功能结构体，并将其初始化。音频功能结构体是音频驱动中的一个重要数据结构，用于描述音频设备的各种功能和属性，例如音量控制、混音、采样率等。
 
 在初始化音频功能结构体之后，afunc_alloc 函数会将其添加到音频设备的功能列表中，以便其他函数可以使用它。同时，它还会返回指向音频功能结构体的指针，以便其他函数可以直接访问它。
-
 
 ```c
 static struct usb_function *afunc_alloc(struct usb_function_instance *fi)
@@ -869,7 +729,9 @@ static struct usb_function *afunc_alloc(struct usb_function_instance *fi)
 - afunc_free 用于释放音频功能结构体的内存空间。
 
 
-## uac2驱动通过configfs的配置
+### uac2驱动通过configfs的配置
+
+> 参考来源： https://blog.csdn.net/u011037593/article/details/121458492
 
 uac2驱动通过configfs的配置过程如下图所示，创建functions调用uac2驱动的afunc_alloc_inst函数，关联functions和配置时调用uac2驱动的afunc_alloc，使能gadget设备调用uac2驱动的afunc_bind函数，下面分析这三个函数的执行过程。
 
@@ -895,10 +757,82 @@ USB主机发送 USB_REQ_SET_INTERFACE 命令时，uac2 驱动将会调用 afunc_
 - Playback: SOC --> PC
 
 ![](https://img-blog.csdnimg.cn/378f49e244a94f558fb17b3d5f2be987.png#pic_center)
+> 图片来源：https://blog.csdn.net/u011037593/article/details/121458492
 
 > **如果使用 tdm_bridge**
 
 - Capture : PC --> USB 控制器 --> usb_request (USB请求包) --> complete --> tdm_bridge 写到 DAM buf --> tdm --> speaker
 
 - Loopback: PC --> USB 控制器 --> usb_request (USB请求包) --> complete --> tdm_bridge 写到 DAM buf --> tdm_bridge 读 DAM buf --> 形成 usb_request --> USB 控制器
+
+## Linux ALSA音频系统架构
+
+### ALSA 声卡驱动
+
+ALSA是 Advanced Linux Sound Architecture 的缩写，目前已经成为了linux的主流音频体系结构，想了解更多的关于ALSA的这一开源项目的信息和知识，请查看以下网址：http://www.alsa-project.org/。
+
+在内核设备驱动层，ALSA提供了 alsa-driver，同时在应用层，ALSA 为我们提供了 alsa-lib，应用程序只要调用 alsa-lib 提供的 API，就可以完成对底层音频硬件的控制。
+
+用户空间的 alsa-lib 对应用程序提供统一的API接口，这样可以隐藏了驱动层的实现细节，简化了应用程序的实现难度。
+
+内核空间中，alsa-soc (ASOC) 其实是对 alsa-driver 的进一步封装，他针对嵌入式设备提供了一些列增强的功能
+
+- `kernel/sound/core` 该目录包含了ALSA驱动的中间层，它是整个 ALSA 驱动的核心部分。
+
+- `kernel/sound/soc` 针对 system-on-chip 体系的中间层代码
+
+![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/alsa架构.3jj3illr82y0.webp)
+
+- **Alsa application**: aplay, arecord, amixer, 是 alsa alsa-tools 中提供的上层调试工具，用户可以直接将其移植到自己所需要的平台，这些应用可以用来实现 playback, capture, controls 等。
+- **alsa library API**: alsa 用户库接口，常见有 alsa-lib. ( alsa-tools 中的应用程序基于 alsa-lib 提供的 api 来实现)
+- **ALSA core**: alsa　核心层，向上提供逻辑设备(`pcm/ctl/midi/timer/..`)系统调用，向下驱动硬件设备(`Machine/i2s/dma/codec`)
+- **ASsoc core**:asoc是建立在标准alsa core基础上，为了更好支持嵌入式系统和应用于移动设备的音频codec的一套软件体系。
+- **hardware driver**: 音频硬件设备驱动，由三大部分组成，分别是 machine, platform, codec .
+
+### ASOC架构
+
+**ASoC 把音频系统同样分为3大部分：Machine，Platform 和 Codec**
+
+在 ASoC 驱动框架中 cpu 部分称作 platform，声卡部分被称作 codec，两者通过 machine 进行匹配连接；machine 可以理解为对开发板的抽象，开发板可能包括多个声卡.
+
+- <strong><font color="orange" size=4>platform：</font></strong> **platform+cpu_dai**  
+
+Platform  一般是指某一个SoC平台，比如 MT6582, MT6595, Amlogic-AV400 等等，与音频相关的通常包含该 SoC 中的 Clock、FAE、I2S、DMA 等等,该模块负责 DMA 的控制和 I2S 的控制, 由 CPU 厂商负责编写此部分代码。
+
+>- 录音数据通路：麦克风 ----> 声卡 –-(I2S) --> DMA ---->内存；
+>- 播放数据通路：内存 ----> DMA –-(I2S) --> 声卡 ---->扬声器；
+
+> DAM 控制器： 负责内存和外设之间的数据传递，不需要经过 CPU
+
+
+- <strong><font color="orange" size=4>Codec:</font></strong>  **codec+codec_dai**
+
+Codec 是音频编解码器，它负责将模拟音频信号转换为数字音频信号，或者将数字音频信号转换为模拟音频信号。Codec 通常由硬件实现，它可以支持多种不同的音频编解码格式，例如 PCM、MP3、AAC 等。
+
+Codec DAI 是连接音频 CODEC 和其他音频组件的接口，它负责将音频数据从 CODEC 发送到其他组件，或者从其他组件接收音频数据并传输到 CODEC。Codec DAI 通常由 CODEC 驱动程序实现，它可以支持多种不同的音频接口，例如 I2S、PCM、AC97 等。
+
+- <strong><font color="orange" size=4>Machine</font></strong>
+
+Machine 是指某一款机器，可以是某款设备，某款开发板，又或者是某款智能手机，由此可以看出Machine几乎是不可重用的，每个 Machine 上的硬件实现可能都不一样，CPU 不一样，Codec不一样，音频的输入、输出设备也不一样，Machine为CPU、Codec、输入输出设备提供了一个载体 ，用于描述一块电路板, 它指明此块电路板上用的是哪个Platform和哪个Codec, 由电路板商负责编写此部分代码。 绑定 platform driver 和 codec driver
+
+
+![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/asoc架构图.561ca6zjfm80.webp)
+
+**参考**：
+- 对 alsa 数据结构，函数源码进行介绍： https://www.linuxidc.com/Linux/2019-01/156223.htm
+- 对 Asoc 详细介绍： https://www.cnblogs.com/blogs-of-lxl/p/6538769.html
+- UAC 麦克风学习： https://www.usbzh.com/article/detail-505.html
+- 实现自己的 alsa 驱动： https://blog.csdn.net/u014056414/article/details/120988882
+
+-----
+
+## ALSA 电源管理 DAPM
+
+ALSA 主要是通过 DAPM 进行电源管理
+
+DAPM（Dynamic Audio Power Management）是 ALSA 中的一种动态音频功率管理机制，它可以根据音频设备的使用情况动态地调整设备的电源状态，以达到节能和延长设备寿命的目的。
+
+DAPM 是为了使基于 linux 的移动设备上的音频子系统在任何时候都工作在最小功耗状态下。DAPM 对用户空间的应用程序来说是透明的，所有与电源相关的开关都在 ASoc core 中完成。用户空间的应用程序无需对代码做出修改，也无需重新编译，DAPM 根据当前激活的音频流（playback/capture）和声卡中的 mixer 等的配置来决定那些音频控件的电源开关被打开或关闭。
+
+> Mixer 是一种硬件或软件设备，用于混合多个音频信号并将它们输出到单个音频输出设备。Mixer 可以将多个音频源（例如麦克风、音乐播放器、电视等）的音频信号混合在一起，并通过单个音频输出设备（例如扬声器、耳机等）输出混合后的音频信号。
 

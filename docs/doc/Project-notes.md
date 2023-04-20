@@ -550,8 +550,6 @@ rm  ./chromium/src/out_chromecast_korlan/release/gen/chromecast/internal/build/o
 # 编译出来的ota包在：out/target/product/korlan/korlan-ota-eng.shengken.lin.zip
 ```
 
-
-
 ## Koraln板子和芯片型号
 
 - u-boot
@@ -559,6 +557,10 @@ rm  ./chromium/src/out_chromecast_korlan/release/gen/chromecast/internal/build/o
 > - u-boot/arch/arm/dts/meson-a1-a113l-korlan.dtsi
 > - u-boot/arch/arm/mach-meson/board-common.c
 > - arch/arm/mach-meson/
+
+## Korlan 拨码快关
+
+<img src="https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/korlan拨码开关.4t3eqr2yphu0.webp" style="zoom: 25%;" />
 
 ##  korlan 设置USB模式
 
