@@ -1001,3 +1001,51 @@ int platform_driver_probe(struct platform_driver *drv, int (*probe)(struct platf
 
 `mb()` 函数通常用于同步不同 CPU 核心之间的内存访问，以确保内存操作的顺序和可见性。例如，在驱动程序中，当一个 CPU 核心修改了某个共享内存位置的值后，可以使用 `mb()` 函数来确保该修改对其他 CPU 核心可见，从而避免出现数据不一致的情况。
 
+# 给 kernel 添加一个自定义的节点
+
+> 一般为应用层获取状态时使用
+
+# kernel 源码中一些函数介绍
+
+## usb_add_phy_dev
+
+usb_add_phy_dev()函数可以用于将PHY设备与USB控制器相关联，从而使USB控制器能够正确地工作。
+
+在Linux内核中，PHY 设备通常由 SOC（系统芯片）供应商提供，并且**负责完成USB信号的传输和调节**。在使用 USB 控制器之前，必须先为其分配一个 PHY 设备。usb_add_phy_dev() 函数可以用来完成这个操作。
+
+此外，usb_add_phy_dev() 函数还有一个参数，即 USB 控制器对应的 platform_device 结构体指针。通过这个参数， usb_add_phy_dev() 函数可以将 PHY 设备和 USB 控制器绑定在一起，从而实现正确的数据传输和调节。
+
+```c
+// 函数原型
+int usb_add_phy_dev(struct usb_phy *x)
+```
+
+## kstrtoint
+
+kstrtoint 函数是一个C语言函数，通常用于将字符串转换为整数。它的原型如下：
+
+```c
+int kstrtoint(const char *s, unsigned int base, int *res);
+```
+
+其中，参数 s 是要转换的字符串；参数 base 是进制数，一般设置为 10 即可，表示十进制；参数 res 是转换后得到的整数。
+
+该函数会尝试将字符串s解析成整数，并将结果存储在res中。如果转换成功，函数返回 0，否则会返回一个非零值，表示转换失败。需要注意的是，res必须指向已经分配了足够空间的内存，以存储转换后的整数。
+
+以下是使用这个函数的伪代码
+
+```c
+static int __init my_init(void)
+{
+    char *str = "1234";
+    int num;
+
+    if (kstrtoint(str, 10, &num) != 0) {
+        printk(KERN_ERR "Failed to convert string to integer\n");
+        return -EINVAL;
+    }
+
+    printk(KERN_INFO "The converted integer is: %d\n", num);
+    return 0;
+}
+```
