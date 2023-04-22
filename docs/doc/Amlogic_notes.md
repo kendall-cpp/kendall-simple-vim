@@ -1720,5 +1720,3 @@ lsken00 crg_gadget_handle_interrupt -- 4311 crg_udc->connected = 1
 ### 通知 tdm_bridge stop 
 
 通知 tdm_bridge stop 只需要在 中断处理函数 crg_gadget_handle_interrup 中。有事件来时，也就是 CRG_U3DC_STATUS_EINT 这个状态寄存器发生变化，直接判断 crg_udc->connected == 0 ,就可以调用通知函数 do_usb_disconn_notifier。
-
-

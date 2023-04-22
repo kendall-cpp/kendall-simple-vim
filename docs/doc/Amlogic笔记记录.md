@@ -990,3 +990,86 @@ U_BOOT_DRIVER(meson_nfc) = {
   - get_aml_mtd_partition ： 找到并添加分区表
   - get_aml_partition_count ： 计算分区表大小
 
+# 设备驱动函数 platform_driver_probe 
+
+在系统启动时自动探测和注册平台设备驱动程序。该函数是由 platform_driver_register 函数调用的，用于注册一个平台设备驱动程序并将其添加到内核的驱动程序列表中。
+
+platform_driver_probe 函数的定义如下：
+
+
+```c
+int platform_driver_probe(struct platform_driver *drv, int (*probe)(struct platform_device *));
+```
+
+- drv 是一个指向 platform_driver 结构体的指针，该结构体包含了平台设备驱动程序的信息；
+- probe 是一个指向函数的指针，该函数用于探测和初始化平台设备。
+
+在系统启动时，内核会自动调用 platform_driver_probe 函数来探测和注册平台设备驱动程序。该函数会遍历系统中所有的平台设备，对于每个平台设备，会调用 probe 函数来探测和初始化设备。如果 probe 函数返回成功，则**该设备会被添加到内核的设备列表中**，以便其他驱动程序可以使用它。
+
+
+# rmb wmb mb
+
+**内存屏障**是一种硬件机制，用于保证内存操作的顺序和可见性。在多核系统中，不同 CPU 核心之间的内存访问可能存在乱序执行的情况，这会导致内存操作的顺序和可见性出现问题。内存屏障可以通过一些特殊的 CPU 指令来保证内存操作的顺序和可见性，从而避免这些问题。
+
+`rmb()` 和 `wmb()` 分别表示读内存屏障和写内存屏障。它们的作用是：
+
+- rmb()：确保在**读取某个内存位置之前**，先读取该位置之前的所有内存位置。这可以保证读取的数据是最新的，并且读取操作不会被重排到该位置之后。
+
+- wmb()：确保在**写入某个内存位置之后**，先写入该位置之后的所有内存位置。这可以保证写入的数据对其他 CPU 核心可见，并且写入操作不会被重排到该位置之前。
+
+在 Linux 内核中，rmb() 和 wmb() 函数通常用于同步不同 CPU 核心之间的内存访问，以确保内存操作的顺序和可见性。例如，在驱动程序中，当一个 CPU 核心修改了某个共享内存位置的值后，可以使用 wmb() 函数来确保该修改对其他 CPU 核心可见，从而避免出现数据不一致的情况。
+
+- mb() 的作用是：
+  - 确保在执行该函数之前的所有内存操作都已经完成。
+  - 确保在执行该函数之后的所有内存操作都还没有开始。
+
+`mb()` 函数通常用于同步不同 CPU 核心之间的内存访问，以确保内存操作的顺序和可见性。例如，在驱动程序中，当一个 CPU 核心修改了某个共享内存位置的值后，可以使用 `mb()` 函数来确保该修改对其他 CPU 核心可见，从而避免出现数据不一致的情况。
+
+# 给 kernel 添加一个自定义的节点
+
+> 一般为应用层获取状态时使用
+
+# kernel 源码中一些函数介绍
+
+## usb_add_phy_dev
+
+usb_add_phy_dev()函数可以用于将PHY设备与USB控制器相关联，从而使USB控制器能够正确地工作。
+
+在Linux内核中，PHY 设备通常由 SOC（系统芯片）供应商提供，并且**负责完成USB信号的传输和调节**。在使用 USB 控制器之前，必须先为其分配一个 PHY 设备。usb_add_phy_dev() 函数可以用来完成这个操作。
+
+此外，usb_add_phy_dev() 函数还有一个参数，即 USB 控制器对应的 platform_device 结构体指针。通过这个参数， usb_add_phy_dev() 函数可以将 PHY 设备和 USB 控制器绑定在一起，从而实现正确的数据传输和调节。
+
+```c
+// 函数原型
+int usb_add_phy_dev(struct usb_phy *x)
+```
+
+## kstrtoint
+
+kstrtoint 函数是一个C语言函数，通常用于将字符串转换为整数。它的原型如下：
+
+```c
+int kstrtoint(const char *s, unsigned int base, int *res);
+```
+
+其中，参数 s 是要转换的字符串；参数 base 是进制数，一般设置为 10 即可，表示十进制；参数 res 是转换后得到的整数。
+
+该函数会尝试将字符串s解析成整数，并将结果存储在res中。如果转换成功，函数返回 0，否则会返回一个非零值，表示转换失败。需要注意的是，res必须指向已经分配了足够空间的内存，以存储转换后的整数。
+
+以下是使用这个函数的伪代码
+
+```c
+static int __init my_init(void)
+{
+    char *str = "1234";
+    int num;
+
+    if (kstrtoint(str, 10, &num) != 0) {
+        printk(KERN_ERR "Failed to convert string to integer\n");
+        return -EINVAL;
+    }
+
+    printk(KERN_INFO "The converted integer is: %d\n", num);
+    return 0;
+}
+```

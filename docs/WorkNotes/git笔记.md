@@ -24,8 +24,8 @@
 - [邮箱设置](#邮箱设置)
 - [push pull](#push-pull)
 	- [和远程发生冲突](#和远程发生冲突)
-	- [pull出现commit失败](#pull出现commit失败)
-	- [推送别人已经推送过的 commit](#推送别人已经推送过的-commit)
+	- [push 别人已经推送过的 commit](#push-别人已经推送过的-commit)
+	- [解释 push HEAD](#解释-push-head)
 - [git patch](#git-patch)
 	- [git format-patch：生成commit的内容](#git-format-patch生成commit的内容)
 	- [检查 patch](#检查-patch)
@@ -60,7 +60,6 @@ git rm --cached hello.txt   从暂存区退回到工作区  # 从暂存区删除
 	git restore --staged fileName
 
 
-
 git status        			查看目前工作区状态
 
 
@@ -89,7 +88,7 @@ https://www.cnblogs.com/everest33Tong/p/6418494.html
 
 #### 删除 commit 
  
-git reset --soft HEAD^		 撤销commit 保留add
+git reset --soft HEAD^		 撤销commit 保留 add
 
 git reset HEAD~数字		按照输入的数字撤销输入数字条commit记录
 
@@ -432,14 +431,7 @@ git config --local --unset user.email  删除
 
 - git fetch   拉去到本地，origin/master 分支，还未合并
 
-### pull出现commit失败
-
-git reset --hard FETCH_HEAD
-
-git pull
-
-
-### 推送别人已经推送过的 commit 
+### push 别人已经推送过的 commit 
 
 - 会报错
 
@@ -458,6 +450,15 @@ git push --no-thin  review HEAD:refs/for/amlogic-5.4-dev
 ```
 
 - 出现原因： 推送到远程的文件被本地git优化后，发送数据不一致。
+
+### 解释 push HEAD
+
+git push origin HEAD:refs/for/master
+
+- HEAD: 是一个特别的指针，它是一个指向你正在工作的本地分支的指针，
+  - 可以把它当做本地分支的别名，git 这样就可以知道你工作在哪个分支
+- refs/for :意义在于我们提交代码到服务器之后是需要经过 code review 之后才能进行merge的
+- refs/heads： 不需要 review 直接 merge (**谨慎操作**)
 
 ---
 
