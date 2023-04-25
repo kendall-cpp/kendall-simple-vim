@@ -439,6 +439,18 @@ echo "fdd00000.crgudc2" > /sys/kernel/config/usb_gadget/amlogic/UDC
 arecord -l 
 ```
 
+#### 关闭其他不相关的
+
+修改完 buildroot 之后
+
+```
+make aml-usb-config-rebuild
+make boa-rebuild
+make dhcpcd-rebuild
+make ifupdown-scripts-rebuild
+make
+```
+
 ### 解决 EQDRC 导致 uac 播放结束后 aplay 没声音问题
 
 jira: https://jira.amlogic.com/browse/SWPL-118631

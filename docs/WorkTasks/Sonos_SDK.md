@@ -2,8 +2,6 @@
 
 https://support.amlogic.com/issues/18567
 
-
-
 ## 熟悉 DSP 和 rsic-v 
 
 - dsp 
@@ -25,7 +23,6 @@ dsp_util --load --dsp hifi4a -f dspbootA.bin
 /lib/firmware/dspbootA.bin
 ```
 
-
 **相关流程**
 
 - 在 bl30 阶段 启动 rtos
@@ -41,8 +38,6 @@ dsp_util --load --dsp hifi4a -f dspbootA.bin
 以 driver 的形式加载。代码实现在下面的函数中
 
 > kernel/aml-5.4/drivers/amlogic/hifi4dsp/hifi4dsp_module.c 
-
-
 
 ## 研究a5-av400 supend 过程
 

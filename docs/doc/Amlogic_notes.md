@@ -1720,3 +1720,128 @@ lsken00 crg_gadget_handle_interrupt -- 4311 crg_udc->connected = 1
 ### 通知 tdm_bridge stop 
 
 通知 tdm_bridge stop 只需要在 中断处理函数 crg_gadget_handle_interrup 中。有事件来时，也就是 CRG_U3DC_STATUS_EINT 这个状态寄存器发生变化，直接判断 crg_udc->connected == 0 ,就可以调用通知函数 do_usb_disconn_notifier。
+
+
+
+## TRB
+
+用来描述数据传输请求的数据结构。每个TRB包含了一个USB传输操作的详细信息，如传输方向、数据长度、数据缓冲区地址等
+
+> **TD 由一个或多个传输请求块（TRB）组成**
+
+除了 TD 的最后一个 TRB 之外的所有 TRB 中都设置了链标志。注意，TD 可能由单个 TRB 组成，不得设置链标志
+
+> 参考 Corigine_USB31_DRD_Datasheet_v1.4   8.6.3TRB
+
+![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/image.34hn6sjq83o0.webp)
+
+- Data Buffer Pointer 数据缓冲指针： 指向与此 TRB 关联的数据缓冲区的**起始地址**
+- TRB Transfer Size TRB 传输大小： 数据缓冲区大小，字节
+- TD  Size : 此字段表示在完成此TRB后，仍需要为当前TD传输多少个数据包。(**最大 31 个**)
+  - 如果链位为 1，并且有剩余字节不能形成 MPS 包，则将剩余字节添加到相同 TD 的所有后续 trb 的大小中，以计算还剩下多少包。
+  - 如果剩余的数据包超过 31 个，请将 TD 大小设置为 31 个
+- Interrupt Target 中断目标 ： 此字段指示如果设备需要为此 TRB 生成传输事件，则要使用哪个事件环。
+- Cycle bit (C) ： 此位用于标记传输环的队列指针。
+- No Snoop (NS) ： 保留以备将来使用。
+- Chain bit (CH) ： 通过软件设置为 1，将此TRB与环上的下一个 TRB 关联起来，因此它们属于同一 TD 。
+- Interrupt on Completion (IOC)  完成时中断 ： 如果设置了该位，设备控制器应通过生成一个传输事件并在下一个中断阈值断言一个中断来通知软件该 TRB 的完成。
+- AZP ： 附加零长度数据包。
+  - 这个字段只能在 EP 出端点的 TD 的最后一个 TRB 中 断言。在所有其他情况下，它都应予以清除。
+  - 此字段不得在零长度的 TD 中 断言。
+  - 设备控制器完成当前 TD 传输后将再发送一个零长度数据包。
+- Block Event Interrupt (BEI) 块事件中断（BEI） ： 如果设置了此位，则 IOC 生成的传输事件**不应**在下一个中断阈值断中断。
+- TRB Type ： 此 TRB 的类型。
+
+
+### CRG USB3.1 接口
+
+#### Master interface(AXI)
+
+> USB3.1 Controller use AXI master to fetch TRB and data from system memory and EBC data buffer. And use this interface to write events to event ring.
+
+USB3.1控制器使用 AXI 主服务器从系统内存和 EBC 数据缓冲区获取 TRB 和数据。并使用此接口将事件写入事件环。
+
+#### Slave interface(AXI / AHB / APB)
+
+> CPU use slave interface to access the registers in USB3.1 Device Controller, including interrupt handling and Device Controller configuration, Corigine USB3.1 IP support AXI, AHB and APB for slave interface
+
+CPU 使用从接口访问 USB3.1 设备控制器中的寄存器，包括中断处理和设备控制器配置，源 USB3.1 IP 支持 AXI，AHB 和 APB 从接口
+
+#### Interrupt interface(Legacy/MSI)
+
+> USB3.1 Controller use this interface to inform CPU there is event to handle, System SW should read out and handle all events in event ring, SW should clear the interrupt by writing interrupt control register, Corigine USB3.1 IP support both legacy interrupt and MSI interrupt.
+
+USB3.1 控制器使用此接口通知 CPU 有事件要处理，系统软件应读出并处理事件环中的所有事件，软件应通过写入中断控制寄存器清除中断，Corigine USB3.1 IP 支持遗留中断和 MSI 中断。
+
+#### USB3.1 PHY interface(PIPE3)
+
+传输数据到 PHY 接口
+
+#### USB2.0 PHY interface(UTMI+/ULPI)
+
+#### Top level full signal list
+
+## Corigine USB Device DMA
+
+原始 USB 设备 DMA 是 xHCI 像 DMA。环有三种类型。环是一个包含 TRB 数据结构的循环队列。TRB 环用于将 TRB 从生产者传递给消费者。与每个环关联的两个指针（排队和退出队列）标识生产者将排队环上下一个TRB的位置，以及使用者将退出下一个TRB的位置。设备控制器使用三种类型的环来通信和执行 USB 操作：
+
+- 命令环：一个用于设备控制器 , 系统软件使用命令环向设备控制器发出命令
+- 事件环：一个用于断路器 , 事件环被控制器用于返回命令的状态和结果，并传输到系统软件。
+- 传输环：每个端点或流 , 传输环用于在系统内存缓冲区和设备端点之间移动数据
+
+### 传输环
+
+![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/image.37nyl8x1ukq0.webp)
+
+由 USB 设备声明的每个活动端点或流都有一个传输环。转移环包含“转移”特定的 trb。
+
+在最简单的情况下，软件通过为其分配和初始化内存缓冲区来定义传输环，然后将进入队列和退出队列指针设置为该内存缓冲区的地址，并将其写入关联端点的 TR 退出队列指针字段。当进入队列指针等于退出队列指针时，传输环为空。
+
+注：无法将传送环进入队列和退出队列指针通过物理设备控制器寄存器访问。它们是逻辑实体，由系统软件和设备控制器在内部进行维护。
+
+![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/image.4mn8bwtyis60.webp)
+
+队列指针标识系统软件用于调度工作（TD）的下一个 TRB 位置。脱队列指针标识传输环中要由设备控制器执行的下一个 TRB
+
+### 事件环
+
+![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/image.4k9gw62k7ts0.webp)
+
+事件环和传输环之间的一个基本区别是，**设备控制器是生产者，而系统软件是事件 trb 的消费者**。设备控制器将事件 TRB 写入事件环，并更新TRB中的循环位，以指示软件的输入队列指针的当前位置。
+
+![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/image.30gsxfu89aa0.webp)
+
+在上图中请注意，除了 Multi-TRB TD 的最后一个 TRB 外，其余的TRB中都设置了链位（CH）。设备控制器将 Multi-TRB TD 中的TRB从出队列指针解析到出队列指针（图中从上到下），从内存中的单独缓冲区形成一个连接的数据缓冲区。如果传输环与 OUT 端点相关联，则连接的数据缓冲区将作为单次传输发送到 USB 设备
+
+注意，“散点/收集”列表中的“ TRB 长度”字段没有设置约束。传统上，散点收集列表所指向的所有缓冲区的长度都必须是“页面大小”，除了第一个和最后一个缓冲区（如上面的例子所示）。设备控制器不需要此约束条件。TD 中由正常、数据阶段或 Isoch TRB 指向的任何缓冲区都可以是大小在 0 到 64K 字节之间的任何大小。例如，如果操作系统将虚拟内存缓冲区转换为物理页面列表时，列表中的一些条目引用多个连续的页面，则 TRB 的灵活长度字段允许 1：1 映射，即多页列表条目不需要定义为多个页面大小的 TRB。
+
+## process_event_ring
+
+```c
+struct crg_uicr {               
+        u32 iman;   // Interrupt Management Register
+        u32 imod;   // Interrupter Moderation Register  中断器审核寄存器（IMOD）
+        u32 erstsz; //事件环段表大小寄存器
+        u32 resv0;
+        //事件环脱队列指针寄存器 (ERDP)
+        u32 erstbalo; /*0x10*/
+        u32 erstbahi;
+        // 事件环脱队列指针寄存器 (ERDP)
+        u32 erdplo;
+        u32 erdphi;
+};
+```
+
+```c
+// 拿到这个事件环的 一个事件
+udc_event = &crg_udc->udc_event[index];
+
+// 对这个事件进行处理
+ret = crg_udc_handle_event(crg_udc, event);
+
+// 如果是 td 最后一个 trb 
+if (event == udc_event->evt_seg0_last_trb
+//改变当前的连接状态，设置下一个循环开始
+udc_event->CCS = udc_event->CCS ? 0 : 1 //来回交替
+```
+
