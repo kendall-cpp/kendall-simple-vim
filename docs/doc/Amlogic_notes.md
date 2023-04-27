@@ -1674,7 +1674,7 @@ ln -s /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0 /sys/kernel/config/
 
 crg 端口（crg port）发生变化 ，就会调用 crg_handle_port_status 进行端口处理，下面是测试插入和拔出 USB 时的函数调用。
 
-> **插入 USB 时**
+> **拔出 USB 时**
 
 ```c
 //crg port 状态发生改变 CRG_U3DC_PORTSC_PLC
@@ -1783,35 +1783,41 @@ USB3.1 控制器使用此接口通知 CPU 有事件要处理，系统软件应�
 
 ## Corigine USB Device DMA
 
-原始 USB 设备 DMA 是 xHCI 像 DMA。环有三种类型。环是一个包含 TRB 数据结构的循环队列。TRB 环用于将 TRB 从生产者传递给消费者。与每个环关联的两个指针（排队和退出队列）标识生产者将排队环上下一个TRB的位置，以及使用者将退出下一个TRB的位置。设备控制器使用三种类型的环来通信和执行 USB 操作：
+原始 USB 设备 DMA 是 xHCI 像 DMA。环有三种类型。环是一个包含 TRB 数据结构的循环队列。TRB 环用于将 TRB 从生产者传递给消费者。与每个环关联的两个指针（入队和退出队）标识生产者将排队环上的下一个 TRB 的位置，以及使用者将退出下一个TRB的位置。设备控制器使用三种类型的环来通信和执行 USB 操作：
 
-- 命令环：一个用于设备控制器 , 系统软件使用命令环向设备控制器发出命令
-- 事件环：一个用于断路器 , 事件环被控制器用于返回命令的状态和结果，并传输到系统软件。
-- 传输环：每个端点或流 , 传输环用于在系统内存缓冲区和设备端点之间移动数据
+- 命令环：一个用于设备控制器 , 系统软件使用命令环向设备控制器发出命令。
+- 事件环：用户返回命令控制的状态 和 传输的结果。，然后参数到系统软件。
+- 传输环：每个端点或流 , 传输环用于在系统**内存缓冲区和设备端点之间移动数据**
 
 ### 传输环
 
+> **系统软件  ---> 设备控制器**
+
 ![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/image.37nyl8x1ukq0.webp)
 
-由 USB 设备声明的每个活动端点或流都有一个传输环。转移环包含“转移”特定的 trb。
-
-在最简单的情况下，软件通过为其分配和初始化内存缓冲区来定义传输环，然后将进入队列和退出队列指针设置为该内存缓冲区的地址，并将其写入关联端点的 TR 退出队列指针字段。当进入队列指针等于退出队列指针时，传输环为空。
-
-注：无法将传送环进入队列和退出队列指针通过物理设备控制器寄存器访问。它们是逻辑实体，由系统软件和设备控制器在内部进行维护。
+USB 设备的每个 活动端点 或者 流 都有一个传输环，用于参数特定的 TRB 。
 
 ![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/image.4mn8bwtyis60.webp)
 
-队列指针标识系统软件用于调度工作（TD）的下一个 TRB 位置。脱队列指针标识传输环中要由设备控制器执行的下一个 TRB
+入队指针 = 出队指针 时，传输环为空 。
 
 ### 事件环
 
+> **设备控制器  ---> 系统软件**
+
 ![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/image.4k9gw62k7ts0.webp)
 
-事件环和传输环之间的一个基本区别是，**设备控制器是生产者，而系统软件是事件 trb 的消费者**。设备控制器将事件 TRB 写入事件环，并更新TRB中的循环位，以指示软件的输入队列指针的当前位置。
+事件环 和 参数环 的区别是，事件环： **设备控制器是生产者，而系统软件是 trb 的消费者**，这与 传输环 相反
+
+事件环消费周期状态 （CSS :  Consumer Cycle State）
+
+如果事件环 trb 环 bit 不等于 CSS ，那么这就不是个有效事件，软件就会停止对这个事件处理。
 
 ![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/image.30gsxfu89aa0.webp)
 
-在上图中请注意，除了 Multi-TRB TD 的最后一个 TRB 外，其余的TRB中都设置了链位（CH）。设备控制器将 Multi-TRB TD 中的TRB从出队列指针解析到出队列指针（图中从上到下），从内存中的单独缓冲区形成一个连接的数据缓冲区。如果传输环与 OUT 端点相关联，则连接的数据缓冲区将作为单次传输发送到 USB 设备
+在上图中请注意，除了 Multi-TRB TD 的最后一个 TRB 外，其余的TRB中都设置了链位（CH）。设备控制器将 Multi-TRB TD 中的TRB从出队列指针解析到出队列指针（图中从上到下），从内存中的单独缓冲区形成一个连接的数据缓冲区。如果传输环与 OUT 端点相关联，则连接的数据缓冲区将作为单次传输发送到 USB 设备。
+
+![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/image.7d4mhraxpy00.webp)
 
 注意，“散点/收集”列表中的“ TRB 长度”字段没有设置约束。传统上，散点收集列表所指向的所有缓冲区的长度都必须是“页面大小”，除了第一个和最后一个缓冲区（如上面的例子所示）。设备控制器不需要此约束条件。TD 中由正常、数据阶段或 Isoch TRB 指向的任何缓冲区都可以是大小在 0 到 64K 字节之间的任何大小。例如，如果操作系统将虚拟内存缓冲区转换为物理页面列表时，列表中的一些条目引用多个连续的页面，则 TRB 的灵活长度字段允许 1：1 映射，即多页列表条目不需要定义为多个页面大小的 TRB。
 
@@ -1819,7 +1825,7 @@ USB3.1 控制器使用此接口通知 CPU 有事件要处理，系统软件应�
 
 ```c
 struct crg_uicr {               
-        u32 iman;   // Interrupt Management Register
+        u32 iman;   // Interrupt Management Register  中断寄存器
         u32 imod;   // Interrupter Moderation Register  中断器审核寄存器（IMOD）
         u32 erstsz; //事件环段表大小寄存器
         u32 resv0;
@@ -1833,15 +1839,73 @@ struct crg_uicr {
 ```
 
 ```c
-// 拿到这个事件环的 一个事件
-udc_event = &crg_udc->udc_event[index];
+int process_event_ring(struct crg_gadget_dev *crg_udc, int index) {
+  // 拿到这个事件环的 一个事件
+  udc_event = &crg_udc->udc_event[index];
 
-// 对这个事件进行处理
-ret = crg_udc_handle_event(crg_udc, event);
+  // 循环这个时间环的 trb 包
+  while (udc_event->evt_dq_pt) { 
+    ret = crg_udc_handle_event(crg_udc, event); // 处理这个事件的 trb
 
-// 如果是 td 最后一个 trb 
-if (event == udc_event->evt_seg0_last_trb
-//改变当前的连接状态，设置下一个循环开始
-udc_event->CCS = udc_event->CCS ? 0 : 1 //来回交替
+    // 如果是 链接 TRB （事件环的最后一个）
+    if (event == udc_event->evt_seg0_last_trb) {}
+      //改变消费周期状态
+      udc_event->CCS = udc_event->CCS ? 0 : 1 // Consumer Cycle State 消费周期状态
+      udc_event->evt_dq_pt = udc_event->event_ring.vaddr;
+    } else {
+      udc_event->evt_dq_pt++;   // 处理下一个trb
+    }
+  }
+}
+
+int crg_udc_handle_event(struct crg_gadget_dev *crg_udc, struct event_trb_s *event)
+{
+  comp_code = comp_code = GETF(EVE_TRB_COMPL_CODE, event->dw2);   // Completion Code
+
+  case TRB_TYPE_EVT_TRANSFER:  // 传输类型
+    // 处理传输函数
+    int crg_handle_xfer_event {
+      //送到 complete 函数
+      req_done(udc_ep_ptr, udc_req_ptr, 0);
+    }
+  
+  case TRB_TYPE_EVT_SETUP_PKT:   // 安装类型的包
+    //将这个包入队
+    queue_setup_pkt(crg_udc, setup_pkt, setup_tag); 
+    // 开始执行按组安装处理
+    crg_handle_setup_pkt(crg_udc, setup_pkt, setup_tag); 
+}
 ```
+
+- Completion Code : 此字段表示所指向的TRB的完成状态。对于在进行到下一个 TD 时设置了 IOC 位的 TRB 生成的传输事件，应忽略该字段。
+
+![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/image.1g7hwqd3alnk.webp)
+
+- Short Packet
+
+  - 这表明主机发送的数据小于当前 TD 的大小。
+  - TRB传输长度字段表示在指向的TRB中尚未传输多少字节
+  - 如果同一TD有更多的 trb，设备将自动前进到下一个 TD。转会事件将生成的 TRB 与 IOC，同时推进到下一个 TD
+
+
+## crg_udc_build_td
+
+- 先判断是否需要完成上一次未完成的传输
+
+```c
+if (udc_req_ptr->trbs_needed)
+
+// 接着根据 trb 的类型来进行入队
+if (usb_endpoint_xfer_control(udc_ep_ptr->desc))  // 控制传输类型
+if (usb_endpoint_xfer_isoc(udc_ep_ptr->desc))     // 等时传输类型
+if (usb_endpoint_xfer_bulk(udc_ep_ptr->desc))     // 批量传输类型
+```
+
+
+- 等时传输 和 sof 包共同点
+
+isochronous transfers 和 USB 的 SOF 包之间有一个共同点，那就是它们都涉及到 USB 数据传输中的时间同步。在 USB 总线上，每个帧都被划分为若干微桢（microframe），每个微桢由一个开始帧(SOF)信号指示开始。这个信号的作用是在 USB 设备和主机之间提供一个公共的时间基准，以确保传输数据的同步性能。而 isochronous transfers 则需要根据这个时间基准来在规定时间内传输数据，从而实现实时性应用的要求，这也是两者之间的共同点。
+
+所以如果传输的 isoc pkt ，那么这个时候应该加上 timestamp 也是合理的。
+
 

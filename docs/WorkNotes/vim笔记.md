@@ -15,6 +15,7 @@
   - [ubuntu 安装 ag](#ubuntu-安装-ag)
 - [vim 命令记录](#vim-命令记录)
   - [vim 查找替换](#vim-查找替换)
+  - [vim 解决结尾自动加换行问题](#vim-解决结尾自动加换行问题)
 - [vscode 设置 markdown 字体](#vscode-设置-markdown-字体)
   - [vscode 快速阅读 kernel 源码](#vscode-快速阅读-kernel-源码)
 
@@ -344,6 +345,32 @@ ag --ignore-dir /etc/ "kendall"  	忽略某些文件目录进行搜索。
 
 # 如果想搜索和替换整个文件中的匹配内容，使用百分比字符%作为范围。此字符指示从文件第一行到最后一行的范围, g 表示某一行的全部
 :%s/foo/bar/g
+```
+
+
+### vim 解决结尾自动加换行问题
+
+解除自动换行的方法
+
+- 方法一：
+
+```sh
+vim -b xxxx
+
+set noeol
+
+:wq
+```
+
+- 方法二：
+
+```sh
+#进入二进制模式
+set binary
+
+set noeol
+
+:wq
 ```
 
 ## vscode 设置 markdown 字体
