@@ -1817,7 +1817,7 @@ USB 设备的每个 活动端点 或者 流 都有一个传输环，用于参数
 
 在上图中请注意，除了 Multi-TRB TD 的最后一个 TRB 外，其余的TRB中都设置了链位（CH）。设备控制器将 Multi-TRB TD 中的TRB从出队列指针解析到出队列指针（图中从上到下），从内存中的单独缓冲区形成一个连接的数据缓冲区。如果传输环与 OUT 端点相关联，则连接的数据缓冲区将作为单次传输发送到 USB 设备。
 
-![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/image.7d4mhraxpy00.webp)
+![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/image.hy4y0ubr5qo.webp)
 
 注意，“散点/收集”列表中的“ TRB 长度”字段没有设置约束。传统上，散点收集列表所指向的所有缓冲区的长度都必须是“页面大小”，除了第一个和最后一个缓冲区（如上面的例子所示）。设备控制器不需要此约束条件。TD 中由正常、数据阶段或 Isoch TRB 指向的任何缓冲区都可以是大小在 0 到 64K 字节之间的任何大小。例如，如果操作系统将虚拟内存缓冲区转换为物理页面列表时，列表中的一些条目引用多个连续的页面，则 TRB 的灵活长度字段允许 1：1 映射，即多页列表条目不需要定义为多个页面大小的 TRB。
 
@@ -1904,6 +1904,8 @@ if (usb_endpoint_xfer_bulk(udc_ep_ptr->desc))     // 批量传输类型
 
 - 等时传输 和 sof 包共同点
 
+> 手册： 8.3.8Handling Isochronous Transfers
+
 isochronous transfers 和 USB 的 SOF 包之间有一个共同点，那就是它们都涉及到 USB 数据传输中的时间同步。在 USB 总线上，每个帧都被划分为若干微桢（microframe），每个微桢由一个开始帧(SOF)信号指示开始。这个信号的作用是在 USB 设备和主机之间提供一个公共的时间基准，以确保传输数据的同步性能。而 isochronous transfers 则需要根据这个时间基准来在规定时间内传输数据，从而实现实时性应用的要求，这也是两者之间的共同点。
 
 所以如果传输的 isoc pkt ，那么这个时候应该加上 timestamp 也是合理的。
@@ -1914,6 +1916,9 @@ isochronous transfers 和 USB 的 SOF 包之间有一个共同点，那就是它
 
 - 如果是 入队数据包 （TRB_TYPE_EVT_SETUP_PKT） ， 那么就进行入队操作
 
-
-
+```c
+if (event == udc_event->evt_seg0_last_trb) {  // 一个事件环的最后一个数据包（链接 trb）
+else 
+udc_event->evt_dq_pt++;  // 下一个trb
+```
 
