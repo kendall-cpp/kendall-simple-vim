@@ -1908,4 +1908,12 @@ isochronous transfers 和 USB 的 SOF 包之间有一个共同点，那就是它
 
 所以如果传输的 isoc pkt ，那么这个时候应该加上 timestamp 也是合理的。
 
+- 在 crg_udc_handle_event 函数中，会去判断 trb 的类型，如果是传输 TRB ，那么就会进行出队传输，这里里判断是否是 isoc pkt 获取时间戳。
+
+判断是不是 isoc 包的函数 `usb_endpoint_xfer_isoc(udc_ep_ptr->desc`
+
+- 如果是 入队数据包 （TRB_TYPE_EVT_SETUP_PKT） ， 那么就进行入队操作
+
+
+
 
