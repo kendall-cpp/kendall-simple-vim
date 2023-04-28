@@ -35,6 +35,7 @@
 		- [强制打上 patch](#强制打上-patch)
 	- [patch 例子](#patch-例子)
 - [cherry-pick](#cherry-pick)
+- [查看某个文件的修改记录](#查看某个文件的修改记录)
 - [repo 命令](#repo-命令)
 - [设置 git commit 模式使用 vim](#设置-git-commit-模式使用-vim)
 
@@ -611,6 +612,11 @@ git cherry-pick --continue  // 1. 解决完冲突以后，继续下一个 cherry
 git cherry-pick --abort   // 2. 如果不想解决冲突，要放弃合并，用此命令回到操作以前
 git cherry-pick --quit   // 3. 不想解决冲突，放弃合并，且保持现有情况，不回到操作以前
 ```
+
+## 查看某个文件的修改记录
+
+git log --pretty --oneline xxxx
+
 ---
 
 ## repo 命令
