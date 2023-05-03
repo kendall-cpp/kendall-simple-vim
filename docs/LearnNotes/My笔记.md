@@ -1033,3 +1033,5 @@ enum {
 	MEMBLOCK_NOMAP		= 0x4,	/* don't add to kernel direct mapping */
 };
 ```
+
+![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/image.6m2bn9503ms0.webp)
