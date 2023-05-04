@@ -1035,3 +1035,78 @@ enum {
 ```
 
 ![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/image.6m2bn9503ms0.webp)
+
+#### ARM64 内核初始化 memblock 分配器过程
+
+主要实现是这个函数
+
+```c
+// arch/arm64/mm/init.c 
+void __init arm64_memblock_init(void)
+{
+
+}
+// 29-1.png
+
+// mm/memblock.c
+// 插入一块可用的物理内存
+// base 指向要添加内存块的起始物理地址
+// size 指向要添加内存块的大小
+int __init_memblock memblock_add(phys_addr_t base, phys_addr_t size)
+{
+	phys_addr_t end = base + size - 1;
+
+	memblock_dbg("memblock_add: [%pa-%pa] %pF\n",
+		     &base, &end, (void *)_RET_IP_);
+
+	// 将内存块添加到 memblock.memory
+	return memblock_add_range(&memblock.memory, base, size, MAX_NUMNODES, 0);
+}
+
+/**
+type: 指向内存区，也就是预留内存
+base: 指向新加入的内存块的基础地址
+size：指向新加入的内核块的长度
+nid : 指向新加入内存块对应的 flags
+*/
+int __init_memblock memblock_add_range(struct memblock_type *type,
+				phys_addr_t base, phys_addr_t size,
+				int nid, unsigned long flags)
+{
+	// 遍历这个内存区的所有内存块，每遍历到一个内存块，函数就会将新的内存块和这个内存块进行比较
+	for_each_memblock_type(type, rgn) {
+		phys_addr_t rbase = rgn->base;
+		phys_addr_t rend = rbase + rgn->size;
+
+		...
+			if (insert)
+				memblock_insert_region(type, idx++, base,
+						       rbase - base, nid,
+						       flags);
+		}
+		/* area below @rend is dealt with, forget about it */
+		base = min(rend, end);
+	}
+
+	// 没有新的内存区块需要加入到内存区块链表
+	if (!nr_new)
+		return 0;
+}
+//30-1.png
+```
+
+- memblock_add : 添加新的内存块到 memblock.memory 中。
+- memblock_renove : 删除内存块区域
+- memblock_alloc : 分配内存
+- memblock_free : 释放内存
+
+**memblock 内存分配器的原理：**
+
+主要是维护两种内存：
+
+- 第一种内存是系统可用的物理内存，也就是系统实际含有的物理内存，这个值是从 dts 中进行配置的， 通过 uboot 实际探测之后再插入到内核中。
+
+- 第二种内存是内核预留给操作系统的内存，这部分内存作为特殊功能使用，不能作为共享内存使用。
+
+
+
