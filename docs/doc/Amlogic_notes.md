@@ -1709,7 +1709,7 @@ lsken00 crg_gadget_handle_interrupt -- 4311 crg_udc->connected = 1
 
 		reg_write(&uccr->status, CRG_U3DC_STATUS_EINT);
 
-		printk("crg_udc->device_state = %d\n", crg_udc->device_state);
+		printk("crg_udc->device_state = %d\n", crg_udc->device_state);   // 2
 
 		/*process event rings*/
 		for (i = 0; i < CRG_RING_NUM; i++)
@@ -1721,7 +1721,76 @@ lsken00 crg_gadget_handle_interrupt -- 4311 crg_udc->connected = 1
 
 通知 tdm_bridge stop 只需要在 中断处理函数 crg_gadget_handle_interrup 中。有事件来时，也就是 CRG_U3DC_STATUS_EINT 这个状态寄存器发生变化，直接判断 crg_udc->connected == 0 ,就可以调用通知函数 do_usb_disconn_notifier。
 
+```c
+int crg_gadget_handle_interrupt(struct crg_gadget_dev *crg_udc)
+{
+  if (tmp_status & CRG_U3DC_STATUS_EINT) {
+    int i;
 
+    if (crg_udc->connected == 0)
+      do_usb_disconn_notifier(USB_STATE_ATTACHED);
+
+    reg_write(&uccr->status, CRG_U3DC_STATUS_EINT);
+    /*process event rings*/
+    for (i = 0; i < CRG_RING_NUM; i++)
+      process_event_ring(crg_udc, i);
+  }
+}
+```
+
+## corigine usb 核心寄存器
+
+```c
+struct crg_uccr {
+	u32 capability;	/*0x00*/  // 功能寄存器指定了主机控制器实现的只读限制、限制和功能。这些值被用作主机控制器 (xhci) 驱动程序的参数。
+	u32 resv0[3];
+
+	u32 config0;	/*0x10*/
+	u32 config1;
+	u32 resv1[2];
+
+	u32 control;	/*0x20*/
+	u32 status;
+	u32 dcbaplo;
+	u32 dcbaphi;
+	u32 portsc;
+	u32 u3portpmsc;
+	u32 u2portpmsc;
+	u32 u3portli;
+
+	u32 doorbell;	/*0x40*/
+	u32 mfindex;
+	u32 speed_select;
+	u32 resv3[5];
+
+	u32 ep_enable;	/*0x60*/
+	u32 ep_running;
+	u32 resv4[2];
+
+	u32 cmd_param0;	/*0x70*/
+	u32 cmd_param1;
+	u32 cmd_control;
+	u32 resv5[1];
+
+	u32 odb_capability;	/*0x80*/
+	u32 resv6[3];
+	u32 odb_config[8];
+
+	u32 debug0;	/*0xB0*/
+};
+```
+
+- Capability Registers : 功能寄存器指定了主机控制器实现的只读限制、限制和功能。这些值被用作主机控制器 (xhci) 驱动程序的参数。
+
+-  Runtime and Operational Registers : 指定了主机控制器的配置和运行时可修改的状态，并被系统软件用于控制和监控主机控制器的运行状态。这些寄存器被划分为在运行时大量访问的，以及仅在初始化时或在运行时少量访问的，以便更好地支持 xHCI 的虚拟化。
+
+- xHCI Extended Capabilities : 指定了 xHCI 实现的可选特性，也就是扩展能力。
+
+- Doorbell Array : 是一个多达 256 个门铃寄存器的阵列，它支持 255 个 USB 设备或集线器。每个门钟寄存器都为系统软件提供了一种机制，如果 xHC 有插槽或与端点相关的工作要执行，则可以通知 xHC。门铃寄存器中的ADB 目标字段是用一个值来标识“按”门铃的原因的。门铃寄存器 0 被分配给主机控制器，用于命令环管理。
+
+- Controller Save State (CSS)
+
+- Connect Status Change (CSC) : 此标志表示在端口的当前连接状态（CSS）或冷连接状态（CAS）位中发生了更改
 
 ## TRB
 
@@ -1819,11 +1888,13 @@ USB 设备的每个 活动端点 或者 流 都有一个传输环，用于参数
 
 ![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/image.hy4y0ubr5qo.webp)
 
-注意，“散点/收集”列表中的“ TRB 长度”字段没有设置约束。传统上，散点收集列表所指向的所有缓冲区的长度都必须是“页面大小”，除了第一个和最后一个缓冲区（如上面的例子所示）。设备控制器不需要此约束条件。TD 中由正常、数据阶段或 Isoch TRB 指向的任何缓冲区都可以是大小在 0 到 64K 字节之间的任何大小。例如，如果操作系统将虚拟内存缓冲区转换为物理页面列表时，列表中的一些条目引用多个连续的页面，则 TRB 的灵活长度字段允许 1：1 映射，即多页列表条目不需要定义为多个页面大小的 TRB。
+注意，“散点/收集”列表中的“ TRB 长度”字段没有设置约束。传统上，散点收集列表所指向的所有缓冲区的长度都必须是“页面大小”，除了第一个和最后一个缓冲区（如上面的例子所示）。设备控制器不需要此约束条件。TD 中由正常、数据阶段或 Isoc  TRB 指向的任何缓冲区都可以是大小在 0 到 64K 字节之间的任何大小。例如，如果操作系统将虚拟内存缓冲区转换为物理页面列表时，列表中的一些条目引用多个连续的页面，则 TRB 的灵活长度字段允许 1：1 映射，即多页列表条目不需要定义为多个页面大小的 TRB。
 
 ## process_event_ring
 
 ```c
+// 8.7.23  Interrupt Management Register (IMAN)
+// 8.7.24  Interrupter Moderation Register (IMOD)
 struct crg_uicr {               
         u32 iman;   // Interrupt Management Register  中断寄存器
         u32 imod;   // Interrupter Moderation Register  中断器审核寄存器（IMOD）
@@ -1843,7 +1914,7 @@ int process_event_ring(struct crg_gadget_dev *crg_udc, int index) {
   // 拿到这个事件环的 一个事件
   udc_event = &crg_udc->udc_event[index];
 
-  // 循环这个时间环的 trb 包
+  // 循环这个事件环的 trb 包
   while (udc_event->evt_dq_pt) { 
     ret = crg_udc_handle_event(crg_udc, event); // 处理这个事件的 trb
 
@@ -1858,26 +1929,124 @@ int process_event_ring(struct crg_gadget_dev *crg_udc, int index) {
   }
 }
 
-int crg_udc_handle_event(struct crg_gadget_dev *crg_udc, struct event_trb_s *event)
+int crg_udc_handle_event(struct crg_gadget_dev *crg_udc,
+			struct event_trb_s *event)
 {
-  comp_code = comp_code = GETF(EVE_TRB_COMPL_CODE, event->dw2);   // Completion Code
+	int ret;
 
-  case TRB_TYPE_EVT_TRANSFER:  // 传输类型
-    // 处理传输函数
-    int crg_handle_xfer_event {
-      //送到 complete 函数
-      req_done(udc_ep_ptr, udc_req_ptr, 0);
-    }
-  
-  case TRB_TYPE_EVT_SETUP_PKT:   // 安装类型的包
-    //将这个包入队
-    queue_setup_pkt(crg_udc, setup_pkt, setup_tag); 
-    // 开始执行按组安装处理
-    crg_handle_setup_pkt(crg_udc, setup_pkt, setup_tag); 
+	switch (GETF(EVE_TRB_TYPE, event->dw3)) {
+	case TRB_TYPE_EVT_PORT_STATUS_CHANGE:  // Port Status Change Event TRB
+		if (crg_udc->device_state == USB_STATE_RECONNECTING) {
+			crg_udc->portsc_on_reconnecting = 1;
+			break;
+		}
+		/* 1.端口重置 2.端口连接更改 3.端口链接更改 */
+		ret = crg_handle_port_status(crg_udc);  //处理端口状态变化
+		break;
+	case TRB_TYPE_EVT_TRANSFER: // 传输类型
+
+		crg_handle_xfer_event(crg_udc, event);  // 处理传输的包
+		break;
+	case TRB_TYPE_EVT_SETUP_PKT:  // 安装类型的包
+		{
+        // 将这个包入队
+				queue_setup_pkt(crg_udc, setup_pkt, setup_tag);
+				break;
+			}
+      // 开始执行安装处理程序
+			crg_handle_setup_pkt(crg_udc, setup_pkt, setup_tag);
+
+			break;
+		}
+	}
 }
 ```
 
-- Completion Code : 此字段表示所指向的TRB的完成状态。对于在进行到下一个 TD 时设置了 IOC 位的 TRB 生成的传输事件，应忽略该字段。
+> 对应 8.6.3.4 TRB Type Encoding
+
+
+### crg_handle_xfer_event
+
+> 传输包处理
+
+```c
+int crg_handle_xfer_event(struct crg_gadget_dev *crg_udc,
+			struct event_trb_s *event)
+{
+  // isochronous trb timestamp  在这里添加时间戳
+	if (usb_endpoint_xfer_isoc(udc_ep_ptr->desc))
+		crg_isoc_timer_hit();
+
+	comp_code = GETF(EVE_TRB_COMPL_CODE, event->dw2);
+	switch (comp_code) {
+    case CMPL_CODE_SUCCESS:
+    {
+      handle_cmpl_code_success(crg_udc, event, udc_ep_ptr);
+      trbs_dequeued = true;
+    }
+    case CMPL_CODE_SHORT_PKT:
+    {
+      if (usb_endpoint_dir_out(udc_ep_ptr->desc)) {
+        if (udc_req_ptr->usb_req.actual != 512 && udc_req_ptr->usb_req.actual != 31) {
+          trb_pt = (u64)event->dw0 +
+            ((u64)(event->dw1) << 32);
+          p_trb = tran_trb_dma_to_virt(udc_ep_ptr, trb_pt);
+        }
+        req_done(udc_ep_ptr, udc_req_ptr, 0);
+      }
+      //将出队指针推进到下一个 TD
+      advance_dequeue_pt(udc_ep_ptr);
+    }
+    case CMPL_CODE_PROTOCOL_STALL:
+    {
+      udc_req_ptr = list_entry(udc_ep_ptr->queue.next,
+            struct crg_udc_request, queue);
+      req_done(udc_ep_ptr, udc_req_ptr, -EINVAL);
+      trbs_dequeued = true;
+      crg_udc->setup_status = WAIT_FOR_SETUP;
+      advance_dequeue_pt(udc_ep_ptr);
+      break;
+    }
+    case CMPL_CODE_SETUP_TAG_MISMATCH:
+    {
+      /* skip seqnum err event until last one arrives. */
+      if (udc_ep_ptr->deq_pt == udc_ep_ptr->enq_pt) {
+        udc_req_ptr = list_entry(udc_ep_ptr->queue.next,
+            struct crg_udc_request,
+            queue);
+
+        if (udc_req_ptr)
+          req_done(udc_ep_ptr, udc_req_ptr, -EINVAL);
+
+        /* drop all the queued setup packet, only
+        * process the latest one.
+        */
+        crg_udc->setup_status = WAIT_FOR_SETUP;
+        if (enq_idx) {
+          crg_setup_pkt =
+            &crg_udc->ctrl_req_queue[enq_idx - 1];
+          setup_pkt = &crg_setup_pkt->usbctrlreq;
+          setup_tag = crg_setup_pkt->setup_tag;
+          crg_handle_setup_pkt(crg_udc, setup_pkt,
+                setup_tag);
+          /* flash the queue after the latest
+          * setup pkt got handled..
+          */
+          memset(crg_udc->ctrl_req_queue, 0,
+            sizeof(struct crg_setup_packet)
+            * CTRL_REQ_QUEUE_DEPTH);
+          crg_udc->ctrl_req_enq_idx = 0;
+        }
+      } else {
+      }
+      crg_udc->setup_tag_mismatch_found = 1;
+      break;
+    }
+  }
+}
+```
+
+- Completion Code （comp_code）: 此字段表示所指向的 TRB 的完成状态。对于在进行到下一个 TD 时设置了 IOC 位的 TRB 生成的传输事件，应忽略该字段。
 
 ![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/image.1g7hwqd3alnk.webp)
 
@@ -1887,6 +2056,24 @@ int crg_udc_handle_event(struct crg_gadget_dev *crg_udc, struct event_trb_s *eve
   - TRB传输长度字段表示在指向的TRB中尚未传输多少字节
   - 如果同一TD有更多的 trb，设备将自动前进到下一个 TD。转会事件将生成的 TRB 与 IOC，同时推进到下一个 TD
 
+
+### crg_handle_port_status
+
+处理端口状态变化
+
+```c
+int crg_handle_port_status(struct crg_gadget_dev *crg_udc)
+{
+  struct crg_uccr *uccr = crg_udc->uccr;
+  portsc_val = reg_read(&uccr->portsc);  // Port Status and Control Register (PORTSC)
+}
+```
+
+- Port Status and Control Register (PORTSC)
+
+由主机控制器的特定实例化实现的端口寄存器数被记录在 HCSPARAMS1 寄存器中，即参数 MAX_PORTS
+
+仅在冷复位或响应主机控制器复位（HCRST）时，由平台硬件进行复位。
 
 ## crg_udc_build_td
 
@@ -1917,8 +2104,11 @@ isochronous transfers 和 USB 的 SOF 包之间有一个共同点，那就是它
 - 如果是 入队数据包 （TRB_TYPE_EVT_SETUP_PKT） ， 那么就进行入队操作
 
 ```c
-if (event == udc_event->evt_seg0_last_trb) {  // 一个事件环的最后一个数据包（链接 trb）
-else 
-udc_event->evt_dq_pt++;  // 下一个trb
+int process_event_ring(struct crg_gadget_dev *crg_udc, int index) 
+{
+  if (event == udc_event->evt_seg0_last_trb) {  // 一个事件环的最后一个数据包（链接 trb）
+  else 
+  udc_event->evt_dq_pt++;  // 下一个trb
+}
 ```
 
