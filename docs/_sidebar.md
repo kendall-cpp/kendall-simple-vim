@@ -4,6 +4,7 @@
   * [Project-notes](/doc/Project-notes.md)
   * [Amlogic_notes](/doc/Amlogic_notes.md)
   * [Amlogic笔记记录](/doc/Amlogic笔记记录.md)
+  * [Amlogic代码分析](/doc/Amlogic代码分析.md)
 
 * WorkTasks
   * [Korlan_SDK-Task](/WorkTasks/Korlan_SDK-Task.md)

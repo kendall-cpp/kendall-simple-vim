@@ -2048,6 +2048,33 @@ int crg_handle_xfer_event(struct crg_gadget_dev *crg_udc,
 
 - Completion Code （comp_code）: 此字段表示所指向的 TRB 的完成状态。对于在进行到下一个 TD 时设置了 IOC 位的 TRB 生成的传输事件，应忽略该字段。
 
+```c
+enum TRB_CMPL_CODES_E {
+	CMPL_CODE_INVALID       = 0,
+	CMPL_CODE_SUCCESS,
+	CMPL_CODE_DATA_BUFFER_ERR,
+	CMPL_CODE_BABBLE_DETECTED_ERR,
+	CMPL_CODE_USB_TRANS_ERR,
+	CMPL_CODE_TRB_ERR,  /*5*/
+	CMPL_CODE_TRB_STALL,
+	CMPL_CODE_INVALID_STREAM_TYPE_ERR = 10,
+	CMPL_CODE_SHORT_PKT = 13,
+	CMPL_CODE_RING_UNDERRUN,
+	CMPL_CODE_RING_OVERRUN, /*15*/
+	CMPL_CODE_EVENT_RING_FULL_ERR = 21,
+	CMPL_CODE_STOPPED = 26,
+	CMPL_CODE_STOPPED_LENGTH_INVALID = 27,
+	CMPL_CODE_ISOCH_BUFFER_OVERRUN = 31,
+	/*192-224 vendor defined error*/
+	CMPL_CODE_PROTOCOL_STALL = 192,
+	CMPL_CODE_SETUP_TAG_MISMATCH = 193,
+	CMPL_CODE_HALTED = 194,
+	CMPL_CODE_HALTED_LENGTH_INVALID = 195,
+	CMPL_CODE_DISABLED = 196,
+	CMPL_CODE_DISABLED_LENGTH_INVALID = 197,
+};
+```
+
 ![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/image.1g7hwqd3alnk.webp)
 
 - Short Packet
@@ -2069,11 +2096,15 @@ int crg_handle_port_status(struct crg_gadget_dev *crg_udc)
 }
 ```
 
-- Port Status and Control Register (PORTSC)
+- Port Status and Control Register (PORTSC) 【代码中使用的宏： CRG_U3DC_PORTSC_PP 】
 
-由主机控制器的特定实例化实现的端口寄存器数被记录在 HCSPARAMS1 寄存器中，即参数 MAX_PORTS
+  - 由主机控制器的特定实例化实现的端口寄存器数被记录在 HCSPARAMS1 寄存器中，即参数 MAX_PORTS
 
-仅在冷复位或响应主机控制器复位（HCRST）时，由平台硬件进行复位。
+  - 仅在冷复位或响应主机控制器复位（HCRST）时，由平台硬件进行复位。
+
+  - 除非确认端口电源（PP）=（1），否则软件不能改变端口的状态，而不管端口功率控制（PPC）功能
+
+  - 如果一个端口已被分配给调试功能，则该端口不得报告已连接的设备（即中国化学会=“0”），并在端口电源标志为“1”时启用
 
 ## crg_udc_build_td
 
@@ -2088,14 +2119,13 @@ if (usb_endpoint_xfer_isoc(udc_ep_ptr->desc))     // 等时传输类型
 if (usb_endpoint_xfer_bulk(udc_ep_ptr->desc))     // 批量传输类型
 ```
 
-
 - 等时传输 和 sof 包共同点
 
 > 手册： 8.3.8Handling Isochronous Transfers
 
 isochronous transfers 和 USB 的 SOF 包之间有一个共同点，那就是它们都涉及到 USB 数据传输中的时间同步。在 USB 总线上，每个帧都被划分为若干微桢（microframe），每个微桢由一个开始帧(SOF)信号指示开始。这个信号的作用是在 USB 设备和主机之间提供一个公共的时间基准，以确保传输数据的同步性能。而 isochronous transfers 则需要根据这个时间基准来在规定时间内传输数据，从而实现实时性应用的要求，这也是两者之间的共同点。
 
-所以如果传输的 isoc pkt ，那么这个时候应该加上 timestamp 也是合理的。
+> 所以如果传输的 isoc pkt ，那么这个时候应该加上 timestamp 也是合理的 ??
 
 - 在 crg_udc_handle_event 函数中，会去判断 trb 的类型，如果是传输 TRB ，那么就会进行出队传输，这里里判断是否是 isoc pkt 获取时间戳。
 
