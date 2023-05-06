@@ -222,3 +222,16 @@ static void crg_udc_start(struct crg_gadget_dev *crg_udc)
 
 ----
 
+## init_ep_info
+
+```c
+static int init_ep_info(struct crg_gadget_dev *crg_udc)
+{
+	// 将 ep[0] 预留出来
+	crg_ep_struct_setup(crg_udc, 0, NULL);
+
+	// 分别对 epin（1-15） 和 epout（1-15） 进行配置
+	crg_ep_struct_setup(crg_udc, i * 2, name);
+}
+```
+
