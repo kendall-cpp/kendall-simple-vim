@@ -381,6 +381,7 @@ cp ramdisk.img.xz /mnt/fileroot/shengken.lin/workspace/google_source/eureka-v2/k
 # cp ramdisk.img.xz /mnt/fileroot/shengken.lin/workspace/google_source/eureka/korlan-sdk/build-sign-pdk/korlan/ramdisk.img
 
 ## 注意5.15制作ramdisk需要将对应的ko拷贝到ramdisk 中的 /lib/modules 下
+# 还需要替换 early_load_ko-5.15.rc
 # vim vendor/amlogic/korlan/early_load_ko_5.15.rc 
 cd /korlan-sdk/unpack_boot_ramdisk_script
 python3 copy-ko-ramdisk-5.15.py

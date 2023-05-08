@@ -1862,6 +1862,8 @@ USB3.1 控制器使用此接口通知 CPU 有事件要处理，系统软件应�
 
 > **系统软件  ---> 设备控制器**
 
+软件使用一个传输环来为单个 USB 端点安排工作项目。传输环被组织为传输描述符（TD）数据结构的循环队列，其中每个传输描述符定义一个或多个数据缓冲区，用来缓存 USB 数据的传入和传输 。传输环被 xHC 视为只读环。
+
 ![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/image.37nyl8x1ukq0.webp)
 
 USB 设备的每个 活动端点 或者 流 都有一个传输环，用于参数特定的 TRB 。
@@ -1932,33 +1934,33 @@ int process_event_ring(struct crg_gadget_dev *crg_udc, int index) {
 int crg_udc_handle_event(struct crg_gadget_dev *crg_udc,
 			struct event_trb_s *event)
 {
-	int ret;
+  int ret;
 
-	switch (GETF(EVE_TRB_TYPE, event->dw3)) {
-	case TRB_TYPE_EVT_PORT_STATUS_CHANGE:  // Port Status Change Event TRB
-		if (crg_udc->device_state == USB_STATE_RECONNECTING) {
-			crg_udc->portsc_on_reconnecting = 1;
-			break;
-		}
-		/* 1.端口重置 2.端口连接更改 3.端口链接更改 */
-		ret = crg_handle_port_status(crg_udc);  //处理端口状态变化
-		break;
-	case TRB_TYPE_EVT_TRANSFER: // 传输类型
+  switch (GETF(EVE_TRB_TYPE, event->dw3)) {
+  case TRB_TYPE_EVT_PORT_STATUS_CHANGE:  // Port Status Change Event TRB
+      if (crg_udc->device_state == USB_STATE_RECONNECTING) {
+        crg_udc->portsc_on_reconnecting = 1;
+        break;
+      }
+      /* 1.端口重置 2.端口连接更改 3.端口链接更改 */
+      ret = crg_handle_port_status(crg_udc);  //处理端口状态变化
+      break;
+  case TRB_TYPE_EVT_TRANSFER: // 传输类型
 
-		crg_handle_xfer_event(crg_udc, event);  // 处理传输的包
-		break;
-	case TRB_TYPE_EVT_SETUP_PKT:  // 安装类型的包
-		{
+    crg_handle_xfer_event(crg_udc, event);  // 处理传输的包
+    break;
+  case TRB_TYPE_EVT_SETUP_PKT:  // 安装类型的包
+    {
         // 将这个包入队
-				queue_setup_pkt(crg_udc, setup_pkt, setup_tag);
-				break;
-			}
+        queue_setup_pkt(crg_udc, setup_pkt, setup_tag);
+        break;
+      }
       // 开始执行安装处理程序
-			crg_handle_setup_pkt(crg_udc, setup_pkt, setup_tag);
+      crg_handle_setup_pkt(crg_udc, setup_pkt, setup_tag);
 
-			break;
-		}
-	}
+      break;
+    }
+  }
 }
 ```
 
