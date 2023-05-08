@@ -487,7 +487,7 @@ int crg_handle_xfer_event(struct crg_gadget_dev *crg_udc,
 	// 需要保证这个 ep 的状态不是 STOPPED/HALTED/DISABLED 才能够出队
 	update_dequeue_pt(event, udc_ep_ptr);
 
-	//判断是否是个请求事件
+	//请求出队
 	if (is_request_dequeued(crg_udc, udc_ep_ptr, event))
 
 	// 再次获取 TRB 完成状态
@@ -541,3 +541,11 @@ enum TRB_CMPL_CODES_E {
 
 #### is_request_dequeued
 
+```c
+bool is_request_dequeued(struct crg_gadget_dev *crg_udc,
+		struct crg_udc_ep *udc_ep, struct event_trb_s *event)
+{
+	// 获取请求环的地址
+	trb_pt = tran_trb_dma_to_virt(udc_ep, trb_addr);
+}
+```
