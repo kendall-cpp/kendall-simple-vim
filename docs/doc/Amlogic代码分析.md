@@ -592,7 +592,7 @@ if (usb_endpoint_xfer_isoc(udc_ep_ptr->desc))     // 等时传输类型
 if (usb_endpoint_xfer_bulk(udc_ep_ptr->desc))     // 批量传输类型
 ```
 
-------
+---------
 
 ## UDC core 源码分析
 
