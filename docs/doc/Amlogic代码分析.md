@@ -25,7 +25,7 @@ static ssize_t gadget_dev_desc_UDC_store(struct config_item *item,
 		const char *page, size_t len)
 {
 	// 这个函数会解析 设备控制器驱动（UDC） 的信息，主要是通过 udc_name 来匹配并加入 udb_list 中
-	// 最后去执行usb_gadget_probe_driver(&gi->composite.gadget_driver);
+	// 最后去执行 usb_gadget_probe_driver(&gi->composite.gadget_driver);
 }
 ```
 
@@ -496,6 +496,8 @@ int crg_handle_xfer_event(struct crg_gadget_dev *crg_udc,
 	case CMPL_CODE_SUCCESS:
 
 	case CMPL_CODE_SHORT_PKT:  // 这表明主机发送的数据小于当前 TD 的大小。可以进入 req_done 处理
+		req_done(udc_ep_ptr, udc_req_ptr, 0)
+		// 会将 usb 数据送入到 complete 进行处理
 	}
 }
 ```
@@ -549,3 +551,89 @@ bool is_request_dequeued(struct crg_gadget_dev *crg_udc,
 	trb_pt = tran_trb_dma_to_virt(udc_ep, trb_addr);
 }
 ```
+
+### crg_handle_setup_pkt
+
+```c
+void crg_handle_setup_pkt(struct crg_gadget_dev *crg_udc,
+		struct usb_ctrlrequest *setup_pkt, u8 setup_tag)
+{
+	/* EP0 come backs to running when new setup packet comes*/
+	crg_udc->udc_ep[0].ep_state = EP_STATE_RUNNING;
+
+//标准请求，用于 SETUP 数据包的 bRequest 字段
+//这些由 bRequestType 字段限定，因此例如 TYPE_CLASS 或 TYPE_VENDOR 特定功能标志可以通过 GET_STATUS 请求检索。
+	switch (setup_pkt->bRequest) {
+	case USB_REQ_GET_STATUS:
+		// Get status request RequestType
+		getstatusrequest(crg_udc, setup_pkt->bRequestType
+					wValue, wIndex, wLength);
+			//crg_udc_build_td
+	case USB_REQ_SET_ADDRESS:
+		setaddressrequest(crg_udc, wValue, wIndex, wLength);
+	case USB_REQ_SET_SEL:
+		setselrequest(crg_udc, wValue, wIndex, wLength, wData);
+	case USB_REQ_SET_ISOCH_DELAY:
+		set_isoch_delay(crg_udc, wValue, wIndex, wLength);
+	}
+}
+```
+
+## crg_udc_build_td
+
+- 先判断是否需要完成上一次未完成的传输
+
+```c
+if (udc_req_ptr->trbs_needed)
+
+// 接着根据 trb 的类型来进行入队
+if (usb_endpoint_xfer_control(udc_ep_ptr->desc))  // 控制传输类型
+if (usb_endpoint_xfer_isoc(udc_ep_ptr->desc))     // 等时传输类型
+if (usb_endpoint_xfer_bulk(udc_ep_ptr->desc))     // 批量传输类型
+```
+
+------
+
+## UDC core 源码分析
+
+drivers/usb/gadget/udc/core.c
+
+```c
+udc_class = class_create(THIS_MODULE, "udc");
+// udc_class 这个是一个全局变量
+// 在 usb_add_gadget_udc_release 函数被使用
+```
+
+通过调用 class_create 函数，内核会在 /sys/class 目录下创建一个名为"udc"的子目录，该目录用于表示与这个设备类相关的设备。这个设备类可以被 USB gadget 驱动程序使用，以便为 USB 主机提供虚拟设备的支持。
+
+```sh
+# 在配置 UDC 时
+echo "fdd00000.crgudc2"> /sys/kernel/config/usb_gadget/amlogic/UDC 
+
+ ls sys/class/udc/
+fe320000.crgudc2
+```
+
+USB gadget 驱动程序是一种爱 linux 内核中实现 USB 设备功能的的技术，它允许将 linux 系统转换为一个虚拟的 USB 设备，以便与 USB 主机进行通信。
+
+USB gadget 驱动程序可以将 UDC（USB Device Controller）硬件接口映射到"/sys/class/udc"目录下的设备节点上。通过这个设备节点，USB gadget 驱动程序可以向 USB 主机发送各种控制信息并接收来自 USB 主机的数据。
+
+具体来说，USB gadget 驱动程序需要做以下几步操作：
+
+- 创建一个名为 “gadget” 的子目录，该目录将用于表示 USB gadget 设备。
+- 在 “gadget” 目录下创建所需的子目录，例如 “configfs” 、“strings” 等，用于描述USB gadget设备的配置。
+- 建立与“udc”设备类相关联的设备节点，并将其添加到“gadget”目录中，以表示这是一个USB gadget设备。
+- 在USB gadget驱动程序中实现相应的控制和数据传输逻辑，以便与USB主机进行通信。
+- 需要注意的是，USB gadget驱动程序的实现方式因设备类型而异，不同的设备类型需要实现不同的控制和数据传输逻辑。常见的USB gadget设备类型包括Mass Storage、Ethernet、Audio、HID等。
+
+### usb_add_gadget_udc_release
+
+```c
+ret = dev_set_name(&udc->dev, "%s", kobject_name(&parent->kobj));
+
+printk("parent->kobj.name = %s\n",  parent->kobj.name); // fe320000.crgudc2
+printk("dev_name(&udc->dev) = %s\n",  dev_name(&udc->dev)); // fe320000.crgudc2
+```
+
+
+
