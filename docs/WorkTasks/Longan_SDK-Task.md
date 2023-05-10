@@ -8,6 +8,8 @@ PARTNER_BUILD=true BOARD_NAME=longan-b1 make -j30 otapackage
 
 - 编译出错
 
+这是由于 ninja 找不到导致
+
 ```
 FileNotFoundError: [Errno 2] No such file or directory: '/mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/chromium/src/out_chromecast_longan/release/../../third_party/ninja/ninja
 ```
