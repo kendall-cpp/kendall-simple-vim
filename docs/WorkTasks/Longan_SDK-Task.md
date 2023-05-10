@@ -12,7 +12,7 @@ PARTNER_BUILD=true BOARD_NAME=longan-b1 make -j30 otapackage
 FileNotFoundError: [Errno 2] No such file or directory: '/mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/chromium/src/out_chromecast_longan/release/../../third_party/ninja/ninja
 ```
 
-- 解决
+- 问题解决
 
 ```sh
 vim chromium/src/chromecast/internal/build/guarded_ninja.py +64
