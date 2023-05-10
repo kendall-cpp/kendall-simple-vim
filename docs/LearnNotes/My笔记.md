@@ -1120,3 +1120,7 @@ int __init_memblock memblock_add_range(struct memblock_type *type,
 - .slab分配固定大小的块，块的大小通常是2^n字节。
 - slab向伙伴系统申请一定大小的物理块，然后被划分为等长的小块内存，内部的小块内存被组织成空闲链表的形式。
 - 如果收到一个分配请求，直接将current指向的slab中拿出一个空闲块。如果被分配完了，partial将取出一个slab分配给current。
+
+----
+
+

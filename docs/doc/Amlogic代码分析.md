@@ -125,7 +125,7 @@ int usb_add_gadget_udc_release(struct device *parent, struct usb_gadget *gadget,
 	/*
 	static void usb_gadget_state_work(struct work_struct *work)
 	{
-		这个函数主要目的就是将当前的 state 信息写入到 sysfs 中去。这个信息能够cat出来
+		这个函数主要目的就是将当前的 state 信息写入到 sysfs 中去。这个信息能够 cat 出来
 		 # cat ./sys/devices/platform/soc/fe320000.crgudc2/udc/fe320000.crgudc2/state
                  configured  连接
                  # cat ./sys/devices/platform/soc/fe320000.crgudc2/udc/fe320000.crgudc2/state
@@ -135,13 +135,13 @@ int usb_add_gadget_udc_release(struct device *parent, struct usb_gadget *gadget,
 	}
 	*/
 	
-	// 在USB的枚举阶段，会根据USB所处的状态调用 usb_gadget_set_state()去设置USB设备的状态。
+	// 在USB的枚举阶段，会根据USB所处的状态调用 usb_gadget_set_state() 去设置USB设备的状态。
 	usb_gadget_set_state(gadget, USB_STATE_NOTATTACHED);
 	udc->vbus = true;
 	// vbus 设置为 true ，表示 USB 控制器与 usb 总线连接，看上面的 usb_udc_connect_control
 }
 
-// 拔出插入时都会调用这个函数
+// 拔出/插入 时都会调用这个函数
 static void usb_udc_connect_control(struct usb_udc *udc)
 {
 	if (udc->vbus)
@@ -602,6 +602,8 @@ drivers/usb/gadget/udc/core.c
 udc_class = class_create(THIS_MODULE, "udc");
 // udc_class 这个是一个全局变量
 // 在 usb_add_gadget_udc_release 函数被使用
+
+class_create --> __class_create --> __class_register
 ```
 
 通过调用 class_create 函数，内核会在 /sys/class 目录下创建一个名为"udc"的子目录，该目录用于表示与这个设备类相关的设备。这个设备类可以被 USB gadget 驱动程序使用，以便为 USB 主机提供虚拟设备的支持。
@@ -618,14 +620,6 @@ USB gadget 驱动程序是一种爱 linux 内核中实现 USB 设备功能的的
 
 USB gadget 驱动程序可以将 UDC（USB Device Controller）硬件接口映射到"/sys/class/udc"目录下的设备节点上。通过这个设备节点，USB gadget 驱动程序可以向 USB 主机发送各种控制信息并接收来自 USB 主机的数据。
 
-具体来说，USB gadget 驱动程序需要做以下几步操作：
-
-- 创建一个名为 “gadget” 的子目录，该目录将用于表示 USB gadget 设备。
-- 在 “gadget” 目录下创建所需的子目录，例如 “configfs” 、“strings” 等，用于描述USB gadget设备的配置。
-- 建立与“udc”设备类相关联的设备节点，并将其添加到“gadget”目录中，以表示这是一个USB gadget设备。
-- 在USB gadget驱动程序中实现相应的控制和数据传输逻辑，以便与USB主机进行通信。
-- 需要注意的是，USB gadget驱动程序的实现方式因设备类型而异，不同的设备类型需要实现不同的控制和数据传输逻辑。常见的USB gadget设备类型包括Mass Storage、Ethernet、Audio、HID等。
-
 ### usb_add_gadget_udc_release
 
 ```c
@@ -635,5 +629,31 @@ printk("parent->kobj.name = %s\n",  parent->kobj.name); // fe320000.crgudc2
 printk("dev_name(&udc->dev) = %s\n",  dev_name(&udc->dev)); // fe320000.crgudc2
 ```
 
+-------------
 
+# phy-aml-crg-drd-otg
+
+```c
+static int amlogic_crg_otg_probe(struct platform_device *pdev)
+{
+	INIT_DELAYED_WORK(&phy->work, amlogic_crg_otg_work);
+
+	retval = request_irq(irq, amlogic_crgotg_detect_irq,
+			IRQF_SHARED, "amlogic_botg_detect", phy);
+		// 这里调用 schedule_delayed_work(&phy->work, msecs_to_jiffies(10)); 
+	
+	if (otg == 0) {
+	} else {
+		INIT_DELAYED_WORK(&phy->set_mode_work, amlogic_crg_otg_set_m_work);
+		schedule_delayed_work(&phy->set_mode_work, msecs_to_jiffies(500));
+	}
+}
+// 推迟执行
+static void amlogic_crg_otg_set_m_work(struct work_struct *work)
+{
+	set_mode(reg_addr, DEVICE_MODE, phy3_addr);
+	amlogic_m31_set_vbus_power(phy, 0)
+	crg_gadget_init();
+}
+```
 

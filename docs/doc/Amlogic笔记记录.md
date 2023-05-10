@@ -1090,3 +1090,21 @@ configfs_write_file(struct file *file, const char __user *buf, size_t count, lof
 **对于 USB 驱动而言**，当用户空间中的应用程序通过 sysfs 接口向某个 USB 设备的配置文件写入数据时（例如 `/sys/bus/usb/devices/<bus>-<port>/<configuration>/bConfigurationValue` 文件）, 内核会将这个操作映射到 configfs 文件系统的相应 VFS inode 的 write() 方法上，而 configfs 文件系统又会将这个操作转发给对应 config_item 的 write_file 回调函数，最终调用 configfs_write_file 函数来完成实际的写操作。此时，USB 驱动可以在 configfs_write_file 函数中获取到用户空间写入的数据，并据此更新设备的配置描述符或属性。 也就是说在配置 USB 的时候会调用到这个函数。
 
 需要注意的是，USB 设备通常有多个配置（configuration），每个配置包含多个接口（interface），每个接口包含多个端点（endpoint）。因此，在写入 USB 设备的配置文件时，需要同时指定配置、接口和端点等参数，才能精确地控制设备的行为。
+
+## class_create
+
+当一个新的设备驱动程序被加载到内核中时，通常会使用 class_create 来创建一个与其相关的设备类。
+
+```c
+acc_class = class_create(THIS_MODULE, "udc");
+
+class_create --> __class_create --> __class_register
+
+int __class_register(struct class *cls, struct lock_class_key *key)
+{
+	error = kobject_set_name(&cp->subsys.kobj, "%s", cls->name);
+	error = class_add_groups(class_get(cls), cls->class_groups)
+}
+```
+
+通过调用 class_create 函数，内核会在 `/sys/class` 目录下创建一个名为"`udc`"的子目录，该目录用于表示与这个设备类相关的设备。这个设备类可以被 USB gadget 驱动程序使用，以便为 USB 主机提供虚拟设备的支持。

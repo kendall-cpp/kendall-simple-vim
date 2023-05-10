@@ -447,7 +447,7 @@ adnl.exe oem "store init 1"
 adnl.exe oem "store boot_erase bootloader"
 adnl.exe oem "store erase boot 0 0"
 adnl.exe oem "store erase system 0 0"
-cat u-boot.bin.usb.bl2 u-boot.bin.usb.tpl > u-boot.bin
+# cat u-boot.bin.usb.bl2 u-boot.bin.usb.tpl > u-boot.bin
 adnl.exe Partition -P bootloader  -F  u-boot.bin
 # adnl.exe Partition -P system  -F fct_boot.img
 adnl.exe Partition -P system  -F boot-sign.img    # 自己编的kernel
