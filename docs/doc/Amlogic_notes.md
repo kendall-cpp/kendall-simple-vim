@@ -220,6 +220,14 @@ __va()：从物理地址转换为虚拟地址;
 
 __pa()：从虚拟地址转换为物理地址;
 
+## ioremap 与 iounmap
+
+- `ioremap()` 函数将物理地址范围映射到内核地址空间，以便设备驱动程序直接访问。它返回对应的虚拟地址，这个虚拟地址可以被设备驱动程序用于访问I/O内存区域。
+
+- `iounmap()` 函数执行 `ioremap()` 的相反操作，即取消已通过 `ioremap()` 映射的虚拟地址范围。取消映射后，设备驱动程序不能再使用这个虚拟地址访问I/O内存区域。
+
+在使用 ioremap() 函数映射 I/O 内存区域时，需要小心谨慎，确保映射的 I/O 内存区域不会超出设备的物理地址范围，并且在使用完成后及时调用 iounmap() 函数释放映射的虚拟地址。
+
 ## 修改 u-boot BOOTDELAY 时间
 
 ```sh
@@ -1548,13 +1556,15 @@ static void dump_pcm_setting(struct pcm_setting *setting)
 
 # 查看 uboot 传递给 kernel 的参数
 
-vim bootloader/uboot-repo/bl33/v2019$ ls include/env_default.h 
+```sh
+bootloader/uboot-repo/bl33/v2019$ ls include/env_default.h 
+```
 
 bootargs
 
-对应的 config 在 bootloader/uboot-repo/bl33/v2019/board/amlogic/  
+对应的 config 在 `bootloader/uboot-repo/bl33/v2019/board/amlogic/`  
 
-比如 bootloader/uboot-repo/bl33/v2019/board/amlogic/configs/a5_av400.h 
+比如 `bootloader/uboot-repo/bl33/v2019/board/amlogic/configs/a5_av400.h` 
 
 ```sh
 "storeargs="\
@@ -1580,8 +1590,285 @@ module_param(uac_irq_cnt, uint, 0444);
 MODULE_PARM_DESC(uac_irq_cnt, "uac irq cnt");
 ```
 
-cat /sys/module/u_audio/parameters/uac_irq_cnt
+`cat /sys/module/u_audio/parameters/uac_irq_cnt`
 
+# uboot 和 kernel 启动时间
+
+> 基于 ba400 测试 
+> 记录系统时间寄存器  
+> SYSCTRL_TIMERE    
+> #define SYSCTRL_TIMERE                             ((0x0041  << 2) + 0xfe005800)
+
+## 打印 uboot 启动时间
+
+```c
+//打印时间文件
+// bootloader/uboot-repo/bl33/v2019/arch/arm/lib/bootm.c
+static void boot_jump_linux(bootm_headers_t *images, int flag)
+{
+  printf("uboot time: %u us\n", get_time());
+}
+
+uint32_t get_time(void)
+{
+  extern uint32_t get_time(void);
+  return readl(SYSCTRL_TIMERE);  // 记录时间的寄存器
+}
+```
+
+- 打印结果
+
+```
+uboot time: 1464469 us
+```
+
+- 从 uboot 跳到 kernel 启动函数
+
+```c
+if (images->os.arch == IH_ARCH_ARM) {
+  pr_info("boot 32bit kernel\n");
+  jump_to_a32_kernel(images->ep, machid, (unsigned long)images->ft_addr);
+}
+esle {
+  pr_info("boot 64bit kernel\n");
+  kernel_entry(images->ft_addr, NULL, NULL, NULL);
+}
+```
+
+## 打印 boot.img 镜像读取时间
+
+```c
+U_BOOT_CMD(
+  imgread,         //command name
+  5,               //maxargs
+  0,               //repeatable
+  do_image_read,   //command function
+)
+// 调用 do_image_read 读取 boot.img , dtb 这些镜像
+static int do_image_read(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]
+{
+  c = find_cmd_tbl(argv[0], &cmd_imgread_sub[0], ARRAY_SIZE(cmd_imgread_sub));
+}
+
+static cmd_tbl_t cmd_imgread_sub[] = {
+  U_BOOT_CMD_MKENT(kernel, 4, 0, do_image_read_kernel, "", ""),
+  U_BOOT_CMD_MKENT(dtb,    4, 0, do_image_read_dtb, "", ""),
+  U_BOOT_CMD_MKENT(res,    3, 0, do_image_read_res, "", ""),
+  U_BOOT_CMD_MKENT(pic,    4, 0, do_image_read_pic, "", ""),
+}
+```
+
+- 打印时间 patch
+
+```patch
+--- a/cmd/amlogic/imgread.c
++++ b/cmd/amlogic/imgread.c
+@@ -416,6 +416,7 @@ static int do_image_read_dtb(cmd_tbl_t *cmdtp, int flag, int argc, char * const
+     return iRet;
+ }
+ 
++extern uint32_t get_time(void);
+ static int do_image_read_kernel(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
+ {
+     unsigned    kernel_size;
+@@ -431,6 +432,7 @@ static int do_image_read_kernel(cmd_tbl_t *cmdtp, int flag, int argc, char * con
+        u32 securekernelimgsz = 0;
+        char *upgrade_step_s = NULL;
+        bool cache_flag = false;
++       uint32_t ttt = 0;
+ 
+        if (argc > 2)
+                loadaddr = (unsigned char *)simple_strtoul(argv[2], NULL, 16);
+@@ -466,6 +468,8 @@ static int do_image_read_kernel(cmd_tbl_t *cmdtp, int flag, int argc, char * con
+ 
+        if (!cache_flag) {
+                MsgP("read from part: %s\n", partname);
++               ttt = get_time();
++               pr_alert("start read boot.img : %u us\n", get_time());
+                rc = store_logic_read(partname, flashreadoff, IMG_PRELOAD_SZ, loadaddr);
+                if (rc) {
+                        errorP("Fail to read 0x%xB from part[%s] at offset 0\n",
+@@ -534,6 +538,8 @@ static int do_image_read_kernel(cmd_tbl_t *cmdtp, int flag, int argc, char * con
+                                return __LINE__;
+                        }
+                }
++               pr_alert("end read boot.img : %u us\n", get_time());
++               pr_alert("total read boot.img time: %u us\n", get_time() - ttt);
+                debugP("totalSz=0x%x\n", actualbootimgsz);
+ 
+                //because secure boot will use DMA which need disable MMU tem
+```
+
+- 打印结果
+
+```
+start read boot.img : 1061436 us
+end read boot.img : 1142386 us
+total read boot.img time: 80958 us
+```
+
+## 打印 board_init_f 花费时间
+
+<strong><font color="orange" size="4">
+board_init_f 的功能
+</font></strong>
+
+
+- 初始化一系列外设，比如串口、定时器，或者打印一些消息等。
+- 初始化 gd 的各个成员变量，uboot 会将自己重定位到 DRAM 最后面的地址区域，也就是将自己拷贝到 DRAM 最后面的内存区域中。这么做的目的是给 Linux 腾出空间，防止 Linuxkernel 覆盖掉 uboot，将 DRAM 前面的区域完整的空出来。在拷贝之前肯定要给 uboot 各部分分配好内存位置和大小，比如 gd 应该存放到哪个位置，malloc 内存池应该存放到哪个位置等等。这些信息都保存在 gd 的成员变量中，因此要对 gd 的这些成员变量做初始化。
+
+```c
+void board_init_f(ulong boot_flags
+{
+  if (initcall_run_list(init_sequence_f))  // 这个数组中成员 setup_dest_addr,
+}
+static int setup_dest_addr(void)
+{
+  printf("gd->ram_size = %llx\r\n", gd->ram_size); //MMU 的 TLB 表大小
+  printf("gd->ram_top = %lx\r\n", gd->ram_top);  //MMU 的 TLB 表起始地址，64KB 对齐以后
+  printf("gd->relocaddr = %lx\r\n", gd->relocaddr); //relocaddr 地址
+}
+
+// gd->ram_size = 7f800000
+// gd->ram_top = 3f800000
+// gd->relocaddr = 3f800000
+```
+
+- 打印时间 patch
+
+```patch
+--- a/common/board_f.c
++++ b/common/board_f.c
+@@ -987,6 +991,14 @@ __weak int arch_cpu_init_dm(void)
+        return 0;
+ }
+ 
++uint32_t f_start, f_end;
++extern uint32_t get_time(void);
++static int end_record(void)
++{
++       f_end = get_time();
++       pr_alert("board_init_f time %u us - %u us = %u us\n", f_end, f_start, f_end - f_start);
++       return 0;
++}
+ static const init_fnc_t init_sequence_f[] = {
+        setup_mon_len,
+ #ifdef CONFIG_OF_CONTROL
+@@ -1132,6 +1144,7 @@ static const init_fnc_t init_sequence_f[] = {
+ #if defined(CONFIG_XTENSA)
+        clear_bss,
+ #endif
++       end_record,
+ #if !defined(CONFIG_ARM) && !defined(CONFIG_SANDBOX) && \
+                !CONFIG_IS_ENABLED(X86_64)
+        jump_to_copy,
+@@ -1144,6 +1157,7 @@ void board_init_f(ulong boot_flags)
+        gd->flags = boot_flags;
+        gd->have_console = 0;
+ 
++       f_start = get_time();
+        if (initcall_run_list(init_sequence_f))
+                hang();
+```
+
+- 打印结果
+
+```
+board_init_f time 724525 us - 645680 us = 78845 us
+```
+
+## board_init_r 花费时间
+
+```patch
+--- a/common/board_r.c
++++ b/common/board_r.c
+@@ -688,6 +688,14 @@ static int run_main_loop(void)
+  *
+  * TODO: perhaps reset the watchdog in the initcall function after each call?
+  */
++uint32_t r_start, r_end;
++extern uint32_t get_time(void);
++static int end_record(void)
++{
++       r_end = get_time();
++       pr_alert("board_init_r time %u us - %u us = %u us\n", r_end, r_start, r_end - r_start);
++       return 0;
++}
+ static init_fnc_t init_sequence_r[] = {
+        initr_trace,
+        initr_reloc,
+@@ -885,6 +893,7 @@ static init_fnc_t init_sequence_r[] = {
+ #if defined(CONFIG_PRAM)
+        initr_mem,
+ #endif
++       end_record,
+        run_main_loop,
+ };
+ 
+@@ -896,6 +905,7 @@ void board_init_r(gd_t *new_gd, ulong dest_addr)
+         * TODO(sjg@chromium.org): Consider doing this for all archs, or
+         * dropping the new_gd parameter.
+         */
++       r_start = get_time();
+ #if CONFIG_IS_ENABLED(X86_64)
+        arch_setup_gd(new_gd);
+ #endif
+```
+
+- 打印结果
+
+```
+board_init_r time 932058 us - 751193 us = 180865 us
+
+```
+
+## kernel 打印uac启动完成，声卡注册完成的时间
+
+- ktime_get 获取从内核启动开始的时间
+- SYSCTRL_TIMERE 记录的是从上电开始的时间???
+
+```patch
+--- a/drivers/usb/gadget/function/u_audio.c
++++ b/drivers/usb/gadget/function/u_audio.c
+@@ -28,6 +28,7 @@
+ #define PRD_SIZE_MAX   PAGE_SIZE
+ #define MIN_PERIODS    4
+ #define TSBUF_LEN_MAX  (5000 * sizeof(u64))
++#define SYSCTRL_TIMERE                             ((0x0041  << 2) + 0xfe005800)
+ 
+ #define USB_TIMESTAMP 1
+ #define PROC_FOPS_FROM_OPEN(open_op)                                           \
+@@ -1060,6 +1061,8 @@ int g_audio_setup(struct g_audio *g_audio, const char *pcm_name,
+        struct uac_params *params;
+        int p_chmask, c_chmask;
+        int err;
++       void __iomem *time_addr;
++       u32 time_val_us = 0;
+ 
+        if (!g_audio)
+                return -EINVAL;
+@@ -1151,6 +1154,13 @@ int g_audio_setup(struct g_audio *g_audio, const char *pcm_name,
+ 
+        err = snd_card_register(card);
+ 
++       time_addr = ioremap_nocache(SYSCTRL_TIMERE, 4);
++       time_val_us = readl(time_addr);
++       printk(KERN_WARNING"uac register and start time : %d us. lsken00\n", time_val_us);
++       iounmap(time_addr);
++
++       printk("lsken00 ktime_get = %lld \n", ktime_get()); //从kernel启动开始记录时间，和dmesg 前面的时间戳对应
++
+        if (err)
+                goto snd_fail;
+ #if USB_TIMESTAMP
+```
+
+- 打印结果
+
+```
+[    8.604213@1]  uac register and start time : 262143 us. lsken00
+[    8.604267@1]  lsken00 ktime_get = 8603044754
+```
 
 # korlan 中 HIFI 调试
 

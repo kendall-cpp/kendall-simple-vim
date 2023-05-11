@@ -33,7 +33,7 @@
   - [buildroot整理](#buildroot整理)
   - [开始测试](#开始测试)
     - [修改代码-使得 vsi 能够在 av400 中测试](#修改代码-使得-vsi-能够在-av400-中测试)
-    - [insmod galcore时 error](#insmod-galcore时-error)
+    - [insmod galcore 时 error](#insmod-galcore-时-error)
       - [fix](#fix)
     - [编译 case 模型时出错](#编译-case-模型时出错)
     - [重新编译 FPN\_be 修改 optimize](#重新编译-fpn_be-修改-optimize)
@@ -1091,7 +1091,7 @@ int gckPLATFORM_Init(struct platform_driver *pdrv, gcsPLATFORM **platform)
 ```
 
 
-### insmod galcore时 error
+### insmod galcore 时 error
 
 ```sh
 # insmod /data/galcore.ko
@@ -1881,8 +1881,6 @@ In addition, the kernel and toolchain I used to compile galcore.ko are respectiv
 The toolchain used to compile the related lib so is: `gcc-linaro-6.3.1-2017.02-x86_64_arm-linux-gnueabihf `
 
 And I have attached my compile script, please check: build_ml.sh & acuity-ovxlib-dev/build_vx.sh
-
-
 
 
 - 回复邮件

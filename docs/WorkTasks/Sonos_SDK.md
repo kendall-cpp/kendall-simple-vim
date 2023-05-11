@@ -146,7 +146,7 @@ https://confluence.amlogic.com/pages/viewpage.action?pageId=225027291#Test&Tools
 https://optee.readthedocs.io/en/latest/building/gits/optee_test.html
 
 
-## 烧录完成后编译进不去kernel
+## 烧录完成后编译进不去 kernel
 
 - 进入 uboot
 

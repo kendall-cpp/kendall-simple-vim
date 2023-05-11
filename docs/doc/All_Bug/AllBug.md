@@ -628,11 +628,20 @@ issue: https://partnerissuetracker.corp.google.com/issues/246404063#comment2
 
 # AV400 NN 模型测试
 
+只需要在 /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon 路径下切换分支就可以了
+
+```sh
+$ git branch 
+* 6.4.11.2
+  6.4.2
+  6.4.9
+```
+
 > https://jira.amlogic.com/browse/GH-3183
 
 ## 修改 vsi 编译工具和kernel地址
 
-```sh
+```
 参考 /mnt/fileroot/shengken.lin/workspace/a5_buildroot/hardware/aml-5.4/npu/nanoq 下面的文件
 aml_buildroot.sh makefile.linux 
 修改 build_ml.sh acuity-ovxlib-dev/build_vx.sh
@@ -641,7 +650,7 @@ aml_buildroot.sh makefile.linux
 
 ### 对应 buildroot 配置文件
 
-```sh
+```
 在这里去找 /mnt/fileroot/shengken.lin/workspace/a5_buildroot/buildroot/configs/amlogic/arch_a6432_10.3_7.3.1.config  应用所用的编译器 和 kernel 的编译器
 vim package/amlogic/npu/npu.mk  找编译 npu 的编译脚本
 
@@ -656,7 +665,6 @@ vim package/amlogic/npu/npu.mk  找编译 npu 的编译脚本
 cd verisilicon
 ./build_ml.sh arm64 spencer-p2 ./../../chrome
 ```
-
 
 ### 关于 so lib Errro
 
