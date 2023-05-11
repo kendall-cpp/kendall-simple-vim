@@ -1825,7 +1825,7 @@ board_init_r time 932058 us - 751193 us = 180865 us
 ## kernel 打印uac启动完成，声卡注册完成的时间
 
 - ktime_get 获取从内核启动开始的时间
-- SYSCTRL_TIMERE 记录的是从上电开始的时间???
+- SYSCTRL_TIMERE 记录的是从上电开始的时间，但是的注意这个寄存器是 64 位的。
 
 ```patch
 --- a/drivers/usb/gadget/function/u_audio.c
@@ -1853,10 +1853,10 @@ board_init_r time 932058 us - 751193 us = 180865 us
  
 +       time_addr = ioremap_nocache(SYSCTRL_TIMERE, 4);
 +       time_val_us = readl(time_addr);
-+       printk(KERN_WARNING"uac register and start time : %d us. lsken00\n", time_val_us);
++       printk("uac register and start time : %d us. lsken00\n", time_val_us);
 +       iounmap(time_addr);
 +
-+       printk("lsken00 ktime_get = %lld \n", ktime_get()); //从kernel启动开始记录时间，和dmesg 前面的时间戳对应
++       printk("lsken00 ktime_get = %lld \n", ktime_get());                                                  //从kernel启动开始记录时间，和dmesg 前面的时间戳对应
 +
         if (err)
                 goto snd_fail;
@@ -1868,6 +1868,40 @@ board_init_r time 932058 us - 751193 us = 180865 us
 ```
 [    8.604213@1]  uac register and start time : 262143 us. lsken00
 [    8.604267@1]  lsken00 ktime_get = 8603044754
+```
+
+- 参考 A1 timestamp
+
+```c
+static u64 meson_timestamp_hw_get(void __iomem *vaddr)
+{
+	unsigned long flags;
+	u64 low, high, low2;
+
+	spin_lock_irqsave(&lock, flags);
+	low = readl_relaxed(vaddr);
+	high = readl_relaxed(vaddr + 4);
+
+	// If low 32bit flipped, read timestamp again.
+	low2 = readl_relaxed(vaddr);
+
+	if (low > low2) {
+		low = low2;
+		high = readl_relaxed(vaddr + 4);
+	}
+
+	spin_unlock_irqrestore(&lock, flags);
+	return (high << 32) + low;
+}
+
+u64 meson_timestamp(void)
+{
+	if (!aml_tdev)
+		return 0;
+
+	return meson_timestamp_hw_get(aml_tdev->base);   // 使用
+  // pr_info(" kendall ========>>> Kernel TE entry: %llu\n", meson_timestamp_hw_get(tdev->base));
+}
 ```
 
 # korlan 中 HIFI 调试

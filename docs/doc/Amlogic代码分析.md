@@ -657,3 +657,30 @@ static void amlogic_crg_otg_set_m_work(struct work_struct *work)
 }
 ```
 
+# USB 的各个结构体
+
+```c
+struct crg_udc_ep {
+	struct usb_ep usb_ep;  // USB 端点
+
+	struct buffer_info tran_ring_info;
+	struct transfer_trb_s *first_trb;
+	struct transfer_trb_s *last_trb;
+
+	struct transfer_trb_s *enq_pt;
+	struct transfer_trb_s *deq_pt;
+	u8 pcs;
+
+	char name[10];
+	u8 DCI;
+	struct list_head queue;
+	const struct usb_endpoint_descriptor *desc;
+	const struct usb_ss_ep_comp_descriptor *comp_desc;
+	bool tran_ring_full;
+	struct crg_gadget_dev *crg_udc;
+
+	int ep_state;
+
+	unsigned wedge:1;
+};
+```
