@@ -224,6 +224,11 @@ __pa()：从虚拟地址转换为物理地址;
 
 - `ioremap()` 函数将物理地址范围映射到内核地址空间，以便设备驱动程序直接访问。它返回对应的虚拟地址，这个虚拟地址可以被设备驱动程序用于访问I/O内存区域。
 
+```c
+ioremap_nocache(SYSCTRL_TIMERE, 4)  // 映射 4 个字节，
+ioremap_nocache(SYSCTRL_TIMERE, 0x14)  // 映射 20 个字节
+```
+
 - `iounmap()` 函数执行 `ioremap()` 的相反操作，即取消已通过 `ioremap()` 映射的虚拟地址范围。取消映射后，设备驱动程序不能再使用这个虚拟地址访问I/O内存区域。
 
 在使用 ioremap() 函数映射 I/O 内存区域时，需要小心谨慎，确保映射的 I/O 内存区域不会超出设备的物理地址范围，并且在使用完成后及时调用 iounmap() 函数释放映射的虚拟地址。
@@ -1822,7 +1827,7 @@ board_init_r time 932058 us - 751193 us = 180865 us
 
 ```
 
-## kernel 打印uac启动完成，声卡注册完成的时间
+## kernel 打印 uac 启动完成，声卡注册完成的时间
 
 - ktime_get 获取从内核启动开始的时间
 - SYSCTRL_TIMERE 记录的是从上电开始的时间，但是的注意这个寄存器是 64 位的。
@@ -1830,7 +1835,15 @@ board_init_r time 932058 us - 751193 us = 180865 us
 ```patch
 --- a/drivers/usb/gadget/function/u_audio.c
 +++ b/drivers/usb/gadget/function/u_audio.c
-@@ -28,6 +28,7 @@
+@@ -21,6 +21,7 @@
+ #include <linux/debugfs.h>
+ #include <linux/debugfs.h>
+ #include <linux/amlogic/usb-v2.h>
++#include <linux/io.h>
+ 
+ #include "u_audio.h"
+ 
+@@ -28,6 +29,7 @@
  #define PRD_SIZE_MAX   PAGE_SIZE
  #define MIN_PERIODS    4
  #define TSBUF_LEN_MAX  (5000 * sizeof(u64))
@@ -1838,25 +1851,52 @@ board_init_r time 932058 us - 751193 us = 180865 us
  
  #define USB_TIMESTAMP 1
  #define PROC_FOPS_FROM_OPEN(open_op)                                           \
-@@ -1060,6 +1061,8 @@ int g_audio_setup(struct g_audio *g_audio, const char *pcm_name,
+@@ -1051,6 +1053,24 @@ void usb_change_status(int on_off)
+        }
+ }
+ 
++static u64 meson_timestamp_hw_get(void __iomem *vaddr)
++{
++       u64 low, high, low2;
++
++       low = readl_relaxed(vaddr);
++       high = readl_relaxed(vaddr + 4);
++
++       // If low 32bit flipped, read timestamp again.
++       low2 = readl_relaxed(vaddr);
++
++       if (low > low2) {
++               low = low2;
++               high = readl_relaxed(vaddr + 4);
++       }
++
++       return (high << 32) + low;
++}
++
+ int g_audio_setup(struct g_audio *g_audio, const char *pcm_name,
+                                        const char *card_name)
+ {
+@@ -1060,6 +1080,9 @@ int g_audio_setup(struct g_audio *g_audio, const char *pcm_name,
         struct uac_params *params;
         int p_chmask, c_chmask;
         int err;
 +       void __iomem *time_addr;
-+       u32 time_val_us = 0;
++       u32 time_low = 0;
++       u64 time_high = 0;
  
         if (!g_audio)
                 return -EINVAL;
-@@ -1151,6 +1154,13 @@ int g_audio_setup(struct g_audio *g_audio, const char *pcm_name,
+@@ -1151,6 +1174,14 @@ int g_audio_setup(struct g_audio *g_audio, const char *pcm_name,
  
         err = snd_card_register(card);
  
-+       time_addr = ioremap_nocache(SYSCTRL_TIMERE, 4);
-+       time_val_us = readl(time_addr);
-+       printk("uac register and start time : %d us. lsken00\n", time_val_us);
++       time_addr = ioremap_nocache(SYSCTRL_TIMERE, 8);
++       time_low = readl_relaxed(time_addr);
++       time_high = readl_relaxed(time_addr + 4);
++       printk("uac register and start time : %lld us. lsken00\n", meson_timestamp_hw_get(time_addr));
 +       iounmap(time_addr);
 +
-+       printk("lsken00 ktime_get = %lld \n", ktime_get());                                                  //从kernel启动开始记录时间，和dmesg 前面的时间戳对应
++       printk("lsken00 ktime_get = %lld \n", ktime_get());
 +
         if (err)
                 goto snd_fail;

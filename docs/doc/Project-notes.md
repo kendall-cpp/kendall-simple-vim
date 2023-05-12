@@ -438,6 +438,7 @@ adnl.exe Partition -P system_1  -F erofs.img
 # 关闭工厂模式 如果之前设置了工厂模式
 # adnl.exe oem "store erase fts  0 0"
 
+
 # 烧录工厂模式
 adnl.exe  Download u-boot.bin 0x10000  
 adnl.exe run
@@ -645,6 +646,12 @@ board/amlogic/defconfigs/a1_korlan_b1_defconfig
 
 mount -t ubifs ubi7:cache /data/ -o noexec,rw,nosuid,nodev,noatime;
 ```
+
+## korlan 出现 UBIF 无法挂载问题
+
+这种问题可以选择烧录工厂模式清空之后再重新烧录正常的镜像
+
+> UBIFS error (ubi7:0 pid 1451): ubifs_read_node: bad node at LEB 20:40376, LEB mapping status 0
 
 ## audio工具
 

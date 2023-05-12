@@ -798,6 +798,25 @@ verisilicon-6.4.11.2/build/sdk/drivers
 - 所有的 topic cls : https://eureka-partner-review.googlesource.com/q/topic:%22verisilicon-6.4.11.2%22
 - 给 google 的文档：https://docs.google.com/document/d/1JTUCzPwTrY9xw1cA3fbS8vDJmZ5PMTw6JBZGAIk51Ts/edit#
 
+
+## NN 修改编译动态库与静态库
+
+主要是通过这个  BUILD_OPTION_gcdSTATIC_LINK 变脸来控制的。
+
+```patch
+--- a/build_ml.sh
++++ b/build_ml.sh
+@@ -447,7 +447,7 @@ mkdir -p ${LIBRARY_PATH}
+ if [ ${BUILD_OPTION_gcdSTATIC_LINK} == "1" ]; then
+   LIB_SUFFIX=a
+ else
+-  LIB_SUFFIX=so
++  LIB_SUFFIX=a
+ fi
+ 
+ if [ ${BUILD_OPTION_USE_VSC_LITE} == "1" ]; then
+```
+
 ---
 
 # C3 AW409 

@@ -30,7 +30,7 @@
 	- [git format-patch：生成commit的内容](#git-format-patch生成commit的内容)
 	- [检查 patch](#检查-patch)
 	- [git am 对应 git format-patch](#git-am-对应-git-format-patch)
-	- [git apply 与 git am的区别](#git-apply-与-git-am的区别)
+	- [git apply 与 git am 的区别](#git-apply-与-git-am-的区别)
 	- [打patch发生冲突](#打patch发生冲突)
 		- [强制打上 patch](#强制打上-patch)
 	- [patch 例子](#patch-例子)
@@ -522,7 +522,7 @@ git am --abort
 git am --resolved
 ```
 
-### git apply 与 git am的区别
+### git apply 与 git am 的区别
 
 - git apply 只更新改动内容，打完之后需要自己 git add 和  git commit
 
@@ -615,7 +615,7 @@ git cherry-pick --quit   // 3. 不想解决冲突，放弃合并，且保持现�
 
 ## 查看某个文件的修改记录
 
-git log --pretty --oneline xxxx
+git log --pretty --oneline xarch/arm64/boot/dts/amlogic/a4_a113l2_ba400.dtsxxx
 
 ---
 
