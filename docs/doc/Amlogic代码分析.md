@@ -657,30 +657,60 @@ static void amlogic_crg_otg_set_m_work(struct work_struct *work)
 }
 ```
 
-# USB 的各个结构体
+-----
+
+# 关于 HIFIPLL 代码分析
+
+# aml_tdm_br_tick_control
 
 ```c
-struct crg_udc_ep {
-	struct usb_ep usb_ep;  // USB 端点
+// tick_len = 当前读的位置 减去 上一次读的位置
+int aml_tdm_br_tick_control(struct aml_tdm *p_tdm, int tick_len)
+{
+	int irq_cnt_div = 10;//(tb_c.rate/48000)*10;
+	int len_diff_thrd = 0;
+	int len_diff = 0;
 
-	struct buffer_info tran_ring_info;
-	struct transfer_trb_s *first_trb;
-	struct transfer_trb_s *last_trb;
+	len_diff_thrd = tb_c.size_1ms * 2;  // (4 * 48000) / 1000
+	tdm_cached_data = aml_tdm_br_dmabuf_cached_size();
 
-	struct transfer_trb_s *enq_pt;
-	struct transfer_trb_s *deq_pt;
-	u8 pcs;
+	sum_tick_len += tick_len;  // sum_tick_len 记录每个 sum_tick_len 的和
+	if (tdm_irq_cnt <= irq_cnt_div) {
+		tb_c.start_cache_size = tdm_cached_data;
+		irq_start_tm = meson_timestamp();
+		sum_tick_len = 0;
+	} else if (!man_ppm && (tdm_irq_cnt % irq_cnt_div) == 0) {
 
-	char name[10];
-	u8 DCI;
-	struct list_head queue;
-	const struct usb_endpoint_descriptor *desc;
-	const struct usb_ss_ep_comp_descriptor *comp_desc;
-	bool tran_ring_full;
-	struct crg_gadget_dev *crg_udc;
+		len_diff = tdm_cached_data - tb_c.start_cache_size;
 
-	int ep_state;
+		//adjust the ppm acording the data len difference between TDM and UAC.
+		if (abs(len_diff) > len_diff_thrd) {
+			ppm_con.offset = ppm_step;
+			if (len_diff < 0)
+				ppm_con.offset = 0 - ppm_con.offset;
+			HIFIPLL_change_ppm(&ppm_con);
+		} else if (abs(len_diff) <= tb_c.size_1ms) {
+			if (ppm_con.oflsken00_fset) {
+				ppm_con.offset = 0;
+				HIFIPLL_change_ppm(&ppm_con);
+			}
+		}
 
-	unsigned wedge:1;
-};
+		pr_br_cnt++;
+		if (!(pr_br_cnt % 200))
+			pr_info("tdm_br. cachedSz:%d bytes\n", tdm_cached_data);
+
+		sum_tick_len = 0;
+	} else if (man_ppm) {
+		if (ppm_con.ppm_steps != cur_ppm_steps) {
+			cur_centi_ppm = cur_ppm_steps * 16 * 100;
+			ppm_con.cur_ppm = cur_ppm_steps * 16;
+		}
+		ppm_con.offset = ppm_con.cur_ppm - ppm_con.ppm_def;
+		HIFIPLL_change_ppm(&ppm_con);
+	}
+
+	return 0;
+}
+
 ```
