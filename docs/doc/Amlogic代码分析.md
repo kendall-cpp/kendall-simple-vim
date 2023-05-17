@@ -667,7 +667,7 @@ static void amlogic_crg_otg_set_m_work(struct work_struct *work)
 // tick_len = 当前读的位置 减去 上一次读的位置
 int aml_tdm_br_tick_control(struct aml_tdm *p_tdm, int tick_len)
 {
-	int irq_cnt_div = 10;//(tb_c.rate/48000)*10;
+	int irq_cnt_div = 10;//(tb_c.rate/48000)*10; 48000 / 48000 * 10
 	int len_diff_thrd = 0;
 	int len_diff = 0;
 
@@ -675,17 +675,17 @@ int aml_tdm_br_tick_control(struct aml_tdm *p_tdm, int tick_len)
 	tdm_cached_data = aml_tdm_br_dmabuf_cached_size();
 
 	sum_tick_len += tick_len;  // sum_tick_len 记录每个 sum_tick_len 的和
-	if (tdm_irq_cnt <= irq_cnt_div) {
+	if (tdm_irq_cnt <= irq_cnt_div) { // 大于 10 才需要去调整 ppm 与 UAC
 		tb_c.start_cache_size = tdm_cached_data;
 		irq_start_tm = meson_timestamp();
 		sum_tick_len = 0;
-	} else if (!man_ppm && (tdm_irq_cnt % irq_cnt_div) == 0) {
+	} else if (!man_ppm && (tdm_irq_cnt % irq_cnt_div) == 0) { // man_ppm = 0 通过程序算法auto 调整
 
 		len_diff = tdm_cached_data - tb_c.start_cache_size;
 
 		//adjust the ppm acording the data len difference between TDM and UAC.
 		if (abs(len_diff) > len_diff_thrd) {
-			ppm_con.offset = ppm_step;
+			ppm_con.offset = ppm_step;   // 设置成 50
 			if (len_diff < 0)
 				ppm_con.offset = 0 - ppm_con.offset;
 			HIFIPLL_change_ppm(&ppm_con);
@@ -702,11 +702,12 @@ int aml_tdm_br_tick_control(struct aml_tdm *p_tdm, int tick_len)
 
 		sum_tick_len = 0;
 	} else if (man_ppm) {
-		if (ppm_con.ppm_steps != cur_ppm_steps) {
+		if (ppm_con.ppm_steps != cur_ppm_steps) {   // 这个值是 app 改变的
 			cur_centi_ppm = cur_ppm_steps * 16 * 100;
 			ppm_con.cur_ppm = cur_ppm_steps * 16;
 		}
 		ppm_con.offset = ppm_con.cur_ppm - ppm_con.ppm_def;
+			// ppm_con.ppm_def HIFIPLL_get_centi_ppm()/100
 		HIFIPLL_change_ppm(&ppm_con);
 	}
 
@@ -714,3 +715,43 @@ int aml_tdm_br_tick_control(struct aml_tdm *p_tdm, int tick_len)
 }
 
 ```
+
+- cur_ppm_steps : 这个值是 app 改变的, kernel 中并没有赋值， 默认是 0
+- cur_centi_ppm ： HIFIPLL_get_centi_ppm 获取的值， 
+  - probe 函数：  cur_centi_ppm = ppm_con.cur_ppm * 100;
+  - aml_tdm_br_tick_control 函数： cur_centi_ppm = cur_ppm_steps * 16 * 100; （man_ppm == 1 的前提下，用于 debug）
+
+- **手动 debug ppm**
+
+当 `echo 1 > /sys/module/snd_soc/parameters/man_ppm` 时
+
+设置 `echo 20 >  /sys/module/snd_soc/parameters/cur_ppm_steps` 的值就会执行下面这里的代码
+
+```c
+if (ppm_con.ppm_steps != cur_ppm_steps) {
+	cur_centi_ppm = cur_ppm_steps * 16 * 100;
+	ppm_con.cur_ppm = cur_ppm_steps * 16;
+}
+ppm_con.offset = ppm_con.cur_ppm - ppm_con.ppm_def;
+HIFIPLL_change_ppm(&ppm_con);  // 这个函数一旦调整， cur_ppm_steps 就 等于 ppm_con.ppm_steps
+```
+
+- **总结**
+
+我们只需要修改下面的值
+
+- man_ppm = 0 ： 算法 HIFIPLL_change_ppm 自动调整
+- cur_ppm_steps ： 修改这个值，APP 也是修改这个值，这个值可以决定 HIFI_CTRL1_OFFSET 寄存器中的值，也决定 cur_centi_ppm 和 ppm 的值
+- cur_centi_ppm ： 这个值只能读，不能修改，它是 HIFI_CTRL1_OFFSET 中的值 *100
+  - HIFI_CTRL1_OFFSET 寄存器中的值就是 ppm
+
+## HIFIPLL_change_ppm 函数
+
+这个函数是将 ppm 的值计算出来写进寄存器 HIFI_CTRL1_OFFSET 。
+
+所以寄存器 HIFI_CTRL1_OFFSET 中存的值是 ppm 。
+
+## HIFIPLL_get_centi_ppm 函数
+
+这个函数是从寄存器 HIFI_CTRL1_OFFSET 中的值读出来，（也就是读出来的值 ppm * 100 ） , 就是 cur_centi_ppm
+

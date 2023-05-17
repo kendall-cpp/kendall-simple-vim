@@ -1992,17 +1992,27 @@ cur_centi_ppm = ppm_con.cur_ppm * 100;  // 用于google的算法调试
 - tdm_cached_data： 还在 DMA 中未被 TDMB FIFO 读的 data 长度，app 根据这个值来调节 cur_centi_ppm 。
 
 
-cur_centi_ppm：ppm * 100
+- cur_centi_ppm：ppm * 100   (ppm : ppm_con.ppm_def = HIFIPLL_get_centi_ppm()/100;)
 
-tdm_cached_data ：TDMB FIFO 已经从 DMA buffer 中读取的 uac 数据
+- tdm_cached_data ：TDMB FIFO 已经从 DMA buffer 中读取的 uac 数据
 
-tdm_irq_cnt : TDMB FIFO 读取 DMA buffer 的中断数
+- tdm_irq_cnt : TDMB FIFO 读取 DMA buffer 的中断数
 
 man_ppm
 - 1： 应用层可以调节 ppm
 - 0： 自动调节 ppm
 
 start_playing_threshold : 默认值 10，表示刚开始播放时需要判断， tdm_cached_data 的数据 $>=10ms$ 的数据时 （$192 \times 10 \ bytes$）
+
+- **总结**
+
+我们只需要修改下面的值
+
+- man_ppm = 0 ： 算法 HIFIPLL_change_ppm 自动调整
+- cur_ppm_steps ： 修改这个值，APP 也是修改这个值，这个值可以决定 HIFI_CTRL1_OFFSET 寄存器中的值，也决定 cur_centi_ppm 和 ppm 的值
+- cur_centi_ppm ： 这个值只能读，不能修改，它是 HIFI_CTRL1_OFFSET 中的值 *100
+  - HIFI_CTRL1_OFFSET 寄存器中的值就是 ppm
+
 
 > **yuegui 提供图片参考**
 
@@ -2146,4 +2156,16 @@ isochronous transfers （`/aɪˈsɑːkrənəs/`） 和 USB 的 SOF 包之间有�
 代码分析见 [Amlogic代码分析 - crg 控制器分析](doc/Amlogic代码分析?id=crg-控制器分析)
 </font></strong>
 
+
+----
+
+# tdm 驱动
+
+## audio 时钟
+
+- 先生成 6 个主 mclk
+- 然后通过 mclk 生成 3个不同阶段的 sclk / lrclk 
+  - phase0 for pad(device);
+  - phase1 for tdmin;
+  - phase2 for tdmout;
 

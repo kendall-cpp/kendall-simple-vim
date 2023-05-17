@@ -255,7 +255,7 @@ git stash    保存现场，还原到上一个时刻
 
 git stash save "mystash"  保存现场，并命名为 mystash，同时还原到上一个时刻
 
-gir stash list   查看所有保存的现场
+git stash list   查看所有保存的现场
 
 git stash pop    后面不跟stash id, 还原到上一个现场，同时删除上一个现场
 
