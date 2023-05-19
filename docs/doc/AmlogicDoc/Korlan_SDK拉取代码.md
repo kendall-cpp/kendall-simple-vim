@@ -117,6 +117,7 @@ What is your project-id?  google.com:eureka-builds
 ### 拉取 chrome 代码
 
 ```sh
+google-repo-sync
 mkdir eureka && cd eureka
 mkdir chrome && cd chrome
 repo init -u https://eureka-partner.googlesource.com/amlogic/manifest -m default.xml
@@ -156,6 +157,7 @@ git" "-c" "core.deltaBaseCacheLimit=2g" "clone" "--no-checkout" "--progress" "ht
 ### Korlan
 
 ```sh
+google-repo-sync
 cd eureka && mkdir amlogic_sdk
 repo init -u https://eureka-partner.googlesource.com/amlogic/manifest -b korlan-master -m combined_sdk.xml
 repo sync

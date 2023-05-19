@@ -8,6 +8,19 @@ git config --global user.name "shengken.lin"
 git config --global user.email "shengken.lin@amlogic.com"
 ```
 
+- 拉取 google 代码前
+
+```sh
+# 设置 depot_path
+google-repo-sync
+
+# 设置代理
+proxy-change
+
+# 设置 git 邮箱和用户名
+google-git
+```
+
 ## A1-sync
 
 ```sh
@@ -463,6 +476,13 @@ adnl   # 进入烧录模式
 ```
 
 ## 编译korlan-chrome-ota
+
+- 编译前先 source 脚本
+
+```
+source build-chrome.sh
+```
+
 
 ```sh
 # 先设置JAVA_HOME
