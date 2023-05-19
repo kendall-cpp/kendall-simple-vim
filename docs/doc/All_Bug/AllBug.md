@@ -497,6 +497,12 @@ static int effect_platform_probe(struct platform_device *pdev) {
 aml_audiobus_update_bits(actrl, reg, 0x1 << 3, enable << 3);
 ```
 
+### 修复 A4 ddr fifo_depth 错误问题
+
+TODDR_A’s FIFO depth is 4096x64; B/C/D/E are 128x64.
+
+FRDDR_A’s FIFO depth is 256x64, B/C/D/E are 128x64
+
 ### 解决由于 c_ssize 设置成 2 导致 underrun 问题
 
 - c_ssize = 2 表示 rate 96k

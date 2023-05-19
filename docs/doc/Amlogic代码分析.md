@@ -755,7 +755,216 @@ HIFIPLL_change_ppm(&ppm_con);  // 这个函数一旦调整， cur_ppm_steps 就 
 
 这个函数是从寄存器 HIFI_CTRL1_OFFSET 中的值读出来，（也就是读出来的值 ppm * 100 ） , 就是 cur_centi_ppm
 
-# TDM 
+# TDM
+
+当应用层应用程序播放音频时， 会将音频数据写到 DDR 中，然后 tdm（TDMOUT） 通过 ddr（frddr_b） 去读取音频数据，然后再送到 codec (tas5707) ，最终送到喇叭
+
+```c
+// 应用播放之后会对 tdm 进行 aml_tdm_ops 相关操作
+aml_tdm_component->aml_tdm_ops
+```
+
+## aml_tdm_ops 相关操作的调用
+
+```c
+static struct snd_pcm_ops aml_tdm_ops = {
+	.open = aml_tdm_open,
+	.close = aml_tdm_close,
+	.ioctl = snd_pcm_lib_ioctl,  // 通过应用层去充值 pcm ,设置 channel 或者 fifo 大小
+	.hw_params = aml_tdm_hw_params,  // 这里会分配 substream->runtime->dma_bytes 内存
+	.hw_free = aml_tdm_hw_free,
+	.prepare = aml_tdm_prepare,
+	.pointer = aml_tdm_pointer,
+	.mmap = aml_tdm_mmap,
+};
+```
+
+aml_tdm_component （aml_tdm_ops 结构体的封装） 是在 aml_tdm_platform_probe 的时候注册到 soc-core 中。
+
+```c
+ret = devm_snd_soc_register_component(dev, &aml_tdm_component,
+			&aml_tdm_dai[p_tdm->id], 1);  // 使用的是 tdm_b 对应 frddr-1
+```
+
+从源码角度来看，首先加载并打开音频字符设备（chrdev_open），调用 snd_pcm_playback_open 进行播放，在播放的时走的是 DPCM 框架，通过 dpcm_be_dai_startup 启动的 DPCM（DynamicDynamic PCM）后端 DAI（Digital Audio Interface）。
+
+其中 soc_pcm_xxx 就是 DPCM 的 DAI，比如 soc_pcm_open 就是 DPCM 的 open 接口。
+
+> 关于函数 dpcm_be_dai_startup ，具体来说，当应用程序请求打开某个 PCM 设备时，ALSA 的 PCM 模块会根据用户请求创建相应的 PCM 运行时实例，并通过 SoC 平台的 DPCM 框架将其与 DAIs 进行连接。此时，就会调用 dpcm_be_dai_startup 函数对后端 DAI 进行初始化，以便开始音频数据传输。
+
+aml_tdm_open 具体的函数调用栈如下;
+
+```sh
+aml_tdm_open
+snd_soc_component_open
+soc_pcm_open
+snd_pcm_open_substream
+snd_pcm_open
+snd_pcm_playback_open
+snd_open
+chrdev_open
+do_dentry_open
+vfs_open
+```
+
+### aml_tdm_open
+
+```c
+static int aml_tdm_open(struct snd_pcm_substream *substream)  
+{
+	struct snd_pcm_runtime *runtime = substream->runtime;
+	struct snd_soc_pcm_runtime *rtd = substream->private_data;
+
+	// 注意这时候 substream->runtime->dma_bytes 还是空的，也就是还没开始去获取 dam 中的数据
+	// 在 aml_tdm_ddr_isr 中获取 dam 中的数据并填入 runtime 中
+	// aml_tdm_close 的时候释放掉内存，所以第二次 open 时
+
+	// 指定当前打开 tdm 的设备和设备类型
+	snd_pcm_lib_preallocate_pages(substream, SNDRV_DMA_TYPE_DEV,
+			dev, TDM_BUFFER_BYTES / 2, TDM_BUFFER_BYTES);
+	
+	// 外部想 tdm 送数据
+	if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK) {
+		int dst_id = get_aed_dst();  // 选择 aed （对音质控制）
+		bool aed_dst_status = false;
+
+		if (dst_id == p_tdm->id && is_aed_reserve_frddr())  //需要保证 AED 和 当前使用 frddr 是同一个，否则声音可能出不来
+			aed_dst_status = true;
+		// 找到并注册这个 frddr (在有 tdm_bridge 的情况下。tdm 用的是 frddr-2, tdm_bridge 用的是 frddr-1)
+		p_tdm->fddr = aml_audio_register_frddr(dev,
+			aml_tdm_ddr_isr,
+			substream, aed_dst_status);  // 一旦有中断上报就执行 aml_tdm_ddr_isr
+		if (!p_tdm->fddr) {
+			ret = -ENXIO;
+			dev_err(dev, "failed to claim from ddr\n");
+			goto err_ddr;
+		}
+		/*tdm busy*/
+		aml_tdm_br_state_busy();
+	} else { // tdm 往外送数据
+		p_tdm->tddr = aml_audio_register_toddr(dev,
+			aml_tdm_ddr_isr, substream);
+		if (!p_tdm->tddr) {
+			ret = -ENXIO;
+			dev_err(dev, "failed to claim to ddr\n");
+			goto err_ddr;
+		}
+	}
+
+	runtime->private_data = p_tdm;  // runtime 的 private_data 就是当前 tdm 
+}
+```
+
+### aml_tdm_ddr_isr
+
+> 一定要在 aml_tdm_hw_params 函数之后，因为 aml_tdm_hw_params 会往 runtime 缓冲区中填数据
+
+```c
+static irqreturn_t aml_tdm_ddr_isr(int irq, void *devid)
+{
+	struct snd_pcm_substream *substream = (struct snd_pcm_substream *)devid;
+	struct snd_soc_pcm_runtime *rtd = substream->private_data;  // ALSA ring buffer
+
+	// 当用户空间应用程序通过系统调用 ioctl() 向 PCM 设备发送命令时，
+	//该命令将被传递到内核中的 snd_pcm_kernel_ioctl 函数进行处理。
+	//该函数负责解析命令并执行相应的操作，例如读取或写入 PCM 数据、设置 PCM 参数等。
+	err = snd_pcm_kernel_ioctl(substream, SNDRV_PCM_IOCTL_DELAY,&delay);  
+	//snd_pcm_kernel_ioctl 会获取 dam 中的数据并填入 runtime 中
+	//  runtime->dma_bytes = 4 * 48000 = 96000
+	if (!err) {
+		// 处理出现underrun 相关错误
+	}
+
+	// 更新下一周期的 pcm 状态
+	snd_pcm_period_elapsed(substream);
+}
+```
+
+### aml_tdm_prepare
+
+初始化 clk ，fifo 等
+
+```c
+static int aml_tdm_prepare(struct snd_pcm_substream *substream)
+{
+	period	 = frames_to_bytes(runtime, runtime->period_size);  //一帧大小
+	int_addr = period / FIFO_BURST;  // audio spec 中规定一次取 8 bytes, 计算需要几个中断
+	if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK) {
+		threshold = min(period, fr->chipinfo->fifo_depth);
+		threshold /= 2;
+		aml_frddr_set_fifos(fr, fr->chipinfo->fifo_depth, threshold);  // 设置一个中断占用
+	}
+}
+```
+
+**EE_AUDIO_FRDDR_A_INT_ADDR 的用法**
+
+```c
+int_addr,usage A : as an address of interrupt;
+usage B : as a count of interrupt;  // tdm 中使用的计算中断次数
+```
+
+![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/image.6v1vjld33qg0.webp)
+
+
+
+## u_audio_iso_cap_complete
+
+- 通过 UAC 往 complete 播放声音时，是将 req->buf 中的数据往 dma 中塞，然后应用再去 DMA 中读数据。
+- 通过 complete 往 UAC 播放声音时，这时候 dma 中必然是有数据的，然后将 dma 中的数据塞到 req->buf 送出去
+
+```c
+static void u_audio_iso_cap_complete(struct usb_ep *ep, struct usb_request *req)
+{
+	// SNDRV_PCM_STREAM_PLAYBACK 通过 UAC 播放出去
+	if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK) {
+		/*
+		 * 对于每个 IN 数据包，取当前数据速率与端点间隔的商作为基本数据包大小。
+		 如果此除法有余数，则将其添加到余数累加器中。
+		 */
+		req->length = uac->p_pktsize;
+		// p_residue 累加器
+		uac->p_residue += uac->p_pktsize_residue;  // p_pktsize_residue当前数据速率
+
+		/*
+		 *每当累加器中的字节多于我们需要添加一个样本帧时，增加此数据包的大小并减少累加器。
+		 */
+		if (uac->p_residue / uac->p_interval >= uac->p_framesize) {
+			req->length += uac->p_framesize;   // uac->p_framesize 一帧大小， 基本数据包大小
+			uac->p_residue -= uac->p_framesize *
+					   uac->p_interval;  // p_interval 端点见间隔
+		}
+
+		req->actual = req->length;
+	}
+
+	/* Pack USB load in ALSA ring buffer */
+	// 这里的 ring 必须比每次来的数据包大
+	pending = runtime->dma_bytes - hw_ptr;  // ring buffer 中指针当前位置
+	// req->length = 196
+	// req->actual = 192
+
+	if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK) {
+		if (unlikely(pending < req->actual)) {
+			memcpy(req->buf, runtime->dma_area + hw_ptr, pending);
+			memcpy(req->buf + pending, runtime->dma_area,
+			       req->actual - pending);
+		} else {
+			memcpy(req->buf, runtime->dma_area + hw_ptr,
+			       req->actual);
+		}
+	} else {
+		if (unlikely(pending < req->actual)) {
+			memcpy(runtime->dma_area + hw_ptr, req->buf, pending); // pending 就是这个数据包的大小
+			memcpy(runtime->dma_area, req->buf + pending,
+			       req->actual - pending);
+		} else {
+			memcpy(runtime->dma_area + hw_ptr, req->buf,
+			       req->actual);
+		}
+	}
+}
+```
 
 ## tdm_bridge
 
@@ -789,5 +998,15 @@ int aml_tdm_br_dmabuf_avail_space(void)
 		// 如果 add - last_wr_addr , 也就是最后一点小于 192 ,那么久说明有误了，no space
 
 	return space;
+}
+```
+
+### aml_tdm_br_frddr_prepare
+
+```c
+### int aml_tdm_br_frddr_prepare(struct aml_tdm *p_tdm)
+{
+	aml_frddr_set_intrpt(fddr, int_addr); //aml_audio_mmio_write
+	// aml_tdm_bridge_frddr_isr 对应 aml_frddr_get_position //aml_audio_mmio_read
 }
 ```
