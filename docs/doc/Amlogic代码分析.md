@@ -757,6 +757,8 @@ HIFIPLL_change_ppm(&ppm_con);  // 这个函数一旦调整， cur_ppm_steps 就 
 
 # TDM
 
+> 主要分析 frddr 为主
+
 当应用层应用程序播放音频时， 会将音频数据写到 DDR 中，然后 tdm（TDMOUT） 通过 ddr（frddr_b） 去读取音频数据，然后再送到 codec (tas5707) ，最终送到喇叭
 
 ```c
@@ -882,17 +884,20 @@ static irqreturn_t aml_tdm_ddr_isr(int irq, void *devid)
 
 ### aml_tdm_prepare
 
-初始化 clk ，fifo 等
+初始化 fifo ，设置后规则之后，系统就会按照这个规则往 DDR 中写数据。
 
 ```c
 static int aml_tdm_prepare(struct snd_pcm_substream *substream)
 {
-	period	 = frames_to_bytes(runtime, runtime->period_size);  //一帧大小
+	period	 = frames_to_bytes(runtime, runtime->period_size);  //一个周期所有音频帧字节大小
 	int_addr = period / FIFO_BURST;  // audio spec 中规定一次取 8 bytes, 计算需要几个中断
 	if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK) {
-		threshold = min(period, fr->chipinfo->fifo_depth);
-		threshold /= 2;
-		aml_frddr_set_fifos(fr, fr->chipinfo->fifo_depth, threshold);  // 设置一个中断占用
+		threshold = min(period, fr->chipinfo->fifo_depth);  // min(24000, 4096)
+		threshold /= 2;		// // 2048
+		aml_frddr_set_fifos(fr, fr->chipinfo->fifo_depth, threshold);  // fifo depth 是 4096， 使用了 2048
+
+		aml_frddr_set_buf(fr, start_addr, end_addr);  // 设置使用 fifo 的 ddr 位置
+		aml_frddr_set_intrpt(fr, int_addr);  // 一个中断读 int_addr 数据
 	}
 }
 ```
@@ -905,6 +910,22 @@ usage B : as a count of interrupt;  // tdm 中使用的计算中断次数
 ```
 
 ![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/image.6v1vjld33qg0.webp)
+
+### aml_tdm_pointer
+
+响应中断，不断从 ddr 中读数据
+
+```c
+static snd_pcm_uframes_t aml_tdm_pointer(struct snd_pcm_substream *substream)
+{
+	addr = aml_frddr_get_position(p_tdm->fddr);  // 从 fifo 中读取数据
+}
+```
+
+## 设置 clk
+
+在上面进行音频播放之前需要先设置 clk .
+
 
 
 
