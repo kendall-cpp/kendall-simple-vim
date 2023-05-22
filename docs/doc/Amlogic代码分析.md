@@ -928,6 +928,28 @@ static snd_pcm_uframes_t aml_tdm_pointer(struct snd_pcm_substream *substream)
 
 
 
+#### audio fifo-depth
+
+frddr toddr 大小不能用完，用越少越好，用完会导致延迟增值
+
+### aml_tdm_pointer
+
+响应中断，不断从 ddr 中读数据
+
+```c
+static snd_pcm_uframes_t aml_tdm_pointer(struct snd_pcm_substream *substream)
+{
+	addr = aml_frddr_get_position(p_tdm->fddr);  // 从 fifo 中读取数据
+}
+```
+
+## 设置 clk
+
+在上面进行音频播放之前需要先设置 clk .
+
+clk 链表结构：
+
+clk --> mclk --> mclk2pad
 
 ## u_audio_iso_cap_complete
 

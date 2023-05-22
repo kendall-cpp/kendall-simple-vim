@@ -829,3 +829,45 @@ verisilicon-6.4.11.2/build/sdk/drivers
 
 MBP 理解和使用：https://confluence.amlogic.com/pages/viewpage.action?pageId=215566618
 
+
+# Sonos openlinux
+
+## 修改 usb 模式
+
+https://support.amlogic.com/issues/23574
+
+
+
+```c
+//include/linux/amlogic/usbtype.h
+#define USB_NORMAL      0
+#define USB_HOST_ONLY   1
+#define USB_DEVICE_ONLY  2
+#define USB_OTG          3
+#define USB_M31          4
+```
+
+- 修改 patch
+
+```patch
+--- a/arch/arm64/boot/dts/amlogic/a5_a113x2_av400_1g.dts
++++ b/arch/arm64/boot/dts/amlogic/a5_a113x2_av400_1g.dts
+@@ -976,7 +976,7 @@
+ 
+ &crg20_otg {
+        status = "okay";
+-       controller-type = <3>;
++       controller-type = <1>;
+        usb5v-supply = <&vcc5v_reg>;
+        usb3v3-supply = <&avdd33_usb_reg>;
+        usb1v8-supply = <&avdd18_usb_reg>;
+```
+
+- 验证
+
+```sh
+mkdir /mnt/usb
+mount -t vfat /dev/sda1 /mnt/usb
+
+umount /mnt/usb/
+```
