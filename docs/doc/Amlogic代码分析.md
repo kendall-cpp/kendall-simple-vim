@@ -911,6 +911,11 @@ usage B : as a count of interrupt;  // tdm 中使用的计算中断次数
 
 ![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/image.6v1vjld33qg0.webp)
 
+
+#### audio fifo-depth
+
+frddr toddr 大小不能用完，用越少越好，用完会导致延迟增值
+
 ### aml_tdm_pointer
 
 响应中断，不断从 ddr 中读数据
@@ -926,8 +931,9 @@ static snd_pcm_uframes_t aml_tdm_pointer(struct snd_pcm_substream *substream)
 
 在上面进行音频播放之前需要先设置 clk .
 
+clk 链表结构：
 
-
+clk --> mclk --> mclk2pad
 
 ## u_audio_iso_cap_complete
 

@@ -955,7 +955,7 @@ fts -i  #清除工厂模式
 
 # wpa_cli连接wifi
 
-```
+```sh
 wpa_cli -iwlan0 remove_network 0
 wpa_cli -iwlan0 add_network 0
 wpa_cli -iwlan0 set_network 0 ssid '"Amlogic-vpn04_5G"'
@@ -969,17 +969,15 @@ wpa_cli -iwlan0 status
 wpa_cli -iwlan0 save
 dhcpcd wlan0
 
-wpa_cli -iwlan0 remove_network 0
-wpa_cli -iwlan0 add_network 0
-wpa_cli -iwlan0 set_network 0 ssid '"kendall"'
-wpa_cli -iwlan0 set_network 0 key_mgmt WPA-PSK
-wpa_cli -iwlan0 set_network 0 psk '"12345678"' 
-wpa_cli -iwlan0 set_network 0 pairwise CCMP
-wpa_cli -iwlan0 set_network 0 group CCMP
-wpa_cli -iwlan0 set_network 0 proto RSN
-wpa_cli -iwlan0 enable_network 0
-wpa_cli -iwlan0 status
-wpa_cli -iwlan0 save
+# 或者
+wpa_cli -i wlan0 scan
+wpa_cli -i wlan0 scan_results 
+wpa_cli -i wlan0 add_network
+wpa_cli -i wlan0 set_network 0 ssid '"kendall"'
+wpa_cli -i wlan0 set_network 0 psk '"kendall00"'
+wpa_cli -i wlan0 enable_network 0
+udhcpc -i wlan0
+wpa_cli save_config
 ```
 
 ---
@@ -1218,6 +1216,8 @@ echo ff400000.dwc2_a > /sys/kernel/config/usb_gadget/amlogic/UDC
 
 
 # 板子挂载 U 盘
+
+USB 模式需要时 host 模式
 
 ```sh
 mkdir /mnt/usb
@@ -2159,13 +2159,5 @@ isochronous transfers （`/aɪˈsɑːkrənəs/`） 和 USB 的 SOF 包之间有�
 
 ----
 
-# tdm 驱动
 
-## audio 时钟
-
-- 先生成 6 个主 mclk
-- 然后通过 mclk 生成 3个不同阶段的 sclk / lrclk 
-  - phase0 for pad(device);
-  - phase1 for tdmin;
-  - phase2 for tdmout;
 
