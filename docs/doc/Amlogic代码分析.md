@@ -911,6 +911,22 @@ usage B : as a count of interrupt;  // tdm 中使用的计算中断次数
 
 ![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/image.6v1vjld33qg0.webp)
 
+### aml_tdm_pointer
+
+响应中断，不断从 ddr 中读数据
+
+```c
+static snd_pcm_uframes_t aml_tdm_pointer(struct snd_pcm_substream *substream)
+{
+	addr = aml_frddr_get_position(p_tdm->fddr);  // 从 fifo 中读取数据
+}
+```
+
+## 设置 clk
+
+在上面进行音频播放之前需要先设置 clk .
+
+
 
 #### audio fifo-depth
 
