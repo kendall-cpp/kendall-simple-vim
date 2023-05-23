@@ -1182,9 +1182,6 @@ av400 板子资料下载地址：https://confluence.amlogic.com/pages/viewpage.a
 
   - 同样在 datasheet 中找 fe004000 对应的功能是： pad_ctrl
 
-
-
-
 # 早期板子解决 adb 无法使用问题
 
 > 打开 adb
@@ -1214,7 +1211,6 @@ start adbd
 echo ff400000.dwc2_a > /sys/kernel/config/usb_gadget/amlogic/UDC
 ```
 
-
 # 板子挂载 U 盘
 
 USB 模式需要时 host 模式
@@ -1225,6 +1221,23 @@ mount -t vfat /dev/sda1 /mnt/usb
 
 umount /mnt/usb/
 ```
+
+# uboot 下查看 USB 模式
+
+通过 uboot 命令查看 U盘 中的数据
+
+- 初始化 USB 中
+
+usb start 0
+
+- 读取 USB 中的数据
+
+fatls usb 0
+
+- 将 USB 中的数据写到 DRAM （如果是镜像烧录）
+
+fatload usb 0 ${loadaddr} recovery.img 0x10000000 0
+
 
 # av400 audio 工具
 

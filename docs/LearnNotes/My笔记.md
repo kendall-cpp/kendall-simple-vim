@@ -492,7 +492,7 @@ USB 子系统架构两部分： **主机端** 和 **设备端**
 
 - 各种类设备驱动：uac, HID，CDC 等
 - USB 设备驱动， USB core 处理
-- 主机控制器驱动：不同的 USB 主机控制器不同（DHCI、EHCI、UHCI、XHCI）,统称 HDC
+- 主机控制器驱动：不同的 USB 主机控制器不同（DHCI、EHCI、UHCI、XHCI）,统称 HCD
 
 > **XHCI**（eXtensible Host Controller Interface）：XHCI 是一种 USB 控制器，它是 USB 3.0 和 USB 3.1 标准中使用的控制器。XHCI 控制器使用 DMA 技术来处理 USB 数据传输和控制，这使得 XHCI 控制器比 EHCI 控制器更快和更可靠。
 

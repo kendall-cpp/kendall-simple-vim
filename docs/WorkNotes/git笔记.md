@@ -489,8 +489,8 @@ git format-patch -1 <commit_hash>
 某次提交以后的所有patch，不包括 commit_hash 这个
 git format-patch <commit_hash>
 
-将所有patch输出到一个指定位置的指定文件
-git format-patch -1 xxx --stdout > xxx.patch
+将所有patch输出到一个指定位置的指定文件，git am 的时候会看到所有的 commit
+git format-patch -1 <commit_hash> --stdout > xxx.patch
 ```
 
 ### 检查 patch
@@ -588,7 +588,7 @@ git am *.patch
 
 > 学习参考：https://www.cnblogs.com/lueguo/p/3544114.html
 
-将所有patch输出到一个指定位置的指定文件 git format-patch xxx --stdout > xxx.patch
+将所有patch输出到一个指定位置的指定文件 git format-patch commit_hash --stdout > xxx.patch
 
 使用 git am xxx.patch  可以把所有的 commit 保存成一个 patch， 打 patch 的时候会显示所有的 commit
 

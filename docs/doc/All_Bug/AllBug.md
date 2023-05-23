@@ -497,11 +497,9 @@ static int effect_platform_probe(struct platform_device *pdev) {
 aml_audiobus_update_bits(actrl, reg, 0x1 << 3, enable << 3);
 ```
 
-### 修复 A4 ddr fifo_depth 错误问题
+关于上面的修复不正确，这样会导致 EQDRC 在绑定设备的时候出现问题。这个错误的根本原因是 aplay 和 uac 都是使用 tdm 这个驱动，然后 uac 占用了 frddr-1 不释放导致的。所以因为在  aml_tdm_br_tdm_stop 的时候 aml_audio_unregister_frddr 掉。
 
-TODDR_A’s FIFO depth is 4096x64; B/C/D/E are 128x64.
-
-FRDDR_A’s FIFO depth is 256x64, B/C/D/E are 128x64
+https://scgit.amlogic.com/#/c/321928/
 
 ### 解决由于 c_ssize 设置成 2 导致 underrun 问题
 
