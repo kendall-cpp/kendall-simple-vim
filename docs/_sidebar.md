@@ -3,7 +3,7 @@
 * AmlogicDoc
   * [Project-notes](/doc/Project-notes.md)
   * [Amlogic_notes](/doc/Amlogic_notes.md)
-  * [Amlogic笔记记录](/doc/Amlogic笔记记录.md)
+  * [common笔记](/doc/common笔记.md)
   * [Amlogic代码分析](/doc/Amlogic代码分析.md)
 
 * WorkTasks
@@ -13,4 +13,4 @@
   * [AllBug](/doc/All_Bug/AllBug.md)
 
 * LearnNotes
-  * [My笔记](/LearnNotes/My%E7%AC%94%E8%AE%B0.md)
+  * [额外知识点笔记](/LearnNotes/额外知识点笔记.md)
