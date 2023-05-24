@@ -1526,7 +1526,7 @@ drivers/amlogic/timestamp/
 - 最后编译，编译的时候可能会出现是否选择开启 timerstamp ,输入 y 即可
 
 
-# 查看音频 clk
+# 查看 clk
 
 measure-clk
 

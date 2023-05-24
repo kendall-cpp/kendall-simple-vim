@@ -283,7 +283,7 @@ ep 端点基于传输环进行工作，主要的工作形式是通过 “控制�
 
 要发出命令，软件首先要设置命令参数（命令类型，上下文操作），然后写入命令控制寄存器。
 
-如果在写入命令控制寄存器时声明（asserted）了 IOC 位，那么软件就会去等待这个命令去生成控制事件，这个事件是由【设备控制器】生成的。否则，软件会轮询去等待这个命令活动位 IOC ，知道它取消断言 （de-asserted）
+如果在写入命令控制寄存器时声明（asserted）了 IOC 位，那么软件就会去等待这个命令去生成控制事件，这个事件是由【设备控制器】生成的。否则，软件会轮询去等待这个命令活动位 IOC ，直到它取消断言 （de-asserted）
 
 **建议软件轮询命令活动位，而不是为以下命令设置 IOC：**
 
@@ -616,9 +616,9 @@ echo "fdd00000.crgudc2"> /sys/kernel/config/usb_gadget/amlogic/UDC
 fe320000.crgudc2
 ```
 
-USB gadget 驱动程序是一种爱 linux 内核中实现 USB 设备功能的的技术，它允许将 linux 系统转换为一个虚拟的 USB 设备，以便与 USB 主机进行通信。
+USB gadget 驱动程序是一种在 linux 内核中实现 USB 设备功能的的技术，它允许将 linux 系统转换为一个虚拟的 USB 设备，以便与 USB 主机进行通信。
 
-USB gadget 驱动程序可以将 UDC（USB Device Controller）硬件接口映射到"/sys/class/udc"目录下的设备节点上。通过这个设备节点，USB gadget 驱动程序可以向 USB 主机发送各种控制信息并接收来自 USB 主机的数据。
+USB gadget 驱动程序可以将 UDC（USB Device Controller）硬件接口映射到"`/sys/class/udc`"目录下的设备节点上。通过这个设备节点，USB gadget 驱动程序可以向 USB 主机发送各种控制信息并接收来自 USB 主机的数据。
 
 ### usb_add_gadget_udc_release
 
@@ -631,7 +631,9 @@ printk("dev_name(&udc->dev) = %s\n",  dev_name(&udc->dev)); // fe320000.crgudc2
 
 -------------
 
-# phy-aml-crg-drd-otg
+# crg20_otg
+
+crg20_otg 这是一个 otg usb , 他会分别与 crg_udc (设备控制器) 和 crg2_drd (主机控制器) 进行数据交互。crg20_otg 会接受和发送数据给 phy (crg_phy_20) 进行数字信号和模拟信号之间的数据转换。最后送出给 microUSB 。
 
 ```c
 static int amlogic_crg_otg_probe(struct platform_device *pdev)
@@ -648,7 +650,62 @@ static int amlogic_crg_otg_probe(struct platform_device *pdev)
 		schedule_delayed_work(&phy->set_mode_work, msecs_to_jiffies(500));
 	}
 }
-// 推迟执行
+```
+
+## amlogic_crg_otg_work
+
+这个函数会分别启动和关闭 host crg 和 device crg , 会相应调到 crg_udc.c (device) 和 crg_drd.c （host） 中执行
+
+**注意**
+
+- 有设备固件插入的时候，才会启动 host crg work 。
+
+- 因为板子在启动的时候会配置 udc ，所以会走 device crg work
+
+```c
+static void amlogic_crg_otg_work(struct work_struct *work)
+{
+	struct amlogic_crg_otg *phy =
+		container_of(work, struct amlogic_crg_otg, work.work);
+	union usb_r5_v2 reg5;
+	unsigned long reg_addr = ((unsigned long)phy->usb2_phy_cfg);
+	unsigned long phy3_addr = ((unsigned long)phy->phy3_cfg);
+	int ret;
+
+	if (phy->mode_work_flag == 1) {
+		cancel_delayed_work_sync(&phy->set_mode_work);
+		phy->mode_work_flag = 0;
+	}
+	mutex_lock(phy->otg_mutex);
+	reg5.d32 = readl((void __iomem *)(phy3_addr + 0x14));
+	// reg5.b.iddig_curr 0
+	if (reg5.b.iddig_curr == 0) {
+		/* to do*/
+		crg_gadget_exit();
+		amlogic_m31_set_vbus_power(phy, 1);
+		set_mode(reg_addr, HOST_MODE, phy3_addr);
+		crg_init();
+	} else {  // reg5.b.iddig_curr 1
+		/* to do*/
+		crg_exit();
+		set_mode(reg_addr, DEVICE_MODE, phy3_addr);
+		amlogic_m31_set_vbus_power(phy, 0);
+		crg_gadget_init();
+		if (UDC_v2_exist_flag != 1) {
+			ret = crg_otg_write_UDC(crg_v2_UDC_name);
+			if (ret == 0 || ret == -EBUSY)
+				UDC_v2_exist_flag = 1;
+		}
+	}
+	reg5.b.usb_iddig_irq = 0;
+	writel(reg5.d32, (void __iomem *)(phy3_addr + 0x14));
+	mutex_unlock(phy->otg_mutex);
+}
+```
+
+## amlogic_crg_otg_set_m_work
+
+```c
 static void amlogic_crg_otg_set_m_work(struct work_struct *work)
 {
 	set_mode(reg_addr, DEVICE_MODE, phy3_addr);
@@ -922,26 +979,9 @@ static snd_pcm_uframes_t aml_tdm_pointer(struct snd_pcm_substream *substream)
 }
 ```
 
-## 设置 clk
-
-在上面进行音频播放之前需要先设置 clk .
-
-
-
-#### audio fifo-depth
+## audio fifo-depth
 
 frddr toddr 大小不能用完，用越少越好，用完会导致延迟增值
-
-### aml_tdm_pointer
-
-响应中断，不断从 ddr 中读数据
-
-```c
-static snd_pcm_uframes_t aml_tdm_pointer(struct snd_pcm_substream *substream)
-{
-	addr = aml_frddr_get_position(p_tdm->fddr);  // 从 fifo 中读取数据
-}
-```
 
 ## 设置 clk
 
