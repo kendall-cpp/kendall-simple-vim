@@ -599,14 +599,16 @@ if (usb_endpoint_xfer_bulk(udc_ep_ptr->desc))     // 批量传输类型
 drivers/usb/gadget/udc/core.c
 
 ```c
-udc_class = class_create(THIS_MODULE, "udc");
-// udc_class 这个是一个全局变量
-// 在 usb_add_gadget_udc_release 函数被使用
-
+static int __init usb_udc_init(void)
+{
+	udc_class = class_create(THIS_MODULE, "udc");
+	// udc_class 这个是一个全局变量
+	// udc_class 在 usb_add_gadget_udc_release 函数被使用  （udc->dev.class = udc_class;）
+}
 class_create --> __class_create --> __class_register
 ```
 
-通过调用 class_create 函数，内核会在 /sys/class 目录下创建一个名为"udc"的子目录，该目录用于表示与这个设备类相关的设备。这个设备类可以被 USB gadget 驱动程序使用，以便为 USB 主机提供虚拟设备的支持。
+通过调用 class_create 函数，内核会在 `/sys/class` 目录下创建一个名为"udc"的子目录，该目录用于表示与这个设备类相关的设备。这个设备类可以被 USB gadget 驱动程序使用，以便为 USB 主机提供虚拟设备的支持。
 
 ```sh
 # 在配置 UDC 时
@@ -622,18 +624,42 @@ USB gadget 驱动程序可以将 UDC（USB Device Controller）硬件接口映�
 
 ### usb_add_gadget_udc_release
 
-```c
-ret = dev_set_name(&udc->dev, "%s", kobject_name(&parent->kobj));
+在 usb_add_gadget_udc 中回调
 
-printk("parent->kobj.name = %s\n",  parent->kobj.name); // fe320000.crgudc2
-printk("dev_name(&udc->dev) = %s\n",  dev_name(&udc->dev)); // fe320000.crgudc2
+```c
+int usb_add_gadget_udc_release(struct device *parent, struct usb_gadget *gadget
+	void (*release)(struct device *dev))
+{
+	ret = dev_set_name(&udc->dev, "%s", kobject_name(&parent->kobj));
+
+	printk("parent->kobj.name = %s\n",  parent->kobj.name); // fe320000.crgudc2
+	printk("dev_name(&udc->dev) = %s\n",  dev_name(&udc->dev)); // fe320000.crgudc2
+}
+```
+
+```c
+int usb_add_gadget_udc(struct device *parent, struct usb_gadget *gadget)
+{
+	return usb_add_gadget_udc_release(parent, gadget, NULL);
+}
+```
+
+而 usb_add_gadget_udc 函数是在设备控制器源码中调用的，也就是 crg_udc.c  中的 probe 函数会将 udc 设备控制器缇添加到内核。
+
+```c
+crg_udc_probe()
+{
+	ret = usb_add_gadget_udc(&pdev->dev, &crg_udc->gadget);
+}
 ```
 
 -------------
 
 # crg20_otg
 
-crg20_otg 这是一个 otg usb , 他会分别与 crg_udc (设备控制器) 和 crg2_drd (主机控制器) 进行数据交互。crg20_otg 会接受和发送数据给 phy (crg_phy_20) 进行数字信号和模拟信号之间的数据转换。最后送出给 microUSB 。
+crg20_otg 这是一个 otg usb , 他会分别与 crg_udc (设备控制器) 和 crg2_drd (主机控制器) 进行数据交互。
+
+crg20_otg 会接收和发送数据给 phy (crg_phy_20) 进行数字信号和模拟信号之间的数据转换。最后送出给 microUSB 。
 
 ```c
 static int amlogic_crg_otg_probe(struct platform_device *pdev)
@@ -678,14 +704,14 @@ static void amlogic_crg_otg_work(struct work_struct *work)
 	}
 	mutex_lock(phy->otg_mutex);
 	reg5.d32 = readl((void __iomem *)(phy3_addr + 0x14));
-	// reg5.b.iddig_curr 0
+	// reg5.b.iddig_curr 0  host
 	if (reg5.b.iddig_curr == 0) {
 		/* to do*/
 		crg_gadget_exit();
 		amlogic_m31_set_vbus_power(phy, 1);
 		set_mode(reg_addr, HOST_MODE, phy3_addr);
 		crg_init();
-	} else {  // reg5.b.iddig_curr 1
+	} else {  // reg5.b.iddig_curr 1   device
 		/* to do*/
 		crg_exit();
 		set_mode(reg_addr, DEVICE_MODE, phy3_addr);
@@ -703,14 +729,55 @@ static void amlogic_crg_otg_work(struct work_struct *work)
 }
 ```
 
+## amlogic_crgotg_detect_irq
+
+每次插拔切换 host 和 device 的时候就会产生一次中断，产生中断 `reg5.b.usb_iddig_irq = 1`，在处理完中断之后  `reg5.b.usb_iddig_irq = 0` 将中断位清空。 
+
+- 当检测到 device port 时 reg5.b.iddig_curr = 1 
+- 当检测到 host port 时 reg5.b.iddig_curr = 0
+
+接着会调用上面的 work 函数 amlogic_crg_otg_work 进行 usb mode 切换
+
+
+```c
+static irqreturn_t amlogic_crgotg_detect_irq(int irq, void *dev)
+{
+	union usb_r5_v2 reg5;
+	reg5.d32 = readl((void __iomem *)((unsigned long)phy->phy3_cfg + 0x14));
+	reg5.b.usb_iddig_irq = 0;
+	schedule_delayed_work(&phy->work, msecs_to_jiffies(10));
+}
+```
+
 ## amlogic_crg_otg_set_m_work
+
+设置一开始默认的 usb 模式
 
 ```c
 static void amlogic_crg_otg_set_m_work(struct work_struct *work)
 {
-	set_mode(reg_addr, DEVICE_MODE, phy3_addr);
-	amlogic_m31_set_vbus_power(phy, 0)
-	crg_gadget_init();
+	struct amlogic_crg_otg *phy =
+		container_of(work, struct amlogic_crg_otg, set_mode_work.work);
+	union usb_r5_v2 reg5;
+	unsigned long reg_addr = ((unsigned long)phy->usb2_phy_cfg);
+	unsigned long phy3_addr = ((unsigned long)phy->phy3_cfg);
+
+	mutex_lock(phy->otg_mutex);
+	phy->mode_work_flag = 0;
+	reg5.d32 = readl((void __iomem *)(phy3_addr + 0x14));
+	// 检车到 host 端口
+	if (reg5.b.iddig_curr == 0) {
+		amlogic_m31_set_vbus_power(phy, 1);
+		set_mode(reg_addr, HOST_MODE, phy3_addr);
+		crg_init();   //使用 crg_drd
+	} else {  // 检测到 device 端口
+		set_mode(reg_addr, DEVICE_MODE, phy3_addr);
+		amlogic_m31_set_vbus_power(phy, 0);
+		crg_gadget_init();  // 使用 crg_udc
+	}
+	reg5.b.usb_iddig_irq = 0;  //清空中断标志位
+	writel(reg5.d32, (void __iomem *)(phy3_addr + 0x14));
+	mutex_unlock(phy->otg_mutex);
 }
 ```
 

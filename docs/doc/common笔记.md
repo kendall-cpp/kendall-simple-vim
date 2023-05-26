@@ -1099,6 +1099,51 @@ int __class_register(struct class *cls, struct lock_class_key *key)
 
 通过调用 class_create 函数，内核会在 `/sys/class` 目录下创建一个名为"`udc`"的子目录，该目录用于表示与这个设备类相关的设备。这个设备类可以被 USB gadget 驱动程序使用，以便为 USB 主机提供虚拟设备的支持。
 
+-----
+
+# 联合体寄存器位操作
+
+```c
+union usb_r5_v2 {
+	/** raw register data */
+	uint32_t d32;
+	/** register bits */
+	struct {
+		unsigned iddig_sync:1;
+		unsigned iddig_reg:1;
+		unsigned iddig_cfg:2;
+		unsigned iddig_en0:1;
+		unsigned iddig_en1:1;
+		unsigned iddig_curr:1;
+		unsigned usb_iddig_irq:1;
+		unsigned iddig_th:8;
+		unsigned iddig_cnt:8;
+		unsigned reserved:8;
+	} b;
+};
+```
+
+如果初始值： reg5.d32 = 0xfff3  1111111111110011
+
+在进行 reg5.b.usb_iddig_irq = 0 操作后，第 7 位（从 0 开始）被清空，变成 0 ， 1111111101110011
+
+所以 reg5.d32 = 0xff73
+
+### 中断响应寄存器变化
+
+```c
+static irqreturn_t amlogic_crgotg_detect_irq(int irq, void *dev)
+{
+	union usb_r5_v2 reg5;
+	reg5.d32 = readl((void __iomem *)((unsigned long)phy->phy3_cfg + 0x14));
+	reg5.b.usb_iddig_irq = 0;
+	schedule_delayed_work(&phy->work, msecs_to_jiffies(10));
+}
+```
+
+上报一次中断，硬件会将 `reg5.b.usb_iddig_irq = 1`; 这个中断被响应处理了，就需要把中断位清楚，也就是 `reg5.b.usb_iddig_irq = 0`。
+
+
 ----
 
 
