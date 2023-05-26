@@ -627,9 +627,6 @@ issue: https://partnerissuetracker.corp.google.com/issues/246404063#comment2
 
 ---
 
-
----
-
 # AV400 NN 模型测试
 
 只需要在 /mnt/fileroot/shengken.lin/workspace/google_source/eureka/spencer-sdk/verisilicon 路径下切换分支就可以了
@@ -869,3 +866,10 @@ mount -t vfat /dev/sda1 /mnt/usb
 
 umount /mnt/usb/
 ```
+
+## 在用户成设置 flag 修改 usb host
+
+```sh
+/mnt/fileroot/shengken.lin/workspace/Sonos-file-openlinux/patch-to-sonos/kernel-0001-Subject-PATCH-Add-usb-mode-flag-to-force-set-usb-hos.patch
+```
+
