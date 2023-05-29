@@ -2169,8 +2169,51 @@ isochronous transfers （`/aɪˈsɑːkrənəs/`） 和 USB 的 SOF 包之间有�
 代码分析见 [Amlogic代码分析 - crg 控制器分析](doc/Amlogic代码分析?id=crg-控制器分析)
 </font></strong>
 
+## A4 USB 架构
+
+![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/USB架构图-yuegui.3676mln75qm0.webp)
+
+```c
+crg_phy_20 {
+	compatible = "amlogic, amlogic-crg-drd-usb2";
+	
+}
+crg3_phy_20 {
+	compatible = "amlogic, amlogic-crg-drd-usb3";	
+}
+crg20_otg {
+	compatible = "amlogic, amlogic-crg-otg";
+}
+crg2_drd {
+	usb-phy = <&crg_phy_20>, <&crg3_phy_20>;
+	clock-src = "usb3.0";
+}
+crg_phy_21 {
+	compatible = "amlogic, amlogic-crg-drd-usb2";
+}
+crg3_phy_21 {  // 为了满足 usb 物理上的需要，必须加上一个伪装的，实际上不适用 USB3.0
+	compatible = "amlogic, amlogic-crg-drd-usb3";
+}
+crg21_drd {
+	usb-phy = <&crg_phy_21>, <&crg3_phy_21>;
+}
+crg_udc_2 {
+	compatible = "amlogic, crg_udc";
+}
+```
+
+![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/a4-usb-phy.766tkswb6hc0.webp)
+
+#### 对比 AV400 的 usb-phy 控制器 关系
+
+![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/av400-usb.7cff1q8iejk0.webp)
 
 ----
+
+
+# Av400 SDK 架构
+
+内核起来后加载 HiFiDSP  
 
 
 
