@@ -538,7 +538,7 @@ echo 4 > /sys/kernel/config/usb_gadget/amlogic/functions/uac2.0/c_ssize
 > https://scgit.amlogic.com/#/c/298458
 
 
-### dam 音频数据
+### dump 音频数据
 
 查看 USB 传到 tdm_bridge 的数据是否有问题
 
@@ -556,10 +556,6 @@ audio_tdm_bridge: tdm_bridge {
         status = "okay";
 }; 
 ```
-
-## A4 上跑 tdb_bridge
-
-- cl topic: https://scgit.amlogic.com/#/q/status:open+project:kernel/common+branch:bringup/amlogic-5.4/A4_2_20230309+topic:SWPL-116372
 
 -----
 

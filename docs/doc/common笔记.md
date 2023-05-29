@@ -1278,12 +1278,15 @@ ls /sys/kernel/debug/usb/usbmon/
 如果输出结果类似于 0s  0t  1s  1t，则说明已经加载成功。
 
 启动 usbmon 抓包
+
 使用以下命令启动 usbmon：
 
+```
 sudo modprobe usbmon
 sudo cat /sys/kernel/debug/usb/usbmon/<bus_number>t<device_address>
+```
 
-其中 <bus_number> 和 <device_address> 分别是设备所连接的总线编号和设备地址。例如，如果设备连接在总线 1，地址为 2，则应该输入以下命令：
+其中 `<bus_number>` 和 `<device_address>` 分别是设备所连接的总线编号和设备地址。例如，如果设备连接在总线 1，地址为 2，则应该输入以下命令：
 
 sudo cat /sys/kernel/debug/usb/usbmon/1t2
 
@@ -1292,11 +1295,35 @@ sudo cat /sys/kernel/debug/usb/usbmon/1t2
 过滤 SOF 数据包
 如果只想查看 SOF 数据包，可以使用以下命令过滤：
 
+```
 sudo cat /sys/kernel/debug/usb/usbmon/<bus_number>t<device_address> | grep "SOF"
+```
 
 这将只显示包含 SOF 的数据包。
 
 注意：usbmon 工具需要 root 权限才能使用。
+
+## USB通讯过程
+
+一次完整的通信分为三个过程：
+
+- 请求过程（令牌包）
+- 数据过程（数据包）
+- 状态过程（握手包）
+
+没有数据要传输时，跳过数据过程。
+
+通信过程包含以下三种情况：
+
+![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/image.5rc2w8o9il40.webp)
+
+主机发送令牌包（Token）开始请求过程，如果请求中声明有数据要传输则有数据过程，最后由数据接收方（有数据过程）或从机（无数据过程）发起状态过程，结束本次通信。
+
+与 USB 全速设备通信时，主机将每秒等分为 1000 个帧（Frame）。主机在每帧开始时，向所有从机广播一个帧起始令牌包（Start Of Frame，SOF包）。它的作用有两个：
+- 一是通知所有从机，主机的 USB 总线正常工作；
+- 二是从机以此同步主机的时序。
+
+与 USB 高速设备通信时，主机将帧进一步等分为 8 个微帧（Microframe），每个微帧占 125μ \muμs 。在同一帧内，8个微帧的帧号都等于当前SOF包的帧号。
 
 ------------
 
@@ -1305,7 +1332,7 @@ sudo cat /sys/kernel/debug/usb/usbmon/<bus_number>t<device_address> | grep "SOF"
 ## UAC2
 
 
-UVC（USB Audio Class）定义了使用USB协议播放或采集音频数据的设备应当遵循的规范。目前，UAC协议有UAC1.0和UAC2.0。UAC2.0协议相比UAC1.0协议，提供了更多的功能，支持更高的带宽，拥有更低的延迟。Linux内核中包含了UAC1.0和UAC2.0驱动，分别在f_uac1.c和f_uac2.c文件中实现。这里主要以UAC2驱动为例，具体分析 USB 设备驱动的初始化、描述符配置、数据传输过程等。 
+UVC（USB Audio Class）定义了使用USB协议播放或采集音频数据的设备应当遵循的规范。目前，UAC协议有UAC1.0和UAC2.0。UAC2.0协议相比UAC1.0协议，提供了更多的功能，支持更高的带宽，拥有更低的延迟。Linux内核中包含了 UAC1.0 和 UAC2.0 驱动，分别在 f_uac1.c 和 f_uac2.c 文件中实现。这里主要以 UAC2 驱动为例，具体分析 USB 设备驱动的初始化、描述符配置、数据传输过程等。 
 
 ### UAC2 源码分析
 
@@ -1452,7 +1479,7 @@ static struct usb_function *afunc_alloc(struct usb_function_instance *fi)
 - afunc_free 用于释放音频功能结构体的内存空间。
 
 
-### uac2驱动通过configfs的配置
+### uac2 驱动通过 configfs 的配置
 
 > 参考来源： https://blog.csdn.net/u011037593/article/details/121458492
 
@@ -1472,7 +1499,7 @@ USB 设备的枚举实质上是响应 USB 主机发送请求的过程。对于�
 
 ![](https://img-blog.csdnimg.cn/b64cc232240346e28a876f8ec606bb15.png#pic_center)
 
-### 工作过程分析
+### uac2 工作过程分析
 
 USB主机发送 USB_REQ_SET_INTERFACE 命令时，uac2 驱动将会调用 afunc_set_alt 函数，若 intf=2，alt=1 ，则开始录音，若 intf=1，alt=1，则开始播放。下图是 USB 音频设备工作时数据流的传输过程。录音（capture）时，USB 主机控制器 (PC) 向 USB 设备控制器 (板子 SOC) 发送音频数据，USB 设备控制器收到以后通过 **【DMA控制器】** 将其写入到 usb_request 的缓冲区中，随后再拷贝到 DMA 缓冲区中，**用户可使用 arecord、tinycap 等工具从 DMA 缓冲区中读取音频数据**，DMA 缓冲区是一个 FIFO ，uac2 驱动往里面填充数据，用户应用程序从里面读取数据。播放（playback）时，用户通过 aplay、tinyplay 等工具将音频数据写道 DMA 缓冲区中，uac2 驱动从 DMA 缓冲区中读取数据，然后**构造成 usb_request** ，送到 USB 设备控制器，USB 设备控制器再将音频数据发送到 USB 主机控制器。可以看出录音和播放的音频数据流方向相反，用户和 uac2 驱动构造了一个生产者和消费者模型，录音时，uac2 驱动是生产者，用户是消费者，播放时则相反。
 
@@ -1547,4 +1574,11 @@ Machine 是指某一款机器，可以是某款设备，某款开发板，又或
 - UAC 麦克风学习： https://www.usbzh.com/article/detail-505.html
 - 实现自己的 alsa 驱动： https://blog.csdn.net/u014056414/article/details/120988882
 
+## 音频传输计算
+
+> **对于单声道，采样率为 48000 , 1ms 能读取多少数据？**
+
+如果每个采样点需要占用 32 位（4 个字节），则每毫秒需要读取的字节数为 192。
+
+因此，在单声道、采样率为 48000、每个采样点占用 32 位的情况下，每毫秒能够读取 48 个采样点，即 192 字节的数据。
 
