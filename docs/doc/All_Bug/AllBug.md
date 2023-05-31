@@ -557,6 +557,8 @@ audio_tdm_bridge: tdm_bridge {
 }; 
 ```
 
+loopback https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/292485
+
 -----
 
 # Elaine
