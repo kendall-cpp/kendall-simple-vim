@@ -2213,7 +2213,24 @@ crg_udc_2 {
 
 # Av400 SDK 架构
 
-内核起来后加载 HiFiDSP  
+- 在 bl30 阶段加载 RISC-V ， 跑 rots
+
+/mnt/fileroot/shengken.lin/workspace/sonos-sdk/vendor/amlogic/rtos/HiFiDSP_rtos_sdk
+
+- 内核起来后加载 HiFiDSP , 在这个 dsp core 上跑 rtos 。
+
+/mnt/fileroot/shengken.lin/workspace/sonos-sdk/bootloader/uboot-repo/bl30/rtos_sdk
+
+
+启动 dsp 脚本
+
+```sh
+vim buildroot/package/amlogic/aml-hifi-rtos-sdk/S71_load_dspa
+
+dsp_util --load --dsp hifi4a -f dspbootA.bin
+```
+
+
 
 
 
