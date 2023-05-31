@@ -1736,9 +1736,13 @@ static int effect_platform_probe(struct platform_device *pdev) {
 aml_audiobus_update_bits(actrl, reg, 0x1 << 3, enable << 3);
 ```
 
-BA400 所有的 patch commit 点：
 
-449d128a9e323fc1f5a880fd897b8e7557dd7e4c
+# BA400 UAC 是否丢包
 
-git reset --hard 449d128a9e323fc1f5a880fd897b8e7557dd7e4c
+参考 cl:
+https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/292485
+
+
+## loopback 测试
+
 

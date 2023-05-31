@@ -609,8 +609,6 @@ drivers/amlogic/timestamp/
 
 - 最后编译，编译的时候可能会出现是否选择开启 timerstamp ,输入 y 即可
 
-
-
 ## config 和 mk 文件
 
 比如
