@@ -1739,10 +1739,14 @@ aml_audiobus_update_bits(actrl, reg, 0x1 << 3, enable << 3);
 
 # BA400 UAC 是否丢包
 
-参考 cl:
-https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/292485
 
+测试相关的文件在 /mnt/fileroot/shengken.lin/workspace/a4/A4_file/test_uac_miss
+
+查看下面的 readme.md 说明
 
 ## loopback 测试
 
+参考 cl:
+https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/292485
 
+测试 loopback 不能在 89usbgadget 中配置，可能会由于会与某个程序出现冲突导致一直重启，所以应该在 S90start_adb_udc.sh 中配置 UAC 

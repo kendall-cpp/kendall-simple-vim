@@ -341,6 +341,15 @@ make linux-savedefconfig # 保存到 output/linux-kernel/defconfig
 最后将 defconfig 和 kernel 下的 defconfig 对比并修改
 ```
 
+### 编译 uboot
+
+```sh
+cd a4_buildroot/bootloader/uboot-repo/
+./mk a4_ba409
+
+编译出来的 bin 文件 fip/_tmp/u-boot.bin.signed 或者 build 目录下
+```
+
 ## buildroot 找到配置文件
 
 比如找到 av400 kernel使用的是哪个配置文件
@@ -1407,7 +1416,7 @@ static struct usb_function_instance *afunc_alloc_inst(void)
 		opts->p_ssize = UAC2_DEF_PSSIZE;	//2
 		opts->c_chmask = UAC2_DEF_CCHMASK;	//0x3  默认播放是双声道
 		opts->c_srate = UAC2_DEF_CSRATE;	//64000  默认播放采样率是 64000， 一般都会改成 48000
-		opts->c_ssize = UAC2_DEF_CSSIZE;	//2  一般都会改成 4
+		opts->c_ssize = UAC2_DEF_CSSIZE;	//2  一般都会改成 
 		opts->req_number = UAC2_DEF_REQ_NUM;  //2
 		return &opts->func_inst;
 }

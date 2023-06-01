@@ -21,6 +21,59 @@ proxy-change
 google-git
 ```
 
+### 公版单独编译 bootloader 和烧录
+
+```sh
+cd a4_buildroot/bootloader/uboot-repo/
+./mk a4_ba409
+
+编译出来的 bin 文件 fip/_tmp/u-boot.bin.signed 或者 build 目录下
+
+u-boot.bin.sd.bin.signed (sd card ,1G DDR)
+
+u-boot.bin.signed  emmc 烧录
+
+u-boot.bin.usb.signed  usb 骚瑞
+```
+
+```sh
+#from rom启动执行 :
+adnl.exe bl1_boot -f u-boot.bin.usb.signed
+adnl.exe bl2_boot -f u-boot.bin.usb.signed
+#烧录执行：
+adnl.exe oem "disk_initial 0"
+adnl.exe partition -p bootloader -f u-boot.bin.signed
+```
+
+### 单独烧录 kernel 和 rootfs
+
+- 编译kernel
+
+
+```sh
+ ./scripts/amlogic/mk_smarthome_builtin.sh 
+
+# Image:
+
+common/arch/arm64/boot/Image
+
+# dtb:     
+
+common/arch/arm64/boot/dts/amlogic/a4_a113l2_ba400.dtb
+
+common/arch/arm64/boot/dts/amlogic/a4_a113l2_ba409.dtb
+```
+
+```sh
+adnl partition -m mem -p 0x1080000 -f Image
+
+adnl partition -m mem -p 0x30000000 -f rootfs.cpio.uboot
+
+adnl partition -m mem -p 0x20000000 -f a4_a113l2_ba400.dtb
+
+adnl oem "booti 1080000 30000000 20000000"
+```
+
 ## A1-sync
 
 ```sh
