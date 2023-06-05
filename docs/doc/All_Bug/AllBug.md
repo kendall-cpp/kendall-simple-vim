@@ -157,6 +157,7 @@ https://eureka-partner-review.googlesource.com/c/amlogic/u-boot/+/276588
 https://eureka-partner-review.googlesource.com/c/vendor/amlogic/+/276589
 ```
 
+# BA400
 
 ## 迁移 tdm_bridge 功能到 kernel 5.4
 
@@ -556,8 +557,82 @@ audio_tdm_bridge: tdm_bridge {
         status = "okay";
 }; 
 ```
+### loopback
 
 loopback https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/292485
+
+A4 提交： https://scgit.amlogic.com/#/c/303804
+
+## ba400 wifi ok 但是 ba409 wifi faid 
+
+wifi 加载需要两个驱动
+
+
+```sh
+insmod /lib/modules/5.4.210-08059-g8b54704e8832-dirty/kernel/amlogic/wifi/aml_sdio.ko
+
+insmod /lib/modules/5.4.210-08059-g8b54704e8832-dirty/kernel/amlogic/wifi/vlsicomm.ko
+```
+
+在代码 hardware/aml-5.4/wifi/amlogic/w1/project_w1/vmac 中 insmod aml_sdio.ko ,
+
+代码分析
+
+```c
+aml_insmod
+        aml_sdio_init {
+                if (!w1_sdio_after_porbe) {
+                         set_usb_wifi_power(0);  // 定义在 kernel/aml-5.4/drivers/amlogic/wifi/wifi_dt.c
+                         set_usb_wifi_power(1);    
+                }
+                if (!w1_sdio_driver_insmoded) {  //这里有问题，检测不到 w1_sdio_driver_insmoded == 0
+                        aml_w1_sdio_init() {
+                                w1_sdio_driver_insmoded = 1;
+                        }
+        }
+        // 
+
+```
+
+w1_sdio_driver_insmoded 是在 hardware/aml-5.4/wifi/amlogic/w1/project_w1/vmac/w1_sdio/w1_sdio.c 定义的。
+
+- kernel/aml-5.4/drivers/amlogic/wifi/wifi_dt.c
+
+usb_power_control 中无法正常 power on 导致 sdio_reinit 失效
+
+```c
+  static void usb_power_control(int is_power, int shift)
+  {
+          mutex_lock(&wifi_bt_mutex);
+          if (is_power) {
+                  if (!usb_power) {
+                          set_wifi_power(is_power);
+                          WIFI_INFO("Set %s power on !\n",
+                                    (shift ? "WiFi" : "BT"));
+                          msleep(200);
+                          sdio_reinit();  // 由于供电问题，这里无法正常 reint
+                  }    
+                  usb_power |= (1 << shift);
+                  WIFI_INFO("Set %s power on !\n",
+                            (shift ? "WiFi" : "BT"));
+          } else {
+                  usb_power &= ~(1 << shift);
+                  if (!usb_power) {
+                          set_wifi_power(is_power);
+                          msleep(200);
+                          WIFI_INFO("Set %s power down\n",
+                                    (shift ? "WiFi" : "BT"));
+                  }    
+          }    
+          mutex_unlock(&wifi_bt_mutex);
+  }
+  
+  void set_usb_bt_power(int is_power)
+  {
+          if (!is_pcie_wifi())
+                  usb_power_control(is_power, BT_BIT);                                                                                                                                                                                                        
+  }
+```
 
 -----
 
