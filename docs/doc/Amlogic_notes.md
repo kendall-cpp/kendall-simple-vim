@@ -980,6 +980,24 @@ udhcpc -i wlan0
 wpa_cli save_config
 ```
 
+## wpa_cli 清空 wifi 信息
+
+```sh
+# wpa_cli  list_network
+Selected interface 'wlan0'
+network id / ssid / bssid / flags
+0       kendall any     [CURRENT]
+
+
+wpa_cli remove_network 0    清掉 wlan0
+# 或者 
+wpa_cli -i wlan0 remove_network 0
+
+wpa_cli save_config          保存信息
+```
+
+> 或者执行 wpa_cli 进入 客户端命令行，可以直接执行命令，最后 quit 退出。
+
 ---
 
 # chrome 中打开 kernel log
@@ -2169,7 +2187,100 @@ isochronous transfers （`/aɪˈsɑːkrənəs/`） 和 USB 的 SOF 包之间有�
 代码分析见 [Amlogic代码分析 - crg 控制器分析](doc/Amlogic代码分析?id=crg-控制器分析)
 </font></strong>
 
-## A4 USB 架构
+# BA400 wifi 结构
+
+通过 etc/swupdate/start_wifi.sh 去 start wifi , 也就是通过 multi_wifi_load_driver 去 insmod aml_sdio.ko 和 vlsicomm.ko 。
+
+> start_wifi.sh 是在 board/amlogic/common/ota/ota-a4/ramdisk/etc/init.d/S01swupdate 中执行的
+## 应用层
+
+```sh
+multi_wifi_load_driver station 1
+# 调用 vendor/amlogic/aml_commonlib/utils/multi_wifi_load_driver.c 这里的代码
+```
+
+- multi_wifi_load_driver 函数调用栈
+
+```c
+main
+  wifi_on
+    multi_wifi_load_driver
+      sdio_wifi_load_driver 
+        insmod(module_path, module_arg);  // imsmod aml_sdio.ko
+
+      fprintf(stderr, "wait usb ok\n");
+
+      usb_wifi_load_driver(type); // 加载 usb wifi
+```
+
+## 内核驱动层
+
+应用 multi_wifi_load_driver insmod 模块的时候会走到 hardware/aml-5.4/wifi/amlogic/w1/project_w1/vmac 
+
+走到 wifi_hal_platform.c 中的 aml_insmod 
+
+```c
+aml_insmod {
+  aml_sdio_init {
+    if (!w1_sdio_after_porbe) {
+          // 电源相关操作
+              set_usb_wifi_power(0);  // 定义在 kernel/aml-5.4/drivers/amlogic/wifi/wifi_dt.c
+              set_usb_wifi_power(1);    
+    }
+    // 判断 sdio 驱动是否已经注册到 内核， 如果没有注册，那么就注册
+    if (!w1_sdio_driver_insmoded) {  //w1_sdio_driver_insmoded 是在 hardware/aml-5.4/wifi/amlogic/w1/project_w1/vmac/w1_sdio/w1_sdio.c 定义的。
+            aml_w1_sdio_init() {
+                err = sdio_register_driver(&aml_w1_sdio_driver);
+                w1_sdio_driver_insmoded = 1;
+            }
+    }
+    if (!w1_sdio_after_porbe) {  // 也是在 hardware/aml-5.4/wifi/amlogic/w1/project_w1/vmac/w1_sdio/w1_sdio.c 定义的。
+      ERROR_DEBUG_OUT("can't probe sdio!\n");
+      return -ENODEV;
+    }
+  }
+  aml_insmod_flag = 1;  // 表示 aml_sdio.ko 已经 insmod 起来了
+}
+```
+
+分析 hardware/aml-5.4/wifi/amlogic/w1/project_w1/vmac/w1_sdio/w1_sdio.c
+
+```c
+module_init(aml_w1_sdio_insmod);
+static int aml_w1_sdio_insmod(void) 
+{
+  aml_w1_sdio_init() {
+    err = sdio_register_driver(&aml_w1_sdio_driver);
+    w1_sdio_driver_insmoded = 1;  // 说明sdio 驱动已经注册
+  }
+}
+
+aml_w1_sdio_driver {
+  .probe = aml_w1_sdio_probe {
+    aml_w1_sdio_init_ops() {
+      w1_sdio_after_porbe = 1;   // 驱动已经初始化完成
+    }
+  }
+}
+```
+
+## 手动加载和卸载 wifi 模块
+
+主要是 vlsicomm.ko
+
+```sh
+/usr/bin/multi_wifi_load_driver station 1  # 加载
+
+/usr/bin/multi_wifi_load_driver station 0   # 卸载
+```
+
+### 使用默认脚本连接 wifi
+
+```sh
+/usr/bin/wac.sh setwifi kendall kendall00
+```
+
+# A4 USB 架构
 
 ![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/USB架构图-yuegui.3676mln75qm0.webp)
 

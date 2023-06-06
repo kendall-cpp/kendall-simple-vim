@@ -627,11 +627,29 @@ usb_power_control 中无法正常 power on 导致 sdio_reinit 失效
           mutex_unlock(&wifi_bt_mutex);
   }
   
-  void set_usb_bt_power(int is_power)
-  {
-          if (!is_pcie_wifi())
-                  usb_power_control(is_power, BT_BIT);                                                                                                                                                                                                        
-  }
+void set_usb_wifi_power(int is_power)
+{
+        usb_power_control(is_power, IFI_BIT);                                                                    
+}
+```
+
+### 连接和测试 wifi
+
+```sh
+wpa_cli -i wlan0 scan
+wpa_cli -i wlan0 scan_results 
+wpa_cli -i wlan0 add_network
+wpa_cli -i wlan0 set_network 0 ssid '"kendall"'
+wpa_cli -i wlan0 set_network 0 psk '"kendall00"'
+wpa_cli -i wlan0 enable_network 0
+udhcpc -i wlan0
+wpa_cli save_config
+```
+
+或者使用默认脚本
+
+```sh
+/usr/bin/wac.sh setwifi kendall kendall00
 ```
 
 -----
@@ -663,6 +681,7 @@ commitId: 6b7f44b5eed0a00ef73bb94dbf5c64551fdb40a9
 
 
 ### 根据 kernel patch 修复
+
 
 - 讨论 (patch 链接在最后)：https://bugzilla.kernel.org/show_bug.cgi?id=214021
 
