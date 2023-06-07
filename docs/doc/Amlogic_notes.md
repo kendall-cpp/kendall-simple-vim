@@ -2215,7 +2215,9 @@ main
 
 ## 内核驱动层
 
-应用 multi_wifi_load_driver insmod 模块的时候会走到 hardware/aml-5.4/wifi/amlogic/w1/project_w1/vmac 
+应用 multi_wifi_load_driver insmod 模块的时候会走到 hardware/aml-5.4/wifi/amlogic/w1/project_w1/vmac/wifi_hal_platform.c 
+
+hardware/aml-5.4/wifi/amlogic/w1/project_w1/vmac 
 
 走到 wifi_hal_platform.c 中的 aml_insmod 
 
@@ -2260,7 +2262,10 @@ aml_w1_sdio_driver {
     aml_w1_sdio_init_ops() {
       w1_sdio_after_porbe = 1;   // 驱动已经初始化完成
     }
-  }
+  .id_table = aml_w1_sdio,
+  .remove = aml_w1_sdio_remove
+  .drv.pm = &aml_sdio_pm_ops,
+  .drv.shutdown = aml_sdio_shutdown,
 }
 ```
 
@@ -2315,12 +2320,19 @@ crg_udc_2 {
 
 ![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/a4-usb-phy.766tkswb6hc0.webp)
 
-#### 对比 AV400 的 usb-phy 控制器 关系
+## 对比 AV400 的 usb-phy 控制器关系
 
 ![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/av400-usb.7cff1q8iejk0.webp)
 
-----
+## A5-AV400 USB 架构
 
+> **分析的是 Sonos-openlinux USB 架构**
+
+只有一个 micro USB 口，这个口直接对接 crg20_otg ，是一个 otg 模式，默认是 device 模式， 走 crg_udc_2 ，如果介绍 host ，会自动切换成 host 模式，走 crg21_drd 。
+
+![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/image.5u57b1ws6340.webp)
+
+----
 
 # Av400 SDK 架构
 

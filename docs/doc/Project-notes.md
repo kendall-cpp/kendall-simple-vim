@@ -199,38 +199,6 @@ make show-targets # 查看所有package
 ```
 
 
-## wpa_cli连接wifi
-
-```sh
-wpa_cli -iwlan0 remove_network 0
-wpa_cli -iwlan0 add_network 0
-wpa_cli -iwlan0 set_network 0 ssid '"Amlogic-vpn04_5G"'
-wpa_cli -iwlan0 set_network 0 key_mgmt WPA-PSK
-wpa_cli -iwlan0 set_network 0 psk '"Aml1234566"' 
-wpa_cli -iwlan0 set_network 0 pairwise CCMP
-wpa_cli -iwlan0 set_network 0 group CCMP
-wpa_cli -iwlan0 set_network 0 proto RSN
-wpa_cli -iwlan0 enable_network 0
-wpa_cli -iwlan0 status
-wpa_cli -iwlan0 save
-dhcpcd wlan0
-
-wpa_cli -iwlan0 remove_network 0
-wpa_cli -iwlan0 add_network 0
-wpa_cli -iwlan0 set_network 0 ssid '"kendall"'
-wpa_cli -iwlan0 set_network 0 key_mgmt WPA-PSK
-wpa_cli -iwlan0 set_network 0 psk '"12345678"' 
-wpa_cli -iwlan0 set_network 0 pairwise CCMP
-wpa_cli -iwlan0 set_network 0 group CCMP
-wpa_cli -iwlan0 set_network 0 proto RSN
-wpa_cli -iwlan0 enable_network 0
-wpa_cli -iwlan0 status
-wpa_cli -iwlan0 save
-dhcpcd wlan0
-```
-
-
-
 ## 提交gerrit
 
 

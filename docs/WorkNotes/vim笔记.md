@@ -11,6 +11,7 @@
   - [安装 ctags](#安装-ctags)
   - [使用 ctags](#使用-ctags)
   - [在创建ctags的时候排除某些目录](#在创建ctags的时候排除某些目录)
+  - [指定文件夹和文件类型](#指定文件夹和文件类型)
   - [函数变量查找](#函数变量查找)
   - [ubuntu 安装 ag](#ubuntu-安装-ag)
 - [vim 命令记录](#vim-命令记录)
@@ -224,6 +225,7 @@ sudo apt-get install ctags
 > 不过还有一个小瑕疵, 你修改程序后, 比如增加了函数定义, 删除了变量定义, tags文件不能自动rebuild, 你必须手动再运行一下命令: `ctags -R`
 
 不过，ctags -R 有个问题，成员变量没有包含在里面。所以自动完成对象的成员时没有提示。
+
 解决办法：
 
 ```
@@ -236,15 +238,17 @@ ctags -R --exclude=pattern
 
 ctags -R --exclude=hifi4_framework/*
 
-或者将所有需要排除的目录都写在一个文件 exclude_file 里，然后ctags -R --exclude=@exclude_file
+或者将所有需要排除的目录都写在一个文件 exclude_file 里，然后 ctags -R --exclude=@exclude_file
+
+### 指定文件夹和文件类型
+
+ctags -R --languages=c,c++ /path/to/folder1 /path/to/folder2
 
 ### 函数变量查找
 
 - 命令模式下  CTRL+] 跳转到函数或者变量
 
 - 查找完毕返回到当前：CTRL+o
-
-
 
 
 ### ubuntu 安装 ag
