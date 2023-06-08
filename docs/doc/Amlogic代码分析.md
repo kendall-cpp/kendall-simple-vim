@@ -1116,47 +1116,50 @@ static void u_audio_iso_cap_complete(struct usb_ep *ep, struct usb_request *req)
 }
 ```
 
-## tdm_bridge
+# 关于系统分区代码分析
 
-如果您使用的是单声道音频流，则每个采样帧的大小应该为 2 到 2.5 字节，具体取决于音频设备硬件和采样率。对于一个典型的 48 kHz 采样率的单声道音频流，每个采样帧的大小通常为 2 字节，这意味着每秒需要传输的数据量为 48,000 Hz x 2 B = 96,000 B/s = 93.75 KB/s 左右。
-
-因此，在 u_audio_iso_cap_complete() 函数中，如果您使用的是单声道音频流，则 req->actual 的值应该大致等于每秒传输的数据量除以每个包传输的数据量（通常为 192 【48,000 Hz x 4 B 】 字节），而不是始终等于 192。例如，在上面给出的单声道音频流示例中，每个 1 ms 包应该传输约 93.75 KB/s / 1000 = 93.75 B。因此，如果没有数据传输丢失或其他问题，则 req->actual 的值应该非常接近于 93.75。
-
-需要注意的是，如果您的音频流具有不同的采样率、声道数或采样格式，则每个采样帧的大小和每秒传输的数据量也会发生变化，因此 req->actual 的值也会随之变化。
-
-### aml_tdm_br_dmabuf_avail_space
+- kernel/aml-5.4/arch/arm64/boot/dts/amlogic/a4_a113l2_ba400.dts
 
 ```c
-int aml_tdm_br_dmabuf_avail_space(void)
-{
-	unsigned int dmabuf_size = tdm_br_dmabuf.bytes;
-	unsigned int space = 0;
-	unsigned int addr = 0;
-	struct aml_tdm *tdm = gp_tdm;
-	if (!tdm) {
-		pr_err("%s, can't get tdm dev\n", __func__);
-		return -1;
-	}
-	addr = atomic_read(&cur_rd_addr);//aml_frddr_get_position(tb_c.fddr);
-	if (last_wr_addr == addr)  //当前位置正好是上一次写的位置，那么说明当前缓冲区中已经没有数据了
-		return dmabuf_size;  // 4 * 48000
+    partitions: partitions{
+        parts = <5>; 
+        part-0 = <&recovery>;
+        part-1 = <&misc>;
+        part-2 = <&boot>;
+        part-3 = <&system>;
+        part-4 = <&data>;
 
-	if (last_wr_addr > addr)  // 上一次写的位置在当前位置后面，说明 last_wr_addr - addr 中间是缓冲数据
-		space = dmabuf_size + addr - last_wr_addr; // dmabuf_size - (last_wr_addr - addr)
-	else
-		space = addr - last_wr_addr;  //只需沿着 上一次 写的后面塞数据就可以
-		// 如果 add - last_wr_addr , 也就是最后一点小于 192 ,那么久说明有误了，no space
-
-	return space;
-}
+        recovery:recovery{
+            pname = "recovery";
+            size = <0x0 0x2000000>;
+            mask = <1>; 
+        };   
+        misc:misc{
+            pname = "misc";
+            size = <0x0 0x800000>;
+            mask = <1>; 
+        };   
+        boot:boot
+        { 
+            pname = "boot";
+            size = <0x0 0x4000000>;
+            mask = <1>; 
+        };
+        system:system
+        {
+            pname = "system";
+            size = <0x0 0x40000000>;
+            mask = <1>; 
+        }; 
+        data:data
+        {
+            pname = "data";
+            size = <0xffffffff 0xffffffff>;
+            mask = <4>; 
+        };   
+    };   
+};
 ```
 
-### aml_tdm_br_frddr_prepare
+- bootloader/uboot-repo/bl33/v2019/board/amlogic/a4_ba400/a4_ba400.c
 
-```c
-### int aml_tdm_br_frddr_prepare(struct aml_tdm *p_tdm)
-{
-	aml_frddr_set_intrpt(fddr, int_addr); //aml_audio_mmio_write
-	// aml_tdm_bridge_frddr_isr 对应 aml_frddr_get_position //aml_audio_mmio_read
-}
-```

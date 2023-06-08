@@ -27,7 +27,7 @@
 	- [push 别人已经推送过的 commit](#push-别人已经推送过的-commit)
 	- [解释 push HEAD](#解释-push-head)
 - [git patch](#git-patch)
-	- [git format-patch：生成commit的内容](#git-format-patch生成commit的内容)
+	- [生成 patch](#生成-patch)
 	- [检查 patch](#检查-patch)
 	- [git am 对应 git format-patch](#git-am-对应-git-format-patch)
 	- [git apply 与 git am 的区别](#git-apply-与-git-am-的区别)
@@ -465,7 +465,7 @@ git push origin HEAD:refs/for/master
 
 ## git patch
 
-### git format-patch：生成commit的内容
+### 生成 patch
 
 ```
 生成最近1次的commit的patch
@@ -489,8 +489,8 @@ git format-patch -1 <commit_hash>
 某次提交以后的所有patch，不包括 commit_hash 这个
 git format-patch <commit_hash>
 
-将所有patch输出到一个指定位置的指定文件，git am 的时候会看到所有的 commit
-git format-patch -1 <commit_hash> --stdout > xxx.patch
+将所有patch输出到一个指定位置的指定文件，git am 的时候会看到所有的 commit (不包括 commit_hash 这个)
+git format-patch  <commit_hash> --stdout > xxx.patch
 ```
 
 ### 检查 patch

@@ -895,7 +895,18 @@ index d1a19855a1..b3660ab80d 100644
 +        }
 ```
 
-- 板子上查看分区
+## 计算分区对应关系
+
+对比这两个文件计算
+
+> kernel/arch/arm64/boot/dts/amlogic/korlan-common.dtsi     
+> u-boot/board/amlogic/a1_korlan_p2/a1_korlan_p2.c
+
+- system : 0x1E00000 / 1024 / 1024 = 30  ------- 30 * SZ_1M
+- boot : 0xC00000 / 1024 / 1024 = 12  -------   12 * SZ_1M
+- recovery : 0xC00000 / 1024 / 1024  -------   12 * SZ_1M
+
+## 板子上查看分区
 
 ```sh
 cat /proc/mtd
@@ -2324,13 +2335,21 @@ crg_udc_2 {
 
 ![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/av400-usb.7cff1q8iejk0.webp)
 
-## A5-AV400 USB 架构
+## A5 USB 架构
 
-> **分析的是 Sonos-openlinux USB 架构**
+> **基于 Sonos-openlinux(av400) USB 分析**
 
-只有一个 micro USB 口，这个口直接对接 crg20_otg ，是一个 otg 模式，默认是 device 模式， 走 crg_udc_2 ，如果介绍 host ，会自动切换成 host 模式，走 crg21_drd 。
+只有一个 micro USB 口，这个口直接对接 crg20_otg ，是一个 otg 模式，默认是 device 模式， 走 crg_udc_2 ，如果接上 host ，会自动切换成 host 模式，走 crg21_drd 。
 
 ![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/image.5u57b1ws6340.webp)
+
+## A4 USB 架构
+
+> **基于 a4-ba400 分析**
+
+micro USB 口，otg mode, 两个额外的 USB 口只能作为 host.
+
+![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/image.3e413zuo1ec.webp)
 
 ----
 

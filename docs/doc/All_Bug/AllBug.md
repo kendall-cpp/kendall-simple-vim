@@ -563,7 +563,9 @@ loopback https://eureka-partner-review.googlesource.com/c/amlogic/kernel/+/29248
 
 A4 提交： https://scgit.amlogic.com/#/c/303804
 
-## ba400 wifi ok 但是 ba409 wifi faid 
+## A113L2 功耗测试
+
+### ba400 wifi ok 但是 ba409 wifi faid 
 
 wifi 加载需要两个驱动
 
@@ -650,7 +652,23 @@ wpa_cli save_config
 
 ```sh
 /usr/bin/wac.sh setwifi kendall kendall00
+
+# 清空
+wpa_cli -i wlan0 remove_network 0
+wpa_cli save_config
 ```
+
+### 手动加载和卸载 wifi 模块
+
+主要是 vlsicomm.ko
+
+```sh
+/usr/bin/multi_wifi_load_driver station 1  # 加载
+
+/usr/bin/multi_wifi_load_driver station 0   # 卸载
+```
+
+上面这些动作都是在 S39wifi 脚本中完成，可以直接使用 S39wifi start 来 start wifi 
 
 -----
 
