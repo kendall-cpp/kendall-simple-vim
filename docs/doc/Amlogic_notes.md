@@ -841,8 +841,17 @@ https://eureka-partner-review.googlesource.com/c/amlogic/u-boot/+/276588
 https://eureka-partner-review.googlesource.com/c/vendor/amlogic/+/276589
 ```
 
+# 系统分区
 
-# 给 korlan 增加一个分区
+- kernel 分区表
+
+kernel/aml-5.4/arch/arm64/boot/dts/amlogic/a4_a113l2_ba400.dts
+
+- uboot 中 nand 分区表
+
+bootloader/uboot-repo/bl33/v2019/board/amlogic/a4_ba400/a4_ba400.c
+
+## 给 korlan 增加一个分区
 
 ```
 vim  google_source/eureka/korlan-sdk/u-boot/board/amlogic/a1_korlan_p2/a1_korlan_p2.c
@@ -895,18 +904,8 @@ index d1a19855a1..b3660ab80d 100644
 +        }
 ```
 
-## 计算分区对应关系
+### 查看自己增加的分区
 
-对比这两个文件计算
-
-> kernel/arch/arm64/boot/dts/amlogic/korlan-common.dtsi     
-> u-boot/board/amlogic/a1_korlan_p2/a1_korlan_p2.c
-
-- system : 0x1E00000 / 1024 / 1024 = 30  ------- 30 * SZ_1M
-- boot : 0xC00000 / 1024 / 1024 = 12  -------   12 * SZ_1M
-- recovery : 0xC00000 / 1024 / 1024  -------   12 * SZ_1M
-
-## 板子上查看分区
 
 ```sh
 cat /proc/mtd
@@ -918,6 +917,18 @@ ls /dev/block/mtdblock8
 # 可以在 init.rc 中查看
 # exec /bin/sh /sbin/check_and_mount_ubifs.sh 7 cache /cache 20 
 ```
+
+## 计算分区对应关系
+
+对比这两个文件计算
+
+> kernel/arch/arm64/boot/dts/amlogic/korlan-common.dtsi     
+> u-boot/board/amlogic/a1_korlan_p2/a1_korlan_p2.c
+
+- system : 0x1E00000 / 1024 / 1024 = 30  ------- 30 * SZ_1M
+- boot : 0xC00000 / 1024 / 1024 = 12  -------   12 * SZ_1M
+- recovery : 0xC00000 / 1024 / 1024  -------   12 * SZ_1M
+
 
 ## 读取分区表
 
@@ -956,10 +967,60 @@ adnl oem "store read 0x1080000 system_1 0 0x2c0000"
 adnl upload -f system_1.bin  -z 0x2c0000 -m mem -p 0x1080000
 ```
 
+### uboot 读取分区数据
+
+```sh
+分区表，
+0x000000000000-0x000000200000 : "bootloader"
+0x000000800000-0x000001000000 : "tpl"
+0x000001000000-0x000001100000 : "fts"
+0x000001100000-0x000001500000 : "factory"
+0x000001500000-0x000002120000 : "recovery"
+0x000002120000-0x000002d20000 : "boot"
+0x000002d20000-0x000004be0000 : "system"
+0x000004be0000-0x000008000000 : "cache"
+
+step1: 读fts分区到 0x1080000 
+E:\amlogic_tools\aml_dnl-win32\adnl.exe oem "store read 0x1080000 fts 0 0x100000"
+
+step2: 从1080000， dump 出 0x100000 到fts.bin.
+E:\amlogic_tools\aml_dnl-win32\adnl.exe upload -f fts.bin  -z 0x100000 -m mem -p 0x1080000
+```
+
+### 板子上查看分区
+
+```sh
+/ # cat /proc/mtd 
+dev:    size   erasesize  name
+mtd0: 00200000 00020000 "bootloader"
+mtd1: 00800000 00020000 "tpl"
+mtd2: 00100000 00020000 "fts"
+mtd3: 00400000 00020000 "factory"
+mtd4: 00c20000 00020000 "recovery"
+mtd5: 00c00000 00020000 "boot"
+mtd6: 01e00000 00020000 "system"
+mtd7: 03220000 00020000 "cache"
+mtd8: 002c0000 00020000 "system_1"
+
+adnl oem "store read 0x1080000 system_1 0 0x2c0000"
+adnl upload -f system_1.bin  -z 0x2c0000 -m mem -p 0x1080000
+
+# 对比 system_1.bin 和 erofs.img
+第一种方法： 将后缀改成一样然后用 compare 工具比较
+第二种方法：
+hexdump -C system_1.bin > system_1.bin.txt
+hexdump -C erofs.img > erofs.img.txt 
+vim -d erofs.img.txt  system_1.bin.txt 
+
+
+# 挂载
+mount -t erofs /dev/block/mtdblock8  /data/aaa/
+```
+
 # 更改工厂模式 factory
 
 ```sh
-cat /proc/fts 
+cat /proc/fts
 fts -s bootloader.command  # 设置bootloader命令
 fts -i  #清除工厂模式
 ```
@@ -971,7 +1032,7 @@ wpa_cli -iwlan0 remove_network 0
 wpa_cli -iwlan0 add_network 0
 wpa_cli -iwlan0 set_network 0 ssid '"Amlogic-vpn04_5G"'
 wpa_cli -iwlan0 set_network 0 key_mgmt WPA-PSK
-wpa_cli -iwlan0 set_network 0 psk '"Aml1234566"' 
+wpa_cli -iwlan0 set_network 0 psk '"Aml1234566"'
 wpa_cli -iwlan0 set_network 0 pairwise CCMP
 wpa_cli -iwlan0 set_network 0 group CCMP
 wpa_cli -iwlan0 set_network 0 proto RSN
@@ -982,7 +1043,7 @@ dhcpcd wlan0
 
 # 或者
 wpa_cli -i wlan0 scan
-wpa_cli -i wlan0 scan_results 
+wpa_cli -i wlan0 scan_results
 wpa_cli -i wlan0 add_network
 wpa_cli -i wlan0 set_network 0 ssid '"kendall"'
 wpa_cli -i wlan0 set_network 0 psk '"kendall00"'
@@ -999,7 +1060,6 @@ Selected interface 'wlan0'
 network id / ssid / bssid / flags
 0       kendall any     [CURRENT]
 
-
 wpa_cli remove_network 0    清掉 wlan0
 # 或者 
 wpa_cli -i wlan0 remove_network 0
@@ -1009,7 +1069,7 @@ wpa_cli save_config          保存信息
 
 > 或者执行 wpa_cli 进入 客户端命令行，可以直接执行命令，最后 quit 退出。
 
----
+----
 
 # chrome 中打开 kernel log
 
@@ -1251,13 +1311,13 @@ mount -t vfat /dev/sda1 /mnt/usb
 umount /mnt/usb/
 ```
 
-# uboot 下查看 USB 模式
+# uboot USB 模式
 
 通过 uboot 命令查看 U盘 中的数据
 
 - 初始化 USB 中
 
-usb start 0
+usb start
 
 - 读取 USB 中的数据
 
@@ -1266,6 +1326,11 @@ fatls usb 0
 - 将 USB 中的数据写到 DRAM （如果是镜像烧录）
 
 fatload usb 0 ${loadaddr} recovery.img 0x10000000 0
+
+## uboot usb 代码分析
+
+usb 命令定义在 cmd/usb.c
+
 
 
 # av400 audio 工具
@@ -2352,6 +2417,8 @@ micro USB 口，otg mode, 两个额外的 USB 口只能作为 host.
 ![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/image.3e413zuo1ec.webp)
 
 ----
+
+
 
 # Av400 SDK 架构
 

@@ -285,6 +285,7 @@ repo sync
 ## 编译korlan-4.19
 
 ```sh
+# build without "release"，Default compilation option will enable logs.
 cd bl2
 ./build_bl2.sh korlan-b1 ../u-boot release
 cd -

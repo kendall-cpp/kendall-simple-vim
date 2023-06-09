@@ -309,7 +309,7 @@ u-boot/drivers/pinctrl/meson/pinctrl-meson-axg.c
 ```
 
  Meson 系列的 SOC 有两个pinctrl 控制器，分别是： pinctrl_aobus 和 pinctrl_periphs
- 
+
 - pinctrl_aobus -- AO domain
 - pinctrl_periphs -- EE domain
 
@@ -397,7 +397,7 @@ config=${local_name}_${rev}${cfg_suffix} # config=a1_korlan_p2
 
 ./mk ${config} --board_name $board_name --bl2 fip/${soc_family_name}/bl2.bin --bl30 fip/${soc_family_name}/bl30.bin --bl31 fip/${soc_family_name}/bl31.img --bl32 fip/${soc_family_name}/bl32.img $5
 # ./mk a1_korlan_p2 --board_name korlan-p2 --bl2 fip/a1/bl2.bin --bl30 fip/a1/bl30.bin --bl31 fip/a1/bl31.img --bl32 fip/a1/bl32.img release
-# 这行命令主要的工作时 source 前面所有的 脚本
+# 这行命令主要的工作是 source 前面所有的 脚本
 
 local bootloader_path=${workspace_path}/vendor/amlogic/${product}/prebuilt/${folder}
 # bootloader_path=/mnt/fileroot/shengken.lin/workspace/google_source/eureka/chrome/vendor/amlogic/korlan/prebuilt/bootloader
@@ -409,7 +409,7 @@ cp fip/build/bl32.img ${bootloader_path}/bl32.img.${board}
 cp fip/build/bl33.bin ${bootloader_path}/bl33.bin.${board}
 
 # 拷贝ddr bin用于eureka源下的引导加载程序签名
-# 删除vendor/amlogic下的ddr文件的硬代码
+# 删除vendor/amlogic下的ddr文件的源代码
 cp fip/${soc_family_name}/aml_ddr.fw ${bootloader_path}
 ```
 
