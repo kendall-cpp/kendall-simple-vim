@@ -350,6 +350,17 @@ cd a4_buildroot/bootloader/uboot-repo/
 编译出来的 bin 文件 fip/_tmp/u-boot.bin.signed 或者 build 目录下
 ```
 
+### 编译 bl30
+
+```sh
+cd bootloader/uboot-repo/bl30/rtos_sdk
+
+REPO_DIR=
+source scripts/env.sh riscv a4 ba400_a113l2 aocpu && make distclean && make REPO_DIR=$REPO_DIR
+output_dir=output/riscv-ba400_a113l2-aocpu/freertos
+cp -arf ${output_dir}/freertos.bin ${output_dir}/bl30.bin
+```
+
 ## buildroot 找到配置文件
 
 比如找到 av400 kernel使用的是哪个配置文件
@@ -1331,6 +1342,87 @@ sudo cat /sys/kernel/debug/usb/usbmon/<bus_number>t<device_address> | grep "SOF"
 - 二是从机以此同步主机的时序。
 
 与 USB 高速设备通信时，主机将帧进一步等分为 8 个微帧（Microframe），每个微帧占 125μ \muμs 。在同一帧内，8个微帧的帧号都等于当前SOF包的帧号。
+
+## USB 抓包分析
+
+使用抓包工具 usbmon ，在 ubuntu 上进行抓包分析
+
+```sh
+# ubuntu 中
+sudo  mount -t debugfs none  /sys/kernel/debug
+sudo modprobe usbmon
+sudo ls /sys/kernel/debug/usb/usbmon
+0s  0u  1s  1t  1u  2s  2t  2u  3s  3t  3u  4s  4t  4u
+
+# 显示上面说明 usbmon 可以使用
+```
+
+- 查看要抓取的设备，可以通过插入前后对比是哪个设备
+
+```sh
+cat /sys/kernel/debug/usb/devices 
+
+ T:  Bus=03 Lev=01 Prnt=01 Port=01 Cnt=01 Dev#=127 Spd=480  MxCh= 0  # 总线是 03 ， 设备是 127
+ P:  Vendor=18d1 ProdID=4e26 Rev= 5.04   # 选择需要有这行的设备
+```
+
+- 或者使用 lsusb 查看
+
+```sh
+Bus 003 Device 127: ID 18d1:4e26 Google Inc. p212
+```
+
+- 保存抓取的数据文件
+
+```sh
+cat  /sys/kernel/debug/usb/usbmon/3u > usb3u.txt
+```
+
+- **使用 wireshark 实时抓取分析**
+
+- 添加udev规则，使得 wireshark 可以捕获到usb接口数据
+
+```
+# addgroup usbmon
+Adding group `usbmon' (GID 1001) ...
+Done.
+
+
+# gpasswd -a $USER usbmon
+Adding user amlogic to group usbmon
+```
+
+- 查看规则文件，该文件名可能会根据不同电脑会有所不同，根据实际文件对应修改。
+
+```sh
+vim /etc/udev/rules.d/99-usbmon.rules   # 创建并添加
+
+# 加入下面这一行
+SUBSYSTEM=="usbmon", GROUP="usbmon", MODE="640“
+```
+
+### 使用 wireshark 打开抓取的数据
+
+```sh
+apt install wireshark-qt
+```
+
+- 配置
+
+```sh
+# 将下面这一行
+--dofile(DATA_DIR.."dtd_gen.lua")
+# 改为
+--dofile(DATA_DIR.."console.lua")
+```
+
+- 打开 wireshark，需要在 ubuntu 中，有界面
+
+- 或者使用 wireshark 打印保存的抓取分拣
+
+```sh
+wireshark ./usb3u.txt
+```
 
 ------------
 

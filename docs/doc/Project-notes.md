@@ -8,11 +8,11 @@ git config --global user.name "shengken.lin"
 git config --global user.email "shengken.lin@amlogic.com"
 ```
 
-- 拉取 google 代码前
+## 拉取 google 代码前
 
 ```sh
 # 设置 depot_path
-google-repo-sync
+source  google-repo-sync
 
 # 设置代理
 proxy-change
@@ -1959,4 +1959,57 @@ echo "#define _IO_IN_BACKUP 0x100" >> lib/stdio-impl.h
 ```
 # 进入 uboot
 up
+```
+
+
+# newman
+
+## 编译 newman
+
+```sh
+# 不加 release 表示打开 log
+cd bl2
+./build_bl2.sh newman-b3 release
+cd -
+
+cd bl31
+./build_bl31.sh newman-b3 release
+cd -
+
+cd bl32
+./build_bl32.sh newman-b3 release
+cd -
+
+cd u-boot
+./build_uboot.sh newman-b3 ./../../chrome 
+cd -
+
+cd kernel
+./build_kernel.sh newman-b3 ./../../chrome 
+cd -
+
+```
+
+## 烧录 newman
+
+```sh
+D:\my_software\Aml_usb_update_tool_4_windows-1.7.5\update.exe write bl2.bin 0xfffa0000   //将bl2 写到ddr中
+
+D:\my_software\Aml_usb_update_tool_4_windows-1.7.5\update.exe run  0xfffa0000                //run bl2 
+
+ cat bl2.bin tpl.bin > u-boot.bin
+
+D:\my_software\Aml_usb_update_tool_4_windows-1.7.5\update.exe bl2_boot u-boot.bin        //将u-boot加载到ddr中，并run u-boot
+
+
+
+D:\my_software\Aml_usb_update_tool_4_windows-1.7.5\update.exe mwrite newman-b3.dtb mem 0x1000000 normal   //将dtb加载到ddr中
+
+D:\my_software\Aml_usb_update_tool_4_windows-1.7.5\update.exe bulkcmd "emmc part_write 0x1000000"    //擦掉头部MBR & GPT; 并将dtb中的分区信息获取出来写到gpt中
+
+D:\my_software\Aml_usb_update_tool_4_windows-1.7.5\update.exe  partition bootloader  u-boot.bin              // 烧录bootloader分区
+
+D:\my_software\Aml_usb_update_tool_4_windows-1.7.5\update.exe partition boot  boot.img                            //烧录boot分区
+
+D:\my_software\Aml_usb_update_tool_4_windows-1.7.5\update.exe  partition system system.img                     //烧录system 分区  
 ```

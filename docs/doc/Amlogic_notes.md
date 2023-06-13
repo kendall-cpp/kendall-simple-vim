@@ -843,6 +843,8 @@ https://eureka-partner-review.googlesource.com/c/vendor/amlogic/+/276589
 
 # 系统分区
 
+## nand flash
+
 - kernel 分区表
 
 kernel/aml-5.4/arch/arm64/boot/dts/amlogic/a4_a113l2_ba400.dts
@@ -851,7 +853,7 @@ kernel/aml-5.4/arch/arm64/boot/dts/amlogic/a4_a113l2_ba400.dts
 
 bootloader/uboot-repo/bl33/v2019/board/amlogic/a4_ba400/a4_ba400.c
 
-## 给 korlan 增加一个分区
+### 给 korlan 增加一个分区
 
 ```
 vim  google_source/eureka/korlan-sdk/u-boot/board/amlogic/a1_korlan_p2/a1_korlan_p2.c
@@ -904,7 +906,7 @@ index d1a19855a1..b3660ab80d 100644
 +        }
 ```
 
-### 查看自己增加的分区
+#### 查看自己增加的分区
 
 
 ```sh
@@ -918,7 +920,7 @@ ls /dev/block/mtdblock8
 # exec /bin/sh /sbin/check_and_mount_ubifs.sh 7 cache /cache 20 
 ```
 
-## 计算分区对应关系
+### 计算分区对应关系
 
 对比这两个文件计算
 
@@ -930,7 +932,7 @@ ls /dev/block/mtdblock8
 - recovery : 0xC00000 / 1024 / 1024  -------   12 * SZ_1M
 
 
-## 读取分区表
+### 读取分区表
 
 ```sh
 分区表，
@@ -1016,6 +1018,24 @@ vim -d erofs.img.txt  system_1.bin.txt
 # 挂载
 mount -t erofs /dev/block/mtdblock8  /data/aaa/
 ```
+
+## EMMC 分区
+
+EMMC 分区表一般在这里定义
+
+bootloader/uboot-repo/bl33/v2019/drivers/mmc/aml_emmc_partition.c
+
+```c
+struct partitions emmc_partition_table[] = {
+  PARTITION_ELEMENT(MMC_RESERVED_NAME, MMC_RESERVED_SIZE, 0),
+  PARTITION_ELEMENT(MMC_RESERVED_NAME, MMC_RESERVED_SIZE, 0),
+  PARTITION_ELEMENT(MMC_CACHE_NAME, 0, 0),
+  PARTITION_ELEMENT(MMC_ENV_NAME, MMC_ENV_SIZE, 0),
+}
+
+// 上面的宏定义在 emmc_partitions.h 中
+```
+
 
 # 更改工厂模式 factory
 
