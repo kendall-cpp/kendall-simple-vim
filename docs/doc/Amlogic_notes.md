@@ -2283,6 +2283,64 @@ isochronous transfers （`/aɪˈsɑːkrənəs/`） 和 USB 的 SOF 包之间有�
 代码分析见 [Amlogic代码分析 - crg 控制器分析](doc/Amlogic代码分析?id=crg-控制器分析)
 </font></strong>
 
+# A4 USB 架构
+
+![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/USB架构图-yuegui.3676mln75qm0.webp)
+
+```c
+crg_phy_20 {
+	compatible = "amlogic, amlogic-crg-drd-usb2";
+	
+}
+crg3_phy_20 {
+	compatible = "amlogic, amlogic-crg-drd-usb3";	
+}
+crg20_otg {
+	compatible = "amlogic, amlogic-crg-otg";
+}
+crg2_drd {
+	usb-phy = <&crg_phy_20>, <&crg3_phy_20>;
+	clock-src = "usb3.0";
+}
+crg_phy_21 {
+	compatible = "amlogic, amlogic-crg-drd-usb2";
+}
+crg3_phy_21 {  // 为了满足 usb 物理上的需要，必须加上一个伪装的，实际上不适用 USB3.0
+	compatible = "amlogic, amlogic-crg-drd-usb3";
+}
+crg21_drd {
+	usb-phy = <&crg_phy_21>, <&crg3_phy_21>;
+}
+crg_udc_2 {
+	compatible = "amlogic, crg_udc";
+}
+```
+
+![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/a4-usb-phy.766tkswb6hc0.webp)
+
+## 对比 AV400 的 usb-phy 控制器关系
+
+![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/av400-usb.7cff1q8iejk0.webp)
+
+## A5 USB 架构
+
+> **基于 Sonos-openlinux(av400) USB 分析**
+
+只有一个 micro USB 口，这个口直接对接 crg20_otg ，是一个 otg 模式，默认是 device 模式， 走 crg_udc_2 ，如果接上 host ，会自动切换成 host 模式，走 crg21_drd 。
+
+![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/image.5u57b1ws6340.webp)
+
+## A4 USB 架构
+
+> **基于 a4-ba400 分析**
+
+micro USB 口，otg mode, 两个额外的 USB 口只能作为 host.
+
+![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/image.3e413zuo1ec.webp)
+
+----
+
+
 # BA400 wifi 结构
 
 通过 etc/swupdate/start_wifi.sh 去 start wifi , 也就是通过 multi_wifi_load_driver 去 insmod aml_sdio.ko 和 vlsicomm.ko 。
@@ -2380,65 +2438,6 @@ aml_w1_sdio_driver {
 ```sh
 /usr/bin/wac.sh setwifi kendall kendall00
 ```
-
-# A4 USB 架构
-
-![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/USB架构图-yuegui.3676mln75qm0.webp)
-
-```c
-crg_phy_20 {
-	compatible = "amlogic, amlogic-crg-drd-usb2";
-	
-}
-crg3_phy_20 {
-	compatible = "amlogic, amlogic-crg-drd-usb3";	
-}
-crg20_otg {
-	compatible = "amlogic, amlogic-crg-otg";
-}
-crg2_drd {
-	usb-phy = <&crg_phy_20>, <&crg3_phy_20>;
-	clock-src = "usb3.0";
-}
-crg_phy_21 {
-	compatible = "amlogic, amlogic-crg-drd-usb2";
-}
-crg3_phy_21 {  // 为了满足 usb 物理上的需要，必须加上一个伪装的，实际上不适用 USB3.0
-	compatible = "amlogic, amlogic-crg-drd-usb3";
-}
-crg21_drd {
-	usb-phy = <&crg_phy_21>, <&crg3_phy_21>;
-}
-crg_udc_2 {
-	compatible = "amlogic, crg_udc";
-}
-```
-
-![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/a4-usb-phy.766tkswb6hc0.webp)
-
-## 对比 AV400 的 usb-phy 控制器关系
-
-![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/av400-usb.7cff1q8iejk0.webp)
-
-## A5 USB 架构
-
-> **基于 Sonos-openlinux(av400) USB 分析**
-
-只有一个 micro USB 口，这个口直接对接 crg20_otg ，是一个 otg 模式，默认是 device 模式， 走 crg_udc_2 ，如果接上 host ，会自动切换成 host 模式，走 crg21_drd 。
-
-![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/image.5u57b1ws6340.webp)
-
-## A4 USB 架构
-
-> **基于 a4-ba400 分析**
-
-micro USB 口，otg mode, 两个额外的 USB 口只能作为 host.
-
-![](https://cdn.staticaly.com/gh/kendall-cpp/blogPic@main/blog-01/image.3e413zuo1ec.webp)
-
-----
-
-
 
 # Av400 SDK 架构
 

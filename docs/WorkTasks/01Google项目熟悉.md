@@ -25,7 +25,7 @@
   - [用alsa播放wav文件](#用alsa播放wav文件)
     - [aml\_tdm\_open](#aml_tdm_open)
 - [2022年8月11日](#2022年8月11日)
-  - [核对 pinmux 功能](#核对-pinmux-功能)
+  - [核对 gpio-pinmux 功能](#核对-gpio-pinmux-功能)
     - [记录](#记录)
     - [寻找 GPIOP](#寻找-gpiop)
     - [寻找 GPIOB](#寻找-gpiob)
@@ -587,7 +587,7 @@ dump_stack();
 
 ## 2022年8月11日
 
-### 核对 pinmux 功能
+### 核对 gpio-pinmux 功能
 
 #### 记录
 
@@ -605,7 +605,7 @@ HW -- (gpio) -->> pinmux  -->> dts -->> drive(SW)
 
 vim drivers/amlogic/pinctrl/pinctrl-meson-a1.c
 
-搜索 GPIOB
+搜索 GPIOP
 
 ```c
 static const unsigned int psram_clkn_pins[] = {GPIOP_0};                                                              
