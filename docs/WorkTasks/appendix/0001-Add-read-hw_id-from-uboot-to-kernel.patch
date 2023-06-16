@@ -1,0 +1,104 @@
+From 8bcbab8af8563e927de3895fd7ca6b884bf81f75 Mon Sep 17 00:00:00 2001
+From: "shengken.lin" <shengken.lin@amlogic.com>
+Date: Fri, 16 Jun 2023 19:19:31 +0800
+Subject: [PATCH] Add read hw_id from uboot to kernel
+
+Change-Id: I8d96df23b67d4a05d5851f9bb8b72262eb2df704
+Signed-off-by: shengken.lin <shengken.lin@amlogic.com>
+---
+ board/amlogic/a4_ba400/a4_ba400.c | 33 +++++++++++++++++++++++++++++++
+ board/amlogic/configs/a4_ba400.h  | 11 ++++++++---
+ 2 files changed, 41 insertions(+), 3 deletions(-)
+
+diff --git a/board/amlogic/a4_ba400/a4_ba400.c b/board/amlogic/a4_ba400/a4_ba400.c
+index 0f8a59d7fbc..34e7c6694a2 100644
+--- a/board/amlogic/a4_ba400/a4_ba400.c
++++ b/board/amlogic/a4_ba400/a4_ba400.c
+@@ -381,6 +381,39 @@ int get_aml_partition_count(void)
+ 
+ #endif
+ 
++int do_get_board_hw_id(cmd_tbl_t *cmdtp, int flag, int argc,
++		char * const argv[])
++{
++	unsigned int hw_id = 0, ret = 0;
++	char hw_id_str[8] = {0};  // eg: 0x0A
++
++	/* pin mux to gpio pin */
++	ret = readl(PADCTRL_PIN_MUX_REG3);
++	writel(ret & (~(0xFFFFF << 0)), PADCTRL_PIN_MUX_REG3);
++
++	/* enable input */
++	ret = readl(PADCTRL_GPIOX_OEN);
++	writel(ret | (0x1F << 0), PADCTRL_GPIOX_OEN);
++
++	/* disable gpio pull */
++	ret = readl(PADCTRL_GPIOX_PULL_EN);
++	writel(ret & (~(0x1F << 0)), PADCTRL_GPIOX_PULL_EN);
++
++	/* read hw id */
++	ret = readl(PADCTRL_GPIOX_I);
++	hw_id = (ret >> 0) & 0x1F;
++
++	snprintf(hw_id_str, sizeof(hw_id_str), "0x%02x", hw_id);
++	env_set("hw_id", hw_id_str);
++	return 0;
++}
++
++U_BOOT_CMD(
++	get_board_hw_id, 1, 0, do_get_board_hw_id,
++	"get LUMIA HW_ID and env_set 'hw_id'\n",
++	"get_board_hw_id"
++);
++
+ /* partition table */
+ /* partition table for spinand flash */
+ #if (defined(CONFIG_SPI_NAND) || defined(CONFIG_MTD_SPI_NAND))
+diff --git a/board/amlogic/configs/a4_ba400.h b/board/amlogic/configs/a4_ba400.h
+index dc03d595698..13802032c24 100644
+--- a/board/amlogic/configs/a4_ba400.h
++++ b/board/amlogic/configs/a4_ba400.h
+@@ -142,10 +142,12 @@
+ 			"frac_rate_policy=${frac_rate_policy} hdmi_read_edid=${hdmi_read_edid} cvbsmode=${cvbsmode} "\
+ 			"osd_reverse=${osd_reverse} video_reverse=${video_reverse} irq_check_en=${Irq_check_en}  "\
+ 			"androidboot.selinux=${EnableSelinux} androidboot.firstboot=${firstboot} jtag=${jtag}; "\
+-		"setenv bootargs ${bootargs} androidboot.bootloader=${bootloader_version} androidboot.hardware=amlogic;"\
++		"setenv bootargs ${bootargs} " \
++		"hw_id=${hw_id} " \
++		"androidboot.bootloader=${bootloader_version} androidboot.hardware=amlogic;"\
+ 		"run cmdline_keys;"\
+ 		"\0"\
+-	"switch_bootmode="\
++		"switch_bootmode="\
+ 		"get_rebootmode;"\
+ 		"if test ${reboot_mode} = factory_reset; then "\
+ 				"run recovery_from_flash;"\
+@@ -206,6 +208,9 @@
+ 		"setenv fatload_dev usb;"\
+ 		"if usb start 0; then run recovery_from_fat_dev; fi;"\
+ 		"\0"\
++	"get_hw_id=" \
++		"get_board_hw_id;" \
++		"\0" \
+ 	"recovery_from_sdcard="\
+ 		"setenv fatload_dev mmc;"\
+ 		"if mmcinfo; then run recovery_from_fat_dev; fi;"\
+@@ -304,7 +309,6 @@
+ 			"if keyman read deviceid ${loadaddr} str; then "\
+ 				"setenv bootargs ${bootargs} androidboot.deviceid=${deviceid};"\
+ 			"fi;"\
+-		"fi;"\
+ 		"setenv bootargs ${bootargs} androidboot.wificountrycode=${region_code};"\
+ 	"factory_provision init;"\
+ 	"\0"\
+@@ -316,6 +320,7 @@
+ 
+ #ifndef CONFIG_PXP_DDR
+ #define CONFIG_PREBOOT  \
++		"run get_hw_id; " \
+ 		"run bcb_cmd; "\
+ 		"run upgrade_check;"\
+ 		"run init_display;"\
+-- 
+2.25.1
+
