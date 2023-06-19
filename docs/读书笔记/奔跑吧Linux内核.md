@@ -130,4 +130,36 @@ cd global-6.6.2
 
  make && make install
 
-参考： https://blog.csdn.net/q752933833/article/details/117718115?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522168710169616800192232565%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fall.%2522%257D&request_id=168710169616800192232565&biz_id=0&utm_medium=distribute.pc_search_result.none-task-blog-2~all~first_rank_ecpm_v1~rank_v31_ecpm-1-117718115-null-null.142^v88^control_2,239^v2^insert_chatgpt&utm_term=vim%E4%B9%8B%E4%BB%A3%E7%A0%81%E8%B7%9F%E8%B8%AA&spm=1018.2226.3001.4187
+
+```sh
+find ./ -name "*.h" -o -name "*.c" -o -name "*.cpp" >gtags.files
+gtags
+```
+
+### cscope
+
+> 不使用
+
+sudo apt-get install cscope -y
+
+```sh
+find ./ -name "*.h" -o -name "*.c" -o -name "*.cpp" > cscope.file
+cscope -Rbkq -i cscope.file
+# -R: 在生成索引文件时，搜索子目录树中的代码
+
+# -b: 只生成索引文件，不进入cscope的界面
+
+# -k: 在生成索引文件时，不搜索/usr/include目录
+
+# -q: 生成cscope.in.out和cscope.po.out文件，加快cscope的索引速度
+# 接下来，就可以在vim里读代码了。
+```
+
+帮我写个shell，进入执行脚本的目录，然后执行下面命令
+
+```sh
+find ./ -name "*.h" -o -name "*.c" -o -name "*.cpp" >gtags.files
+gtags
+
+ctags -R
+```

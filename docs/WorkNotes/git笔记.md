@@ -31,7 +31,7 @@
 	- [检查 patch](#检查-patch)
 	- [git am 对应 git format-patch](#git-am-对应-git-format-patch)
 	- [git apply 与 git am 的区别](#git-apply-与-git-am-的区别)
-	- [打patch发生冲突](#打patch发生冲突)
+	- [打 patch 发生冲突](#打-patch-发生冲突)
 		- [强制打上 patch](#强制打上-patch)
 	- [patch 例子](#patch-例子)
 - [cherry-pick](#cherry-pick)
@@ -530,7 +530,7 @@ git am --resolved
 
 - git am 是更新的 commit，会将 commit 的所有信息打上去，author 也是 patch 的 author 而不是打 patch的人。
 
-### 打patch发生冲突
+### 打 patch 发生冲突
 
 - 根据 git am 失败的信息，找到发生冲突的具体 patch 文件
 
