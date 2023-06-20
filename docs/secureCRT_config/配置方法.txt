@@ -1,0 +1,3 @@
+如果需要配置 ANSI color
+先在 Options -- Global Options 中配置 ANSI color， 然后看你配置的是哪个主题，
+比如Standard， 那就去 Session Options 中选择 Appearance -- Current color scheme -- Edit  ANSI color -- 选择 Standard， 

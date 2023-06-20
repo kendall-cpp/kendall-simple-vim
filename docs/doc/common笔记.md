@@ -252,7 +252,7 @@ VIR_B = $(VIR_A) B
 VIR_A = AA
 ```
 
-经过上面的赋值后，最后VIR_B的值是AAB，而不是AB。在make时，会把整个makefile展开，拉通决定变量的值
+经过上面的赋值后，最后 VIR_B 的值是 AAB，而不是AB。在 make 时，会把整个 makefile 展开，再决定变量的值
 
 - “:=”
 
@@ -1681,3 +1681,56 @@ Machine 是指某一款机器，可以是某款设备，某款开发板，又或
 
 因此，在单声道、采样率为 48000、每个采样点占用 32 位的情况下，每毫秒能够读取 48 个采样点，即 192 字节的数据。
 
+
+
+# input 的 event 对应的设备
+
+Linux 如何查看与 /dev/input 目录下的 event 对应的设备
+
+`/dev/input` 目录下的事件都是在驱动中调用 `input_register_device(struct input_dev *dev)` 产生的。如我的板子的 `/dev/input` 目录的内容如下：
+
+```
+# ls /dev/input/ -l
+total 0
+crw-r-----    1 root     root       13,  64 Jan  1 00:00 event0
+crw-r-----    1 root     root       13,  65 Jan  1 00:00 event1
+crw-r-----    1 root     root       13,  66 Jan  1 00:00 event2
+crw-r-----    1 root     root       13,  67 Jan  1 00:00 event3
+crw-r-----    1 root     root       13,  68 Jan  1 00:00 event4
+crw-r-----    1 root     root       13,  69 Jan  1 00:00 event5
+crw-r-----    1 root     root       13,  63 Jan  1 00:00 mice
+crw-r-----    1 root     root       13,  32 Jan  1 00:00 mouse0
+crw-r-----    1 root     root       13,  33 Jan  1 00:00 mouse1
+```
+
+每个event将上报指定的事件，如G-Sensor、触摸屏、Mouse、按键等
+
+与 event 对应的相关设备信息位于 `/proc/bus/input/devices`，例子如下：
+
+```
+# cat /proc/bus/input/devices
+I: Bus=0010 Vendor=0001 Product=0001 Version=0100
+N: Name="ir_keypad"
+P: Phys=keypad/input0
+S: Sysfs=/devices/platform/fe08e040.ir/input/input0
+U: Uniq=
+H: Handlers=sysrq kbd mouse0 event0
+B: PROP=0
+B: EV=7
+B: KEY=ffffffff ffffffff ffffffff ffffffff ffffffff ffffffff ffffffff ffffffff ffffffff ffffffff ffffffff 0 0 70000 ffffffff ffffffff ffffffff ffffffff ffffffff ffffffff ffffffff fffffffe
+B: REL=103
+
+
+I: Bus=0010 Vendor=0002 Product=0002 Version=0200
+N: Name="ir_keypad1"
+P: Phys=keypad/input0
+S: Sysfs=/devices/platform/fe08e040.ir/input/input1
+U: Uniq=
+H: Handlers=sysrq kbd mouse1 event1
+B: PROP=0
+B: EV=7
+B: KEY=ffffffff ffffffff ffffffff ffffffff ffffffff ffffffff ffffffff ffffffff ffffffff ffffffff ffffffff 0 0 70000 ffffffff ffffffff ffffffff ffffffff ffffffff ffffffff ffffffff fffffffe
+B: REL=103
+```
+
+在上面的H:中可以看到对应的 `eventxx` 。

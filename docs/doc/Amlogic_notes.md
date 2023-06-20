@@ -1093,6 +1093,8 @@ wpa_cli save_config          保存信息
 
 # chrome 中打开 kernel log
 
+> chrome 日志
+
 ```sh
 vim vendor/amlogic/korlan/BoardConfigCommon.mk  +81
 

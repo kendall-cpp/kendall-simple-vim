@@ -85,7 +85,6 @@ sudo apt-get install llvm clang libclang-10-dev libboost-all-dev -y
 # cd ycm_temp/
 # # 下载地址： https://github.com/llvm/llvm-project/releases/download/llvmorg-10.0.0/clang+llvm-10.0.0-x86_64-linux-gnu-ubuntu-18.04.tar.xz
 
-
 ./install.sh --clangd-completer
 ```
 

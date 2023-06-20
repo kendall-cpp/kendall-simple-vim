@@ -124,6 +124,44 @@ env_set("hw_id", hw_id_str);
 打上 patch 最终在启动 kernel log 中能够看到 hw_id
 
 
+## TEE TDK
+
+check tee_helloworld
+
+- 先从  korlan 分析
+
+```sh
+vim chrome/vendor/amlogic/products/korlan.mk
+  gen_cert_key_$(AMLOGIC_TDK_VERSION).py
+
+# gen_cert_key_2.4.4.py
+# ./out/host/linux-x86/obj/EXECUTABLES/gen_cert_key_2.4.4.py_intermediates/gen_cert_key_2.4.4.py
+# ./out/host/linux-x86/bin/gen_cert_key_2.4.4.py
+# 上面两个文件是一样的
+
+# 在 Korlan 板子上
+/# tee_helloworld
+Invoking TA to increment 42
+TA incremented value to 43
+# vendor/amlogic/common/tdk/demos/hello_world/ca/hello_world.c:75
+```
+
+### 升級 TDK 
+
+将 ba400 buildroot 中的拷贝到 chrome 目录下，升级 tdk
+
+```sh
+cp /mnt/fileroot/shengken.lin/workspace/a4/a4_buildroot/vendor/amlogic/tdk-3.8 chrome/vendor/amlogic/common
+
+cp /mnt/fileroot/shengken.lin/workspace/a4/a4_buildroot/vendor/amlogic/tdk-3.8/ta_export/scripts/gen_cert_key.py out/host/linux-x86/bin/gen_cert_key_3.8.py
+ 
+chrome/out/host/linux-x86/obj/EXECUTABLES$ cp ../../bin/gen_cert_key_3.8.py gen_cert_key_3.8.py_intermediates/
+```
 
 
+在这下面看 gti diff
+
+```
+chrome/vendor/amlogic
+```
 
