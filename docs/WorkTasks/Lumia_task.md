@@ -13,6 +13,14 @@
 
 ./mk a4_lumia_proto
 
+## 使用的文档
+
+- gpio: 文档1： https://docs.google.com/spreadsheets/d/1vfIfrzfPsIUnfrY_ygjiDI7CCKeCf0k_7lZ33QB9IkI/edit?resourcekey=0-mmV6nD00ava-ImJD3n7sXw#gid=2062501657
+
+- 原理图: 文档2： https://drive.google.com/drive/folders/19CYXjglqe01nNpXzwm4_9su01Lo5j2NS
+
+- key tdk: https://docs.google.com/document/d/1ax__vfcX8P0TqnljbcHoU8e2hetGc0mhmnLWeSwJM7g/edit
+
 ## Base GPIO add BSP
 
 ### kernel
@@ -124,6 +132,12 @@ env_set("hw_id", hw_id_str);
 打上 patch 最终在启动 kernel log 中能够看到 hw_id
 
 
+## 配置 TPS62864
+
+P0 原理圖中搜索 TPS62864
+
+TPS62864: datasheet: https://pdf1.alldatasheet.com/datasheet-pdf/view/1195553/TI1/TPS62864.html
+
 ## TEE TDK
 
 check tee_helloworld
@@ -149,19 +163,26 @@ TA incremented value to 43
 ### 升級 TDK 
 
 将 ba400 buildroot 中的拷贝到 chrome 目录下，升级 tdk
-
 ```sh
-cp /mnt/fileroot/shengken.lin/workspace/a4/a4_buildroot/vendor/amlogic/tdk-3.8 chrome/vendor/amlogic/common
+cp /mnt/fileroot/shengken.lin/workspace/a4/a4_buildroot/vendor/amlogic/tdk-3.8 chrome/vendor/amlogic/common/tdk_3.8
 
+# out 下面不需要自己拷贝
 cp /mnt/fileroot/shengken.lin/workspace/a4/a4_buildroot/vendor/amlogic/tdk-3.8/ta_export/scripts/gen_cert_key.py out/host/linux-x86/bin/gen_cert_key_3.8.py
- 
-chrome/out/host/linux-x86/obj/EXECUTABLES$ cp ../../bin/gen_cert_key_3.8.py gen_cert_key_3.8.py_intermediates/
+chrome/out/host/linux-x86/obj/EXECUTABLES$ cp ../../bin/gen_cert_key_3.8.py  gen_cert_key_3.8.py_intermediates/
 ```
 
-
-在这下面看 gti diff
+在这下面看 git diff
 
 ```
 chrome/vendor/amlogic
+```
+
+- 先看看 a4_buildroot TDK 是怎么编译的
+
+```sh
+#TDK
+BR2_PACKAGE_TDK=y 
+BR2_PACKAGE_TDK_VERSION="3.8"
+BR2_PACKAGE_TDK_LOCAL_PATH="$(TOPDIR)/../vendor/amlogic/tdk-3.8"
 ```
 

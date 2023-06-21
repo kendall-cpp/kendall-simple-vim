@@ -706,6 +706,14 @@ cat /sys/kernel/debug/aml_reg/dump
  echo 0 > /sys/module/u_audio/parameters/free_run  & aplay -Dhw:0,0 /data/the-stars-48k-60s.wav & echo 1 > /sys/module/u_audio/parameters/free_run 
 ```
 
+### korlan chrome audio 配置
+
+配置文件： 
+
+```sh
+chrome/vendor/amlogic/korlan/prebuilt/systemfs_overlay/etc/asound.conf
+```
+
 ### ubuntu 测试
 
 ```sh

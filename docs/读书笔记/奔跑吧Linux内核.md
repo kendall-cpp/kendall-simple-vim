@@ -62,6 +62,8 @@ cd ~/.vim/bundle && git clone https://github.com/rking/ag.vim ag && echo "set ru
 
 ### YouCompleteMe自动补齐插件
 
+> :YcmRestartServer  重启
+
 参考： https://blog.csdn.net/OIDCAT/article/details/106816941
 
 ```sh
