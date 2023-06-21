@@ -38,6 +38,7 @@
 - [查看某个文件的修改记录](#查看某个文件的修改记录)
 - [repo 命令](#repo-命令)
 - [设置 git commit 模式使用 vim](#设置-git-commit-模式使用-vim)
+- [设置 token](#设置-token)
 
 -----
 
@@ -643,3 +644,15 @@ repo forall -c “git clean -df” && repo forall -c “git checkout .”
 ## 设置 git commit 模式使用 vim
 
 git config --global core.editor "vim"
+
+## 设置 token
+
+```
+git remote set-url origin https://<your_token>@github.com/<USERNAME>/<REPO>.git
+
+<your_token>：换成你自己得到的token
+<USERNAME>：是你自己github的用户名
+<REPO>：是你的仓库名称
+```
+
+git remote set-url origin https://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@github.com/kendall-cpp/kendall-simple-vim.git
