@@ -138,6 +138,36 @@ P0 原理圖中搜索 TPS62864
 
 TPS62864: datasheet: https://pdf1.alldatasheet.com/datasheet-pdf/view/1195553/TI1/TPS62864.html
 
+```c
+&i2c2 {
+	status = "okay";
+	pinctrl-names="default";
+	pinctrl-0=<&i2c2_pins1>;
+	vddcpu1: tps62864-regulator@42 {
+		compatible = "ti,tps62864";
+		reg = <0x42>;
+		regulator-name = "VDD_CPU";
+		regulator-min-microvolt = <689000>;   // 这个最大值和最小值参考 vddcpu0: pwm_f-regulator { 
+		regulator-max-microvolt = <1049000>;
+		regulator-ramp-delay = <1000>;
+		regulator-initial-mode = <0>;
+		regulator-boot-on;
+		regulator-always-on;
+		ti,vout-reg-id = <0>;
+		status = "okay";
+	};
+```
+
+- 分析 代码
+
+```c
+// drivers/regulator/core.c
+static int regulator_map_voltage(struct regulator_dev *rdev, int min_uV, int max_uV)
+{
+  return desc->ops->map_voltage(rdev, min_uV, max_uV);
+}
+```
+
 ## TEE TDK
 
 check tee_helloworld
@@ -186,3 +216,16 @@ BR2_PACKAGE_TDK_VERSION="3.8"
 BR2_PACKAGE_TDK_LOCAL_PATH="$(TOPDIR)/../vendor/amlogic/tdk-3.8"
 ```
 
+## Build ota script
+
+- 将编译好的 bootloader 和 kernel bin 拷贝到 chrome/vendor/amlogic/longan/prebuilt 目录下
+
+- 关注的文件
+
+````sh
+vendor/amlogic/build/tools/releasetools/ota_from_target_files
+# 这个脚本在 vendor/amlogic/products/longan.mk 中调用
+
+vendor/amlogic/Android.mk
+vendor/eureka/autolog/Android.mK
+```

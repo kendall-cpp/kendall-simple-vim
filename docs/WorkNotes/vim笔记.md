@@ -18,6 +18,7 @@
 - [vim 命令记录](#vim-命令记录)
   - [vim 查找替换](#vim-查找替换)
   - [vim 解决结尾自动加换行问题](#vim-解决结尾自动加换行问题)
+- [Vim中显示Tab字符](#vim中显示tab字符)
 - [vscode 设置 markdown 字体](#vscode-设置-markdown-字体)
   - [vscode 快速阅读 kernel 源码](#vscode-快速阅读-kernel-源码)
 
@@ -368,12 +369,10 @@ cmake -G "Unix Makefiles" -DPYTHON_INCLUDE_DIRS=/usr/include/python3 DEXTERNAL_L
   - d 删除
   - I 进入编辑，编辑完按 ESC 退出
 
-- 调到变量定义处
+- 跳到变量定义处
 
   - gd 在当前函数内查找当前光标下的单词，如果找到，就跳转到该单词在函数内第一次出现的地方。对局部变量来说，也就是跳转到变量定义处。
   - gD 在当前文件内查找当前光标下的单词，如果找到，就跳转到该单词在文件内第一次出现的地方。对全局变量来说，也就是跳转到全局变量定义处
-
-- unzip -q -d 要解压缩到的文件夹路径 被解压的文件路径
 
 - dd 删除
 
@@ -382,7 +381,10 @@ cmake -G "Unix Makefiles" -DPYTHON_INCLUDE_DIRS=/usr/include/python3 DEXTERNAL_L
 ```sh
 ：9, .d  # 9 表示第10行的前一行
 
-:34,y #  复制
+:34,y #  复制 34 行到当前行
+
+:34,d #  删除 34 行到当前行
+:153,161d   # 删除 153,161 行
 ```
 
 ### vim 查找替换
@@ -423,6 +425,19 @@ set binary
 set noeol
 
 :wq
+```
+
+## Vim中显示Tab字符
+
+```sh
+set list
+set listchars=tab:\|\ 
+```
+
+查看当前文件 tab 是几个字符
+
+```sh
+:set tabstop?
 ```
 
 ## vscode 设置 markdown 字体
