@@ -577,8 +577,6 @@ reset 函数在 arch/arm/cpu/armv7/start.S 里面
 
 ---
 
-
-
 ## linux 内核移植
 
 > E:\学习资源\正点原子\【正点原子】阿尔法Linux开发板（A盘）-基础资料\01、例程源码\01、例程源码\04、NXP官方原版Uboot和Linux\
